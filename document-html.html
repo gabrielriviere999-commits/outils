@@ -16,10 +16,7 @@ iframe{background:#fff!important;}
 </style>
 </head>
 <body>
-<button onclick="openMenuPopup()" class="select">≡</button>
-<div id="popupMenuContent" style="display:none"></div>
 <h2>Document HTML</h2>
-
 <div class="container">
   <div class="card">
     <h3>Prévisualisation</h3>
@@ -52,7 +49,6 @@ iframe{background:#fff!important;}
     <button class="align-btn" onclick="toggleAlign(this, 'right')">Droite</button>
     <iframe id="preview" class="border-interne"></iframe>
   </div>
-
   <div class="card">
     <h3>Code HTML</h3>
     <textarea wrap="off" id="output"></textarea><br>
@@ -63,9 +59,7 @@ iframe{background:#fff!important;}
     <div id="status">Prêt.</div>
   </div>
 </div>
-
 <script src="outils.js"></script>
-<script src="popup.js"></script>
 <script>
   // Modèle de page
   var baseTemplate =
