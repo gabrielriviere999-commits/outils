@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recherche</title>
+<meta name="description" content="Recherche">
+<link rel="icon" href="favicon.png" type="image/png">
+<style>
+body {
+  background:#000;
+  color:#ccc;
+  font-family:sans-serif;
+  margin:1em;
+}
+input {
+  width:100%;
+  box-sizing:border-box;
+  padding:4px;
+  font-size:14px;
+  font-family:sans-serif;
+  background:#000;
+  color:#ccc;
+  border:2px groove #808080;
+}
+a {
+  text-decoration:none;
+  color:#4af;
+  word-break:break-all;
+}
+a:hover{text-decoration:underline;}
+ul{padding-left:15px;margin:0}
+li{line-height:1.5;}
+</style>
+</head>
+<body>
+<main>
+<p style="font-size:14px;">Vous pouvez rechercher les noms ou les contenus des fichiers texte et .html mais uniquement les noms pour les .pdf et autres fichiers.</p>
+<input id="search" onkeyup="doSearch()" placeholder="Rechercher..." aria-label="Champ de recherche">
+<div id="count" style="margin:4px 0;"></div>
+<div id="results"></div>
+<script src="docs.js"></script>
+<script>
+function doSearch() {
+  var q = document.getElementById("search").value.toLowerCase();
+  var out = "<ul>";
+  var found = 0;
+  for (var i=0; i<docs.length; i++) {
+    if (docs[i].content.toLowerCase().indexOf(q) !== -1) {
+      out += "<li>"
+          + "<a href='" + docs[i].url + "' target='_self'>" + docs[i].title + "</a>"
+          + " <a href='" + docs[i].url + "' download>[↓]</a>"
+          + "</li>";
+      found++;
+    }
+  }
+  out += "</ul>";
+  // Affichage du compteur
+  document.getElementById("count").textContent =
+      found > 0 ? found + " résultat(s)" : "Aucun résultat";
+  // Affichage des résultats
+  document.getElementById("results").innerHTML =
+      found > 0 ? out : "";
+  // Sauvegarde
+  sessionStorage.setItem("lastQuery", q);
+  sessionStorage.setItem("lastResults", out);
+  sessionStorage.setItem("lastCount", found);
+}
+// Au chargement de la page, restaurer
+window.onload = function() {
+  if (sessionStorage.getItem("lastQuery")) {
+    document.getElementById("search").value = sessionStorage.getItem("lastQuery");
+    document.getElementById("results").innerHTML = sessionStorage.getItem("lastResults");
+  }
+  if (sessionStorage.getItem("lastCount")) {
+    var c = sessionStorage.getItem("lastCount");
+    document.getElementById("count").textContent =
+        c > 0 ? c + " résultat(s)" : "Aucun résultat";
+  }
+};
+</script>
+</main>
+</body>
+</html>
