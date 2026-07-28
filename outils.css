@@ -176,24 +176,6 @@ select:hover{background:#404040;}
 }
 .popup-scroll-up,.popup-scroll-down,.popup-close{width:33%;}
 .popup-content label{font-size:12px;}
-.popup-window-mini {
-  position:absolute;
-  top:20%;
-  left:50%;
-  margin-left:-90px;
-  background:rgba(0,0,0,0.4);
-  color:#ccc;
-  padding:10px;
-  border:1px solid #808080;
-  box-sizing:border-box;
-}
-.popup-window-mini button {
-  width:120px;
-  height:35px;
-  margin-bottom:2px;
-  opacity:0.8;
-  color:#fff;
-}
 .popup-window-menu ul{padding-left:15px;margin:0}
 .popup-window-menu li{line-height:1.5;}
 .popup-window-menu {
