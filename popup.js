@@ -131,15 +131,3 @@ document.onkeydown = function(e){
         if (d) closePopup();
     }
 };
-function openMenuPopup() {
-  var container = document.getElementById("popupMenuContent");
-  container.innerHTML = window.popupMenuHTML;
-  openPopupMenu(container);
-}
-window.popupMenuHTML =
-    '<ul>' +
-    '<li><a href="search.html">Rechercher</a></li>' +
-    '<li><a href="arbo.html">Arborescence</a></li>' +
-    '<li><a href="https://github.com/gabrielriviere999-commits/outils">Dépôt GitHub outils</a></li>' +
-    '<li><a href="https://codeload.github.com/gabrielriviere999-commits/outils/zip/refs/heads/main" download>Télécharger dépôt outils</a></li>' +
-    '</ul>';
