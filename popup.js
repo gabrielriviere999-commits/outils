@@ -77,37 +77,6 @@ function openPopup(container) {
     setTimeout(function(){p.focus();},0);
     addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
 }
-function openPopupMini(container) {
-    popupOrigin = container;
-
-    popupJustOpened = true;
-    setTimeout(function(){ popupJustOpened = false; }, 150);
-
-    var d = document.createElement('div');
-    d.className = "popup-overlay";
-
-    d.onclick = function(e){
-        if (popupJustOpened) return;
-        if (e.target === d) closePopup();
-    };
-
-    var p = document.createElement('div');
-    p.className = "popup-window-mini";
-    p.setAttribute("tabindex", "-1");
-
-    var t = document.createElement('div');
-    t.className = "popup-content-mini";
-
-    while (container.firstChild) {
-        t.appendChild(container.firstChild);
-    }
-
-    p.appendChild(t);
-    d.appendChild(p);
-    document.body.appendChild(d);
-
-    setTimeout(function(){ p.focus(); }, 0);
-}
 function openPopupMenu(container) {
     popupOrigin = container;
 
@@ -162,7 +131,6 @@ document.onkeydown = function(e){
         if (d) closePopup();
     }
 };
-
 function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
   container.innerHTML = window.popupMenuHTML;

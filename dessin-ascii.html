@@ -20,6 +20,18 @@ select{width:55px;}
   position:relative;
   z-index:999;
 }
+.popup-window-menu {
+  top:20%;
+  left:50%;
+  margin-left:-90px;
+}
+.popup-window-menu button {
+  width:120px;
+  height:35px;
+  margin-bottom:2px;
+  opacity:0.8;
+  color:#fff;
+}
 </style>
 </head>
 <body>
@@ -527,7 +539,7 @@ function setRectMode(val){
 }
 function openRectModePopup() {
     var container = document.getElementById("popupRectModeContent");
-    openPopupMini(container);
+    openPopupMenu(container);
 }
 function setRectModeClassic(){setRectMode("classic");}
 function setRectModeDotted(){setRectMode("dotted");}
