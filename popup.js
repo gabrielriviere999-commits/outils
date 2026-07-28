@@ -187,14 +187,14 @@ function openSearchPopup() {
     openPopupMenu(container);
 
     // Restauration
-    var lastQuery   = sessionStorage.getItem("lastQuery");
-    var lastResults = sessionStorage.getItem("lastResults");
-    var lastCount   = sessionStorage.getItem("lastCount");
+    var lastQueryOutils   = sessionStorage.getItem("lastQueryOutils");
+    var lastResultsOutils = sessionStorage.getItem("lastResultsOutils");
+    var lastCountOutils   = sessionStorage.getItem("lastCountOutils");
 
-    if (lastQuery !== null)   input.value = lastQuery;
-    if (lastResults !== null) results.innerHTML = lastResults;
-    if (lastCount !== null)   count.textContent =
-        lastCount > 0 ? lastCount + " résultat(s)" : "Aucun résultat";
+    if (lastQueryOutils !== null)   input.value = lastQueryOutils;
+    if (lastResultsOutils !== null) results.innerHTML = lastResultsOutils;
+    if (lastCountOutils !== null)   count.textContent =
+        lastCountOutils > 0 ? lastCountOutils + " résultat(s)" : "Aucun résultat";
 }
 
 function doSearch() {
@@ -219,7 +219,7 @@ function doSearch() {
   document.getElementById("results").innerHTML =
       found > 0 ? out : "";
   // Sauvegarde
-  sessionStorage.setItem("lastQuery", q);
-  sessionStorage.setItem("lastResults", out);
-  sessionStorage.setItem("lastCount", found);
+  sessionStorage.setItem("lastQueryOutils", q);
+  sessionStorage.setItem("lastResultsOutils", out);
+  sessionStorage.setItem("lastCountOutils", found);
 }
