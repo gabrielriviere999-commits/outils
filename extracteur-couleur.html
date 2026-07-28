@@ -92,12 +92,6 @@
 <body>
 <button onclick="openMenuPopup()" class="select">≡</button>
 <div id="popupMenuContent" style="display:none"></div>
-<button onclick="openSearchPopup()" class="select">Q</button>
-<div id="popupSearchContent" style="display:none">
-  <input id="search" onkeyup="doSearch()" placeholder="Rechercher...">
-  <div id="count" style="margin:4px 0;"></div>
-  <div id="results"></div>
-</div>
 <h2>Extracteur couleur</h2>
 
 <div class="section">
@@ -149,7 +143,6 @@
 
 </div>
 <script src="popup.js"></script>
-<script src="docs.js"></script>
 <script>
 /* --- Variables --- */
 var fileInput = document.getElementById("file-input");

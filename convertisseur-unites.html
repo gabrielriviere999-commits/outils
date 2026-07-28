@@ -58,12 +58,6 @@ label{color:#000;}
 <body>
 <button onclick="openMenuPopup()" class="select">≡</button>
 <div id="popupMenuContent" style="display:none"></div>
-<button onclick="openSearchPopup()" class="select">Q</button>
-<div id="popupSearchContent" style="display:none">
-  <input id="search" onkeyup="doSearch()" placeholder="Rechercher...">
-  <div id="count" style="margin:4px 0;"></div>
-  <div id="results"></div>
-</div>
 <h2>Convertisseur d'unités</h2>
 
 <div class="container">
@@ -121,7 +115,6 @@ label{color:#000;}
   <button id="copyBtn" class="btn-color" style="background:#4caf50;">Copier</button>
 </p>
 <script src="popup.js"></script>
-<script src="docs.js"></script>
 <script>
 /* --- 1. Catégories --- */
 var categories = {

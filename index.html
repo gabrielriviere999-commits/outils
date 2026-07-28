@@ -90,12 +90,6 @@ pre { margin-top:0; margin-bottom:0; }
 <main>
 <button onclick="openMenuPopup()" class="select">≡</button>
 <div id="popupMenuContent" style="display:none"></div>
-<button onclick="openSearchPopup()" class="select">Q</button>
-<div id="popupSearchContent" style="display:none">
-  <input id="search" onkeyup="doSearch()" placeholder="Rechercher...">
-  <div id="count" style="margin:4px 0;"></div>
-  <div id="results"></div>
-</div>
 <a href="https://paypal.me/gabrielriviere999" target="_blank" rel="noopener" aria-label="Faire un don via PayPal" class="a" style="color:black;background:#ffd700;">💙 Faire un don via PayPal</a>
 <p></p><a href="../portfolio/astuces.html">Remonter vers astuces.html</a>
 <h1>Outils</h1>
@@ -459,7 +453,6 @@ Inverser De et Vers
 
 <script src="outils.js"></script>
 <script src="popup.js"></script>
-<script src="docs.js"></script>
 <script>
 function sansAccents(str) {
     return str
