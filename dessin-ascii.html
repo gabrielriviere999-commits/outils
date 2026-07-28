@@ -68,12 +68,12 @@ select{width:55px;}
   <button id="btnFree" onclick="setTool('free')">Tracer</button>
   <input type="text" id="freeChar" value="#" maxlength="1">
   |
-  <button id="btnLine" onclick="setTool('line')">Ligne</button>
+  <button id="btnLine" class="multitouchbtn" data-action="setToolLine">Ligne</button>
   <input type="text" id="lineChar" value="*" maxlength="1">
   |
-  <button id="btnArrow" onclick="setTool('arrow')">Flèche</button>
+  <button id="btnArrow" class="multitouchbtn" data-action="setToolArrow">Flèche</button>
   |
-  <button id="btnRect" onclick="setTool('rect')">Rectangle</button>
+  <button id="btnRect" class="multitouchbtn" data-action="setToolRect">Rectangle</button>
   <button id="rectModeBtn" data-action="openRectModePopup" class="multitouchbtn"><span id="rectModeLabel">+-|</span></button>
   <select id="rectMode" style="display:none">
     <option value="classic">+-|</option>
@@ -91,12 +91,12 @@ select{width:55px;}
   </div>
   <input type="text" id="rectChar" maxlength="1">
   |
-  <button id="btnEllipse" onclick="setTool('ellipse')">Ellipse</button>
+  <button id="btnEllipse" class="multitouchbtn" data-action="setToolEllipse">Ellipse</button>
   <input type="text" id="ellipseChar" value="o" maxlength="1">
   |
-  <button id="btnMove" onclick="setTool('move')">Déplacer</button>
-  <button id="btnCopy" onclick="setTool('copy')">Dupliquer</button>
-  <button id="btnClipboard" onclick="setTool('clipboard')">Copier</button>
+  <button id="btnMove" class="multitouchbtn" data-action="setToolMove">Déplacer</button>
+  <button id="btnCopy" class="multitouchbtn" data-action="setToolCopy">Dupliquer</button>
+  <button id="btnClipboard" class="multitouchbtn" data-action="setToolClipboard">Copier</button>
   |
   <button id="btnText" onclick="setTool('text')">Texte libre</button>
   <button id="btnEdit" onclick="setTool('edit')">Édition</button>
@@ -226,6 +226,14 @@ function setTool(t) {
         enableTouchDrawing(true);  // Android dessine normalement
     }
 }
+
+function setToolLine(){ setTool("line"); }
+function setToolArrow(){ setTool("arrow"); }
+function setToolRect(){ setTool("rect"); }
+function setToolEllipse(){ setTool("ellipse"); }
+function setToolMove(){ setTool("move"); }
+function setToolCopy(){ setTool("copy"); }
+function setToolClipboard(){ setTool("clipboard"); }
 
 /* --- EXPORT / IMPORT --- */
 function exportTextReturn() {
@@ -815,8 +823,14 @@ function confirmText() {
 
     for (i = 0; i < lines.length; i++) {
         for (j = 0; j < lines[i].length; j++) {
-            ensureCell(textStartX + j, textStartY + i);
-            grid[textStartY + i][textStartX + j] = lines[i].charAt(j);
+
+            var ch = lines[i].charAt(j);
+
+            // n'écrase pas si c'est un espace
+            if (ch !== " ") {
+                ensureCell(textStartX + j, textStartY + i);
+                grid[textStartY + i][textStartX + j] = ch;
+            }
         }
     }
 
