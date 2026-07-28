@@ -194,6 +194,8 @@ select:hover{background:#404040;}
   opacity:0.8;
   color:#fff;
 }
+.popup-window-menu ul{padding-left:15px;margin:0}
+.popup-window-menu li{line-height:1.5;}
 .popup-window-menu {
   position:absolute;
   top:45px;
