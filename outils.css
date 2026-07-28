@@ -194,6 +194,15 @@ select:hover{background:#404040;}
   opacity:0.8;
   color:#fff;
 }
+#search {
+  position:sticky;
+  top:0;
+  background:rgba(0,0,0,0.8);
+  width:100%;
+  box-sizing:border-box
+}
+.popup-window-menu ul{padding-left:15px;margin:0}
+.popup-window-menu li{line-height:1.5;}
 .popup-window-menu {
   position:absolute;
   top:45px;
@@ -205,13 +214,6 @@ select:hover{background:#404040;}
   border:1px solid #808080;
   box-sizing:border-box;
   overflow:auto;
-}
-.popup-window-menu ul{padding-left:15px;margin:0}
-.popup-window-menu li{line-height:1.5;}
-#search {
-  position:sticky;
-  top:0;
-  background:rgba(0,0,0,0.8);
 }
 .border-interne {
   background:#000;
