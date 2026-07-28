@@ -198,6 +198,7 @@ function openSearchPopup() {
 }
 
 function doSearch() {
+  if (!window.docs) return;
   var q = document.getElementById("search").value.toLowerCase();
   var out = "<ul>";
   var found = 0;
