@@ -71,7 +71,7 @@ function openPopup(container) {
 
     setTimeout(function(){p.focus();},0);
     addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
-    }, 100);
+    }, 50);
 }
 function openPopupMenu(container) {
     setTimeout(function(){
@@ -100,7 +100,7 @@ function openPopupMenu(container) {
     document.body.appendChild(d);
 
     setTimeout(function(){ p.focus(); }, 0);
-    }, 100);
+    }, 50);
 }
 function closePopup() {
     var d = document.querySelector('.popup-overlay');
@@ -116,7 +116,7 @@ function closePopup() {
         if (d.parentNode) {
             d.parentNode.removeChild(d);
         }
-    }, 100);
+    }, 50);
 }
 document.onkeydown = function(e){
     e = e || window.event;
