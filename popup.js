@@ -9,10 +9,8 @@ function popupScrollDown(){
 var popupOrigin = null;
 var popupJustOpened = false;
 function openPopup(container) {
+	setTimeout(function(){
     popupOrigin = container;
-
-    popupJustOpened = true;
-    setTimeout(function(){ popupJustOpened = false; }, 150);
 
     var d = document.createElement('div');
     d.className = "popup-overlay";
@@ -27,8 +25,6 @@ function openPopup(container) {
         e = e || window.event;
         e.cancelBubble = true;
         if (e.stopPropagation) e.stopPropagation();
-
-        if (popupJustOpened) return; 
 
         if (e.target === d) closePopup();
     };
@@ -76,6 +72,7 @@ function openPopup(container) {
 
     setTimeout(function(){p.focus();},0);
     addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
+    }, 100);
 }
 function openPopupMenu(container) {
     popupOrigin = container;
