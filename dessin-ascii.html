@@ -947,6 +947,13 @@ view.onmousedown = function(e) {
     if (tool === "erase") eraseAt(pos.x, pos.y);
 };
 
+// désactiver sélection de texte
+view.addEventListener("mousedown", function(e){
+    if (tool !== "edit") {
+        e.preventDefault();      // empêche le début de la sélection
+    }
+});
+
 function autoWidthDynamic() {
     autoWidth(); // recalcul charW et charH
 }
