@@ -74,7 +74,7 @@ function openPopupGeneric(container, type) {
             addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
         }
 
-    }, 50);
+    }, 5);
 }
 function openPopup(container) {
     openPopupGeneric(container, "normal");
@@ -96,7 +96,7 @@ function closePopup() {
         if (d.parentNode) {
             d.parentNode.removeChild(d);
         }
-    }, 50);
+    }, 5);
 }
 document.onkeydown = function(e){
     e = e || window.event;
