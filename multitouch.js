@@ -9,26 +9,34 @@ function addMultiTouch(selector){
             el._action = window[action];
         }
 
-        // pointerdown : détecte tactile ou souris
         el.onpointerdown = function(e){
             this._touchTriggered = (e.pointerType === "touch");
         };
 
-        // pointerup : tactile → action ici
         el.onpointerup = function(e){
-            if(this._touchTriggered && this._action){
-                this._action();
+            if(this._touchTriggered){
+
+                // Cas spécial : summary → toggle manuel
+                if(this.tagName.toLowerCase() === "summary"){
+                    var d = this.parentNode;
+                    d.open = !d.open;
+                    return;
+                }
+
+                // Cas normal → action tactile
+                if(this._action){
+                    this._action();
+                }
             }
-            // ⭐ NE PAS remettre à false ici
-            // sinon le click PC n'est plus bloqué
         };
 
-        // click : souris → action ici
         el.onclick = function(e){
             if(this._touchTriggered){
                 // tactile → ignorer le click natif
                 return false;
             }
+
+            // souris → comportement normal
             if(this._action){
                 this._action();
             }
