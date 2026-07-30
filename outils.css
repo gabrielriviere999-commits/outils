@@ -132,6 +132,7 @@ select:hover{background:#404040;}
   right:0;
   overflow-y:auto;
   max-height:225px;
+  font-size:0px;
   padding:4px;
   z-index:9997;
 }
@@ -176,6 +177,8 @@ select:hover{background:#404040;}
 }
 .popup-scroll-up,.popup-scroll-down,.popup-close{width:33%;}
 .popup-content label{font-size:12px;}
+.popup-window-menu ul{padding-left:15px;margin:0}
+.popup-window-menu li{line-height:1.5;}
 .popup-window-menu {
   position:absolute;
   top:20%;
@@ -194,10 +197,9 @@ select:hover{background:#404040;}
   width:120px;
   height:35px;
   margin-bottom:2px;
-  color:#ccc;
+  opacity:0.8;
+  color:#fff;
 }
-.popup-window-menu ul{padding-left:15px;margin:0}
-.popup-window-menu li{line-height:1.5;}
 .border-interne {
   background:#000;
   border:2px solid;
