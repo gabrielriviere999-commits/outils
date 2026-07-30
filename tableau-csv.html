@@ -1065,11 +1065,7 @@ function importFromOutput() {
     var out = document.getElementById("output").value;
     var rows;
 
-    if (out.indexOf("{|") !== -1 && out.indexOf("|}") !== -1) {
-        rows = parseWikiTable(out);
-    } else {
-        rows = parseAnyTable(out);
-    }
+    rows = parseAnyTable(out);
 
     var csv = tableToCSV(rows);
     document.getElementById("input").value = csv;
@@ -1086,11 +1082,7 @@ document.getElementById("tableFileInput").onchange = function () {
 
         var rows;
 
-        if (texte.indexOf("{|") !== -1 && texte.indexOf("|}") !== -1) {
-            rows = parseWikiTable(texte);
-        } else {
-            rows = parseAnyTable(texte);
-        }
+        rows = parseAnyTable(texte);
 
         lastGeneratedCSV = tableToCSV(rows);
 
@@ -1109,6 +1101,10 @@ function parseAnyTable(text) {
   if (model === "fancy" || model === "fancy_header" || model === "fancy_bubble" || model === "fancy_custom_plus") {
       return parseFancyTable(text);
   }
+
+  // WikiTable
+  if (text.indexOf("{|") !== -1 && text.indexOf("|}") !== -1)
+    return parseWikiTable(text);
 
   // HTML
   if (text.indexOf("<table") !== -1)
