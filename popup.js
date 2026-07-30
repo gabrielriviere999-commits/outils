@@ -7,95 +7,80 @@ function popupScrollDown(){
     if(t) t.scrollTop += 50;
 }
 var popupOrigin = null;
-function openPopup(container) {
-	setTimeout(function(){
-    popupOrigin = container;
+function openPopupGeneric(container, type) {
+    setTimeout(function(){
+        popupOrigin = container;
 
-    var d = document.createElement('div');
-    d.className = "popup-overlay";
+        var d = document.createElement('div');
+        d.className = "popup-overlay";
 
-    d.onclick = function(e){
-        e = e || window.event;
-        e.cancelBubble = true;
-        if (e.stopPropagation) e.stopPropagation();
-        if (e.target === d) closePopup();
-    };
+        d.onclick = function(e){
+            e = e || window.event;
+            e.cancelBubble = true;
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.target === d) closePopup();
+        };
 
-    var p = document.createElement('div');
-    p.className = "popup-window";
-    p.setAttribute("tabindex", "-1");
+        // --- fenêtre ---
+        var p = document.createElement('div');
+        p.className = (type === "menu") ? "popup-window-menu" : "popup-window";
+        p.setAttribute("tabindex", "-1");
 
-    var t = document.createElement('div');
-    t.className = "popup-content";
+        // --- contenu ---
+        var t = document.createElement('div');
+        t.className = (type === "menu") ? "popup-content-menu" : "popup-content";
 
-    while (container.firstChild) {
-        t.appendChild(container.firstChild);
-    }
+        while (container.firstChild) {
+            t.appendChild(container.firstChild);
+        }
 
-    var up = document.createElement('button');
-    up.textContent = 'Monter';
-    up.className = 'popup-scroll-up';
-    up.setAttribute("data-action", "popupScrollUp");
-    up.onclick = popupScrollUp;
+        p.appendChild(t);
 
-    var down = document.createElement('button');
-    down.textContent = 'Descendre';
-    down.className = 'popup-scroll-down';
-    down.setAttribute("data-action", "popupScrollDown");
-    down.onclick = popupScrollDown;
+        // --- boutons seulement pour popup normal ---
+        if (type === "normal") {
+            var up = document.createElement('button');
+            up.textContent = 'Monter';
+            up.className = 'popup-scroll-up';
+            up.setAttribute("data-action", "popupScrollUp");
+            up.onclick = popupScrollUp;
 
-    var b = document.createElement('button');
-    b.textContent = 'Fermer';
-    b.className = "popup-close";
-    b.setAttribute("data-action", "closePopup");
-    b.onclick = closePopup;
-    
-    var btns = document.createElement('div');
-    btns.className = "popup-buttons";
-    btns.appendChild(up);
-    btns.appendChild(down);
-    btns.appendChild(b);
+            var down = document.createElement('button');
+            down.textContent = 'Descendre';
+            down.className = 'popup-scroll-down';
+            down.setAttribute("data-action", "popupScrollDown");
+            down.onclick = popupScrollDown;
 
-    p.appendChild(t);
-    p.appendChild(btns);
-    d.appendChild(p);
-    document.body.appendChild(d);
+            var b = document.createElement('button');
+            b.textContent = 'Fermer';
+            b.className = "popup-close";
+            b.setAttribute("data-action", "closePopup");
+            b.onclick = closePopup;
 
-    p.focus();
-    addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
+            var btns = document.createElement('div');
+            btns.className = "popup-buttons";
+            btns.appendChild(up);
+            btns.appendChild(down);
+            btns.appendChild(b);
+
+            p.appendChild(btns);
+        }
+
+        d.appendChild(p);
+        document.body.appendChild(d);
+
+        p.focus();
+
+        if (type === "normal") {
+            addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
+        }
+
     }, 50);
 }
+function openPopup(container) {
+    openPopupGeneric(container, "normal");
+}
 function openPopupMenu(container) {
-    setTimeout(function(){
-    popupOrigin = container;
-
-    var d = document.createElement('div');
-    d.className = "popup-overlay";
-
-    d.onclick = function(e){
-        e = e || window.event;
-        e.cancelBubble = true;
-        if (e.stopPropagation) e.stopPropagation();
-        if (e.target === d) closePopup();
-    };
-
-    var p = document.createElement('div');
-    p.className = "popup-window-menu";
-    p.setAttribute("tabindex", "-1");
-
-    var t = document.createElement('div');
-    t.className = "popup-content-menu";
-
-    while (container.firstChild) {
-        t.appendChild(container.firstChild);
-    }
-
-    p.appendChild(t);
-    d.appendChild(p);
-    document.body.appendChild(d);
-
-    p.focus();
-    }, 50);
+    openPopupGeneric(container, "menu");
 }
 function closePopup() {
     var d = document.querySelector('.popup-overlay');
