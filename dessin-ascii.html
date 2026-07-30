@@ -579,43 +579,7 @@ function safeSet(x, y, c) {
     grid[y][x] = c;
 }
 
-function captureSelection(x1,y1,x2,y2) {
-
-    var xMin = Math.min(x1,x2);
-    var xMax = Math.max(x1,x2);
-    var yMin = Math.min(y1,y2);
-    var yMax = Math.max(y1,y2);
-
-    moveSelection = {
-        x:xMin,
-        y:yMin,
-        w:xMax-xMin+1,
-        h:yMax-yMin+1,
-        data:[]
-    };
-
-    var x,y;
-
-    for(y=yMin;y<=yMax;y++) {
-
-        moveSelection.data.push([]);
-
-        for(x=xMin;x<=xMax;x++) {
-
-            ensureCell(x,y);
-
-            moveSelection.data[y-yMin].push(safeGet(x, y));
-
-            // efface l'original
-            grid[y][x] = " ";
-        }
-    }
-
-    render();
-    tempGrid = copyGrid(grid);
-}
-
-function captureSelectionCopy(x1, y1, x2, y2) {
+function captureSelectionGeneric(x1, y1, x2, y2, eraseOriginal) {
 
     var xMin = Math.min(x1, x2);
     var xMax = Math.max(x1, x2);
@@ -623,30 +587,39 @@ function captureSelectionCopy(x1, y1, x2, y2) {
     var yMax = Math.max(y1, y2);
 
     moveSelection = {
-        x:xMin,
-        y:yMin,
-        w:xMax-xMin+1,
-        h:yMax-yMin+1,
-        data:[]
+        x: xMin,
+        y: yMin,
+        w: xMax - xMin + 1,
+        h: yMax - yMin + 1,
+        data: []
     };
 
-    var x,y;
+    var x, y;
 
-    for(y=yMin;y<=yMax;y++) {
+    for (y = yMin; y <= yMax; y++) {
 
         moveSelection.data.push([]);
 
-        for(x=xMin;x<=xMax;x++){
+        for (x = xMin; x <= xMax; x++) {
 
-            ensureCell(x,y);
+            ensureCell(x, y);
 
-            // on copie mais on n'efface pas
-            moveSelection.data[y-yMin].push(safeGet(x, y));
+            moveSelection.data[y - yMin].push(safeGet(x, y));
+
+            if (eraseOriginal) {
+                grid[y][x] = " ";
+            }
         }
     }
 
     render();
     tempGrid = copyGrid(grid);
+}
+function captureSelection(x1, y1, x2, y2) {
+    captureSelectionGeneric(x1, y1, x2, y2, true);
+}
+function captureSelectionCopy(x1, y1, x2, y2) {
+    captureSelectionGeneric(x1, y1, x2, y2, false);
 }
 
 function trimGrid() {
