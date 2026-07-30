@@ -16,10 +16,21 @@ function addMultiTouch(selector){
         el.onpointerup = function(e){
             if(this._touchTriggered){
 
+                var tag = this.tagName.toLowerCase();
+
                 // Cas spécial : summary → toggle manuel
-                if(this.tagName.toLowerCase() === "summary"){
+                if(tag === "summary"){
                     var d = this.parentNode;
                     d.open = !d.open;
+                    return;
+                }
+
+                // Cas spécial : input → focus manuel + action
+                if(tag === "input"){
+                    this.focus(); // ⭐ ouvre le clavier et place le curseur
+                    if(this._action){
+                        this._action();
+                    }
                     return;
                 }
 
@@ -32,7 +43,13 @@ function addMultiTouch(selector){
 
         el.onclick = function(e){
             if(this._touchTriggered){
-                // tactile → ignorer le click natif
+
+                // Cas spécial : input → NE PAS bloquer le click natif
+                if(this.tagName.toLowerCase() === "input"){
+                    return; // laisser le focus/clavier
+                }
+
+                // tactile → ignorer le click natif pour les boutons
                 return false;
             }
 
