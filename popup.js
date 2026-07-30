@@ -61,7 +61,7 @@ function openPopup(container) {
     d.appendChild(p);
     document.body.appendChild(d);
 
-    setTimeout(function(){p.focus();},0);
+    p.focus();
     addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
     }, 50);
 }
@@ -94,7 +94,7 @@ function openPopupMenu(container) {
     d.appendChild(p);
     document.body.appendChild(d);
 
-    setTimeout(function(){ p.focus(); }, 0);
+    p.focus();
     }, 50);
 }
 function closePopup() {
