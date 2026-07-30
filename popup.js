@@ -74,7 +74,7 @@ function openPopupGeneric(container, type) {
             addMultiTouch(".popup-close, .popup-scroll-up, .popup-scroll-down");
         }
 
-    }, 0);
+    }, 50);
 }
 function openPopup(container) {
     openPopupGeneric(container, "normal");
