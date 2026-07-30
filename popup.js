@@ -14,17 +14,10 @@ function openPopup(container) {
     var d = document.createElement('div');
     d.className = "popup-overlay";
 
-    d.onmousedown = function(e){
-        e = e || window.event;
-        e.cancelBubble = true;
-        if (e.stopPropagation) e.stopPropagation();
-    };
-
     d.onclick = function(e){
         e = e || window.event;
         e.cancelBubble = true;
         if (e.stopPropagation) e.stopPropagation();
-
         if (e.target === d) closePopup();
     };
 
@@ -59,7 +52,6 @@ function openPopup(container) {
     
     var btns = document.createElement('div');
     btns.className = "popup-buttons";
-
     btns.appendChild(up);
     btns.appendChild(down);
     btns.appendChild(b);
@@ -81,6 +73,9 @@ function openPopupMenu(container) {
     d.className = "popup-overlay";
 
     d.onclick = function(e){
+        e = e || window.event;
+        e.cancelBubble = true;
+        if (e.stopPropagation) e.stopPropagation();
         if (e.target === d) closePopup();
     };
 
