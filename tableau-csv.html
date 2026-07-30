@@ -1063,9 +1063,7 @@ function tableToCSV(rows) {
 
 function importFromOutput() {
     var out = document.getElementById("output").value;
-    var rows;
-
-    rows = parseAnyTable(out);
+    var rows = parseAnyTable(out);
 
     var csv = tableToCSV(rows);
     document.getElementById("input").value = csv;
@@ -1080,9 +1078,7 @@ document.getElementById("tableFileInput").onchange = function () {
     reader.onload = function (e) {
         var texte = e.target.result;
 
-        var rows;
-
-        rows = parseAnyTable(texte);
+        var rows = parseAnyTable(texte);
 
         lastGeneratedCSV = tableToCSV(rows);
 
