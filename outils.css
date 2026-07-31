@@ -132,7 +132,6 @@ select:hover{background:#404040;}
   right:0;
   overflow-y:auto;
   max-height:225px;
-  font-size:0px;
   padding:4px;
   z-index:9997;
 }
@@ -142,7 +141,7 @@ select:hover{background:#404040;}
   padding:0;
   overflow:hidden;
 }
-.toolbar button{margin:2px;}
+.toolbar button{margin-bottom:2px;}
 .toolbar-nfix {
   background:#202020;
   border:2px solid;
