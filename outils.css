@@ -126,6 +126,7 @@ select:hover{background:#404040;}
   background:#202020;
   border:2px solid;
   border-color:#888 #111 #111 #888;
+  opacity:0.8;
   position:fixed;
   top:0;
   left:0;
