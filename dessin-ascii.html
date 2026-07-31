@@ -982,7 +982,7 @@ view.onmousemove = function(e) {
 
     var pos = getPos(e);
 
-    if (isDown && (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse")) {
+    if (isDown && (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse" || tool === "move" || tool === "copy" || tool === "clipboard")) {
 
         var w = Math.abs(pos.x - startX) + 1;
         var h = Math.abs(pos.y - startY) + 1;
