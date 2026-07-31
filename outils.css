@@ -174,7 +174,7 @@ select:hover{background:#404040;}
   right:10px;
   bottom:10px;
 }
-.popup-scroll-up,.popup-scroll-down,.popup-close{width:33.3%;}
+.popup-scroll-up,.popup-scroll-down,.popup-close{width:33.33%;}
 .popup-content label{font-size:12px;}
 .popup-window-menu ul{padding-left:15px;margin:0}
 .popup-window-menu li{line-height:1.5;}
