@@ -27,7 +27,7 @@ function addMultiTouch(selector){
 
                 // Cas spécial : input → focus manuel + action
                 if(tag === "input"){
-                    this.focus(); // ⭐ ouvre le clavier et place le curseur
+                    this.focus(); // ouvre le clavier et place le curseur
                     if(this._action){
                         this._action();
                     }
