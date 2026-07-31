@@ -132,7 +132,7 @@ select:hover{background:#404040;}
   left:0;
   right:0;
   overflow-y:auto;
-  max-height:150px;
+  max-height:25%;
   padding:4px;
   z-index:9997;
 }
