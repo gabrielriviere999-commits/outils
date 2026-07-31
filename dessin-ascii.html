@@ -1033,12 +1033,14 @@ view.onmouseup = function(e) {
     if (tool === "move" && moveMode === 1) {
         pasteSelection(lastMoveX, lastMoveY);
         isDown = false;
+        clearShapeInfo();
         return;
     }
 
     if (tool === "copy" && copyMode === 1) {
         pasteSelection(lastMoveX, lastMoveY);
         isDown = false;
+        clearShapeInfo();
         return;
     }
 
@@ -1051,18 +1053,23 @@ view.onmouseup = function(e) {
         if (moveMode === 0) {
             captureSelection(startX, startY, pos.x, pos.y);
             moveMode = 1;
+            clearShapeInfo();
+            return;
         }
-        return;
     }
+
     if (tool === "copy") {
         if (copyMode === 0) {
             captureSelectionCopy(startX, startY, pos.x, pos.y);
             copyMode = 1;
+            clearShapeInfo();
+            return;
         }
-        return;
     }
+
     if (tool === "clipboard") {
         copySelectionToClipboard(startX, startY, pos.x, pos.y);
+        clearShapeInfo();
         return;
     }
     // formes finales
