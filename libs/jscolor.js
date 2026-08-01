@@ -11,7 +11,6 @@
  */
 function convertColorNameToHex(input) {
     var v = input.value.replace(/^\s+|\s+$/g, '');
-
     // --- HEX abrégé : 000, fff, abc ---
     if (/^[0-9A-Fa-f]{3}$/.test(v)) {
         input.value = "#" +
@@ -20,35 +19,27 @@ function convertColorNameToHex(input) {
             v.charAt(2) + v.charAt(2);
         return;
     }
-
     // --- HEX complet : #000000 ---
     if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
         return; // déjà valide
     }
-
     // --- Nom CSS : red, blue, cyan ---
     if (/^[A-Za-z]+$/.test(v)) {
-
         var tmp = document.createElement("div");
         tmp.style.color = v;
         document.body.appendChild(tmp);
-
         var rgb = tmp.currentStyle ?
             tmp.currentStyle.color :
             document.defaultView.getComputedStyle(tmp, null).color;
-
         document.body.removeChild(tmp);
-
         var m = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/);
         if (m) {
             var r = parseInt(m[1], 10).toString(16);
             var g = parseInt(m[2], 10).toString(16);
             var b = parseInt(m[3], 10).toString(16);
-
             if (r.length < 2) r = "0" + r;
             if (g.length < 2) g = "0" + g;
             if (b.length < 2) b = "0" + b;
-
             input.value = "#" + r + g + b;
         }
     }
@@ -644,8 +635,6 @@ var jsc = {
 		jsc.appendCss(
 			[
 				'.jscolor-wrap{position:fixed!important;top:50%!important;left:50%!important;margin-left:-120px!important;margin-top:-110px!important;}',
-				'.jscolor-wrap .jscolor-picker{position:relative;}',
-				'.jscolor-wrap .jscolor-border{position:relative;}',
 				'.jscolor-wrap .jscolor-palette{position:absolute;}',
 				'.jscolor-wrap .jscolor-palette-sw{position:absolute;display:block;cursor:pointer;}',
 			].join('\n')
