@@ -18,30 +18,12 @@ td.selected {
   outline:5px solid #0078d7;
   outline-offset:-2px;
 }
-.palette{display:block;}
-.palette .color {
-  display:inline-block;
-  width:22px;
-  height:22px;
-  border:1px solid #444;
-  margin-right:4px;
-  margin-bottom:4px;
-  cursor:pointer;
-}
-#hexColorInput {
-  width:80px;
-  padding:4px;
-  font-family:monospace;
-}
-#output {
-  width:100%;
-  height:200px;
-  font-family:monospace;
-}
+#hexColorInput{width:60px;}
 #editorTable td {
   min-width:40px;
   height:25px;
 }
+#colorModes{display:inline-block;}
 </style>
 </head>
 <body>
@@ -67,12 +49,13 @@ td.selected {
 |
   <!-- Sélection multiple -->
   <label><input type="checkbox" id="multiSelectMode">Sélection multiple</label>
+  <button id="clearSelectionBtn">Eff sél</button><br>
   <!-- Modes d'application -->
   <div id="colorModes">
     <button data-mode="text">Texte</button>
     <button data-mode="bg">Fond</button>
     <button data-mode="border">Bordure</button>
-  <label>Épaisseur :
+    <label>Épaisseur :
     <select id="borderWidth">
       <option value="1px" selected>1</option>
       <option value="2px">2</option>
@@ -83,57 +66,47 @@ td.selected {
       <option value="8px">8</option>
       <option value="10px">10</option>
     </select>
-  </label>
-  <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
+    </label>
   </div>
-  <!-- Palette de couleurs -->
-  <div id="colorPalette" class="palette">
-    <div class="color" data-col="#000000" style="background:#000"></div>
-    <div class="color" data-col="#ffffff" style="background:#fff"></div>
-    <div class="color" data-col="#ff0000" style="background:#f00"></div>
-    <div class="color" data-col="#00aa00" style="background:#0a0"></div>
-    <div class="color" data-col="#0000ff" style="background:#00f"></div>
-    <div class="color" data-col="#ff9900" style="background:#f90"></div>
-    <div class="color" data-col="#ffff00" style="background:#ff0"></div>
-    <input type="text" id="hexColorInput" placeholder="#rrggbb">
-    <button id="applyHexColor">OK</button>
-    <button onclick="openHelpPopup()">?</button>
-    <div id="popupHelpContent" style="display:none">
-      <h3>Barre d'outils</h3>
-      Pour masquer/afficher la barre d'outils, cliquer sur le bouton V<br>
-      <style>#help td{border:1px solid #808080;color:#ccc;background:transparent;text-align:left;}</style>
-      <table style="border-collapse: collapse;" id="help">
-        <tbody>
-          <tr><td>Bouton</td><td>Utilité</td>
-          </tr>
-          <tr><td>Ligne au dessus, Ligne en dessous, Supprimer ligne, Colonne à gauche, Colonne à droite, Supprimer colonne</td><td>Dimensions du tableau.</td>
-          </tr>
-          <tr><td>Fusionner</td><td>La sélection multiple doit être activée pour pouvoir fusionner des cellules.</td>
-          </tr>
-          <tr><td>Défusionner</td><td>Il n'est pas possible de défusionner plusieurs cellules non voisines en même temps.</td>
-          </tr>
-          <tr><td>Gauche, Centre, Droite</td><td>Changer l'alignement du texte, si aucune cellule n'est sélectionnée, le texte de toutes les cellules sera changé de façon globale.</td>
-          </tr>
-          <tr><td>Texte, Fond</td><td>Changer la couleur du texte et/ou du fond, si aucune cellule n'est sélectionnée, toutes les cellules seront affectées de façon globale.</td>
-          </tr>
-          <tr><td>Bordure</td><td>Changer la couleur de bordure du tableau.</td>
-          </tr>
-          <tr><td>Épaisseur</td><td>Changer l'épaisseur de bordure du tableau.</td>
-          </tr>
-          <tr><td>Effacer style</td><td>Effacer l'alignement et les couleurs, si aucune cellule n'est sélectionnée, le style de toutes les cellules seront effacées, sauf le style global.</td>
-          </tr>
-        </tbody>
-      </table>
-      <br>Note : pour passer à la ligne sans créer de div, juste &lt;br&gt;, il faut faire Shift + Entrée.
-      <p><hr></p>
-      <h3>Code du tableau</h3>
-      • Le tableau peut être envoyé dans la zone du code en le faisant glisser ou en cliquant sur <b>Importer fichier...</b>.<br>
-      • Pour afficher le code du tableau, cliquer sur <b>Générer le code</b>.<br>
-      • Pour copier le code du tableau, cliquer sur <b>Copier le code</b>.<br>
-      • Pour éviter les conflits de styles globaux lors de l'utilisation de plusieurs tableaux dans une même page HTML, il faut définir un ID pour chaque tableau.<br>
-      • Pour afficher le tableau à partir du code, cliquer sur <b>Mettre à jour le tableau</b>.<br>
-      • Pour nettoyer (classes LibreOffice, balises et attributs inutiles, bordures inline, styles vides) un tableau HTML exporté par LibreOffice Calc, cliquer sur <b>Nettoyer LibreOffice</b>.
-    </div>
+  <input type="text" id="hexColorInput" class="jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" placeholder="#rrggbb">
+  <button id="applyHexColor">OK</button>
+  <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
+  <button onclick="openHelpPopup()">?</button>
+  <div id="popupHelpContent" style="display:none">
+    <h3>Barre d'outils</h3>
+    Pour masquer/afficher la barre d'outils, cliquer sur le bouton V<br>
+    <style>#help td{border:1px solid #808080;color:#ccc;background:transparent;text-align:left;}</style>
+    <table style="border-collapse: collapse;" id="help">
+      <tbody>
+        <tr><td>Bouton</td><td>Utilité</td>
+        </tr>
+        <tr><td>Ligne au dessus, Ligne en dessous, Supprimer ligne, Colonne à gauche, Colonne à droite, Supprimer colonne</td><td>Dimensions du tableau.</td>
+        </tr>
+        <tr><td>Fusionner</td><td>La sélection multiple doit être activée pour pouvoir fusionner des cellules.</td>
+        </tr>
+        <tr><td>Défusionner</td><td>Il n'est pas possible de défusionner plusieurs cellules non voisines en même temps.</td>
+        </tr>
+        <tr><td>Gauche, Centre, Droite</td><td>Changer l'alignement du texte, si aucune cellule n'est sélectionnée, le texte de toutes les cellules sera changé de façon globale.</td>
+        </tr>
+        <tr><td>Texte, Fond</td><td>Changer la couleur du texte et/ou du fond, si aucune cellule n'est sélectionnée, toutes les cellules seront affectées de façon globale.</td>
+        </tr>
+        <tr><td>Bordure</td><td>Changer la couleur de bordure du tableau.</td>
+        </tr>
+        <tr><td>Épaisseur</td><td>Changer l'épaisseur de bordure du tableau.</td>
+        </tr>
+        <tr><td>Effacer style</td><td>Effacer l'alignement et les couleurs, si aucune cellule n'est sélectionnée, le style de toutes les cellules seront effacées, sauf le style global.</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>Note : pour passer à la ligne sans créer de div, juste &lt;br&gt;, il faut faire Shift + Entrée.
+    <p><hr></p>
+    <h3>Code du tableau</h3>
+    • Le tableau peut être envoyé dans la zone du code en le faisant glisser ou en cliquant sur <b>Importer fichier...</b>.<br>
+    • Pour afficher le code du tableau, cliquer sur <b>Générer le code</b>.<br>
+    • Pour copier le code du tableau, cliquer sur <b>Copier le code</b>.<br>
+    • Pour éviter les conflits de styles globaux lors de l'utilisation de plusieurs tableaux dans une même page HTML, il faut définir un ID pour chaque tableau.<br>
+    • Pour afficher le tableau à partir du code, cliquer sur <b>Mettre à jour le tableau</b>.<br>
+    • Pour nettoyer (classes LibreOffice, balises et attributs inutiles, bordures inline, styles vides) un tableau HTML exporté par LibreOffice Calc, cliquer sur <b>Nettoyer LibreOffice</b>.
   </div>
 </div>
 <button id="toggleToolbarBtn">V</button>
@@ -151,6 +124,7 @@ td.selected {
 <input type="file" id="textareaFileoutput" style="display:none;">
 <script src="outils.js"></script>
 <script src="popup.js"></script>
+<script src="libs/jscolor.js"></script>
 <script>
 /* --- POLYFILLS --- */
 // matches()
@@ -222,17 +196,6 @@ table.addEventListener('click', function(e) {
   }
 });
 
-document.addEventListener('click', function(e) {
-  var t = e.target;
-  var isCell = t && t.nodeName === 'TD';
-  var isTable = closest(t, '#editorTable');
-  var isTools = closest(t, '.toolbar');
-
-  if (!isCell && !isTable && !isTools) {
-    clearSelection();
-  }
-});
-
 function selectCell(cell) {
   addClass(cell, "selected");
   selectedCells.push(cell);
@@ -248,6 +211,9 @@ function toggleSelect(cell) {
   }
 }
 
+document.getElementById('clearSelectionBtn').onclick = function(){
+    clearSelection();
+};
 function clearSelection() {
   for (var i = 0; i < selectedCells.length; i++) {
     removeClass(selectedCells[i], "selected");
@@ -752,7 +718,6 @@ forEachNode(alignButtons, function(btn) {
 });
 
 /* --- PALETTE + MODES --- */
-
 var modeButtons = document.querySelectorAll('#colorModes button');
 forEachNode(modeButtons, function(btn) {
   btn.onclick = function() {
@@ -763,14 +728,6 @@ forEachNode(modeButtons, function(btn) {
     });
 
     addClass(btn, "active");
-  };
-});
-
-var paletteColors = document.querySelectorAll('#colorPalette .color');
-forEachNode(paletteColors, function(el) {
-  el.onclick = function() {
-    var col = el.getAttribute('data-col');
-    applyColor(col);
   };
 });
 
@@ -1287,24 +1244,12 @@ function rebindTableEvents() {
   });
 }
 
+/* --- Toolbar ---*/
 var toolbar = document.getElementsByClassName('toolbar')[0];
 var toggleBtn = document.getElementById('toggleToolbarBtn');
-
 var toolbarVisible = true;
-
-toggleBtn.onmousedown = function(e) {
-  e = e || window.event;
-  e.cancelBubble = true;
-  if (e.stopPropagation) e.stopPropagation();
-};
-
 toggleBtn.onclick = function(e) {
-  e = e || window.event;
-  e.cancelBubble = true;
-  if (e.stopPropagation) e.stopPropagation();
-
   toolbarVisible = !toolbarVisible;
-
   if (toolbarVisible) {
     toolbar.className = 'toolbar';
   } else {

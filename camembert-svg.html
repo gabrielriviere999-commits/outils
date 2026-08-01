@@ -61,7 +61,7 @@ input[type=text], input[type=number] {
 <div class="scrollZone">
 <table id="tbl">
   <thead>
-    <tr><th style="width:100px">Libellé</th><th style="width:50px">Val %</th><th style="width:60px";>Couleur</th><th></th></tr>
+    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:85px";>Couleur</th><th></th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -88,6 +88,7 @@ input[type=text], input[type=number] {
 
 </div>
 <script src="outils.js"></script>
+<script src="libs/jscolor.js"></script>
 <script>
 /* --- Données --- */
 var slices = [
@@ -182,6 +183,7 @@ function rebuildTable() {
     var td3 = document.createElement("td");
     var inp3 = document.createElement("input");
     inp3.type = "text";
+    inp3.className = "jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}";
     inp3.value = s.color;
     inp3.maxLength = 20;
 
@@ -249,6 +251,9 @@ function rebuildTable() {
     tr.appendChild(td4);
 
     tblBody.appendChild(tr);
+  }
+  if (window.jscolor) {
+      jscolor.install();
   }
 }
 

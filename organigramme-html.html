@@ -27,6 +27,7 @@ body{margin-top:170px;}
   text-align:center;
 }
 .org-node.selected .org-label{border:5px solid #0078d7;}
+#colorInput{width:60px;}
 </style>
 </head>
 <body>
@@ -44,11 +45,14 @@ body{margin-top:170px;}
   <input type="file" style="width:115px;" onchange="loadNodeImage(this)">
   <button onclick="removeImageFromNode()" class="btn-color" style="background:#ff4444;">Supprimer image</button>
   |
-  <button onclick="changeGlobalTextColor()">Texte global</button>
-  <button onclick="changeSelectedTextColor()">Texte sélectionné</button>
-  |
-  <button onclick="changeGlobalColor()">Fond global</button>
-  <button onclick="changeSelectedBgColor()">Fond sélectionné</button>
+<button class="style-btn" onclick="changeGlobalTextColor(this)">Texte global</button>
+<button class="style-btn" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
+<button class="style-btn" onclick="changeGlobalColor(this)">Fond global</button>
+<button class="style-btn" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
+
+<input type="text" id="colorInput" class="jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" placeholder="#rrggbb">
+<button onclick="applyColor()">OK</button>
+
   |
   <button onclick="clearGlobalStyle()" class="btn-color" style="background:#ff4444;">Effacer style global</button>
   <button onclick="clearSelectedStyle()" class="btn-color" style="background:#ff4444;">Effacer style sélectionné</button>
@@ -69,6 +73,7 @@ body{margin-top:170px;}
 <input type="file" id="textareaFileoutput" style="display:none;">
 
 <script src="outils.js"></script>
+<script src="libs/jscolor.js"></script>
 <script>
 /* --- VARIABLES GLOBALES --- */
 var globalBoxBg = "transparent";
@@ -148,11 +153,6 @@ var toolbar = document.getElementsByClassName('toolbar')[0];
 var toggleBtn = document.getElementById('toggleToolbarBtn');
 var editMode = document.getElementById("editMode");
 var toolbarVisible = true;
-
-toolbar.onmousedown = function(e) {
-  clickOnToolbar = true;
-  e.stopPropagation();
-};
 
 toggleBtn.onmousedown = function(e) {
   clickOnToolbar = true;
@@ -520,45 +520,76 @@ function generateCode(text) {
 }
 
 /* --- Styles --- */
-function changeGlobalTextColor() {
-  var col = prompt("Couleur globale du texte :");
-  if (!col) return;
-  col = col.toLowerCase().replace(/^([0-9a-f]{6})$/, "#$1").replace(/^([0-9a-f]{3})$/, "#$1");
-  var root = document.querySelector(".org-root");
-  root.style.color = col;
-  renderOrgTree(orgRoot);
+function setActiveButton(btn) {
+  // Retirer .active de tous les boutons de style
+  var buttons = document.getElementsByClassName("style-btn");
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].className = buttons[i].className.replace(" active", "");
+  }
+
+  // Ajouter .active au bouton cliqué
+  btn.className += " active";
 }
 
-function changeSelectedTextColor() {
-  if (!selectedId) return;
-  var col = prompt("Couleur du texte :");
-  if (!col) return;
-  col = col.toLowerCase().replace(/^([0-9a-f]{6})$/, "#$1").replace(/^([0-9a-f]{3})$/, "#$1");
-  var node = findNodeById(orgRoot, selectedId);
-  node.textColor = col;
+var pendingColorAction = null;
+
+function applyColor() {
+  var col = document.getElementById("colorInput").value;
+  if (!col || !pendingColorAction) return;
+
+  col = col.toLowerCase()
+           .replace(/^([0-9a-f]{6})$/, "#$1")
+           .replace(/^([0-9a-f]{3})$/, "#$1");
+
+  if (pendingColorAction === "globalText") {
+    var root = document.querySelector(".org-root");
+    root.style.color = col;
+  }
+
+  if (pendingColorAction === "selectedText" && selectedId) {
+    var node = findNodeById(orgRoot, selectedId);
+    node.textColor = col;
+  }
+
+  if (pendingColorAction === "globalBg") {
+    globalBoxBg = col;
+  }
+
+  if (pendingColorAction === "selectedBg" && selectedId) {
+    var node = findNodeById(orgRoot, selectedId);
+    node.bg = col;
+  }
+
   renderOrgTree(orgRoot);
   updateSelectionHighlight();
+
+  pendingColorAction = null; // reset
 }
 
-function changeGlobalColor() {
-  var col = prompt("Couleur globale du fond des carrés :");
-  if (!col) return;
-  col = col.toLowerCase().replace(/^([0-9a-f]{6})$/, "#$1").replace(/^([0-9a-f]{3})$/, "#$1");
-  globalBoxBg = col;
-  renderOrgTree(orgRoot);
+/* --- Boutons de sélection d'action --- */
+function changeGlobalTextColor(btn) {
+  pendingColorAction = "globalText";
+  setActiveButton(btn);
 }
 
-function changeSelectedBgColor() {
+function changeSelectedTextColor(btn) {
   if (!selectedId) return;
-  var col = prompt("Couleur du fond du carré sélectionné :");
-  if (!col) return;
-  col = col.toLowerCase().replace(/^([0-9a-f]{6})$/, "#$1").replace(/^([0-9a-f]{3})$/, "#$1");
-  var node = findNodeById(orgRoot, selectedId);
-  node.bg = col;
-  renderOrgTree(orgRoot);
-  updateSelectionHighlight();
+  pendingColorAction = "selectedText";
+  setActiveButton(btn);
 }
 
+function changeGlobalColor(btn) {
+  pendingColorAction = "globalBg";
+  setActiveButton(btn);
+}
+
+function changeSelectedBgColor(btn) {
+  if (!selectedId) return;
+  pendingColorAction = "selectedBg";
+  setActiveButton(btn);
+}
+
+/* --- Reset --- */
 function clearGlobalStyle() {
   globalBoxBg = "transparent";
   var root = document.querySelector(".org-root");

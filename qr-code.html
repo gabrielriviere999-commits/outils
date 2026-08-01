@@ -13,7 +13,7 @@ textarea, input {
   margin:4px 0;
   box-sizing:border-box;
 }
-.hex-input{width:90px;}
+.hex-input{width:100px;}
 .color-picker{margin-bottom:10px;}
 .color-row {
   display:flex;
@@ -65,18 +65,7 @@ textarea, input {
     <label>Couleur du QR Code :</label>
     <div class="color-row">
       <div id="qrPreview" class="color-preview"></div>
-      <input id="qrHex" class="hex-input" value="#000000">
-    </div>
-
-    <div class="palette">
-      <div data-col="#000000" style="background:#000"></div>
-      <div data-col="#ffffff" style="background:#fff"></div>
-      <div data-col="#ff0000" style="background:#f00"></div>
-      <div data-col="#00ff00" style="background:#0f0"></div>
-      <div data-col="#0000ff" style="background:#00f"></div>
-      <div data-col="#ffff00" style="background:#ff0"></div>
-      <div data-col="#ff00ff" style="background:#f0f"></div>
-      <div data-col="#00ffff" style="background:#0ff"></div>
+      <input id="qrHex" class="hex-input jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" value="#000000">
     </div>
   </div>
 
@@ -85,18 +74,7 @@ textarea, input {
     <label>Couleur du fond :</label>
     <div class="color-row">
       <div id="bgPreview" class="color-preview"></div>
-      <input id="bgHex" class="hex-input" value="#ffffff">
-    </div>
-
-    <div class="palette">
-      <div data-col="#ffffff" style="background:#fff"></div>
-      <div data-col="#000000" style="background:#000"></div>
-      <div data-col="#cccccc" style="background:#ccc"></div>
-      <div data-col="#808080" style="background:#808080"></div>
-      <div data-col="#ffaaaa" style="background:#faa"></div>
-      <div data-col="#aaffaa" style="background:#afa"></div>
-      <div data-col="#aaaaff" style="background:#aaf"></div>
-      <div data-col="#ffffaa" style="background:#ffa"></div>
+      <input id="bgHex" class="hex-input jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" value="#ffffff">
     </div>
 
     <label>Opacité du fond :</label>
@@ -153,7 +131,7 @@ textarea, input {
 <script src="libs/qrcode.js"></script>
 <script src="libs/zxing-es5.min.js"></script>
 <script src="libs/zxing-browser.min.js"></script>
-
+<script src="libs/jscolor.js"></script>
 <script>
 /* --- RÉFÉRENCES DE BASE --- */
 var text = document.getElementById("text");
@@ -221,15 +199,6 @@ function initColorPicker(hexInputId, previewId, callback, skipInit) {
       applyColor(hex);
     }
   };
-
-  var palette = input.parentNode.parentNode.querySelector(".palette");
-  var items = palette.querySelectorAll("div");
-
-  for (var i = 0; i < items.length; i++) {
-    items[i].onclick = function () {
-      applyColor(this.dataset.col);
-    };
-  }
 
   // Ne déclenche pas au chargement
   applyColor(input.value, false);
