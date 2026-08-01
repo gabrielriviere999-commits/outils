@@ -101,21 +101,21 @@ function colorNameToHex(name) {
 }
 
 var quickColors = document.querySelectorAll(".qc");
-quickColors.forEach(function(div){
-    div.onclick = function(){
-        var hex = div.getAttribute("data-col");
+for (var i = 0; i < quickColors.length; i++) {
+    (function(div){
+        div.onclick = function(){
+            var hex = div.getAttribute("data-col");
 
-        // mettre à jour l’input actif
-        if (activeInput) {
-            activeInput.value = hex;
-            activepreviewColorPicker.style.background = hex;
-            activeInput.dispatchEvent(new Event("change"));
-        }
+            if (activeInput) {
+                activeInput.value = hex;
+                activepreviewColorPicker.style.background = hex;
+                activeInput.dispatchEvent(new Event("change"));
+            }
 
-        // mettre à jour le picker HSV
-        updatePickerFromInput({ value: hex }, { style:{ background: hex } });
-    };
-});
+            updatePickerFromInput({ value: hex }, { style:{ background: hex } });
+        };
+    })(quickColors[i]);
+}
 
 function updatePickerFromInput(input, previewColorPicker){
     var hex = input.value.trim();
