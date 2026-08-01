@@ -42,7 +42,6 @@ input[type=text], input[type=number] {
   margin-right:6px;
   border-radius:50%;
 }
-
 .container-camembert {
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
@@ -197,6 +196,7 @@ function rebuildTable() {
 
     var inp3 = document.createElement("input");
     inp3.type = "text";
+    inp3.className = "ColorPickerZindex";
     inp3.value = s.color;
     inp3.maxLength = 20;
 

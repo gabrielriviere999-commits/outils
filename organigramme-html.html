@@ -46,11 +46,11 @@ body{margin-top:170px;}
   <input type="file" style="width:115px;" onchange="loadNodeImage(this)">
   <button onclick="removeImageFromNode()" class="btn-color" style="background:#ff4444;">Supprimer image</button>
   |
-  <button class="style-btn" onclick="changeGlobalTextColor(this)">Texte global</button>
-  <button class="style-btn" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
-  <button class="style-btn" onclick="changeGlobalColor(this)">Fond global</button>
-  <button class="style-btn" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
-  <input type="text" id="colorInput" placeholder="#rrggbb"><div class="previewColorPicker"></div>
+  <button class="style-btn ColorPickerZindex" onclick="changeGlobalTextColor(this)">Texte global</button>
+  <button class="style-btn ColorPickerZindex" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
+  <button class="style-btn ColorPickerZindex" onclick="changeGlobalColor(this)">Fond global</button>
+  <button class="style-btn ColorPickerZindex" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
+  <input type="text" id="colorInput" class="ColorPickerZindex" placeholder="#rrggbb"><div class="previewColorPicker"></div>
   <div class="overlay">
     <div class="overlay-cell">
       <div class="mini-picker" id="miniPicker">

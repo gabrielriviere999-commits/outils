@@ -60,6 +60,7 @@
   border-radius:50%;
   box-shadow:0 0 3px #000;
   pointer-events:none;
+  z-index:9999;
 }
 /* Barre de teinte horizontale */
 .hue-slider {
@@ -83,6 +84,8 @@
 }
 /* previewColorPicker */
 #previewColorPicker,.previewColorPicker {
+  position:relative;
+  z-index:9999;
   width:20px;
   height:20px;
   border:1px solid #444;
@@ -90,3 +93,4 @@
   vertical-align:middle;
   margin-left:6px;
 }
+.ColorPickerZindex{position:relative;z-index:9999;}
