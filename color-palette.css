@@ -8,6 +8,7 @@
   background:rgba(0,0,0,0.4);
   display:none; /* ⭐ important */
   z-index:9998;
+  overflow:auto;
 }
 /* Conteneur centré */
 .overlayColorPicker-cell {
