@@ -5,7 +5,7 @@ var hueCursor = document.getElementById('hueCursor');
 var activeInput = null;
 var activepreviewColorPicker = null;
 
-var overlay = document.querySelector('.overlay');
+var overlay = document.querySelector('.overlayColorPicker');
 var picker = document.getElementById('miniPicker');
 
 var hue = 0;   // 0–360

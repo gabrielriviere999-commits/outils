@@ -1,5 +1,5 @@
 /* Overlay caché au chargement */
-.overlay {
+.overlayColorPicker {
   position:fixed;
   left:0;
   top:0;
@@ -10,7 +10,7 @@
   z-index:9998;
 }
 /* Conteneur centré */
-.overlay-cell {
+.overlayColorPicker-cell {
   position:absolute;
   top:20%;
   left:50%;
