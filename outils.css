@@ -140,6 +140,7 @@ select:hover{background:#404040;}
   overflow:hidden;
 }
 .toolbar button{margin-bottom:2px;}
+#toggleToolbarBtn{position:fixed;top:0;right:0;z-index:9998;opacity:0.8;}
 .toolbar-nfix {
   background:#202020;
   border:2px solid;
