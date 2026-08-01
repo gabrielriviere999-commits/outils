@@ -305,39 +305,81 @@ document.onkeyup = function(e){
     e = e || window.event;
     keys[e.keyCode] = false;
 };
+var hueHasFocus = false;
+hueSlider.onfocus = function(){
+    hueHasFocus = true;
+};
+hueSlider.onblur = function(){
+    hueHasFocus = false;
+};
 // boucle de mouvement
 setInterval(function(){
-    if (!svHasFocus) return; // ne bouger que si le carré a le focus
+
     var step = 0.1;
-    // gauche
-    if (keys[37]) {
-        sat -= step;
-        if (sat < 0) sat = 0;
+
+    /* --- Mouvement SV si le carré a le focus --- */
+    if (svHasFocus) {
+
+        // gauche
+        if (keys[37]) {
+            sat -= step;
+            if (sat < 0) sat = 0;
+        }
+
+        // droite
+        if (keys[39]) {
+            sat += step;
+            if (sat > 100) sat = 100;
+        }
+
+        // haut
+        if (keys[38]) {
+            val += step;
+            if (val > 100) val = 100;
+        }
+
+        // bas
+        if (keys[40]) {
+            val -= step;
+            if (val < 0) val = 0;
+        }
+
+        // mise à jour visuelle SV
+        updateSVBackground();
+        updateColor();
+
+        var svX = (sat / 100) * svBox.offsetWidth;
+        var svY = ((100 - val) / 100) * svBox.offsetHeight;
+
+        svCursor.style.left = (svX - 5) + "px";
+        svCursor.style.top  = (svY - 5) + "px";
     }
-    // droite
-    if (keys[39]) {
-        sat += step;
-        if (sat > 100) sat = 100;
+
+    /* --- Mouvement HUE si la barre a le focus --- */
+    if (hueHasFocus) {
+
+        var stepHue = 0.5;
+
+        // gauche → hue--
+        if (keys[37]) {
+            hue -= stepHue;
+            if (hue < 0) hue += 360;
+        }
+
+        // droite → hue++
+        if (keys[39]) {
+            hue += stepHue;
+            if (hue >= 360) hue -= 360;
+        }
+
+        // mise à jour visuelle hue
+        updateSVBackground();
+        updateColor();
+
+        var hueX = (hue / 360) * hueSlider.offsetWidth;
+        hueCursor.style.left = (hueX - 5) + "px";
     }
-    // haut
-    if (keys[38]) {
-        val += step;
-        if (val > 100) val = 100;
-    }
-    // bas
-    if (keys[40]) {
-        val -= step;
-        if (val < 0) val = 0;
-    }
-    // si aucune flèche → ne rien faire
-    if (!keys[37] && !keys[38] && !keys[39] && !keys[40]) return;
-    // mise à jour visuelle
-    updateSVBackground();
-    updateColor();
-    var svX = (sat / 100) * svBox.offsetWidth;
-    var svY = ((100 - val) / 100) * svBox.offsetHeight;
-    svCursor.style.left = (svX - 5) + "px";
-    svCursor.style.top  = (svY - 5) + "px";
+
 }, 20); // 50 FPS
 // empêcher le scroll quand on utilise les flèches dans le carré SV
 document.onkeydown = function(e){
@@ -348,13 +390,10 @@ document.onkeydown = function(e){
         return;
     }
     // empêcher le scroll si le carré a le focus
-    if (svHasFocus && (e.keyCode >= 37 && e.keyCode <= 40)) {
+    if ((svHasFocus || hueHasFocus) && (e.keyCode >= 37 && e.keyCode <= 40)) {
         e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
+
     keys[e.keyCode] = true;
-};
-document.onkeyup = function(e){
-    e = e || window.event;
-    keys[e.keyCode] = false;
 };
 

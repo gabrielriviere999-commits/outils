@@ -22,7 +22,7 @@
 .mini-picker {
   padding:8px;
   border:1px solid #808080;
-  box-shadow:0 0 6px #000;
+  background:#000;
   display:block; /* pas inline-block */
   text-align:left;
 }
