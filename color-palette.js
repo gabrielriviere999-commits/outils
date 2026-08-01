@@ -247,7 +247,7 @@ svBox.ontouchstart = function(e){
 
 document.ontouchmove = function(e){
   if (draggingHue || draggingSV) {
-    e.preventDefault();   // ⭐ bloque le scroll
+    e.preventDefault();   // bloque le scroll
   }
 
   if (draggingHue) moveHue(e.touches[0]);
@@ -347,7 +347,7 @@ document.onkeydown = function(e){
         overlay.style.display = "none";
         return;
     }
-    // ⭐ empêcher le scroll si le carré a le focus
+    // empêcher le scroll si le carré a le focus
     if (svHasFocus && (e.keyCode >= 37 && e.keyCode <= 40)) {
         e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
