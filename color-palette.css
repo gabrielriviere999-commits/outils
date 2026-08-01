@@ -20,9 +20,8 @@
 }
 /* Picker */
 .mini-picker {
-  background:#222;
   padding:8px;
-  border:1px solid #555;
+  border:1px solid #808080;
   box-shadow:0 0 6px #000;
   display:block; /* pas inline-block */
   text-align:left;
