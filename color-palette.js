@@ -271,9 +271,90 @@ overlay.onclick = function(e){
     }
 };
 
+/* --- Fermeture échap --- */
 document.onkeydown = function(e){
     e = e || window.event;
     if (e.keyCode == 27) {
         overlay.style.display = "none";
     }
 };
+
+/* --- Mouvement curseur flèches clavier --- */
+var keys = {};
+var svHasFocus = false;
+// donner le focus au carré SV
+svBox.setAttribute("tabindex", "0");
+svBox.onfocus = function(){
+    svHasFocus = true;
+};
+svBox.onblur = function(){
+    svHasFocus = false;
+};
+// touches pressées
+document.onkeydown = function(e){
+    e = e || window.event;
+    keys[e.keyCode] = true;
+
+    // Échap → fermer
+    if (e.keyCode == 27) {
+        overlay.style.display = "none";
+    }
+};
+// touches relâchées
+document.onkeyup = function(e){
+    e = e || window.event;
+    keys[e.keyCode] = false;
+};
+// boucle de mouvement
+setInterval(function(){
+    if (!svHasFocus) return; // ne bouger que si le carré a le focus
+    var step = 0.1;
+    // gauche
+    if (keys[37]) {
+        sat -= step;
+        if (sat < 0) sat = 0;
+    }
+    // droite
+    if (keys[39]) {
+        sat += step;
+        if (sat > 100) sat = 100;
+    }
+    // haut
+    if (keys[38]) {
+        val += step;
+        if (val > 100) val = 100;
+    }
+    // bas
+    if (keys[40]) {
+        val -= step;
+        if (val < 0) val = 0;
+    }
+    // si aucune flèche → ne rien faire
+    if (!keys[37] && !keys[38] && !keys[39] && !keys[40]) return;
+    // mise à jour visuelle
+    updateSVBackground();
+    updateColor();
+    var svX = (sat / 100) * svBox.offsetWidth;
+    var svY = ((100 - val) / 100) * svBox.offsetHeight;
+    svCursor.style.left = (svX - 5) + "px";
+    svCursor.style.top  = (svY - 5) + "px";
+}, 20); // 50 FPS
+// empêcher le scroll quand on utilise les flèches dans le carré SV
+document.onkeydown = function(e){
+    e = e || window.event;
+    // Échap → fermer
+    if (e.keyCode == 27) {
+        overlay.style.display = "none";
+        return;
+    }
+    // ⭐ empêcher le scroll si le carré a le focus
+    if (svHasFocus && (e.keyCode >= 37 && e.keyCode <= 40)) {
+        e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+    }
+    keys[e.keyCode] = true;
+};
+document.onkeyup = function(e){
+    e = e || window.event;
+    keys[e.keyCode] = false;
+};
+
