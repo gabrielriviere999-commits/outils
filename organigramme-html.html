@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Organigramme HTML</title>
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 body{margin-top:170px;}
 .org-scroll {
@@ -45,14 +46,24 @@ body{margin-top:170px;}
   <input type="file" style="width:115px;" onchange="loadNodeImage(this)">
   <button onclick="removeImageFromNode()" class="btn-color" style="background:#ff4444;">Supprimer image</button>
   |
-<button class="style-btn" onclick="changeGlobalTextColor(this)">Texte global</button>
-<button class="style-btn" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
-<button class="style-btn" onclick="changeGlobalColor(this)">Fond global</button>
-<button class="style-btn" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
-
-<input type="text" id="colorInput" class="jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" placeholder="#rrggbb">
-<button onclick="applyColor()">OK</button>
-
+  <button class="style-btn" onclick="changeGlobalTextColor(this)">Texte global</button>
+  <button class="style-btn" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
+  <button class="style-btn" onclick="changeGlobalColor(this)">Fond global</button>
+  <button class="style-btn" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
+  <input type="text" id="colorInput" placeholder="#rrggbb"><div class="previewColorPicker"></div>
+  <div class="overlay">
+    <div class="overlay-cell">
+      <div class="mini-picker" id="miniPicker">
+        <div class="sv-box" id="svBox">
+          <div class="sv-cursor" id="svCursor"></div>
+        </div>
+        <div class="hue-slider" id="hueSlider">
+          <div class="hue-cursor" id="hueCursor"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button onclick="applyColor()">OK</button>
   |
   <button onclick="clearGlobalStyle()" class="btn-color" style="background:#ff4444;">Effacer style global</button>
   <button onclick="clearSelectedStyle()" class="btn-color" style="background:#ff4444;">Effacer style sélectionné</button>
@@ -73,7 +84,7 @@ body{margin-top:170px;}
 <input type="file" id="textareaFileoutput" style="display:none;">
 
 <script src="outils.js"></script>
-<script src="libs/jscolor.js"></script>
+<script src="color-palette.js"></script>
 <script>
 /* --- VARIABLES GLOBALES --- */
 var globalBoxBg = "transparent";
@@ -562,9 +573,9 @@ function applyColor() {
 
   renderOrgTree(orgRoot);
   updateSelectionHighlight();
-
-  pendingColorAction = null; // reset
 }
+
+attachColorPickerTo(document.getElementById("colorInput"));
 
 /* --- Boutons de sélection d'action --- */
 function changeGlobalTextColor(btn) {

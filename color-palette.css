@@ -1,0 +1,92 @@
+/* Overlay caché au chargement */
+.overlay {
+  position:fixed;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.4);
+  display:none; /* ⭐ important */
+  z-index:9998;
+}
+/* Conteneur centré */
+.overlay-cell {
+  position:absolute;
+  top:20%;
+  left:50%;
+  margin-left:-85px; /* moitié de la largeur du picker */
+  width:168px; /* largeur fixe */
+}
+/* Picker */
+.mini-picker {
+  background:#222;
+  padding:8px;
+  border:1px solid #555;
+  box-shadow:0 0 6px #000;
+  display:block; /* pas inline-block */
+  text-align:left;
+}
+/* Carré SV */
+.sv-box {
+  position:relative;
+  width:150px;
+  height:150px;
+  background:red; /* mis à jour selon hue */
+  cursor:crosshair;
+  float:left;
+}
+/* Dégradé saturation (blanc → couleur) */
+.sv-box::before {
+  content:"";
+  position:absolute;
+  left:0; top:0;
+  width:100%; height:100%;
+  background:linear-gradient(to right, #fff, rgba(255,255,255,0));
+}
+/* Dégradé luminosité (transparent → noir) */
+.sv-box::after {
+  content:"";
+  position:absolute;
+  left:0; top:0;
+  width:100%; height:100%;
+  background:linear-gradient(to bottom, rgba(0,0,0,0), #000);
+}
+/* Curseur SV */
+.sv-cursor {
+  position:absolute;
+  width:10px;
+  height:10px;
+  border:2px solid #fff;
+  border-radius:50%;
+  box-shadow:0 0 3px #000;
+  pointer-events:none;
+}
+/* Barre de teinte horizontale */
+.hue-slider {
+  position:relative;
+  width:150px;
+  height:20px;
+  margin-top:10px;
+  background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  cursor:pointer;
+  clear:both;
+}
+/* Curseur hue */
+.hue-cursor {
+  position:absolute;
+  width:10px;
+  height:20px;
+  background:#fff;
+  border:2px solid #000;
+  box-shadow:0 0 3px #000;
+  pointer-events:none;
+}
+/* previewColorPicker */
+#previewColorPicker,.previewColorPicker {
+  width:20px;
+  height:20px;
+  border:1px solid #444;
+  display:inline-block;
+  vertical-align:middle;
+  margin-left:6px;
+}

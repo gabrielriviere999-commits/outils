@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Générateur & Lecteur de QR Code</title>
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 label{font-weight:bold;}
 textarea, input {
@@ -12,15 +13,6 @@ textarea, input {
   box-sizing:border-box;
 }
 .hex-input{width:100px;}
-.color-picker{margin-bottom:10px;}
-.color-preview {
-  width:24px;
-  height:24px;
-  border:2px inset #808080;
-  display:inline-block;
-}
-#qrPreview{background:black;}
-#bgPreview{background:white;}
 .palette{margin-top:6px;}
 .palette div {
   width:20px;
@@ -46,6 +38,18 @@ textarea, input {
 </head>
 <body>
 <h1>Générateur & Lecteur de QR Code</h1>
+<div class="overlay">
+  <div class="overlay-cell">
+    <div class="mini-picker" id="miniPicker">
+      <div class="sv-box" id="svBox">
+        <div class="sv-cursor" id="svCursor"></div>
+      </div>
+      <div class="hue-slider" id="hueSlider">
+        <div class="hue-cursor" id="hueCursor"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="section">
   <h2>Générer un QR Code</h2>
@@ -57,15 +61,13 @@ textarea, input {
   <!-- === COLOR PICKER QR === -->
   <div class="color-picker">
     <label>Couleur du QR Code :</label><br>
-    <div id="qrPreview" class="color-preview"></div>
-    <input id="qrHex" class="hex-input jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" value="#000000">
+    <input id="qrHex" class="hex-input" value="#000000"><div class="previewColorPicker"></div>
   </div>
 
   <!-- === COLOR PICKER BACKGROUND === -->
   <div class="color-picker">
     <label>Couleur du fond :</label><br>
-    <div id="bgPreview" class="color-preview"></div>
-    <input id="bgHex" class="hex-input jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" value="#ffffff"><br>
+    <input id="bgHex" class="hex-input" value="#ffffff"><div class="previewColorPicker"></div><br>
 
     <label>Opacité du fond :</label>
     <input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1">
@@ -121,7 +123,7 @@ textarea, input {
 <script src="libs/qrcode.js"></script>
 <script src="libs/zxing-es5.min.js"></script>
 <script src="libs/zxing-browser.min.js"></script>
-<script src="libs/jscolor.js"></script>
+<script src="color-palette.js"></script>
 <script>
 /* --- RÉFÉRENCES DE BASE --- */
 var text = document.getElementById("text");
@@ -130,12 +132,12 @@ var btnGen = document.getElementById("btn-generate");
 
 /* --- COLOR PICKERS INIT --- */
 btnGen.onclick = generateCode;
-initColorPicker("qrHex", "qrPreview", function(hex){
+initColorPicker("qrHex", function(hex){
   document.getElementById("qrColor").value = hex;
   generateCode();
 });
 
-initColorPicker("bgHex", "bgPreview", function(hex){
+initColorPicker("bgHex", function(hex){
   document.getElementById("bgColor").value = hex;
   generateCode();
 });
@@ -155,13 +157,13 @@ function cssNameToHex(name) {
   return computed; // retourne "#rrggbb"
 }
 
-function initColorPicker(hexInputId, previewId, callback, skipInit) {
+function initColorPicker(hexInputId, callback, skipInit) {
   var input = document.getElementById(hexInputId);
-  var preview = document.getElementById(previewId);
+  var previewColorPicker = input.nextElementSibling; // previewColorPicker associé
 
   function applyColor(hex, trigger) {
-    preview.style.background = hex;
     input.value = hex;
+    previewColorPicker.style.background = hex; // mise à jour du previewColorPicker
     if (trigger !== false) callback(hex);
   }
 
@@ -169,30 +171,48 @@ function initColorPicker(hexInputId, previewId, callback, skipInit) {
     this.value = this.value.toLowerCase();
     var v = input.value.trim();
 
-    // 0) Ajouter # si hex sans #
-    if (/^[0-9A-Fa-f]{6}$/.test(v)) {
-      v = "#" + v;
-    }
-    else if (/^[0-9A-Fa-f]{3}$/.test(v)) {
-      v = "#" + v;
-    }
+    if (/^[0-9A-Fa-f]{6}$/.test(v)) v = "#" + v;
+    else if (/^[0-9A-Fa-f]{3}$/.test(v)) v = "#" + v;
 
-    // 1) Si c'est un hex valide (#xxxxxx)
     if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
       applyColor(v);
       return;
     }
 
-    // 2) Sinon, essayer comme nom CSS
     var hex = cssNameToHex(v);
-    if (hex) {
-      applyColor(hex);
-    }
+    if (hex) applyColor(hex);
   };
 
-  // Ne déclenche pas au chargement
   applyColor(input.value, false);
 }
+
+document.getElementById("qrHex").onchange = function () {
+    document.getElementById("qrColor").value = this.value;
+    generateCode();
+};
+document.getElementById("bgHex").onchange = function () {
+    document.getElementById("bgColor").value = this.value;
+    generateCode();
+};
+document.onmouseup = function () {
+    draggingHue = false;
+    draggingSV  = false;
+
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
+document.ontouchend = function () {
+    draggingHue = false;
+    draggingSV  = false;
+
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
+
+attachColorPickerTo(document.getElementById("qrHex"));
+attachColorPickerTo(document.getElementById("bgHex"));
 
 /* --- SLIDER OPACITÉ FOND (QR) --- */
 var bgSlider = document.getElementById("bgOpacity");

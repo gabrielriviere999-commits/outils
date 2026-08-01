@@ -1,0 +1,260 @@
+var svBox = document.getElementById('svBox');
+var hueSlider = document.getElementById('hueSlider');
+var svCursor = document.getElementById('svCursor');
+var hueCursor = document.getElementById('hueCursor');
+var activeInput = null;
+var activepreviewColorPicker = null;
+
+var overlay = document.querySelector('.overlay');
+var picker = document.getElementById('miniPicker');
+
+var hue = 0;   // 0–360
+var sat = 100; // 0–100
+var val = 100; // 0–100
+
+function attachColorPickerTo(inputElement) {
+
+    inputElement.onfocus = function(){
+        activeInput = inputElement;
+        activepreviewColorPicker = inputElement.nextElementSibling;
+
+        overlay.style.display = "block";
+    };
+
+    inputElement.onblur = function(){
+        updatePickerFromInput(activeInput, activepreviewColorPicker);
+    };
+}
+
+function hsvToHex(h, s, v) {
+  s /= 100; v /= 100;
+  var c = v * s;
+  var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  var m = v - c;
+  var r=0,g=0,b=0;
+
+  if (h < 60) { r=c; g=x; }
+  else if (h < 120) { r=x; g=c; }
+  else if (h < 180) { g=c; b=x; }
+  else if (h < 240) { g=x; b=c; }
+  else if (h < 300) { r=x; b=c; }
+  else { r=c; b=x; }
+
+  r = Math.round((r+m)*255).toString(16);
+  g = Math.round((g+m)*255).toString(16);
+  b = Math.round((b+m)*255).toString(16);
+
+  if (r.length<2) r="0"+r;
+  if (g.length<2) g="0"+g;
+  if (b.length<2) b="0"+b;
+
+  return "#" + r + g + b;
+}
+
+function updateColor() {
+  var hex = hsvToHex(hue, sat, val);
+
+  if (activeInput) {
+    activeInput.value = hex;
+    activepreviewColorPicker.style.background = hex;
+  }
+}
+
+
+function updateSVBackground() {
+  svBox.style.background = hsvToHex(hue, 100, 100);
+}
+
+var draggingHue = false;
+var draggingSV  = false;
+
+
+function expandShortHex(hex) {
+    if (/^#?[0-9a-fA-F]{3}$/.test(hex)) {
+        if (hex.charAt(0) === "#") hex = hex.substring(1);
+        return "#" +
+            hex.charAt(0) + hex.charAt(0) +
+            hex.charAt(1) + hex.charAt(1) +
+            hex.charAt(2) + hex.charAt(2);
+    }
+    return hex;
+}
+
+function colorNameToHex(name) {
+    var tmp = document.createElement("div");
+    tmp.style.color = name;
+    document.body.appendChild(tmp);
+
+    var rgb = window.getComputedStyle(tmp).color;
+    document.body.removeChild(tmp);
+
+    var m = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!m) return null;
+
+    var r = parseInt(m[1]).toString(16);
+    var g = parseInt(m[2]).toString(16);
+    var b = parseInt(m[3]).toString(16);
+
+    if (r.length < 2) r = "0" + r;
+    if (g.length < 2) g = "0" + g;
+    if (b.length < 2) b = "0" + b;
+
+    return "#" + r + g + b;
+}
+
+function updatePickerFromInput(input, previewColorPicker){
+    var hex = input.value.trim();
+
+    // Nom de couleur ?
+    if (/^[a-zA-Z]+$/.test(hex)) {
+        var named = colorNameToHex(hex);
+        if (named) hex = named;
+        else return;
+    }
+
+    // Hex abrégé ?
+    hex = expandShortHex(hex);
+
+    // Hex normal ?
+    if (!/^#?[0-9a-fA-F]{6}$/.test(hex)) return;
+
+    // Enlever #
+    if (hex.charAt(0) === "#") hex = hex.substring(1);
+    input.value = "#" + hex;
+    previewColorPicker.style.background = "#" + hex;
+
+    var r = parseInt(hex.substring(0,2), 16) / 255;
+    var g = parseInt(hex.substring(2,4), 16) / 255;
+    var b = parseInt(hex.substring(4,6), 16) / 255;
+
+    var max = Math.max(r,g,b), min = Math.min(r,g,b);
+    var d = max - min;
+
+    // Hue
+    if (d === 0) hue = 0;
+    else if (max === r) hue = ((g - b) / d) * 60;
+    else if (max === g) hue = (2 + (b - r) / d) * 60;
+    else hue = (4 + (r - g) / d) * 60;
+
+    if (hue < 0) hue += 360;
+
+    // Saturation
+    sat = max === 0 ? 0 : (d / max) * 100;
+
+    // Value
+    val = max * 100;
+
+    // Mise à jour visuelle
+    updateSVBackground();
+    updateColor();
+
+    // Curseur Hue
+    var hueX = (hue / 360) * hueSlider.offsetWidth;
+    hueCursor.style.left = (hueX - 5) + "px";
+
+    // Curseur SV
+    var svX = (sat / 100) * svBox.offsetWidth;
+    var svY = ((100 - val) / 100) * svBox.offsetHeight;
+
+    svCursor.style.left = (svX - 5) + "px";
+    svCursor.style.top  = (svY - 5) + "px";
+}
+
+/* --- Hue slider --- */
+hueSlider.onmousedown = function(e){
+  draggingHue = true;
+  moveHue(e);
+};
+
+function moveHue(e){
+  var rect = hueSlider.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+
+  if (x < 0) x = 0;
+  if (x > rect.width) x = rect.width;
+
+  hue = (x / rect.width) * 360;
+  hueCursor.style.left = (x - 5) + "px";
+
+  updateSVBackground();
+  updateColor();
+}
+
+/* --- SV box --- */
+svBox.onmousedown = function(e){
+  draggingSV = true;
+  moveSV(e);
+};
+
+function moveSV(e){
+  var rect = svBox.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+
+  if (x < 0) x = 0;
+  if (x > rect.width) x = rect.width;
+
+  if (y < 0) y = 0;
+  if (y > rect.height) y = rect.height;
+
+  sat = (x / rect.width) * 100;
+  val = 100 - (y / rect.height) * 100;
+
+  svCursor.style.left = (x - 5) + "px";
+  svCursor.style.top  = (y - 5) + "px";
+
+  updateColor();
+}
+
+/* --- Drag global --- */
+document.onmousemove = function(e){
+  if (draggingHue) moveHue(e);
+  if (draggingSV)  moveSV(e);
+};
+
+document.onmouseup = function(){
+  draggingHue = false;
+  draggingSV  = false;
+};
+
+/* --- Touch support --- */
+hueSlider.ontouchstart = function(e){
+  draggingHue = true;
+  e.preventDefault();     // bloque le scroll dès le début
+  moveHue(e.touches[0]);
+};
+
+svBox.ontouchstart = function(e){
+  draggingSV = true;
+  e.preventDefault();     // bloque le scroll dès le début
+  moveSV(e.touches[0]);
+};
+
+document.ontouchmove = function(e){
+  if (draggingHue || draggingSV) {
+    e.preventDefault();   // ⭐ bloque le scroll
+  }
+
+  if (draggingHue) moveHue(e.touches[0]);
+  if (draggingSV)  moveSV(e.touches[0]);
+};
+
+document.ontouchend = function(){
+  draggingHue = false;
+  draggingSV  = false;
+};
+
+/* --- Ouverture du picker (overlay + popup centré) --- */
+
+
+/* --- Fermeture si clic en dehors du picker --- */
+var downOnOverlay = false;
+overlay.onmousedown = function(e){
+    downOnOverlay = (e.target === overlay);
+};
+overlay.onclick = function(e){
+    if (draggingHue || draggingSV) return; // empêche la fermeture après un drag
+    if (downOnOverlay && e.target === overlay) {
+        overlay.style.display = "none";
+    }
+};

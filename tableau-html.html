@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tableau HTML</title>
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 body{margin-top:170px;}
 td {
@@ -18,7 +19,7 @@ td.selected {
   outline:5px solid #0078d7;
   outline-offset:-2px;
 }
-#hexColorInput{width:60px;}
+#colorInput{width:60px;}
 #editorTable td {
   min-width:40px;
   height:25px;
@@ -68,7 +69,19 @@ td.selected {
     </select>
     </label>
   </div>
-  <input type="text" id="hexColorInput" class="jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}" placeholder="#rrggbb">
+  <input type="text" id="colorInput" placeholder="#rrggbb"><div class="previewColorPicker"></div>
+  <div class="overlay">
+    <div class="overlay-cell">
+      <div class="mini-picker" id="miniPicker">
+        <div class="sv-box" id="svBox">
+          <div class="sv-cursor" id="svCursor"></div>
+        </div>
+        <div class="hue-slider" id="hueSlider">
+          <div class="hue-cursor" id="hueCursor"></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <button id="applyHexColor">OK</button>
   <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
   <button onclick="openHelpPopup()">?</button>
@@ -124,7 +137,7 @@ td.selected {
 <input type="file" id="textareaFileoutput" style="display:none;">
 <script src="outils.js"></script>
 <script src="popup.js"></script>
-<script src="libs/jscolor.js"></script>
+<script src="color-palette.js"></script>
 <script>
 /* --- POLYFILLS --- */
 // matches()
@@ -766,7 +779,7 @@ else if (colorMode === "border") {
 }
 
 document.getElementById('applyHexColor').onclick = function () {
-  var col = document.getElementById('hexColorInput').value;
+  var col = document.getElementById('colorInput').value;
 
   // enlever espaces
   col = col.replace(/^\s+|\s+$/g, "");
@@ -778,7 +791,7 @@ document.getElementById('applyHexColor').onclick = function () {
   applyColor(col);
 };
 
-document.getElementById("hexColorInput").onchange = function () {
+document.getElementById("colorInput").onchange = function () {
     var v = this.value.toLowerCase().replace(/^\s+|\s+$/g, "");
     // hex 6 digits → ajouter #
     if (/^[0-9a-f]{6}$/.test(v)) {
@@ -813,6 +826,8 @@ document.getElementById('clearTdStyle').onclick = function () {
     }
   }
 };
+
+attachColorPickerTo(document.getElementById("colorInput"));
 
 /* --- EPAISSEUR --- */
 document.getElementById('borderWidth').onchange = function() {

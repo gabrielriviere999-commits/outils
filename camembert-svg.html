@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Camembert SVG</title>
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 /* Tableaux */
 table {
@@ -54,6 +55,18 @@ input[type=text], input[type=number] {
 </head>
 <body>
 <h2>Diagramme circulaire (camembert) SVG</h2>
+<div class="overlay">
+  <div class="overlay-cell">
+    <div class="mini-picker" id="miniPicker">
+      <div class="sv-box" id="svBox">
+        <div class="sv-cursor" id="svCursor"></div>
+      </div>
+      <div class="hue-slider" id="hueSlider">
+        <div class="hue-cursor" id="hueCursor"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="container-camembert">
 
 <div class="card-camembert border-externe">
@@ -61,7 +74,7 @@ input[type=text], input[type=number] {
 <div class="scrollZone">
 <table id="tbl">
   <thead>
-    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:85px";>Couleur</th><th></th></tr>
+    <tr><th style="width:100px">Libellé</th><th style="width:50px">Val %</th><th style="width:60px";>Couleur</th><th></th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -88,7 +101,7 @@ input[type=text], input[type=number] {
 
 </div>
 <script src="outils.js"></script>
-<script src="libs/jscolor.js"></script>
+<script src="color-palette.js"></script>
 <script>
 /* --- Données --- */
 var slices = [
@@ -181,11 +194,14 @@ function rebuildTable() {
 
     // COULEUR (HEX + noms CSS)
     var td3 = document.createElement("td");
+
     var inp3 = document.createElement("input");
     inp3.type = "text";
-    inp3.className = "jscolor {palette:'#000 #fff #f00 #0a0 #00f #0ff #f90 #ff0'}";
     inp3.value = s.color;
     inp3.maxLength = 20;
+
+    // Color picker HSV
+    attachColorPickerTo(inp3);
 
     inp3.onchange = function(index){ return function(){
       var v = this.value.trim();
@@ -197,6 +213,7 @@ function rebuildTable() {
       if (hex) {
         slices[index].color = hex;
         this.value = hex;
+        renderPie();
       }
     }}(i);
 
@@ -252,10 +269,25 @@ function rebuildTable() {
 
     tblBody.appendChild(tr);
   }
-  if (window.jscolor) {
-      jscolor.install();
-  }
 }
+
+document.onmouseup = function () {
+    draggingHue = false;
+    draggingSV  = false;
+
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
+
+document.ontouchend = function () {
+    draggingHue = false;
+    draggingSV  = false;
+
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
 
 document.getElementById("addBtn").onclick = function() {
   slices.push({
