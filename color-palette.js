@@ -60,14 +60,12 @@ function updateColor() {
   }
 }
 
-
 function updateSVBackground() {
   svBox.style.background = hsvToHex(hue, 100, 100);
 }
 
 var draggingHue = false;
 var draggingSV  = false;
-
 
 function expandShortHex(hex) {
     if (/^#?[0-9a-fA-F]{3}$/.test(hex)) {
@@ -101,6 +99,23 @@ function colorNameToHex(name) {
 
     return "#" + r + g + b;
 }
+
+var quickColors = document.querySelectorAll(".qc");
+quickColors.forEach(function(div){
+    div.onclick = function(){
+        var hex = div.getAttribute("data-col");
+
+        // mettre à jour l’input actif
+        if (activeInput) {
+            activeInput.value = hex;
+            activepreviewColorPicker.style.background = hex;
+            activeInput.dispatchEvent(new Event("change"));
+        }
+
+        // mettre à jour le picker HSV
+        updatePickerFromInput({ value: hex }, { style:{ background: hex } });
+    };
+});
 
 function updatePickerFromInput(input, previewColorPicker){
     var hex = input.value.trim();
@@ -243,9 +258,6 @@ document.ontouchend = function(){
   draggingHue = false;
   draggingSV  = false;
 };
-
-/* --- Ouverture du picker (overlay + popup centré) --- */
-
 
 /* --- Fermeture si clic en dehors du picker --- */
 var downOnOverlay = false;
