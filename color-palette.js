@@ -270,3 +270,10 @@ overlay.onclick = function(e){
         overlay.style.display = "none";
     }
 };
+
+document.onkeydown = function(e){
+    e = e || window.event;
+    if (e.keyCode == 27) {
+        overlay.style.display = "none";
+    }
+};
