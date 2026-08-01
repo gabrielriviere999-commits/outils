@@ -643,19 +643,11 @@ var jsc = {
 	appendDefaultCss : function (css) {
 		jsc.appendCss(
 			[
-				'.jscolor-wrap, .jscolor-wrap div, .jscolor-wrap canvas { ' +
-				'position:static; display:block; visibility:visible; overflow:visible; margin:0; padding:0; ' +
-				'border:none; border-radius:0; outline:none; z-index:auto; float:none; ' +
-				'width:auto; height:auto; left:auto; right:auto; top:auto; bottom:auto; min-width:0; min-height:0; max-width:none; max-height:none; ' +
-				'background:none; clip:auto; opacity:1; transform:none; box-shadow:none; box-sizing:content-box; ' +
-				'}',
-				'.jscolor-wrap { position:fixed!important; top:50%!important; left:50%!important; margin-left:-120px!important; margin-top:-110px!important; }',
-				'.jscolor-wrap .jscolor-picker { position:relative; }',
-				'.jscolor-wrap .jscolor-shadow { position:absolute; left:0; top:0; width:100%; height:100%; }',
-				'.jscolor-wrap .jscolor-border { position:relative; }',
-				'.jscolor-wrap .jscolor-palette { position:absolute; }',
-				'.jscolor-wrap .jscolor-palette-sw { position:absolute; display:block; cursor:pointer; }',
-				'.jscolor-wrap .jscolor-btn { position:absolute; overflow:hidden; white-space:nowrap; font:13px sans-serif; text-align:center; cursor:pointer; }',
+				'.jscolor-wrap{position:fixed!important;top:50%!important;left:50%!important;margin-left:-120px!important;margin-top:-110px!important;}',
+				'.jscolor-wrap .jscolor-picker{position:relative;}',
+				'.jscolor-wrap .jscolor-border{position:relative;}',
+				'.jscolor-wrap .jscolor-palette{position:absolute;}',
+				'.jscolor-wrap .jscolor-palette-sw{position:absolute;display:block;cursor:pointer;}',
 			].join('\n')
 		);
 	},
