@@ -96,13 +96,14 @@
 .ColorPickerZindex{position:relative;z-index:9999;}
 .quick-colors {
   margin-top:10px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
+  overflow:hidden;
 }
 .qc {
+  float:left;
   width:20px;
   height:20px;
   border:1px solid #444;
+  margin-right:6px;
+  margin-bottom:6px;
   cursor:pointer;
 }
