@@ -360,18 +360,18 @@ setInterval(function(){
     /* --- Mouvement HUE si la barre a le focus --- */
     if (hueHasFocus) {
 
-        var stepHue = 0.5;
+        var stepHue = 0.3;
 
         // gauche → hue--
         if (keys[37]) {
             hue -= stepHue;
-            if (hue < 0) hue += 360;
+            if (hue < 0) hue = 0; // += 360 boucle
         }
 
         // droite → hue++
         if (keys[39]) {
             hue += stepHue;
-            if (hue >= 360) hue -= 360;
+            if (hue >= 360) hue = 360; //-= 360 boucle
         }
 
         // mise à jour visuelle hue
