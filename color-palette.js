@@ -167,13 +167,13 @@ function updatePickerFromInput(input, previewColorPicker){
 
     // Curseur Hue
     var hueX = (hue / 360) * hueSlider.offsetWidth;
-    hueCursor.style.left = (hueX - 5) + "px";
+    hueCursor.style.left = (hueX - 1) + "px";
 
     // Curseur SV
     var svX = (sat / 100) * svBox.offsetWidth;
     var svY = ((100 - val) / 100) * svBox.offsetHeight;
 
-    svCursor.style.left = (svX - 5) + "px";
+    svCursor.style.left = (svX - 1) + "px";
     svCursor.style.top  = (svY - 5) + "px";
 }
 
@@ -191,7 +191,7 @@ function moveHue(e){
   if (x > rect.width) x = rect.width;
 
   hue = (x / rect.width) * 360;
-  hueCursor.style.left = (x - 5) + "px";
+  hueCursor.style.left = (X - 1) + "px";
 
   updateSVBackground();
   updateColor();
@@ -217,7 +217,7 @@ function moveSV(e){
   sat = (x / rect.width) * 100;
   val = 100 - (y / rect.height) * 100;
 
-  svCursor.style.left = (x - 5) + "px";
+  svCursor.style.left = (X - 1) + "px";
   svCursor.style.top  = (y - 5) + "px";
 
   updateColor();
@@ -353,7 +353,7 @@ setInterval(function(){
         var svX = (sat / 100) * svBox.offsetWidth;
         var svY = ((100 - val) / 100) * svBox.offsetHeight;
 
-        svCursor.style.left = (svX - 5) + "px";
+        svCursor.style.left = (svX - 1) + "px";
         svCursor.style.top  = (svY - 5) + "px";
     }
 
@@ -379,7 +379,7 @@ setInterval(function(){
         updateColor();
 
         var hueX = (hue / 360) * hueSlider.offsetWidth;
-        hueCursor.style.left = (hueX - 5) + "px";
+        hueCursor.style.left = (hueX - 1) + "px";
     }
 
 }, 20); // 50 FPS
