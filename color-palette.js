@@ -371,7 +371,7 @@ setInterval(function(){
         // droite → hue++
         if (keys[39]) {
             hue += stepHue;
-            if (hue >= 360) hue = 360; //-= 360 boucle
+            if (hue >= 360) hue = 360; // -= 360 boucle
         }
 
         // mise à jour visuelle hue
