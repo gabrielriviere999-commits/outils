@@ -384,18 +384,17 @@ setInterval(function(){
 
 }, 20); // 50 FPS
 // empêcher le scroll quand on utilise les flèches dans le carré SV
-document.onkeydown = function(e){
+document.addEventListener("keydown", function(e){
     e = e || window.event;
-    // Échap → fermer
+    // Échap → fermer le color picker
     if (e.keyCode == 27) {
         overlay.style.display = "none";
         return;
     }
-    // empêcher le scroll si le carré a le focus
+    // empêcher le scroll si SV ou HUE ont le focus
     if ((svHasFocus || hueHasFocus) && (e.keyCode >= 37 && e.keyCode <= 40)) {
         e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
-
     keys[e.keyCode] = true;
-};
+});
 
