@@ -191,7 +191,7 @@ function moveHue(e){
   if (x > rect.width) x = rect.width;
 
   hue = (x / rect.width) * 360;
-  hueCursor.style.left = (X - 1) + "px";
+  hueCursor.style.left = (x - 1) + "px";
 
   updateSVBackground();
   updateColor();
@@ -217,7 +217,7 @@ function moveSV(e){
   sat = (x / rect.width) * 100;
   val = 100 - (y / rect.height) * 100;
 
-  svCursor.style.left = (X - 1) + "px";
+  svCursor.style.left = (x - 1) + "px";
   svCursor.style.top  = (y - 5) + "px";
 
   updateColor();
