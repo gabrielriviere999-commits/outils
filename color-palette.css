@@ -31,14 +31,15 @@
   position:relative;
   width:150px;
   height:150px;
+  margin-bottom:10px;
   background:red; /* mis à jour selon hue */
   cursor:crosshair;
   float:left;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
 }
 /* Dégradé saturation (blanc → couleur) */
 .sv-box::before {
@@ -72,7 +73,6 @@
   position:relative;
   width:150px;
   height:20px;
-  margin-top:10px;
   background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
   cursor:pointer;
   clear:both;
