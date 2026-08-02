@@ -47,23 +47,6 @@ td.selected {
   <button data-align="center">Centre</button>
   <button data-align="right">Droite</button>
   |
-  <div id="colorModes">
-    <button data-mode="text">Texte</button>
-    <button data-mode="bg">Fond</button>
-    <button data-mode="border">Bordure</button>
-    <label>Épaisseur :
-    <select id="borderWidth">
-      <option value="1px" selected>1</option>
-      <option value="2px">2</option>
-      <option value="3px">3</option>
-      <option value="4px">4</option>
-      <option value="5px">5</option>
-      <option value="6px">6</option>
-      <option value="8px">8</option>
-      <option value="10px">10</option>
-    </select>
-    </label>
-  </div>
   <input type="text" id="colorInput" class="ColorPickerZindex" placeholder="#rrggbb"><div class="previewColorPicker"></div>
   <div class="overlayColorPicker">
     <div class="overlayColorPicker-cell">
@@ -89,7 +72,25 @@ td.selected {
     </div>
   </div>
   <button id="applyHexColor" class="ColorPickerZindex">OK</button>
+  <div id="colorModes">
+    <button data-mode="text">Texte</button>
+    <button data-mode="bg">Fond</button>
+    <button data-mode="border">Bordure</button>
+  </div>
   <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
+  |
+  <label>Épaisseur :
+  <select id="borderWidth">
+    <option value="1px" selected>1</option>
+    <option value="2px">2</option>
+    <option value="3px">3</option>
+    <option value="4px">4</option>
+    <option value="5px">5</option>
+    <option value="6px">6</option>
+    <option value="8px">8</option>
+    <option value="10px">10</option>
+  </select>
+  </label>
   <button onclick="openHelpPopup()">?</button>
   <div id="popupHelpContent" style="display:none">
     <h3>Barre d'outils</h3>
