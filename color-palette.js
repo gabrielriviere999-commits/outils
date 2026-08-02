@@ -255,6 +255,7 @@ hueSlider.onblur = function(){
 // boucle de mouvement
 setInterval(function(){
     var step = 0.1;
+    if (keys[17]) step = 0.5;
     /* --- Mouvement SV si le carré a le focus --- */
     if (svHasFocus) {
         // gauche
@@ -288,6 +289,7 @@ setInterval(function(){
     /* --- Mouvement HUE si la barre a le focus --- */
     if (hueHasFocus) {
         var stepHue = 0.3;
+        if (keys[17]) stepHue = 1.5;
         // gauche → hue--
         if (keys[37]) {
             hue -= stepHue;
