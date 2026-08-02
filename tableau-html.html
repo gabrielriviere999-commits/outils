@@ -29,30 +29,24 @@ td.selected {
 <body>
 <h2>Tableau HTML</h2>
 <div class="toolbar">
-  <!-- Lignes -->
   <button id="addRowAbove">↑ Ligne au dessus</button>
   <button id="addRowBelow">↓ Ligne en dessous</button>
   <button id="delRow" class="btn-color" style="background:#ff4444;">X Supprimer ligne</button>
   |
-  <!-- Colonnes -->
   <button id="addColLeft">← Colonne à gauche</button>
   <button id="addColRight">→ Colonne à droite</button>
   <button id="delCol" class="btn-color" style="background:#ff4444;">X Supprimer colonne</button>
   |
-  <!-- Fusionner/défusionner -->
+  <label><input type="checkbox" id="multiSelectMode">Sélection multiple</label>
+  <button id="clearSelectionBtn">Eff sél</button>
+  |
   <button id="mergeCellsBtn">□ Fusionner</button>
   <button id="unmergeCellsBtn">⊞ Défusionner</button>
   |
-  <!-- Alignement -->
   <button data-align="left">Gauche</button>
   <button data-align="center">Centre</button>
   <button data-align="right">Droite</button>
   |
-  <!-- Sélection multiple -->
-  <label><input type="checkbox" id="multiSelectMode">Sélection multiple</label>
-  <button id="clearSelectionBtn">Eff sél</button>
-  |
-  <!-- Modes d'application -->
   <div id="colorModes">
     <button data-mode="text">Texte</button>
     <button data-mode="bg">Fond</button>
