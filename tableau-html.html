@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-body{margin-top:170px;}
 td {
   border:var(--cell-border-width, 1px) solid var(--cell-border-color, #808080);
   padding:6px;
@@ -28,6 +27,7 @@ td.selected {
 </style>
 </head>
 <body>
+<h2>Tableau HTML</h2>
 <div class="toolbar">
   <!-- Lignes -->
   <button id="addRowAbove">↑ Ligne au dessus</button>
@@ -92,13 +92,11 @@ td.selected {
       </div>
     </div>
   </div>
-
   <button id="applyHexColor" class="ColorPickerZindex">OK</button>
   <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
   <button onclick="openHelpPopup()">?</button>
   <div id="popupHelpContent" style="display:none">
     <h3>Barre d'outils</h3>
-    Pour masquer/afficher la barre d'outils, cliquer sur le bouton V<br>
     <style>#help td{border:1px solid #808080;color:#ccc;background:transparent;text-align:left;}</style>
     <table style="border-collapse: collapse;" id="help">
       <tbody>
@@ -132,10 +130,10 @@ td.selected {
     • Pour afficher le tableau à partir du code, cliquer sur <b>Mettre à jour le tableau</b>.<br>
     • Pour nettoyer (classes LibreOffice, balises et attributs inutiles, bordures inline, styles vides) un tableau HTML exporté par LibreOffice Calc, cliquer sur <b>Nettoyer LibreOffice</b>.
   </div>
+</div><br>
+<div class="scrollZone">
+  <table id="editorTable" style="border-collapse:collapse;"><tbody><tr><td contenteditable="true">Cellule 1,1</td><td contenteditable="true">Cellule 1,2</td><td contenteditable="true">Cellule 1,3</td></tr><tr><td contenteditable="true">Cellule 2,1</td><td contenteditable="true">Cellule 2,2</td><td contenteditable="true">Cellule 2,3</td></tr><tr><td contenteditable="true">Cellule 3,1</td><td contenteditable="true">Cellule 3,2</td><td contenteditable="true">Cellule 3,3</td></tr></tbody></table>
 </div>
-<button id="toggleToolbarBtn">V</button>
-<h2>Tableau HTML</h2>
-<table id="editorTable" style="border-collapse:collapse;"><tbody><tr><td contenteditable="true">Cellule 1,1</td><td contenteditable="true">Cellule 1,2</td><td contenteditable="true">Cellule 1,3</td></tr><tr><td contenteditable="true">Cellule 2,1</td><td contenteditable="true">Cellule 2,2</td><td contenteditable="true">Cellule 2,3</td></tr><tr><td contenteditable="true">Cellule 3,1</td><td contenteditable="true">Cellule 3,2</td><td contenteditable="true">Cellule 3,3</td></tr></tbody></table>
 <!-- CODE HTML -->
 <br><h3>Code du tableau</h3>
 <button id="generateCode" class="btn-color" style="background:#ff8800;">Générer le code</button>
@@ -1269,19 +1267,6 @@ function rebindTableEvents() {
     }
   });
 }
-
-/* --- Toolbar ---*/
-var toolbar = document.getElementsByClassName('toolbar')[0];
-var toggleBtn = document.getElementById('toggleToolbarBtn');
-var toolbarVisible = true;
-toggleBtn.onclick = function(e) {
-  toolbarVisible = !toolbarVisible;
-  if (toolbarVisible) {
-    toolbar.className = 'toolbar';
-  } else {
-    toolbar.className = 'toolbar hidden';
-  }
-};
 
 /* --- Popup ---*/
 function openHelpPopup() {

@@ -16,10 +16,6 @@ select{width:55px;}
   padding:0;
   margin:0;
 }
-.toolbar-nfix,button {
-  position:relative;
-  z-index:999;
-}
 </style>
 </head>
 <body>
@@ -65,7 +61,7 @@ select{width:55px;}
     • Boutons multitouch : Options, ?, Ligne, Flèche, Rectangle, Sélecteur de modèle rectangle, Ellipse, Déplacer, Dupliquer, Copier.
   </div>
 <div id="shapeInfo" style="display:inline-block;"></div>
-<div class="toolbar-nfix">
+<div class="toolbar">
   <button id="btnFree" onclick="setTool('free')">Tracer</button>
   <input type="text" id="freeChar" value="#" maxlength="1">
   |

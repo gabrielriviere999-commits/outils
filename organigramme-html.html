@@ -7,10 +7,11 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-body{margin-top:170px;}
 .org-scroll {
   white-space:nowrap;
-  overflow-x:auto;
+  overflow:auto;
+  max-height:500px;
+  max-height:70vh;
 }
 .org-root{display:inline-block;}
 .org-node {
@@ -78,8 +79,6 @@ body{margin-top:170px;}
   <button onclick="clearGlobalStyle()" class="btn-color" style="background:#ff4444;">Effacer style global</button>
   <button onclick="clearSelectedStyle()" class="btn-color" style="background:#ff4444;">Effacer style sélectionné</button>
 </div>
-<button id="toggleToolbarBtn">V</button>
-
 <div class="org-scroll">
   <div id="org-container">
       <div class="org-root"></div>
@@ -168,24 +167,6 @@ function renderOrgTree(root) {
 
   container.innerHTML = html;
 }
-
-/* --- TOOLBAR --- */
-var toolbar = document.getElementsByClassName('toolbar')[0];
-var toggleBtn = document.getElementById('toggleToolbarBtn');
-var editMode = document.getElementById("editMode");
-var toolbarVisible = true;
-
-toggleBtn.onmousedown = function(e) {
-  clickOnToolbar = true;
-  e.stopPropagation();
-};
-
-toggleBtn.onclick = function(e) {
-  clickOnToolbar = true;
-  e.stopPropagation();
-  toolbarVisible = !toolbarVisible;
-  toolbar.className = toolbarVisible ? 'toolbar' : 'toolbar hidden';
-};
 
 /* --- SÉLECTION / ÉDITION --- */
 document.addEventListener('click', function(e) {
