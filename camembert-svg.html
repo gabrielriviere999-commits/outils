@@ -17,9 +17,7 @@ td, th {
   padding:4px;
   font-size:13px;
 }
-input[type=text], input[type=number] {
-  width:100%;
-}
+input[type=text],input[type=number]{width:100%;}
 #preview svg {
   max-width:100%;
   height:auto;
@@ -83,7 +81,7 @@ input[type=text], input[type=number] {
 <div class="scrollZone">
 <table id="tbl">
   <thead>
-    <tr><th style="width:100px">Libellé</th><th style="width:50px">Val %</th><th style="width:60px";>Couleur</th><th></th></tr>
+    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:97px";>Couleur</th><th></th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -207,8 +205,19 @@ function rebuildTable() {
     var inp3 = document.createElement("input");
     inp3.type = "text";
     inp3.className = "ColorPickerZindex";
+    inp3.style.width = "60px";
     inp3.value = s.color;
     inp3.maxLength = 20;
+
+    var preview = document.createElement("div");
+    preview.className = "previewColorPicker";
+    preview.style.background = s.color;
+    preview.style.width = "20px";
+    preview.style.height = "20px";
+    preview.style.verticalAlign = "middle";
+    preview.style.marginLeft = "4px";
+    td3.appendChild(inp3);
+    td3.appendChild(preview);
 
     // Color picker HSV
     attachColorPickerTo(inp3);
@@ -227,7 +236,6 @@ function rebuildTable() {
       }
     }}(i);
 
-    td3.appendChild(inp3);
     tr.appendChild(td3);
 
     // BOUTONS ↑ ↓ x
