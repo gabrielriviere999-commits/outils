@@ -6,7 +6,7 @@
   width:100%;
   height:100%;
   background:rgba(0,0,0,0.4);
-  display:none; /* ⭐ important */
+  display:none;
   z-index:9998;
   overflow:auto;
 }
@@ -23,7 +23,7 @@
   padding:8px;
   border:1px solid #808080;
   background:#000;
-  display:block; /* pas inline-block */
+  display:block;
   text-align:left;
 }
 /* Carré SV */
