@@ -252,13 +252,6 @@ overlay.onclick = function(e){
         overlay.style.display = "none";
     }
 };
-/* --- Fermeture échap --- */
-document.onkeydown = function(e){
-    e = e || window.event;
-    if (e.keyCode == 27) {
-        overlay.style.display = "none";
-    }
-};
 /* --- Mouvement curseur flèches clavier --- */
 var keys = {};
 var svHasFocus = false;
@@ -269,15 +262,6 @@ svBox.onfocus = function(){
 };
 svBox.onblur = function(){
     svHasFocus = false;
-};
-// touches pressées
-document.onkeydown = function(e){
-    e = e || window.event;
-    keys[e.keyCode] = true;
-    // Échap → fermer
-    if (e.keyCode == 27) {
-        overlay.style.display = "none";
-    }
 };
 // touches relâchées
 document.onkeyup = function(e){
