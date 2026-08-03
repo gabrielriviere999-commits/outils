@@ -25,9 +25,29 @@ function addMultiTouch(selector){
                     return;
                 }
 
-                // Cas spécial : input → focus manuel + action
+                // Cas spécial : input
                 if(tag === "input"){
-                    this.focus(); // ouvre le clavier et place le curseur
+                    var type = (this.type || "").toLowerCase();
+                    // Checkbox
+                    if(type === "checkbox"){
+                        this.checked = !this.checked;
+                        this.dispatchEvent(new Event("change", {bubbles:true}));
+                        if(this._action){
+                            this._action();
+                        }
+                        return;
+                    }
+                    // Radio
+                    if(type === "radio"){
+                        this.checked = true;
+                        this.dispatchEvent(new Event("change", {bubbles:true}));
+                        if(this._action){
+                            this._action();
+                        }
+                        return;
+                    }
+                    // Autres input (text, number, etc.)
+                    this.focus();
                     if(this._action){
                         this._action();
                     }
@@ -43,16 +63,16 @@ function addMultiTouch(selector){
 
         el.onclick = function(e){
             if(this._touchTriggered){
-
-                // Cas spécial : input → NE PAS bloquer le click natif
                 if(this.tagName.toLowerCase() === "input"){
-                    return; // laisser le focus/clavier
+                    var type = (this.type || "").toLowerCase();
+                    // Laisser le clic natif seulement pour les champs éditables
+                    if(type !== "checkbox" && type !== "radio"){
+                        return;
+                    }
                 }
-
-                // tactile → ignorer le click natif pour les boutons
+                // tactile → ignorer le click natif
                 return false;
             }
-
             // souris → comportement normal
             if(this._action){
                 this._action();
