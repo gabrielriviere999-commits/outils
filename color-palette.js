@@ -320,6 +320,7 @@ setInterval(function(){
         // mise à jour visuelle SV
         updateSVBackground();
         updateColor();
+        if (activeInput) activeInput.dispatchEvent(new Event("change"));
         var svX = (sat / 100) * svBox.offsetWidth;
         var svY = ((100 - val) / 100) * svBox.offsetHeight;
         svCursor.style.left = (svX - 5) + "px";
@@ -342,6 +343,7 @@ setInterval(function(){
         // mise à jour visuelle hue
         updateSVBackground();
         updateColor();
+        if (activeInput) activeInput.dispatchEvent(new Event("change"));
         var hueX = (hue / 360) * hueSlider.offsetWidth;
         hueCursor.style.left = (hueX - 1) + "px";
     }
