@@ -167,13 +167,13 @@ function updatePickerFromInput(input, previewColorPicker){
     if (hex.length === 6) {
         alpha255 = 255;
     }
-    // 4. Mettre à jour le curseur alpha
+    // 3. Mettre à jour le curseur alpha
     var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
     alphaCursor.style.left = (alphaX - 1) + "px";
-    // 5. Mise à jour input + preview
+    // 4. Mise à jour input + preview
     input.value = "#" + hex;
     previewColorPicker.style.background = "#" + hex;
-    // 6. Conversion RGB → HSV
+    // 5. Conversion RGB → HSV
     var r = parseInt(hex.substring(0,2), 16) / 255;
     var g = parseInt(hex.substring(2,4), 16) / 255;
     var b = parseInt(hex.substring(4,6), 16) / 255;
@@ -188,7 +188,7 @@ function updatePickerFromInput(input, previewColorPicker){
     val = max * 100;
     updateSVBackground();
     updateColor();
-    // 7. Mise à jour curseurs Hue + SV
+    // 6. Mise à jour curseurs Hue + SV
     hueCursor.style.left = ((hue / 360) * hueSlider.offsetWidth - 1) + "px";
     var svX = (sat / 100) * svBox.offsetWidth;
     var svY = ((100 - val) / 100) * svBox.offsetHeight;
