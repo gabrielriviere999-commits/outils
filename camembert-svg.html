@@ -125,33 +125,38 @@ var pieSize = 200;
 
 /* --- Construction du tableau --- */
 function normalizeColor(col) {
-  // élément temporaire
   var tmp = document.createElement("div");
   tmp.style.color = col;
-
-  // si le navigateur ne comprend pas → ignore
   if (!tmp.style.color) return null;
-
-  // obtenir la couleur calculée (souvent en rgb())
   document.body.appendChild(tmp);
-  var rgb = window.getComputedStyle ?
-            window.getComputedStyle(tmp).color :
-            tmp.currentStyle.color;
+  var rgba = window.getComputedStyle ?
+             window.getComputedStyle(tmp).color :
+             tmp.currentStyle.color;
   document.body.removeChild(tmp);
-
-  // convertir rgb(...) → #rrggbb
-  var m = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-  if (!m) return null;
-
-  var r = parseInt(m[1], 10).toString(16);
-  var g = parseInt(m[2], 10).toString(16);
-  var b = parseInt(m[3], 10).toString(16);
-
-  if (r.length < 2) r = "0" + r;
-  if (g.length < 2) g = "0" + g;
-  if (b.length < 2) b = "0" + b;
-
-  return "#" + r + g + b;
+  // rgb(r,g,b)
+  var m = rgba.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+  // rgba(r,g,b,a)
+  var ma = rgba.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)$/);
+  var r, g, b, a = 255;
+  if (m) {
+    r = parseInt(m[1],10);
+    g = parseInt(m[2],10);
+    b = parseInt(m[3],10);
+  }
+  else if (ma) {
+    r = parseInt(ma[1],10);
+    g = parseInt(ma[2],10);
+    b = parseInt(ma[3],10);
+    a = Math.round(parseFloat(ma[4]) * 255);
+  }
+  else {
+    return null;
+  }
+  function hex(v){
+    var h = v.toString(16);
+    return h.length < 2 ? "0"+h : h;
+  }
+  return "#" + hex(r) + hex(g) + hex(b) + (a < 255 ? hex(a) : "");
 }
 
 function rebuildTable() {
