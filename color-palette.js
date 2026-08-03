@@ -83,16 +83,26 @@ function colorNameToHex(name) {
 var quickColors = document.querySelectorAll(".qc");
 for (var i = 0; i < quickColors.length; i++) {
     (function(div){
+        // clic souris
         div.onclick = function(){
             var hex = div.getAttribute("data-col");
-            if (activeInput) {
-                activeInput.value = hex;
-                activepreviewColorPicker.style.background = hex;
-                activeInput.dispatchEvent(new Event("change"));
-            }
-            updatePickerFromInput({ value: hex }, { style:{ background: hex } });
+            applyQuickColor(hex);
         };
+        // tactile multitouch
+        div.addEventListener("touchstart", function(e){
+            var hex = div.getAttribute("data-col");
+            applyQuickColor(hex);
+            e.preventDefault(); // évite le scroll et les clics fantômes
+        });
     })(quickColors[i]);
+}
+function applyQuickColor(hex){
+    if (activeInput) {
+        activeInput.value = hex;
+        activepreviewColorPicker.style.background = hex;
+        activeInput.dispatchEvent(new Event("change"));
+    }
+    updatePickerFromInput({ value: hex }, { style:{ background: hex } });
 }
 function updatePickerFromInput(input, previewColorPicker){
     var hex = input.value.trim();
@@ -181,27 +191,44 @@ document.onmouseup = function(){
   draggingSV  = false;
 };
 /* --- Touch support --- */
-hueSlider.ontouchstart = function(e){
-  draggingHue = true;
-  e.preventDefault(); // bloque le scroll dès le début
-  moveHue(e.touches[0]);
-};
-svBox.ontouchstart = function(e){
-  draggingSV = true;
-  e.preventDefault(); // bloque le scroll dès le début
-  moveSV(e.touches[0]);
-};
-document.ontouchmove = function(e){
-  if (draggingHue || draggingSV) {
-    e.preventDefault(); // bloque le scroll
-  }
-  if (draggingHue) moveHue(e.touches[0]);
-  if (draggingSV)  moveSV(e.touches[0]);
-};
-document.ontouchend = function(){
-  draggingHue = false;
-  draggingSV  = false;
-};
+var touchMap = {}; // idDuDoigt → { type: "sv" | "hue" }
+svBox.addEventListener("touchstart", function(e){
+    for (var i=0; i<e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        touchMap[t.identifier] = { type:"sv" };
+        moveSV(t);
+    }
+    e.preventDefault();
+});
+hueSlider.addEventListener("touchstart", function(e){
+    for (var i=0; i<e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        touchMap[t.identifier] = { type:"hue" };
+        moveHue(t);
+    }
+    e.preventDefault();
+});
+document.addEventListener("touchmove", function(e){
+    var shouldBlockScroll = false;
+    for (var i=0; i<e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        var info = touchMap[t.identifier];
+        if (!info) continue;
+        shouldBlockScroll = true;
+        if (info.type === "sv") moveSV(t);
+        if (info.type === "hue") moveHue(t);
+    }
+    if (shouldBlockScroll) {
+        e.preventDefault(); // bloque le scroll uniquement si un doigt agit
+    }
+});
+document.addEventListener("touchend", function(e){
+    for (var i=0; i<e.changedTouches.length; i++){
+        delete touchMap[e.changedTouches[i].identifier];
+    }
+});
+/* --- Bouton fermer --- */
+function closePicker(){overlay.style.display="none";}
 /* --- Fermeture si clic en dehors du picker --- */
 var downOnOverlay = false;
 overlay.onmousedown = function(e){
