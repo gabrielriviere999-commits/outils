@@ -159,6 +159,21 @@ function normalizeColor(col) {
   return "#" + hex(r) + hex(g) + hex(b) + (a < 255 ? hex(a) : "");
 }
 
+function svgColor(col) {
+  var m = col.match(/^#([0-9a-fA-F]{8})$/);
+  if (m) {
+    var h = m[1];
+    return {
+      fill: "#" + h.substr(0,6),
+      opacity: (parseInt(h.substr(6,2),16) / 255)
+    };
+  }
+  return {
+    fill: col,
+    opacity: 1
+  };
+}
+
 function rebuildTable() {
   tblBody.innerHTML = "";
 
@@ -364,7 +379,11 @@ function renderPie() {
   // PARTIES DU CAMEMBERT
   if (slices.length === 1) {
     // Cas spécial : cercle complet
-    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+slices[0].color+'">' +
+    var sc = svgColor(slices[0].color);
+
+    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+sc.fill+'"'+
+           (sc.opacity < 1 ? ' fill-opacity="'+sc.opacity+'"' : '')+
+           '>';
            '<title>'+escapeHtml(slices[0].label)+' (100%)</title>' +
            '</circle>';
   } else {
@@ -387,7 +406,10 @@ function renderPie() {
       var pct = (s.value / total) * 100;
       pct = Math.round(pct * 10) / 10;
 
-      svg += '<path fill="'+s.color+'" d="'+d+'">' +
+      var sc = svgColor(s.color);
+      svg += '<path fill="'+sc.fill+'"'+
+             (sc.opacity < 1 ? ' fill-opacity="'+sc.opacity+'"' : '')+
+             ' d="'+d+'">' +
              '<title>'+escapeHtml(s.label)+' ('+pct+'%)</title>' +
              '</path>';
 
@@ -404,7 +426,10 @@ function renderPie() {
     pct = Math.round(pct * 10) / 10;
 
     // Point coloré
-    svg += '<circle cx="10" cy="'+legendY+'" r="6" fill="'+s.color+'"></circle>';
+    var sc = svgColor(s.color);
+    svg += '<circle cx="10" cy="'+legendY+'" r="6" fill="'+sc.fill+'"'+
+           (sc.opacity < 1 ? ' fill-opacity="'+sc.opacity+'"' : '')+
+           '></circle>';
 
     // Fond derrière le texte
     svg += '<rect x="20" y="'+(legendY-8)+'" width="200" height="18" fill="black"></rect>';
