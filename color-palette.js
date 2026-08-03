@@ -92,7 +92,15 @@ for (var i = 0; i < quickColors.length; i++) {
         div.addEventListener("touchstart", function(e){
             var hex = div.getAttribute("data-col");
             applyQuickColor(hex);
-            e.preventDefault(); // évite le scroll et les clics fantômes
+            e.preventDefault();
+        });
+        // clavier (Entrée ou Espace)
+        div.addEventListener("keydown", function(e){
+            if (e.key === "Enter" || e.key === " ") {
+                var hex = div.getAttribute("data-col");
+                applyQuickColor(hex);
+                e.preventDefault();
+            }
         });
     })(quickColors[i]);
 }
