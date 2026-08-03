@@ -13,7 +13,11 @@ var alphaToggle = document.getElementById("alphaToggle");
 var alphaSlider = document.getElementById("alphaSlider");
 var alphaCursor = document.getElementById("alphaCursor");
 var alpha255 = 255;
-alphaSlider.style.display = "none";
+if (alphaToggle.checked) {
+    alphaSlider.style.display = "block";
+} else {
+    alphaSlider.style.display = "none";
+}
 function attachColorPickerTo(inputElement) {
     inputElement.onfocus = function(){
         activeInput = inputElement;
