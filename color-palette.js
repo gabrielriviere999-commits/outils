@@ -9,15 +9,9 @@ var picker = document.getElementById('miniPicker');
 var hue = 0;   // 0–360
 var sat = 100; // 0–100
 var val = 100; // 0–100
-var alphaToggle = document.getElementById("alphaToggle");
 var alphaSlider = document.getElementById("alphaSlider");
 var alphaCursor = document.getElementById("alphaCursor");
 var alpha255 = 255;
-if (alphaToggle.checked) {
-    alphaSlider.style.display = "block";
-} else {
-    alphaSlider.style.display = "none";
-}
 function attachColorPickerTo(inputElement) {
     inputElement.onfocus = function(){
         activeInput = inputElement;
@@ -57,7 +51,7 @@ function updateColor() {
     if (alphaHex.length < 2) alphaHex = "0" + alphaHex;
     var finalHex = hex;
     // Ajouter AA seulement si l'alpha n'est pas opaque
-    if (alphaToggle.checked && alpha255 < 255) {
+    if (alpha255 < 255) {
         finalHex += alphaHex;
     }
     if (activeInput) {
@@ -69,17 +63,6 @@ function updateColor() {
             parseInt(hex.substring(5,7),16) + "," + (alpha255 / 255) + ")";
     }
 }
-alphaToggle.onchange = function(){
-    if (!alphaToggle.checked) {
-        alpha255 = 255;
-        alphaSlider.style.display = "none";
-    } else {
-        alphaSlider.style.display = "block";
-        var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
-        alphaCursor.style.left = (alphaX - 1) + "px";
-    }
-    updateColor();
-};
 function updateSVBackground() {
   svBox.style.background = hsvToHex(hue, 100, 100);
 }
@@ -136,7 +119,7 @@ for (var i = 0; i < quickColors.length; i++) {
     })(quickColors[i]);
 }
 function applyQuickColor(hex){
-    if (alphaToggle.checked && alpha255 < 255) {
+    if (alpha255 < 255) {
         var a = alpha255.toString(16);
         if (a.length < 2) a = "0" + a;
         hex += a;
@@ -184,16 +167,9 @@ function updatePickerFromInput(input, previewColorPicker){
     if (hex.length === 6) {
         alpha255 = 255;
     }
-    // 3. Si alpha OFF → supprimer AA
-    if (!alphaToggle.checked && hex.length === 8) {
-        hex = hex.substring(0,6);
-        alpha255 = 255;
-    }
-    // 4. Mettre à jour le curseur alpha seulement si alpha ON
-    if (alphaToggle.checked) {
-        var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
-        alphaCursor.style.left = (alphaX - 1) + "px";
-    }
+    // 4. Mettre à jour le curseur alpha
+    var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
+    alphaCursor.style.left = (alphaX - 1) + "px";
     // 5. Mise à jour input + preview
     input.value = "#" + hex;
     previewColorPicker.style.background = "#" + hex;
