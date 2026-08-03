@@ -283,6 +283,15 @@ document.onkeydown = function(e){
 document.onkeyup = function(e){
     e = e || window.event;
     keys[e.keyCode] = false;
+    // si ce n'est pas une flèche → on ignore
+    if (e.keyCode < 37 || e.keyCode > 40) return;
+    // vérifier si TOUTES les flèches sont relâchées
+    var anyArrowStillDown =
+        keys[37] || keys[38] || keys[39] || keys[40];
+    // si une flèche est encore enfoncée → ne pas valider
+    if (anyArrowStillDown) return;
+    // sinon → validation finale
+    if (activeInput) activeInput.dispatchEvent(new Event("change"));
 };
 var hueHasFocus = false;
 hueSlider.onfocus = function(){
@@ -320,7 +329,6 @@ setInterval(function(){
         // mise à jour visuelle SV
         updateSVBackground();
         updateColor();
-        if (activeInput) activeInput.dispatchEvent(new Event("change"));
         var svX = (sat / 100) * svBox.offsetWidth;
         var svY = ((100 - val) / 100) * svBox.offsetHeight;
         svCursor.style.left = (svX - 5) + "px";
@@ -343,7 +351,6 @@ setInterval(function(){
         // mise à jour visuelle hue
         updateSVBackground();
         updateColor();
-        if (activeInput) activeInput.dispatchEvent(new Event("change"));
         var hueX = (hue / 360) * hueSlider.offsetWidth;
         hueCursor.style.left = (hueX - 1) + "px";
     }
