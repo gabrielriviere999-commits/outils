@@ -254,15 +254,6 @@ overlay.onclick = function(e){
 };
 /* --- Mouvement curseur flèches clavier --- */
 var keys = {};
-var svHasFocus = false;
-// donner le focus au carré SV
-svBox.setAttribute("tabindex", "0");
-svBox.onfocus = function(){
-    svHasFocus = true;
-};
-svBox.onblur = function(){
-    svHasFocus = false;
-};
 // touches relâchées
 document.onkeyup = function(e){
     e = e || window.event;
@@ -277,7 +268,16 @@ document.onkeyup = function(e){
     // sinon → validation finale
     if (activeInput) activeInput.dispatchEvent(new Event("change"));
 };
+var svHasFocus = false;
+svBox.setAttribute("tabindex", "0");
+svBox.onfocus = function(){
+    svHasFocus = true;
+};
+svBox.onblur = function(){
+    svHasFocus = false;
+};
 var hueHasFocus = false;
+hueSlider.setAttribute("tabindex", "0");
 hueSlider.onfocus = function(){
     hueHasFocus = true;
 };
