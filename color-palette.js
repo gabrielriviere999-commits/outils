@@ -228,7 +228,11 @@ document.addEventListener("touchend", function(e){
     }
 });
 /* --- Bouton fermer --- */
-function closePicker(){overlay.style.display="none";}
+function closePicker(){
+  setTimeout(function(){
+    overlay.style.display="none";
+  }, 5);
+}
 /* --- Fermeture si clic en dehors du picker --- */
 var downOnOverlay = false;
 overlay.onmousedown = function(e){
