@@ -85,14 +85,13 @@
   box-shadow:0 0 3px #000;
   pointer-events:none;
 }
-.sv-box,.hue-slider,.alpha-slider,.mini-picker label {
+.sv-box,.hue-slider,.alpha-slider {
   -webkit-user-select:none;
   -moz-user-select:none;
   -ms-user-select:none;
   user-select:none;
   -webkit-touch-callout:none;
 }
-.mini-picker label{font-size:12px;}
 /* previewColorPicker */
 #previewColorPicker,.previewColorPicker {
   position:relative;
