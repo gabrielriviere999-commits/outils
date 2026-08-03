@@ -100,7 +100,7 @@
 }
 .ColorPickerZindex{position:relative;z-index:9999;}
 .quick-colors {
-  margin-top:10px;
+  margin-top:6px;
   overflow:hidden;
 }
 .qc {
@@ -112,3 +112,4 @@
   margin-bottom:6px;
   cursor:pointer;
 }
+#closePickerBtn{width:100%;}
