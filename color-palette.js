@@ -9,6 +9,11 @@ var picker = document.getElementById('miniPicker');
 var hue = 0;   // 0–360
 var sat = 100; // 0–100
 var val = 100; // 0–100
+var alphaToggle = document.getElementById("alphaToggle");
+var alphaSlider = document.getElementById("alphaSlider");
+var alphaCursor = document.getElementById("alphaCursor");
+var alpha255 = 255;
+alphaSlider.style.display = "none";
 function attachColorPickerTo(inputElement) {
     inputElement.onfocus = function(){
         activeInput = inputElement;
@@ -43,12 +48,34 @@ function hsvToHex(h, s, v) {
   return "#" + r + g + b;
 }
 function updateColor() {
-  var hex = hsvToHex(hue, sat, val);
-  if (activeInput) {
-    activeInput.value = hex;
-    activepreviewColorPicker.style.background = hex;
-  }
+    var hex = hsvToHex(hue, sat, val);
+    var alphaHex = alpha255.toString(16);
+    if (alphaHex.length < 2) alphaHex = "0" + alphaHex;
+    var finalHex = hex;
+    // Ajouter AA seulement si l'alpha n'est pas opaque
+    if (alphaToggle.checked && alpha255 < 255) {
+        finalHex += alphaHex;
+    }
+    if (activeInput) {
+        activeInput.value = finalHex;
+        activepreviewColorPicker.style.background =
+            "rgba(" +
+            parseInt(hex.substring(1,3),16) + "," +
+            parseInt(hex.substring(3,5),16) + "," +
+            parseInt(hex.substring(5,7),16) + "," + (alpha255 / 255) + ")";
+    }
 }
+alphaToggle.onchange = function(){
+    if (!alphaToggle.checked) {
+        alpha255 = 255;
+        alphaSlider.style.display = "none";
+    } else {
+        alphaSlider.style.display = "block";
+        var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
+        alphaCursor.style.left = (alphaX - 1) + "px";
+    }
+    updateColor();
+};
 function updateSVBackground() {
   svBox.style.background = hsvToHex(hue, 100, 100);
 }
@@ -105,51 +132,84 @@ for (var i = 0; i < quickColors.length; i++) {
     })(quickColors[i]);
 }
 function applyQuickColor(hex){
+    if (alphaToggle.checked && alpha255 < 255) {
+        var a = alpha255.toString(16);
+        if (a.length < 2) a = "0" + a;
+        hex += a;
+    }
     if (activeInput) {
         activeInput.value = hex;
         activepreviewColorPicker.style.background = hex;
         activeInput.dispatchEvent(new Event("change"));
     }
-    updatePickerFromInput({ value: hex }, { style:{ background: hex } });
+    updatePickerFromInput(
+        { value: hex },
+        { style:{ background: hex } }
+    );
 }
 function updatePickerFromInput(input, previewColorPicker){
     var hex = input.value.trim();
-    // Nom de couleur ?
-    if (/^[a-zA-Z]+$/.test(hex)) {
+    // Hex sans # (6 ou 8 caractères)
+    if (/^[0-9a-fA-F]{6,8}$/.test(hex)) {
+        hex = "#" + hex;
+    }
+    // Nom de couleur
+    else if (/^[a-zA-Z]+$/.test(hex)) {
         var named = colorNameToHex(hex);
-        if (named) hex = named;
-        else return;
+        if (named) {
+            hex = named;
+        } else {
+            return;
+        }
+    }
+    // Ajouter # si nécessaire
+    else if (hex.charAt(0) !== "#") {
+        hex = "#" + hex;
     }
     // Hex abrégé ?
     hex = expandShortHex(hex);
     // Hex normal ?
-    if (!/^#?[0-9a-fA-F]{6}$/.test(hex)) return;
+    if (!/^#?[0-9a-fA-F]{6,8}$/.test(hex)) return;
     // Enlever #
     if (hex.charAt(0) === "#") hex = hex.substring(1);
+    // 1. Restaurer alpha si AA existe
+    if (hex.length === 8) {
+        alpha255 = parseInt(hex.substring(6,8), 16);
+    }
+    // 2. Si pas d'alpha → remettre alpha = 255
+    if (hex.length === 6) {
+        alpha255 = 255;
+    }
+    // 3. Si alpha OFF → supprimer AA
+    if (!alphaToggle.checked && hex.length === 8) {
+        hex = hex.substring(0,6);
+        alpha255 = 255;
+    }
+    // 4. Mettre à jour le curseur alpha seulement si alpha ON
+    if (alphaToggle.checked) {
+        var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
+        alphaCursor.style.left = (alphaX - 1) + "px";
+    }
+    // 5. Mise à jour input + preview
     input.value = "#" + hex;
     previewColorPicker.style.background = "#" + hex;
+    // 6. Conversion RGB → HSV
     var r = parseInt(hex.substring(0,2), 16) / 255;
     var g = parseInt(hex.substring(2,4), 16) / 255;
     var b = parseInt(hex.substring(4,6), 16) / 255;
     var max = Math.max(r,g,b), min = Math.min(r,g,b);
     var d = max - min;
-    // Hue
     if (d === 0) hue = 0;
     else if (max === r) hue = ((g - b) / d) * 60;
     else if (max === g) hue = (2 + (b - r) / d) * 60;
     else hue = (4 + (r - g) / d) * 60;
     if (hue < 0) hue += 360;
-    // Saturation
     sat = max === 0 ? 0 : (d / max) * 100;
-    // Value
     val = max * 100;
-    // Mise à jour visuelle
     updateSVBackground();
     updateColor();
-    // Curseur Hue
-    var hueX = (hue / 360) * hueSlider.offsetWidth;
-    hueCursor.style.left = (hueX - 1) + "px";
-    // Curseur SV
+    // 7. Mise à jour curseurs Hue + SV
+    hueCursor.style.left = ((hue / 360) * hueSlider.offsetWidth - 1) + "px";
     var svX = (sat / 100) * svBox.offsetWidth;
     var svY = ((100 - val) / 100) * svBox.offsetHeight;
     svCursor.style.left = (svX - 5) + "px";
@@ -169,6 +229,20 @@ function moveHue(e){
   hueCursor.style.left = (x - 1) + "px";
   updateSVBackground();
   updateColor();
+}
+/* --- Alpha slider --- */
+alphaSlider.onmousedown = function(e){
+    draggingAlpha = true;
+    moveAlpha(e);
+};
+function moveAlpha(e){
+    var rect = alphaSlider.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    if (x < 0) x = 0;
+    if (x > rect.width) x = rect.width;
+    alpha255 = Math.round((x / rect.width) * 255);
+    alphaCursor.style.left = (x - 1) + "px";
+    updateColor();
 }
 /* --- SV box --- */
 svBox.onmousedown = function(e){
@@ -190,14 +264,19 @@ function moveSV(e){
   updateColor();
 }
 /* --- Drag global --- */
+var draggingAlpha = false;
 document.onmousemove = function(e){
-  if (draggingHue) moveHue(e);
-  if (draggingSV)  moveSV(e);
+    if (draggingHue) moveHue(e);
+    if (draggingSV)  moveSV(e);
+    if (draggingAlpha) moveAlpha(e);
 };
-document.onmouseup = function(){
-  draggingHue = false;
-  draggingSV  = false;
-};
+
+window.addEventListener("mouseup", function(){
+    draggingHue = false;
+    draggingSV  = false;
+    draggingAlpha = false;
+});
+
 /* --- Touch support --- */
 var touchMap = {}; // idDuDoigt → { type: "sv" | "hue" }
 svBox.addEventListener("touchstart", function(e){
@@ -216,6 +295,14 @@ hueSlider.addEventListener("touchstart", function(e){
     }
     e.preventDefault();
 });
+alphaSlider.addEventListener("touchstart", function(e){
+    for (var i=0; i<e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        touchMap[t.identifier] = { type:"alpha" };
+        moveAlpha(t);
+    }
+    e.preventDefault();
+});
 document.addEventListener("touchmove", function(e){
     var shouldBlockScroll = false;
     for (var i=0; i<e.changedTouches.length; i++){
@@ -225,6 +312,7 @@ document.addEventListener("touchmove", function(e){
         shouldBlockScroll = true;
         if (info.type === "sv") moveSV(t);
         if (info.type === "hue") moveHue(t);
+        if (info.type === "alpha") moveAlpha(t);
     }
     if (shouldBlockScroll) {
         e.preventDefault(); // bloque le scroll uniquement si un doigt agit
@@ -253,21 +341,6 @@ overlay.onclick = function(e){
     }
 };
 /* --- Mouvement curseur flèches clavier --- */
-var keys = {};
-// touches relâchées
-document.onkeyup = function(e){
-    e = e || window.event;
-    keys[e.keyCode] = false;
-    // si ce n'est pas une flèche → on ignore
-    if (e.keyCode < 37 || e.keyCode > 40) return;
-    // vérifier si TOUTES les flèches sont relâchées
-    var anyArrowStillDown =
-        keys[37] || keys[38] || keys[39] || keys[40];
-    // si une flèche est encore enfoncée → ne pas valider
-    if (anyArrowStillDown) return;
-    // sinon → validation finale
-    if (activeInput) activeInput.dispatchEvent(new Event("change"));
-};
 var svHasFocus = false;
 svBox.setAttribute("tabindex", "0");
 svBox.onfocus = function(){
@@ -283,6 +356,29 @@ hueSlider.onfocus = function(){
 };
 hueSlider.onblur = function(){
     hueHasFocus = false;
+};
+var alphaHasFocus = false;
+alphaSlider.setAttribute("tabindex", "0");
+alphaSlider.onfocus = function(){
+    alphaHasFocus = true;
+};
+alphaSlider.onblur = function(){
+    alphaHasFocus = false;
+};
+// touches relâchées
+var keys = {};
+document.onkeyup = function(e){
+    e = e || window.event;
+    keys[e.keyCode] = false;
+    // si ce n'est pas une flèche → on ignore
+    if (e.keyCode < 37 || e.keyCode > 40) return;
+    // vérifier si TOUTES les flèches sont relâchées
+    var anyArrowStillDown =
+        keys[37] || keys[38] || keys[39] || keys[40];
+    // si une flèche est encore enfoncée → ne pas valider
+    if (anyArrowStillDown) return;
+    // sinon → validation finale
+    if (activeInput) activeInput.dispatchEvent(new Event("change"));
 };
 // boucle de mouvement
 setInterval(function(){
@@ -338,19 +434,37 @@ setInterval(function(){
         var hueX = (hue / 360) * hueSlider.offsetWidth;
         hueCursor.style.left = (hueX - 1) + "px";
     }
+    /* --- Mouvement ALPHA si la barre a le focus --- */
+    if (alphaHasFocus) {
+        var stepAlpha = 1;
+        if (keys[17]) stepAlpha = 5;
+        if (keys[37]) {
+            alpha255 -= stepAlpha;
+            if (alpha255 < 0) alpha255 = 0;
+        }
+        if (keys[39]) {
+            alpha255 += stepAlpha;
+            if (alpha255 > 255) alpha255 = 255;
+        }
+        if (keys[37] || keys[39]) {
+            updateColor();
+            var alphaX = (alpha255 / 255) * alphaSlider.offsetWidth;
+            alphaCursor.style.left = (alphaX - 1) + "px";
+        }
+    }
 }, 20); // 50 FPS
 // empêcher le scroll quand on utilise les flèches dans le carré SV
-document.addEventListener("keydown", function(e){
+document.onkeydown = function(e){
     e = e || window.event;
-    // Échap → fermer le color picker
+    // Échap → fermer
     if (e.keyCode == 27) {
         overlay.style.display = "none";
         return;
     }
-    // empêcher le scroll si SV ou HUE ont le focus
-    if ((svHasFocus || hueHasFocus) && (e.keyCode >= 37 && e.keyCode <= 40)) {
-        e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+    // empêcher le scroll si SV / HUE / ALPHA ont le focus
+    if ((svHasFocus || hueHasFocus || alphaHasFocus) &&
+        (e.keyCode >= 37 && e.keyCode <= 40)) {
+        e.preventDefault();
     }
     keys[e.keyCode] = true;
-});
-
+};

@@ -7,12 +7,11 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-/* Tableaux */
 table {
   width:100;
   border-collapse:collapse;
 }
-td, th {
+td,th {
   border-bottom:2px groove #808080;
   padding:4px;
   font-size:13px;
@@ -22,7 +21,6 @@ input[type=text],input[type=number]{width:100%;}
   max-width:100%;
   height:auto;
 }
-/* Légende */
 .pie-legend {
   list-style:none;
   padding:0;
@@ -61,6 +59,10 @@ input[type=text],input[type=number]{width:100%;}
       <div class="hue-slider" id="hueSlider">
         <div class="hue-cursor" id="hueCursor"></div>
       </div>
+      <label><input type="checkbox" id="alphaToggle"></input>Alpha</label>
+      <div class="alpha-slider" id="alphaSlider">
+        <div class="alpha-cursor" id="alphaCursor"></div>
+      </div>
       <div class="quick-colors">
         <div class="qc" data-col="#000000" tabindex="0" style="background:#000000"></div>
         <div class="qc" data-col="#ffffff" tabindex="0" style="background:#ffffff"></div>
@@ -83,7 +85,7 @@ input[type=text],input[type=number]{width:100%;}
 <div class="scrollZone">
 <table id="tbl">
   <thead>
-    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:97px";>Couleur</th><th></th></tr>
+    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:105px";>Couleur</th><th></th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -207,7 +209,7 @@ function rebuildTable() {
     var inp3 = document.createElement("input");
     inp3.type = "text";
     inp3.className = "ColorPickerZindex";
-    inp3.style.width = "60px";
+    inp3.style.width = "70px";
     inp3.value = s.color;
     inp3.maxLength = 20;
 
