@@ -353,4 +353,3 @@ document.addEventListener("keydown", function(e){
     }
     keys[e.keyCode] = true;
 });
-
