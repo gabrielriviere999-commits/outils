@@ -56,6 +56,9 @@ input[type=text],input[type=number]{width:100%;}
       <div class="hue-slider" id="hueSlider">
         <div class="hue-cursor" id="hueCursor"></div>
       </div>
+      <div class="alpha-slider" id="alphaSlider">
+        <div class="alpha-cursor" id="alphaCursor"></div>
+      </div>
       <div class="quick-colors">
         <div class="qc" data-col="#000000" tabindex="0" style="background:#000000"></div>
         <div class="qc" data-col="#ffffff" tabindex="0" style="background:#ffffff"></div>
@@ -78,7 +81,7 @@ input[type=text],input[type=number]{width:100%;}
 <div class="scrollZone">
 <table id="tbl">
   <thead>
-    <tr><th style="width:80px">Libellé</th><th style="width:50px">Val %</th><th style="width:94px";>Couleur</th><th></th></tr>
+    <tr><th style="width:60px;">Libellé</th><th style="width:60px;">Val %</th><th style="width:94px">Couleur</th><th></th></tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -120,41 +123,6 @@ var outputArea = document.getElementById("output");
 var pieSize = 200;
 
 /* --- Construction du tableau --- */
-function normalizeColor(col) {
-  var tmp = document.createElement("div");
-  tmp.style.color = col;
-  if (!tmp.style.color) return null;
-  document.body.appendChild(tmp);
-  var rgba = window.getComputedStyle ?
-             window.getComputedStyle(tmp).color :
-             tmp.currentStyle.color;
-  document.body.removeChild(tmp);
-  // rgb(r,g,b)
-  var m = rgba.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-  // rgba(r,g,b,a)
-  var ma = rgba.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)$/);
-  var r, g, b, a = 255;
-  if (m) {
-    r = parseInt(m[1],10);
-    g = parseInt(m[2],10);
-    b = parseInt(m[3],10);
-  }
-  else if (ma) {
-    r = parseInt(ma[1],10);
-    g = parseInt(ma[2],10);
-    b = parseInt(ma[3],10);
-    a = Math.round(parseFloat(ma[4]) * 255);
-  }
-  else {
-    return null;
-  }
-  function hex(v){
-    var h = v.toString(16);
-    return h.length < 2 ? "0"+h : h;
-  }
-  return "#" + hex(r) + hex(g) + hex(b) + (a < 255 ? hex(a) : "");
-}
-
 function rebuildTable() {
   tblBody.innerHTML = "";
 
@@ -232,12 +200,9 @@ function rebuildTable() {
         else if (/^[0-9A-Fa-f]{3}$/.test(v)) v = "#" + v;
         else if (/^[0-9A-Fa-f]{4}$/.test(v)) v = "#" + v;
 
-      var hex = normalizeColor(v);
-      if (hex) {
-        slices[index].color = hex;
-        this.value = hex;
-        renderPie();
-      }
+      slices[index].color = v;
+      this.value = v;
+      renderPie();
     }}(i);
 
     tr.appendChild(td3);
@@ -403,7 +368,7 @@ function renderPie() {
     svg += '<circle cx="10" cy="'+legendY+'" r="6" fill="'+s.color+'"></circle>';
 
     // Fond derrière le texte
-    svg += '<rect x="20" y="'+(legendY-8)+'" width="200" height="18" fill="black"></rect>';
+    svg += '<rect x="20" y="'+(legendY-8)+'" width="200" height="18" fill="rgba(0,0,0,0.8)"></rect>';
 
     // Texte
     svg += '<text x="25" y="'+(legendY+4)+'" font-size="12" font-family="sans-serif" fill="#ccc">'+
