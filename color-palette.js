@@ -156,9 +156,12 @@ function updatePickerFromInput(input, previewColorPicker){
             alpha255 = 255;
         }
         alphaFromRgba = true;
-        var rh = r.toString(16).padStart(2, "0");
-        var gh = g.toString(16).padStart(2, "0");
-        var bh = b.toString(16).padStart(2, "0");
+        var rh = r.toString(16);
+        if (rh.length < 2) rh = "0" + rh;
+        var gh = g.toString(16);
+        if (gh.length < 2) gh = "0" + gh;
+        var bh = b.toString(16);
+        if (bh.length < 2) bh = "0" + bh;
         hex = "#" + rh + gh + bh;
     }
     // Hex sans # (6 ou 8 caractères)
