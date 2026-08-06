@@ -956,53 +956,51 @@ view.onmousemove = function(e) {
     lastMoveX = pos.x;
     lastMoveY = pos.y;
 
-    // Mise à jour uniquement pour les formes géométriques
-    if (isDown && (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse")) {
-        refreshPreview(pos.x, pos.y);
-    }
-
     if (!isDown) return;
 
     var rect = view.getBoundingClientRect();
     var margin = 50;
 
-    if (e.clientY > rect.bottom - margin) {
-        view.scrollTop += charH * 2;
-    }
-    else if (e.clientY < rect.top + margin) {
-        view.scrollTop -= charH * 2;
-        if (view.scrollTop < 0) view.scrollTop = 0;
-    }
+    // scroll auto
+    if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 2;
+    else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 2;
 
-    if (e.clientX > rect.right - margin) {
-        view.scrollLeft += charW * 2;
-    }
-    else if (e.clientX < rect.left + margin) {
-        view.scrollLeft -= charW * 2;
-        if (view.scrollLeft < 0) view.scrollLeft = 0;
-    }
+    if (e.clientX > rect.right - margin) view.scrollLeft += charW * 2;
+    else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 2;
 
-    if(tool === "move" && moveMode === 1) {
+    // move / copy
+    if (tool === "move" && moveMode === 1) {
         previewMove(pos.x, pos.y);
         return;
     }
-    if(tool === "copy" && copyMode === 1) {
+    if (tool === "copy" && copyMode === 1) {
         previewMove(pos.x, pos.y);
         return;
     }
 
     if (tool === "edit") return;
+
     autoWidthDynamic();
 
+    // free / erase
     if (tool === "free") {
         drawFree(pos.x, pos.y);
         return;
     }
-
     if (tool === "erase") {
         eraseAt(pos.x, pos.y);
         return;
     }
+
+    // 1) calcul largeur/hauteur AVANT refreshPreview
+    if (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse") {
+        var w = Math.abs(pos.x - startX) + 1;
+        var h = Math.abs(pos.y - startY) + 1;
+        updateShapeInfo(w, h);
+    }
+
+    // 2) redessiner la forme APRÈS
+    refreshPreview(pos.x, pos.y);
 };
 
 // Correction Chromium Linux
