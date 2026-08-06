@@ -222,6 +222,9 @@ function setTool(t) {
     } else {
         enableTouchDrawing(true);  // Android dessine normalement
     }
+
+    // Mettre à jour forme en cliquant
+    if (isDown){refreshPreview(lastMoveX, lastMoveY);}
 }
 
 function setToolLine(){ setTool("line"); }
@@ -927,7 +930,24 @@ function autoWidthDynamic() {
     autoWidth(); // recalcul charW et charH
 }
 
+// Mettre à jour forme en cliquant
+function refreshPreview(x, y) {
+    if (!isDown || !tempGrid) return;
+    grid = copyGrid(tempGrid);
+    if (tool === "line") drawLine(startX, startY, x, y);
+    else if (tool === "arrow") drawArrow(startX, startY, x, y);
+    else if (tool === "rect") drawRectangle(startX, startY, x, y);
+    else if (tool === "ellipse") drawEllipse(startX, startY, x, y);
+    render();
+}
+
 view.onmousemove = function(e) {
+	// Mettre à jour forme en cliquant
+    var pos = getPos(e);
+    lastMoveX = pos.x;
+    lastMoveY = pos.y;
+    refreshPreview(pos.x, pos.y);
+
     if (!isDown) return; // ne scroller que si on dessine
 
     var rect = view.getBoundingClientRect();
@@ -996,16 +1016,7 @@ view.onmousemove = function(e) {
         return;
     }
 
-    // formes géométriques : affichage temporaire
-    grid = copyGrid(tempGrid);
-
-    if (tool === "line") drawLine(startX, startY, pos.x, pos.y);
-    if (tool === "arrow") drawArrow(startX, startY, pos.x, pos.y);
-    if (tool === "rect") drawRectangle(startX, startY, pos.x, pos.y);
-    if (tool === "ellipse") drawEllipse(startX, startY, pos.x, pos.y);
-
-    // affichage temporaire dans le textarea
-    render();
+    refreshPreview(pos.x, pos.y);
 };
 
 // Correction Chromium Linux

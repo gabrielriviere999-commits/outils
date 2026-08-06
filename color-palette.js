@@ -64,6 +64,8 @@ function updateColor() {
     if (activeInput) {
         activeInput.value = finalValue;
         activepreviewColorPicker.style.background = finalValue;
+        // Mise à jour temps réel
+        activeInput.dispatchEvent(new Event("input"));
     }
 }
 function updateSVBackground() {
