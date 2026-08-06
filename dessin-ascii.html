@@ -523,12 +523,22 @@ function drawRectangle(x1, y1, x2, y2) {
     render();
 }
 
+document.getElementById("lineChar").oninput = function(){
+    if (isDown) refreshPreview(lastMoveX, lastMoveY);
+};
+document.getElementById("rectChar").oninput = function(){
+    if (isDown) refreshPreview(lastMoveX, lastMoveY);
+};
+document.getElementById("ellipseChar").oninput = function(){
+    if (isDown) refreshPreview(lastMoveX, lastMoveY);
+};
 function setRectMode(val){
     var sel = document.getElementById("rectMode");
     sel.value = val;
     var label = document.getElementById("rectModeLabel");
     label.textContent = sel.options[sel.selectedIndex].textContent;
     closePopup();
+    if (isDown) refreshPreview(lastMoveX, lastMoveY);
 }
 function openRectModePopup() {
     var container = document.getElementById("popupRectModeContent");
@@ -942,13 +952,16 @@ function refreshPreview(x, y) {
 }
 
 view.onmousemove = function(e) {
-	// Mettre à jour forme en cliquant
     var pos = getPos(e);
     lastMoveX = pos.x;
     lastMoveY = pos.y;
-    refreshPreview(pos.x, pos.y);
 
-    if (!isDown) return; // ne scroller que si on dessine
+    // Mise à jour uniquement pour les formes géométriques
+    if (isDown && (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse")) {
+        refreshPreview(pos.x, pos.y);
+    }
+
+    if (!isDown) return;
 
     var rect = view.getBoundingClientRect();
     var margin = 50;
@@ -969,42 +982,17 @@ view.onmousemove = function(e) {
         if (view.scrollLeft < 0) view.scrollLeft = 0;
     }
 
-    if(tool === "move" && moveMode === 1 && isDown) {
-
-        var pos = getPos(e);
-
-        lastMoveX = pos.x;
-        lastMoveY = pos.y;
-
+    if(tool === "move" && moveMode === 1) {
         previewMove(pos.x, pos.y);
-
         return;
     }
-    if(tool === "copy" && copyMode === 1 && isDown) {
-
-        var pos = getPos(e);
-
-        lastMoveX = pos.x;
-        lastMoveY = pos.y;
-
+    if(tool === "copy" && copyMode === 1) {
         previewMove(pos.x, pos.y);
-
         return;
     }
 
-	if (tool === "edit") return; // pas de dessin
-	autoWidthDynamic();
-    if (!isDown) return;
-
-    var pos = getPos(e);
-
-    if (isDown && (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse" || tool === "move" || tool === "copy" || tool === "clipboard")) {
-
-        var w = Math.abs(pos.x - startX) + 1;
-        var h = Math.abs(pos.y - startY) + 1;
-
-        updateShapeInfo(w, h);
-    }
+    if (tool === "edit") return;
+    autoWidthDynamic();
 
     if (tool === "free") {
         drawFree(pos.x, pos.y);
@@ -1015,8 +1003,6 @@ view.onmousemove = function(e) {
         eraseAt(pos.x, pos.y);
         return;
     }
-
-    refreshPreview(pos.x, pos.y);
 };
 
 // Correction Chromium Linux
