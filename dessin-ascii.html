@@ -1001,9 +1001,18 @@ view.onmousemove = function(e) {
     // Rectangle temporaire pour sélection MOVE / COPY / CLIPBOARD
     if (tool === "move" || tool === "copy" || tool === "clipboard") {
         grid = copyGrid(tempGrid);
+        // Sauvegarder l'ancien caractère
+        var oldChar = rectChar.value;
+        var oldMode = rectMode.value;
+        // Forcer style dotted + désactiver caractère custom
+        rectMode.value = "dotted";
+        rectChar.value = ""; // désactive useCustom
         drawRectangle(startX, startY, pos.x, pos.y);
+        // Restaurer
+        rectMode.value = oldMode;
+        rectChar.value = oldChar;
         render();
-        return; // empêcher refreshPreview d'écraser le rectangle
+        return;
     }
 
     // 2) redessiner la forme APRÈS
