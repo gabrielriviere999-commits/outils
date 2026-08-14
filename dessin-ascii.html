@@ -917,10 +917,23 @@ function autoWidthDynamic() {
 function refreshPreview(x, y) {
     if (!isDown || !tempGrid) return;
     grid = copyGrid(tempGrid);
+
     if (tool === "line") drawLine(startX, startY, x, y);
     else if (tool === "arrow") drawArrow(startX, startY, x, y);
     else if (tool === "rect") drawRectangle(startX, startY, x, y);
     else if (tool === "ellipse") drawEllipse(startX, startY, x, y);
+    else if (tool === "move" || tool === "copy" || tool === "clipboard") {
+        // Sauvegarder l'ancien mode et caractère
+        var oldMode = rectMode.value;
+        var oldChar = rectChar.value;
+        // Forcer style dotted + désactiver caractère custom
+        rectMode.value = "dotted";
+        rectChar.value = "";
+        drawRectangle(startX, startY, x, y);
+        // Restaurer
+        rectMode.value = oldMode;
+        rectChar.value = oldChar;
+    }
     render();
 }
 
