@@ -998,6 +998,13 @@ view.onmousemove = function(e) {
         var h = Math.abs(pos.y - startY) + 1;
         updateShapeInfo(w, h);
     }
+    // Rectangle temporaire pour sélection MOVE / COPY / CLIPBOARD
+    if (tool === "move" || tool === "copy" || tool === "clipboard") {
+        grid = copyGrid(tempGrid);
+        drawRectangle(startX, startY, pos.x, pos.y);
+        render();
+        return; // empêcher refreshPreview d'écraser le rectangle
+    }
 
     // 2) redessiner la forme APRÈS
     refreshPreview(pos.x, pos.y);
@@ -1042,6 +1049,8 @@ view.onmouseup = function(e) {
 
     if (tool === "move") {
         if (moveMode === 0) {
+			grid = copyGrid(tempGrid);
+			render();
             captureSelection(startX, startY, pos.x, pos.y);
             moveMode = 1;
             clearShapeInfo();
@@ -1051,6 +1060,8 @@ view.onmouseup = function(e) {
 
     if (tool === "copy") {
         if (copyMode === 0) {
+			grid = copyGrid(tempGrid);
+			render();
             captureSelectionCopy(startX, startY, pos.x, pos.y);
             copyMode = 1;
             clearShapeInfo();
@@ -1059,6 +1070,8 @@ view.onmouseup = function(e) {
     }
 
     if (tool === "clipboard") {
+		grid = copyGrid(tempGrid);
+	    render();
         copySelectionToClipboard(startX, startY, pos.x, pos.y);
         clearShapeInfo();
         return;
