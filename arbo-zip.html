@@ -103,7 +103,7 @@ document.getElementById("zipInput").onchange = function (e) {
                 '<p>Dossiers : ' + counts.folders + ', Fichiers : ' + counts.files + '</p>\n' +
                 '<pre class="tree">\n' + html + '</pre>\n' +
                 '<button id="copyarbo" style="background:#000;color:#ccc;border:none;cursor:pointer;">[Copier]</button>\n' +
-                '<br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #808080;font-family:monospace;">' + asciiText + '</textarea>\n' +
+                '<br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #808080;font-family:monospace;">\n' + asciiText + '</textarea>\n' +
                 '<script>function copyFrom(id,btn){var code=document.getElementById(id);var temp=document.createElement("textarea");temp.value=code.value;document.body.appendChild(temp);temp.select();try{document.execCommand("copy");}catch(err){}document.body.removeChild(temp);btn.focus();}document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};<\/script>\n' +
                 '</body>\n</html>';
 
