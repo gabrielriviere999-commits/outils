@@ -408,8 +408,7 @@ var RECT_STYLES = {
     top: ".", 
     bottom: ".", 
     left: ":", 
-    right: ":",
-    dotted: true
+    right: ":"
   },
   rounded: {
     tl: ".",
@@ -472,32 +471,6 @@ function drawRectangle(x1, y1, x2, y2) {
     var right  = useCustom ? c : style.right;
 
     var x, y;
-
-    // MODE POINTILLÉ SPÉCIAL
-    if (style.dotted && !useCustom) {
-
-        grid[yMin][xMin] = tl;
-        grid[yMin][xMax] = tr;
-        grid[yMax][xMin] = bl;
-        grid[yMax][xMax] = br;
-
-        for (x = xMin + 1; x < xMax; x++) {
-            ensureCell(x, yMin);
-            ensureCell(x, yMax);
-            grid[yMin][x] = top;
-            grid[yMax][x] = bottom;
-        }
-
-        for (y = yMin + 1; y < yMax; y++) {
-            ensureCell(xMin, y);
-            ensureCell(xMax, y);
-            grid[y][xMin] = left;
-            grid[y][xMax] = right;
-        }
-
-        render();
-        return;
-    }
 
     // MODE NORMAL
 
