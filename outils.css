@@ -3,6 +3,7 @@ body {
   background:#000;
   color:#ccc;
 }
+a{word-break:break:all;}
 h2,h3{margin-top:0;}
 fieldset{border:2px groove #808080;}
 hr{border:1px inset #808080;}
