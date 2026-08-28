@@ -64,7 +64,7 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
   <button data-action="undo">Annuler</button>
   <button data-action="redo">Rétablir</button>
 </div>
-<div id="dimensions">Largeur : 0, Hauteur : 0</div>
+<div id="dimensions">largeur : 0, hauteur : 0</div>
 <div id="textBox" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#202020;border:1px solid #000;padding:10px;z-index:9999;opacity:0.8;">
   <textarea wrap="off" id="textInput" style="width:300px;height:120px;resize:both;"></textarea><br>
   <button id="confirmTextBtn" type="button">OK</button>
@@ -1008,12 +1008,12 @@ function updateDimensions(x,y){
     var width = Math.abs(x - startX);
     var height = Math.abs(y - startY);
     document.getElementById("dimensions").textContent =
-        "Largeur : " + Math.round(width) +
-        ", Hauteur : " + Math.round(height);
+        "largeur : " + Math.round(width) +
+        ", hauteur : " + Math.round(height);
 }
 function hideDimensions(){
     document.getElementById("dimensions").textContent =
-        "Largeur : 0, Hauteur : 0";
+        "largeur : 0, hauteur : 0";
 }
 
 function drawSelectionPreview(x,y){
