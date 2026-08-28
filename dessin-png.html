@@ -76,6 +76,7 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
 <button data-action="importPNG">Importer PNG base64</button>
 |
 <button data-action="downloadPNG">Télécharger PNG</button>
+<button data-action="downloadJPG">Télécharger JPG</button>
 <input type="file" id="drawingFile">
 <script src="outils.js"></script>
 <script src="popup.js"></script>
@@ -2086,10 +2087,37 @@ function importPNG(){
 }
 function downloadPNG(){
     var link = document.createElement("a");
-
     link.href = canvas.toDataURL("image/png");
     link.download = "dessin.png";
-
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+function downloadJPG(){
+    var jpgCanvas = document.createElement("canvas");
+    jpgCanvas.width = canvas.width;
+    jpgCanvas.height = canvas.height;
+    var jpgCtx = jpgCanvas.getContext("2d");
+    /* Fond blanc */
+    jpgCtx.fillStyle = "#ffffff";
+    jpgCtx.fillRect(
+        0,
+        0,
+        jpgCanvas.width,
+        jpgCanvas.height
+    );
+    /* Copier le dessin */
+    jpgCtx.drawImage(
+        canvas,
+        0,
+        0
+    );
+    var link = document.createElement("a");
+    link.href = jpgCanvas.toDataURL(
+        "image/jpeg",
+        0.92
+    );
+    link.download = "dessin.jpg";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
