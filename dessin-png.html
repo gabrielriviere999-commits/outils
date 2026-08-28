@@ -67,7 +67,7 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
   <button id="cancelTextBtn" type="button">Annuler</button>
 </div>
 <canvas id="canvas" width="640" height="480"></canvas>
-<textarea id="ioArea" placeholder="SVG du dessin" style="width:100%;height:160px;"></textarea>
+<textarea id="ioArea" style="width:100%;height:160px;"></textarea>
 <button data-action="exportPNG">Exporter PNG</button>
 <button data-action="importPNG">Importer PNG</button>
 <button data-action="downloadPNG">Télécharger PNG</button>
@@ -1192,7 +1192,6 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
 }
 
 /* MOUSE EVENTS (ASCII LOGIC) */
-var svgElements = [];
 var currentPath = "";
 canvas.onpointerdown = function(e){
 
