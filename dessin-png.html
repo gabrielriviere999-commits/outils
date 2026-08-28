@@ -50,12 +50,16 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
   <button id="btnRect" data-action="setToolRect">Rectangle</button>
   <button id="btnCircle" data-action="setToolCircle">Rond</button>
   <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
+  |
   <button id="btnText" data-action="setToolText">Texte</button>
+  |
   <button id="btnMove" data-action="setToolMove">Déplacer</button>
   <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
-
+  |
   <input type="file" id="imageFile">
+  |
   <button id="btnFill" data-action="setToolFill">Remplir</button>
+  |
   <button id="btnEraser" data-action="setToolEraser">Gomme</button>
   <button data-action="undo">Annuler</button>
   <button data-action="redo">Rétablir</button>
@@ -68,8 +72,9 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
 </div>
 <canvas id="canvas" width="640" height="480"></canvas>
 <textarea id="ioArea" style="width:100%;height:160px;"></textarea>
-<button data-action="exportPNG">Exporter PNG</button>
-<button data-action="importPNG">Importer PNG</button>
+<button data-action="exportPNG">Exporter PNG base64</button>
+<button data-action="importPNG">Importer PNG base64</button>
+|
 <button data-action="downloadPNG">Télécharger PNG</button>
 <input type="file" id="drawingFile">
 <script src="outils.js"></script>
