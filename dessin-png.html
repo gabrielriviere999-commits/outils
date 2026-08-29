@@ -139,7 +139,9 @@ sizeInput.oninput = function(){
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
-/* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
+/* =====================================================
+   IMAGE : DEPLACER / REDIMENSIONNER / ROTATION
+   ===================================================== */
 
 var imageFile = document.getElementById("imageFile");
 
@@ -174,7 +176,10 @@ var imageStartDistance = 0;
 var imageStartPointerAngle = 0;
 
 
-/* CHARGEMENT */
+/* -----------------------------------------------------
+   CHARGEMENT
+   ----------------------------------------------------- */
+
 imageFile.onchange = function(){
 
     if(!imageFile.files || !imageFile.files.length){
@@ -197,7 +202,10 @@ imageFile.onchange = function(){
 
         img.onload = function(){
 
-            // Si une autre image temporaire existe, on la valide avant d'en charger une nouvelle.
+            /*
+             * Si une autre image temporaire existe,
+             * on la valide avant d'en charger une nouvelle.
+             */
             if(tempImage){
                 commitTempImage();
             }
@@ -207,7 +215,9 @@ imageFile.onchange = function(){
             tempImageW = img.width;
             tempImageH = img.height;
 
-            // Taille maximale initiale.
+            /*
+             * Taille maximale initiale.
+             */
             var maxW = 300;
             var maxH = 300;
 
@@ -227,7 +237,9 @@ imageFile.onchange = function(){
                 tempImageH = maxH;
             }
 
-            // Centrer l'image.
+            /*
+             * Centrer l'image.
+             */
             tempImageX =
                 (canvas.width - tempImageW) / 2;
 
@@ -236,7 +248,9 @@ imageFile.onchange = function(){
 
             tempImageAngle = 0;
 
-            // Sauvegarder le dessin avant l'image.
+            /*
+             * Sauvegarder le dessin avant l'image.
+             */
             imageBaseImage = ctx.getImageData(
                 0,
                 0,
@@ -268,30 +282,47 @@ imageFile.onchange = function(){
 };
 
 
-/* CALCUL DES COORDONNEES */
+/* -----------------------------------------------------
+   CALCUL DES COORDONNEES
+   ----------------------------------------------------- */
+
 function getImageCenter(){
+
     return {
         x: tempImageX + tempImageW / 2,
         y: tempImageY + tempImageH / 2
     };
 }
 
-/* Distance entre deux points. */
+
+/*
+ * Distance entre deux points.
+ */
 function imageDistance(x1,y1,x2,y2){
+
     var dx = x2-x1;
     var dy = y2-y1;
+
     return Math.sqrt(dx*dx + dy*dy);
 }
 
-/* Angle entre deux points. */
+
+/*
+ * Angle entre deux points.
+ */
 function imagePointerAngle(x1,y1,x2,y2){
+
     return Math.atan2(
         y2-y1,
         x2-x1
     );
 }
 
-/* POINT DANS L'IMAGE */
+
+/* -----------------------------------------------------
+   POINT DANS L'IMAGE
+   ----------------------------------------------------- */
+
 function pointInTempImage(x,y){
 
     if(!tempImage){
@@ -303,7 +334,9 @@ function pointInTempImage(x,y){
     var dx = x-c.x;
     var dy = y-c.y;
 
-    // Annuler la rotation.
+    /*
+     * Annuler la rotation.
+     */
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
 
@@ -322,7 +355,10 @@ function pointInTempImage(x,y){
 }
 
 
-/* POIGNEES */
+/* -----------------------------------------------------
+   POIGNEES
+   ----------------------------------------------------- */
+
 function getImageHandle(x,y){
 
     if(!tempImage){
@@ -337,7 +373,9 @@ function getImageHandle(x,y){
     var dx = x-c.x;
     var dy = y-c.y;
 
-    // Coordonnées locales.
+    /*
+     * Coordonnées locales.
+     */
     var lx =
         dx*cos - dy*sin;
 
@@ -346,7 +384,10 @@ function getImageHandle(x,y){
 
     var hs = 10;
 
-    // Poignée rotation. Elle est située au-dessus de l'image.
+    /*
+     * Poignée rotation.
+     * Elle est située au-dessus de l'image.
+     */
     if(
         Math.abs(lx) < hs &&
         Math.abs(ly + tempImageH/2 + 35) < hs
@@ -354,7 +395,10 @@ function getImageHandle(x,y){
         return "rotate";
     }
 
-    // Poignées de redimensionnement.
+    /*
+     * Poignées de redimensionnement.
+     */
+
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly + tempImageH/2) < hs
@@ -415,13 +459,19 @@ function getImageHandle(x,y){
 }
 
 
-/* DESSIN DE L'IMAGE + CADRE + POIGNEES */
+/* -----------------------------------------------------
+   DESSIN DE L'IMAGE + CADRE + POIGNEES
+   ----------------------------------------------------- */
+
 function drawTempImage(){
+
     if(!tempImage){
         return;
     }
 
-    // Restaurer le dessin original.
+    /*
+     * Restaurer le dessin original.
+     */
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -437,7 +487,9 @@ function drawTempImage(){
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
 
-    // Image.
+    /*
+     * Image.
+     */
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -446,9 +498,9 @@ function drawTempImage(){
         tempImageH
     );
 
-    // Cadre de sélection. Le cadre reste toujours en 1 px. On restaure ensuite la taille du pinceau.
-    ctx.save();
-
+    /*
+     * Cadre.
+     */
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
 
@@ -459,9 +511,11 @@ function drawTempImage(){
         tempImageH
     );
 
-    ctx.restore();
+    /*
+     * Retour pour dessiner les poignées
+     * dans le même système de coordonnées.
+     */
 
-    // Poignées.
     var handles = [
         [-tempImageW/2,-tempImageH/2],
         [0,-tempImageH/2],
@@ -475,12 +529,8 @@ function drawTempImage(){
 
     var i;
 
-    // Les poignées sont toujours en 1 px.
-    ctx.save();
-
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
 
     for(i=0;i<handles.length;i++){
 
@@ -497,9 +547,10 @@ function drawTempImage(){
         ctx.stroke();
     }
 
-    // Ligne vers poignée rotation.
+    /*
+     * Ligne vers poignée rotation.
+     */
     ctx.beginPath();
-
     ctx.moveTo(
         0,
         -tempImageH/2
@@ -512,7 +563,9 @@ function drawTempImage(){
 
     ctx.stroke();
 
-    // Poignée rotation.
+    /*
+     * Poignée rotation.
+     */
     ctx.beginPath();
 
     ctx.arc(
@@ -528,20 +581,22 @@ function drawTempImage(){
     ctx.stroke();
 
     ctx.restore();
-
-    // Restaurer toutes les propriétés du contexte.
-    ctx.restore();
 }
 
 
-/* VALIDER L'IMAGE */
+/* -----------------------------------------------------
+   VALIDER L'IMAGE
+   ----------------------------------------------------- */
+
 function commitTempImage(){
 
     if(!tempImage){
         return;
     }
 
-    // Restaurer le fond.
+    /*
+     * Restaurer le fond.
+     */
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -550,7 +605,10 @@ function commitTempImage(){
         );
     }
 
-    // L'image devient définitivement une partie du dessin.
+    /*
+     * L'image devient définitivement
+     * une partie du dessin.
+     */
     var c = getImageCenter();
 
     ctx.save();
@@ -568,7 +626,9 @@ function commitTempImage(){
 
     ctx.restore();
 
-    // Sauvegarder le résultat dans Undo.
+    /*
+     * Sauvegarder le résultat dans Undo.
+     */
     undoStack.push(
         ctx.getImageData(
             0,
@@ -588,7 +648,10 @@ function commitTempImage(){
     hideDimensions();
 }
 
-/* IMPORTER UN DESSIN ENTIER */
+/* =====================================================
+   IMPORTER UN DESSIN ENTIER
+   ===================================================== */
+
 var drawingFile = document.getElementById("drawingFile");
 
 drawingFile.onchange = function(){
@@ -679,42 +742,6 @@ var startX = 0, startY = 0;
 var lastX = 0, lastY = 0;
 
 var currentTool = "free";
-/* DERNIER ELEMENT : DEPLACER / REDIMENSIONNER / ROTATION */
-var tempTransform = null;
-
-/*
- * tempTransform contient :
- *
- * x,y       = position
- * w,h       = taille
- * angle     = rotation
- * data      = image de l'élément
- * base      = dessin avant l'élément
- */
-
-var transformAction = 0;
-/*
- * 0 = aucune
- * 1 = déplacement
- * 2 = redimensionnement
- * 3 = rotation
- */
-
-var transformHandle = "";
-
-var transformStartX = 0;
-var transformStartY = 0;
-
-var transformStartW = 0;
-var transformStartH = 0;
-
-var transformStartCenterX = 0;
-var transformStartCenterY = 0;
-
-var transformStartAngle = 0;
-var transformStartPointerAngle = 0;
-
-var transformBaseImage = null;
 
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
@@ -979,10 +1006,11 @@ function drawEllipsePreview(x,y){
 }
 
 function updateDimensions(x,y){
-
+    var width = Math.abs(x - startX);
+    var height = Math.abs(y - startY);
     document.getElementById("dimensions").textContent =
-        "largeur : " + Math.round(Math.abs(x)) +
-        ", hauteur : " + Math.round(Math.abs(y));
+        "largeur : " + Math.round(width) +
+        ", hauteur : " + Math.round(height);
 }
 function hideDimensions(){
     document.getElementById("dimensions").textContent =
@@ -1058,17 +1086,11 @@ function confirmText(){
         return;
     }
 
-    // Si un ancien élément existe,
-    if(tempTransform){
-        commitTempTransform();
-    }
-
     saveState();
 
     var lines = text.split(/\r?\n/);
 
-    var fontSize =
-        parseInt(sizeInput.value,10) * 5;
+    var fontSize = parseInt(sizeInput.value,10) * 5;
 
     if(!fontSize || fontSize < 1){
         fontSize = 15;
@@ -1077,53 +1099,24 @@ function confirmText(){
     ctx.save();
 
     ctx.fillStyle = colorInput.value;
-
-    ctx.font =
-        fontSize + "px sans-serif";
-
+    ctx.font = fontSize + "px sans-serif";
     ctx.textBaseline = "top";
 
-    var lineHeight =
-        Math.round(fontSize * 1.2);
-
+    var lineHeight = Math.round(fontSize * 1.2);
     var i;
 
-    var maxWidth = 0;
-
-    for(i=0;i<lines.length;i++){
-
-        var mw =
-            ctx.measureText(lines[i]).width;
-
-        if(mw > maxWidth){
-            maxWidth = mw;
-        }
-    }
-
-    var totalHeight =
-        lines.length * lineHeight;
-
-    // Dessiner le texte.
-    for(i=0;i<lines.length;i++){
+    for(i = 0; i < lines.length; i++){
 
         ctx.fillText(
             lines[i],
             textX,
-            textY + i*lineHeight
+            textY + i * lineHeight
         );
     }
 
     ctx.restore();
 
     textInput.value = "";
-
-    // Transformer le texte.
-    createTempTransform(
-        textX,
-        textY,
-        Math.max(2,maxWidth + 4),
-        Math.max(2,totalHeight + 4)
-    );
 }
 function cancelText(){
     textBox.style.display = "none";
@@ -1206,469 +1199,6 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
 
 /* MOUSE EVENTS (ASCII LOGIC) */
 var currentPath = "";
-/* TRANSFORMATION DU DERNIER ELEMENT */
-function getTransformCenter(){
-
-    return {
-        x: tempTransform.x + tempTransform.w / 2,
-        y: tempTransform.y + tempTransform.h / 2
-    };
-}
-
-
-function transformPointerAngle(x1,y1,x2,y2){
-
-    return Math.atan2(
-        y2-y1,
-        x2-x1
-    );
-}
-
-
-/* POINT DANS L'ELEMENT */
-function pointInTransform(x,y){
-
-    if(!tempTransform){
-        return false;
-    }
-
-    var c = getTransformCenter();
-
-    var dx = x-c.x;
-    var dy = y-c.y;
-
-    var cos = Math.cos(-tempTransform.angle);
-    var sin = Math.sin(-tempTransform.angle);
-
-    var rx = dx*cos - dy*sin;
-    var ry = dx*sin + dy*cos;
-
-    return (
-        rx >= -tempTransform.w/2 &&
-        rx <=  tempTransform.w/2 &&
-        ry >= -tempTransform.h/2 &&
-        ry <=  tempTransform.h/2
-    );
-}
-
-
-/* -----------------------------------------------------
-   POIGNEES
-   ----------------------------------------------------- */
-
-function getTransformHandle(x,y){
-
-    if(!tempTransform){
-        return "";
-    }
-
-    var c = getTransformCenter();
-
-    var cos = Math.cos(-tempTransform.angle);
-    var sin = Math.sin(-tempTransform.angle);
-
-    var dx = x-c.x;
-    var dy = y-c.y;
-
-    var lx = dx*cos - dy*sin;
-    var ly = dx*sin + dy*cos;
-
-    var hs = 12;
-
-    /* Poignée rotation */
-
-    if(
-        Math.abs(lx) < hs &&
-        Math.abs(ly + tempTransform.h/2 + 35) < hs
-    ){
-        return "rotate";
-    }
-
-    /* NW */
-    if(
-        Math.abs(lx + tempTransform.w/2) < hs &&
-        Math.abs(ly + tempTransform.h/2) < hs
-    ){
-        return "nw";
-    }
-
-    /* N */
-    if(
-        Math.abs(lx) < hs &&
-        Math.abs(ly + tempTransform.h/2) < hs
-    ){
-        return "n";
-    }
-
-    /* NE */
-    if(
-        Math.abs(lx - tempTransform.w/2) < hs &&
-        Math.abs(ly + tempTransform.h/2) < hs
-    ){
-        return "ne";
-    }
-
-    /* E */
-    if(
-        Math.abs(lx - tempTransform.w/2) < hs &&
-        Math.abs(ly) < hs
-    ){
-        return "e";
-    }
-
-    /* SE */
-    if(
-        Math.abs(lx - tempTransform.w/2) < hs &&
-        Math.abs(ly - tempTransform.h/2) < hs
-    ){
-        return "se";
-    }
-
-    /* S */
-    if(
-        Math.abs(lx) < hs &&
-        Math.abs(ly - tempTransform.h/2) < hs
-    ){
-        return "s";
-    }
-
-    /* SW */
-    if(
-        Math.abs(lx + tempTransform.w/2) < hs &&
-        Math.abs(ly - tempTransform.h/2) < hs
-    ){
-        return "sw";
-    }
-
-    /* W */
-    if(
-        Math.abs(lx + tempTransform.w/2) < hs &&
-        Math.abs(ly) < hs
-    ){
-        return "w";
-    }
-
-    return "";
-}
-
-/* AFFICHER L'ELEMENT TEMPORAIRE */
-function drawTempTransform(){
-
-    if(!tempTransform){
-        return;
-    }
-
-    // Restaurer le fond avant l'élément.
-    if(transformBaseImage){
-        ctx.putImageData(
-            transformBaseImage,
-            0,
-            0
-        );
-    }
-
-    /*
-     * Canvas temporaire contenant les pixels
-     * ORIGINAUX de l'élément.
-     *
-     * IMPORTANT :
-     * on utilise la taille originale des ImageData,
-     * et non la nouvelle taille.
-     */
-    var tempCanvas = document.createElement("canvas");
-
-    tempCanvas.width = tempTransform.data.width;
-    tempCanvas.height = tempTransform.data.height;
-
-    var tempCtx = tempCanvas.getContext("2d");
-
-    tempCtx.putImageData(
-        tempTransform.data,
-        0,
-        0
-    );
-
-    var c = getTransformCenter();
-
-    ctx.save();
-
-    // Centre de l'élément.
-    ctx.translate(
-        c.x,
-        c.y
-    );
-
-    // Rotation.
-    ctx.rotate(
-        tempTransform.angle
-    );
-
-    /*
-     * IMPORTANT :
-     * Ici on utilise la NOUVELLE largeur
-     * et la NOUVELLE hauteur.
-     */
-    ctx.drawImage(
-        tempCanvas,
-        -tempTransform.w / 2,
-        -tempTransform.h / 2,
-        tempTransform.w,
-        tempTransform.h
-    );
-
-    // Cadre.
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
-
-    ctx.strokeRect(
-        -tempTransform.w / 2,
-        -tempTransform.h / 2,
-        tempTransform.w,
-        tempTransform.h
-    );
-
-    // Poignées.
-    var handles = [
-        [-tempTransform.w/2,-tempTransform.h/2],
-        [0,-tempTransform.h/2],
-        [tempTransform.w/2,-tempTransform.h/2],
-        [tempTransform.w/2,0],
-        [tempTransform.w/2,tempTransform.h/2],
-        [0,tempTransform.h/2],
-        [-tempTransform.w/2,tempTransform.h/2],
-        [-tempTransform.w/2,0]
-    ];
-
-    var i;
-
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#000000";
-
-    for(i=0;i<handles.length;i++){
-
-        ctx.beginPath();
-
-        ctx.rect(
-            handles[i][0] - 6,
-            handles[i][1] - 6,
-            12,
-            12
-        );
-
-        ctx.fill();
-        ctx.stroke();
-    }
-
-    // Ligne vers poignée de rotation.
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        -tempTransform.h/2
-    );
-
-    ctx.lineTo(
-        0,
-        -tempTransform.h/2 - 35
-    );
-
-    ctx.stroke();
-
-    // Poignée de rotation.
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        -tempTransform.h/2 - 35,
-        8,
-        0,
-        Math.PI * 2,
-        false
-    );
-
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.restore();
-}
-
-/* VALIDER L'ELEMENT */
-
-function commitTempTransform(){
-
-    if(!tempTransform){
-        return;
-    }
-
-    if(transformBaseImage){
-        ctx.putImageData(
-            transformBaseImage,
-            0,
-            0
-        );
-    }
-
-    var c = getTransformCenter();
-
-    /*
-     * Utiliser un canvas temporaire pour permettre
-     * la rotation + redimensionnement.
-     */
-
-var tempCanvas = document.createElement("canvas");
-
-tempCanvas.width = tempTransform.data.width;
-tempCanvas.height = tempTransform.data.height;
-
-var tempCtx = tempCanvas.getContext("2d");
-
-tempCtx.putImageData(
-    tempTransform.data,
-    0,
-    0
-);
-
-    ctx.save();
-
-    ctx.translate(c.x,c.y);
-    ctx.rotate(tempTransform.angle);
-
-    ctx.drawImage(
-        tempCanvas,
-        -tempTransform.w/2,
-        -tempTransform.h/2,
-        tempTransform.w,
-        tempTransform.h
-    );
-
-    ctx.restore();
-
-    // Sauvegarde Undo.
-    undoStack.push(
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        )
-    );
-
-    redoStack = [];
-
-    tempTransform = null;
-    transformBaseImage = null;
-    transformAction = 0;
-    transformHandle = "";
-
-    hideDimensions();
-}
-
-
-/* CREER LE DERNIER ELEMENT */
-function createTempTransform(x,y,w,h){
-
-    if(w < 2 || h < 2){
-        return false;
-    }
-
-    x = Math.floor(x);
-    y = Math.floor(y);
-    w = Math.floor(w);
-    h = Math.floor(h);
-
-    /* 1. SAUVEGARDER LE FOND AVANT LA NOUVELLE FORME */
-    if(undoStack.length){
-
-        transformBaseImage =
-            undoStack[undoStack.length-1];
-
-    }else{
-
-        transformBaseImage =
-            ctx.getImageData(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-    }
-
-    /* 2. RÉCUPÉRER LA ZONE APRÈS LE TRACÉ */
-    var data = ctx.getImageData(
-        x,
-        y,
-        w,
-        h
-    );
-
-    /* 3. NE CONSERVER QUE LES PIXELS MODIFIÉS */
-    var d = data.data;
-
-    var base = transformBaseImage.data;
-
-    var i;
-    var px;
-    var py;
-    var globalIndex;
-
-    for(i = 0; i < d.length; i += 4){
-
-        px = Math.floor((i / 4) % w);
-        py = Math.floor((i / 4) / w);
-
-        globalIndex =
-            ((y + py) * canvas.width + (x + px)) * 4;
-
-        //Comparer avec le dessin avant la forme.
-        if(
-            d[i]     === base[globalIndex] &&
-            d[i + 1] === base[globalIndex + 1] &&
-            d[i + 2] === base[globalIndex + 2] &&
-            d[i + 3] === base[globalIndex + 3]
-        ){
-
-            /*
-             * Ce pixel appartenait déjà
-             * au dessin précédent.
-             *
-             * Il ne doit donc PAS faire partie
-             * de l'élément temporaire.
-             */
-            d[i + 3] = 0;
-        }
-    }
-
-    /* 4. CRÉER L'ÉLÉMENT TEMPORAIRE */
-    tempTransform = {
-
-        x:x,
-        y:y,
-
-        w:w,
-        h:h,
-
-        data:data,
-
-        angle:0
-    };
-
-    /* 5. RESTAURER LE FOND */
-    ctx.putImageData(
-        transformBaseImage,
-        0,
-        0
-    );
-
-    /* 6. AFFICHER L'ÉLÉMENT */
-    drawTempTransform();
-
-    updateDimensions(
-        w,
-        h
-    );
-
-    return true;
-}
 canvas.onpointerdown = function(e){
 
     var p = getPos(e);
@@ -1678,122 +1208,9 @@ canvas.onpointerdown = function(e){
     lastX = p.x;
     lastY = p.y;
 
-    /* ELEMENT TEMPORAIRE */
-    if(tempTransform){
-
-        var handle = getTransformHandle(
-            p.x,
-            p.y
-        );
-
-        /*
-         * Rotation
-         */
-
-        if(handle === "rotate"){
-
-            transformAction = 3;
-
-            var tc = getTransformCenter();
-
-            transformStartAngle =
-                tempTransform.angle;
-
-            transformStartPointerAngle =
-                transformPointerAngle(
-                    tc.x,
-                    tc.y,
-                    p.x,
-                    p.y
-                );
-
-            drawing = true;
-
-            if(canvas.setPointerCapture &&
-               e.pointerId !== undefined){
-
-                canvas.setPointerCapture(
-                    e.pointerId
-                );
-            }
-
-            return;
-        }
-
-        /*
-         * Redimensionnement
-         */
-
-if(handle){
-
-    transformAction = 2;
-    transformHandle = handle;
-
-    transformStartX = p.x;
-    transformStartY = p.y;
-
-    transformStartW = tempTransform.w;
-    transformStartH = tempTransform.h;
-
-    /*
-     * Mémoriser le centre initial.
-     * Il ne doit pas changer pendant le redimensionnement.
-     */
-    transformStartCenterX =
-        tempTransform.x + tempTransform.w / 2;
-
-    transformStartCenterY =
-        tempTransform.y + tempTransform.h / 2;
-
-    drawing = true;
-
-    if(canvas.setPointerCapture &&
-       e.pointerId !== undefined){
-
-        canvas.setPointerCapture(
-            e.pointerId
-        );
-    }
-
-    return;
-}
-
-        /*
-         * Déplacement
-         */
-
-        if(pointInTransform(p.x,p.y)){
-
-            transformAction = 1;
-
-            transformStartX =
-                p.x - tempTransform.x;
-
-            transformStartY =
-                p.y - tempTransform.y;
-
-            drawing = true;
-
-            if(canvas.setPointerCapture &&
-               e.pointerId !== undefined){
-
-                canvas.setPointerCapture(
-                    e.pointerId
-                );
-            }
-
-            return;
-        }
-
-        /*
-         * Clic en dehors :
-         * VALIDATION DEFINITIVE
-         */
-
-        commitTempTransform();
-    }
-
-    /* IMAGE */
+    /* =================================================
+       IMAGE
+       ================================================= */
 
     if(currentTool === "image" && tempImage){
 
@@ -2009,280 +1426,15 @@ canvas.onpointermove = function(e){
     if(!drawing) return;
 
     var p = getPos(e);
-    /* TRANSFORMATION DU DERNIER ELEMENT */
-    if(tempTransform){
-
-        /* DEPLACEMENT */
-        if(transformAction === 1){
-
-            tempTransform.x =
-                p.x - transformStartX;
-
-            tempTransform.y =
-                p.y - transformStartY;
-
-            drawTempTransform();
-
-            updateDimensions(
-                tempTransform.w,
-                tempTransform.h
-            );
-
-            return;
-        }
-
-
-        /*
-         * ROTATION
-         */
-
-        if(transformAction === 3){
-
-            var tc = getTransformCenter();
-
-            var currentAngle =
-                transformPointerAngle(
-                    tc.x,
-                    tc.y,
-                    p.x,
-                    p.y
-                );
-
-            tempTransform.angle =
-                transformStartAngle +
-                (
-                    currentAngle -
-                    transformStartPointerAngle
-                );
-
-            drawTempTransform();
-
-            return;
-        }
-
-
-        /* REDIMENSIONNEMENT */
-if(transformAction === 2){
-    /*
-     * Centre ORIGINAL de l'élément.
-     *
-     * Il reste fixe pendant tout le redimensionnement.
-     */
-    var oldCenterX = transformStartCenterX;
-    var oldCenterY = transformStartCenterY;
-
-    /*
-     * Position de la souris par rapport
-     * au centre original.
-     */
-    var dx = p.x - oldCenterX;
-    var dy = p.y - oldCenterY;
-
-    /*
-     * Passage dans les coordonnées locales
-     * de l'élément en tenant compte de sa rotation.
-     */
-    var cos = Math.cos(-tempTransform.angle);
-    var sin = Math.sin(-tempTransform.angle);
-
-    var lx =
-        dx*cos - dy*sin;
-
-    var ly =
-        dx*sin + dy*cos;
-
-    var oldW = transformStartW;
-    var oldH = transformStartH;
-
-    var ratio = oldW / oldH;
-
-    var newW = oldW;
-    var newH = oldH;
-
-    /* REDIMENSIONNEMENT */
-    /* COINS Conserve les proportions. */
-    if(transformHandle === "se"){
-
-        newW = Math.max(
-            10,
-            lx + oldW/2
-        );
-
-        newH = newW / ratio;
-    }
-
-    else if(transformHandle === "sw"){
-
-        newW = Math.max(
-            10,
-            oldW/2 - lx
-        );
-
-        newH = newW / ratio;
-    }
-
-    else if(transformHandle === "ne"){
-
-        newW = Math.max(
-            10,
-            lx + oldW/2
-        );
-
-        newH = newW / ratio;
-    }
-
-    else if(transformHandle === "nw"){
-
-        newW = Math.max(
-            10,
-            oldW/2 - lx
-        );
-
-        newH = newW / ratio;
-    }
-
-    /* COTES VERTICAUX */
-    else if(transformHandle === "e"){
-
-        newW = Math.max(
-            10,
-            lx + oldW/2
-        );
-
-        newH = oldH;
-    }
-
-    else if(transformHandle === "w"){
-
-        newW = Math.max(
-            10,
-            oldW/2 - lx
-        );
-
-        newH = oldH;
-    }
-
-    /* COTES HORIZONTAUX */
-    else if(transformHandle === "s"){
-
-        newW = oldW;
-
-        newH = Math.max(
-            10,
-            ly + oldH/2
-        );
-    }
-
-    else if(transformHandle === "n"){
-
-        newW = oldW;
-
-        newH = Math.max(
-            10,
-            oldH/2 - ly
-        );
-    }
-
-    /* NOUVELLE POSITION Le côté opposé à la poignée reste fixe. */
-    var newCenterX = oldCenterX;
-    var newCenterY = oldCenterY;
-
-    if(transformHandle === "se"){
-
-        newCenterX =
-            oldCenterX +
-            (newW - oldW) / 2;
-
-        newCenterY =
-            oldCenterY +
-            (newH - oldH) / 2;
-    }
-
-    else if(transformHandle === "sw"){
-
-        newCenterX =
-            oldCenterX -
-            (newW - oldW) / 2;
-
-        newCenterY =
-            oldCenterY +
-            (newH - oldH) / 2;
-    }
-
-    else if(transformHandle === "ne"){
-
-        newCenterX =
-            oldCenterX +
-            (newW - oldW) / 2;
-
-        newCenterY =
-            oldCenterY -
-            (newH - oldH) / 2;
-    }
-
-    else if(transformHandle === "nw"){
-
-        newCenterX =
-            oldCenterX -
-            (newW - oldW) / 2;
-
-        newCenterY =
-            oldCenterY -
-            (newH - oldH) / 2;
-    }
-
-    else if(transformHandle === "e"){
-
-        newCenterX =
-            oldCenterX +
-            (newW - oldW) / 2;
-    }
-
-    else if(transformHandle === "w"){
-
-        newCenterX =
-            oldCenterX -
-            (newW - oldW) / 2;
-    }
-
-    else if(transformHandle === "s"){
-
-        newCenterY =
-            oldCenterY +
-            (newH - oldH) / 2;
-    }
-
-    else if(transformHandle === "n"){
-
-        newCenterY =
-            oldCenterY -
-            (newH - oldH) / 2;
-    }
-
-    // APPLIQUER
-    tempTransform.w = newW;
-    tempTransform.h = newH;
-
-    tempTransform.x =
-        newCenterX - newW/2;
-
-    tempTransform.y =
-        newCenterY - newH/2;
-
-    drawTempTransform();
-
-    updateDimensions(
-        newW,
-        newH
-    );
-
-    return;
-}
-    }
     var x = p.x, y = p.y;
 
-    /* IMAGE */
-        //REDIMENSIONNEMENT
+    /* =================================================
+       IMAGE
+       ================================================= */
+
+        /*
+         * REDIMENSIONNEMENT
+         */
         if(imageAction === 2){
 
             var c = getImageCenter();
@@ -2537,31 +1689,7 @@ canvas.onpointerup = function(e){
 
     drawing = false;
     isDown = false;
-    /*
-     * Fin d'une transformation
-     */
 
-    if(tempTransform){
-
-        if(transformAction !== 0){
-
-            transformAction = 0;
-            transformHandle = "";
-
-            drawTempTransform();
-
-            if(
-                canvas.hasPointerCapture &&
-                canvas.hasPointerCapture(e.pointerId)
-            ){
-                canvas.releasePointerCapture(
-                    e.pointerId
-                );
-            }
-
-            return;
-        }
-    }
 if(
     canvas.hasPointerCapture &&
     canvas.hasPointerCapture(e.pointerId)
@@ -2759,6 +1887,7 @@ if(moved && window.PointerEvent){
     }
 
     /* DESSIN NORMAL */
+
     if(currentTool==="free"){
         return;
     }
@@ -2767,189 +1896,63 @@ if(moved && window.PointerEvent){
         return;
     }
 
-if(currentTool==="line"){
+    if(currentTool==="line"){
 
-    redrawFromUndoTop();
+        redrawFromUndoTop();
 
-    ctx.beginPath();
-    ctx.moveTo(startX,startY);
-    ctx.lineTo(x,y);
-    ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(startX,startY);
+        ctx.lineTo(x,y);
+        ctx.stroke();
 
-    var margin = ctx.lineWidth + 4;
-
-    var sx = Math.min(startX,x) - margin;
-    var sy = Math.min(startY,y) - margin;
-
-    var sw = Math.abs(x-startX) + margin*2;
-    var sh = Math.abs(y-startY) + margin*2;
-
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
-
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
-
-    return;
-}
-
-if(currentTool==="arrow"){
-
-    redrawFromUndoTop();
-
-    drawArrowPreview(x,y);
-
-    var margin = ctx.lineWidth * 5;
-
-    var sx = Math.min(startX,x) - margin;
-    var sy = Math.min(startY,y) - margin;
-
-    var sw = Math.abs(x-startX) + margin*2;
-    var sh = Math.abs(y-startY) + margin*2;
-
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
-
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
-
-    return;
-}
-
-if(currentTool==="square"){
-
-    drawSquarePreview(x,y);
-
-    var margin = ctx.lineWidth + 4;
-
-    var sx = Math.min(startX,x) - margin;
-    var sy = Math.min(startY,y) - margin;
-
-    var sw = Math.abs(x-startX) + margin*2;
-    var sh = Math.abs(y-startY) + margin*2;
-
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
-
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
-
-    return;
-}
-
-if(currentTool==="rect"){
-
-    redrawFromUndoTop();
-
-    ctx.beginPath();
-    ctx.rect(
-        startX,
-        startY,
-        x-startX,
-        y-startY
-    );
-
-    ctx.stroke();
-
-    var margin = ctx.lineWidth + 4;
-
-    var sx = Math.min(startX,x) - margin;
-    var sy = Math.min(startY,y) - margin;
-
-    var sw = Math.abs(x-startX) + margin*2;
-    var sh = Math.abs(y-startY) + margin*2;
-
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
-
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
-
-    return;
-}
-
-if(currentTool==="circle"){
-
-    drawCirclePreview(x,y);
-
-    var margin = ctx.lineWidth + 4;
-
-    var dx = Math.abs(x-startX);
-    var dy = Math.abs(y-startY);
-
-    var size = Math.min(dx,dy);
-
-    var left = startX;
-
-    var top = startY;
-
-    if(x < startX){
-        left = startX-size;
+        return;
     }
 
-    if(y < startY){
-        top = startY-size;
+    if(currentTool==="arrow"){
+
+        redrawFromUndoTop();
+        drawArrowPreview(x,y);
+
+        return;
     }
 
-    var sx = left-margin;
-    var sy = top-margin;
+    if(currentTool==="square"){
 
-    var sw = size+margin*2;
-    var sh = size+margin*2;
+        drawSquarePreview(x,y);
 
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
+        return;
+    }
 
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
+    if(currentTool==="rect"){
 
-    return;
-}
+        redrawFromUndoTop();
 
-if(currentTool==="ellipse"){
+        ctx.beginPath();
+        ctx.rect(
+            startX,
+            startY,
+            x-startX,
+            y-startY
+        );
 
-    drawEllipsePreview(x,y);
+        ctx.stroke();
 
-    var margin = ctx.lineWidth + 4;
+        return;
+    }
 
-    var sx = Math.min(startX,x) - margin;
-    var sy = Math.min(startY,y) - margin;
+    if(currentTool==="circle"){
 
-    var sw = Math.abs(x-startX) + margin*2;
-    var sh = Math.abs(y-startY) + margin*2;
+        drawCirclePreview(x,y);
 
-    sx = Math.max(0,sx);
-    sy = Math.max(0,sy);
+        return;
+    }
 
-    createTempTransform(
-        sx,
-        sy,
-        Math.min(sw,canvas.width-sx),
-        Math.min(sh,canvas.height-sy)
-    );
+    if(currentTool==="ellipse"){
 
-    return;
-}
+        drawEllipsePreview(x,y);
+
+        return;
+    }
 
     if(currentTool==="fill"){
         return;
