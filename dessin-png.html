@@ -139,9 +139,7 @@ sizeInput.oninput = function(){
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
-/* =====================================================
-   IMAGE : DEPLACER / REDIMENSIONNER / ROTATION
-   ===================================================== */
+/* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
 
 var imageFile = document.getElementById("imageFile");
 
@@ -176,10 +174,7 @@ var imageStartDistance = 0;
 var imageStartPointerAngle = 0;
 
 
-/* -----------------------------------------------------
-   CHARGEMENT
-   ----------------------------------------------------- */
-
+/* CHARGEMENT */
 imageFile.onchange = function(){
 
     if(!imageFile.files || !imageFile.files.length){
@@ -202,10 +197,7 @@ imageFile.onchange = function(){
 
         img.onload = function(){
 
-            /*
-             * Si une autre image temporaire existe,
-             * on la valide avant d'en charger une nouvelle.
-             */
+            // Si une autre image temporaire existe, on la valide avant d'en charger une nouvelle.
             if(tempImage){
                 commitTempImage();
             }
@@ -215,9 +207,7 @@ imageFile.onchange = function(){
             tempImageW = img.width;
             tempImageH = img.height;
 
-            /*
-             * Taille maximale initiale.
-             */
+            // Taille maximale initiale.
             var maxW = 300;
             var maxH = 300;
 
@@ -237,9 +227,7 @@ imageFile.onchange = function(){
                 tempImageH = maxH;
             }
 
-            /*
-             * Centrer l'image.
-             */
+            // Centrer l'image.
             tempImageX =
                 (canvas.width - tempImageW) / 2;
 
@@ -248,9 +236,7 @@ imageFile.onchange = function(){
 
             tempImageAngle = 0;
 
-            /*
-             * Sauvegarder le dessin avant l'image.
-             */
+            // Sauvegarder le dessin avant l'image.
             imageBaseImage = ctx.getImageData(
                 0,
                 0,
@@ -282,47 +268,30 @@ imageFile.onchange = function(){
 };
 
 
-/* -----------------------------------------------------
-   CALCUL DES COORDONNEES
-   ----------------------------------------------------- */
-
+/* CALCUL DES COORDONNEES */
 function getImageCenter(){
-
     return {
         x: tempImageX + tempImageW / 2,
         y: tempImageY + tempImageH / 2
     };
 }
 
-
-/*
- * Distance entre deux points.
- */
+/* Distance entre deux points. */
 function imageDistance(x1,y1,x2,y2){
-
     var dx = x2-x1;
     var dy = y2-y1;
-
     return Math.sqrt(dx*dx + dy*dy);
 }
 
-
-/*
- * Angle entre deux points.
- */
+/* Angle entre deux points. */
 function imagePointerAngle(x1,y1,x2,y2){
-
     return Math.atan2(
         y2-y1,
         x2-x1
     );
 }
 
-
-/* -----------------------------------------------------
-   POINT DANS L'IMAGE
-   ----------------------------------------------------- */
-
+/* POINT DANS L'IMAGE */
 function pointInTempImage(x,y){
 
     if(!tempImage){
@@ -334,9 +303,7 @@ function pointInTempImage(x,y){
     var dx = x-c.x;
     var dy = y-c.y;
 
-    /*
-     * Annuler la rotation.
-     */
+    // Annuler la rotation.
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
 
@@ -355,10 +322,7 @@ function pointInTempImage(x,y){
 }
 
 
-/* -----------------------------------------------------
-   POIGNEES
-   ----------------------------------------------------- */
-
+/* POIGNEES */
 function getImageHandle(x,y){
 
     if(!tempImage){
@@ -373,9 +337,7 @@ function getImageHandle(x,y){
     var dx = x-c.x;
     var dy = y-c.y;
 
-    /*
-     * Coordonnées locales.
-     */
+    // Coordonnées locales.
     var lx =
         dx*cos - dy*sin;
 
@@ -384,10 +346,7 @@ function getImageHandle(x,y){
 
     var hs = 10;
 
-    /*
-     * Poignée rotation.
-     * Elle est située au-dessus de l'image.
-     */
+    // Poignée rotation. Elle est située au-dessus de l'image.
     if(
         Math.abs(lx) < hs &&
         Math.abs(ly + tempImageH/2 + 35) < hs
@@ -395,10 +354,7 @@ function getImageHandle(x,y){
         return "rotate";
     }
 
-    /*
-     * Poignées de redimensionnement.
-     */
-
+    // Poignées de redimensionnement.
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly + tempImageH/2) < hs
@@ -459,19 +415,13 @@ function getImageHandle(x,y){
 }
 
 
-/* -----------------------------------------------------
-   DESSIN DE L'IMAGE + CADRE + POIGNEES
-   ----------------------------------------------------- */
-
+/* DESSIN DE L'IMAGE + CADRE + POIGNEES */
 function drawTempImage(){
-
     if(!tempImage){
         return;
     }
 
-    /*
-     * Restaurer le dessin original.
-     */
+    // Restaurer le dessin original.
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -487,9 +437,7 @@ function drawTempImage(){
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
 
-    /*
-     * Image.
-     */
+    // Image.
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -498,11 +446,7 @@ function drawTempImage(){
         tempImageH
     );
 
-    /*
-     * Cadre de sélection.
-     * Le cadre reste toujours en 1 px.
-     * On restaure ensuite la taille du pinceau.
-     */
+    // Cadre de sélection. Le cadre reste toujours en 1 px. On restaure ensuite la taille du pinceau.
     ctx.save();
 
     ctx.strokeStyle = "#000000";
@@ -517,9 +461,7 @@ function drawTempImage(){
 
     ctx.restore();
 
-    /*
-     * Poignées.
-     */
+    // Poignées.
     var handles = [
         [-tempImageW/2,-tempImageH/2],
         [0,-tempImageH/2],
@@ -533,9 +475,7 @@ function drawTempImage(){
 
     var i;
 
-    /*
-     * Les poignées sont toujours en 1 px.
-     */
+    // Les poignées sont toujours en 1 px.
     ctx.save();
 
     ctx.fillStyle = "#ffffff";
@@ -557,9 +497,7 @@ function drawTempImage(){
         ctx.stroke();
     }
 
-    /*
-     * Ligne vers poignée rotation.
-     */
+    // Ligne vers poignée rotation.
     ctx.beginPath();
 
     ctx.moveTo(
@@ -574,9 +512,7 @@ function drawTempImage(){
 
     ctx.stroke();
 
-    /*
-     * Poignée rotation.
-     */
+    // Poignée rotation.
     ctx.beginPath();
 
     ctx.arc(
@@ -593,26 +529,19 @@ function drawTempImage(){
 
     ctx.restore();
 
-    /*
-     * Restaurer toutes les propriétés du contexte.
-     */
+    // Restaurer toutes les propriétés du contexte.
     ctx.restore();
 }
 
 
-/* -----------------------------------------------------
-   VALIDER L'IMAGE
-   ----------------------------------------------------- */
-
+/* VALIDER L'IMAGE */
 function commitTempImage(){
 
     if(!tempImage){
         return;
     }
 
-    /*
-     * Restaurer le fond.
-     */
+    // Restaurer le fond.
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -621,10 +550,7 @@ function commitTempImage(){
         );
     }
 
-    /*
-     * L'image devient définitivement
-     * une partie du dessin.
-     */
+    // L'image devient définitivement une partie du dessin.
     var c = getImageCenter();
 
     ctx.save();
@@ -642,9 +568,7 @@ function commitTempImage(){
 
     ctx.restore();
 
-    /*
-     * Sauvegarder le résultat dans Undo.
-     */
+    // Sauvegarder le résultat dans Undo.
     undoStack.push(
         ctx.getImageData(
             0,
@@ -664,10 +588,7 @@ function commitTempImage(){
     hideDimensions();
 }
 
-/* =====================================================
-   IMPORTER UN DESSIN ENTIER
-   ===================================================== */
-
+/* IMPORTER UN DESSIN ENTIER */
 var drawingFile = document.getElementById("drawingFile");
 
 drawingFile.onchange = function(){
@@ -758,10 +679,7 @@ var startX = 0, startY = 0;
 var lastX = 0, lastY = 0;
 
 var currentTool = "free";
-/* =====================================================
-   DERNIER ELEMENT : DEPLACER / REDIMENSIONNER / ROTATION
-   ===================================================== */
-
+/* DERNIER ELEMENT : DEPLACER / REDIMENSIONNER / ROTATION */
 var tempTransform = null;
 
 /*
@@ -1140,10 +1058,7 @@ function confirmText(){
         return;
     }
 
-    /*
-     * Si un ancien élément existe,
-     * on le valide.
-     */
+    // Si un ancien élément existe,
     if(tempTransform){
         commitTempTransform();
     }
@@ -1188,10 +1103,7 @@ function confirmText(){
     var totalHeight =
         lines.length * lineHeight;
 
-    /*
-     * Dessiner le texte.
-     */
-
+    // Dessiner le texte.
     for(i=0;i<lines.length;i++){
 
         ctx.fillText(
@@ -1205,16 +1117,13 @@ function confirmText(){
 
     textInput.value = "";
 
-    /*
-     * Transformer le texte.
-     */
-
-createTempTransform(
-    textX,
-    textY,
-    Math.max(2,maxWidth + 4),
-    Math.max(2,totalHeight + 4)
-);
+    // Transformer le texte.
+    createTempTransform(
+        textX,
+        textY,
+        Math.max(2,maxWidth + 4),
+        Math.max(2,totalHeight + 4)
+    );
 }
 function cancelText(){
     textBox.style.display = "none";
@@ -1297,10 +1206,7 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
 
 /* MOUSE EVENTS (ASCII LOGIC) */
 var currentPath = "";
-/* =====================================================
-   TRANSFORMATION DU DERNIER ELEMENT
-   ===================================================== */
-
+/* TRANSFORMATION DU DERNIER ELEMENT */
 function getTransformCenter(){
 
     return {
@@ -1319,10 +1225,7 @@ function transformPointerAngle(x1,y1,x2,y2){
 }
 
 
-/* -----------------------------------------------------
-   POINT DANS L'ELEMENT
-   ----------------------------------------------------- */
-
+/* POINT DANS L'ELEMENT */
 function pointInTransform(x,y){
 
     if(!tempTransform){
@@ -1448,19 +1351,14 @@ function getTransformHandle(x,y){
     return "";
 }
 
-/* -----------------------------------------------------
-   AFFICHER L'ELEMENT TEMPORAIRE
-   ----------------------------------------------------- */
-
+/* AFFICHER L'ELEMENT TEMPORAIRE */
 function drawTempTransform(){
 
     if(!tempTransform){
         return;
     }
 
-    /*
-     * Restaurer le fond avant l'élément.
-     */
+    // Restaurer le fond avant l'élément.
     if(transformBaseImage){
         ctx.putImageData(
             transformBaseImage,
@@ -1494,17 +1392,13 @@ function drawTempTransform(){
 
     ctx.save();
 
-    /*
-     * Centre de l'élément.
-     */
+    // Centre de l'élément.
     ctx.translate(
         c.x,
         c.y
     );
 
-    /*
-     * Rotation.
-     */
+    // Rotation.
     ctx.rotate(
         tempTransform.angle
     );
@@ -1522,9 +1416,7 @@ function drawTempTransform(){
         tempTransform.h
     );
 
-    /*
-     * Cadre.
-     */
+    // Cadre.
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
 
@@ -1535,9 +1427,7 @@ function drawTempTransform(){
         tempTransform.h
     );
 
-    /*
-     * Poignées.
-     */
+    // Poignées.
     var handles = [
         [-tempTransform.w/2,-tempTransform.h/2],
         [0,-tempTransform.h/2],
@@ -1569,9 +1459,7 @@ function drawTempTransform(){
         ctx.stroke();
     }
 
-    /*
-     * Ligne vers poignée de rotation.
-     */
+    // Ligne vers poignée de rotation.
     ctx.beginPath();
 
     ctx.moveTo(
@@ -1586,9 +1474,7 @@ function drawTempTransform(){
 
     ctx.stroke();
 
-    /*
-     * Poignée de rotation.
-     */
+    // Poignée de rotation.
     ctx.beginPath();
 
     ctx.arc(
@@ -1606,9 +1492,7 @@ function drawTempTransform(){
     ctx.restore();
 }
 
-/* -----------------------------------------------------
-   VALIDER L'ELEMENT
-   ----------------------------------------------------- */
+/* VALIDER L'ELEMENT */
 
 function commitTempTransform(){
 
@@ -1659,10 +1543,7 @@ tempCtx.putImageData(
 
     ctx.restore();
 
-    /*
-     * Sauvegarde Undo.
-     */
-
+    // Sauvegarde Undo.
     undoStack.push(
         ctx.getImageData(
             0,
@@ -1683,10 +1564,7 @@ tempCtx.putImageData(
 }
 
 
-/* -----------------------------------------------------
-   CREER LE DERNIER ELEMENT
-   ----------------------------------------------------- */
-
+/* CREER LE DERNIER ELEMENT */
 function createTempTransform(x,y,w,h){
 
     if(w < 2 || h < 2){
@@ -1698,12 +1576,7 @@ function createTempTransform(x,y,w,h){
     w = Math.floor(w);
     h = Math.floor(h);
 
-    /*
-     * ------------------------------------------------
-     * 1. SAUVEGARDER LE FOND AVANT LA NOUVELLE FORME
-     * ------------------------------------------------
-     */
-
+    /* 1. SAUVEGARDER LE FOND AVANT LA NOUVELLE FORME */
     if(undoStack.length){
 
         transformBaseImage =
@@ -1720,12 +1593,7 @@ function createTempTransform(x,y,w,h){
             );
     }
 
-    /*
-     * ------------------------------------------------
-     * 2. RÉCUPÉRER LA ZONE APRÈS LE TRACÉ
-     * ------------------------------------------------
-     */
-
+    /* 2. RÉCUPÉRER LA ZONE APRÈS LE TRACÉ */
     var data = ctx.getImageData(
         x,
         y,
@@ -1733,15 +1601,7 @@ function createTempTransform(x,y,w,h){
         h
     );
 
-    /*
-     * ------------------------------------------------
-     * 3. NE CONSERVER QUE LES PIXELS MODIFIÉS
-     * ------------------------------------------------
-     *
-     * Les pixels identiques au fond sont rendus
-     * transparents.
-     */
-
+    /* 3. NE CONSERVER QUE LES PIXELS MODIFIÉS */
     var d = data.data;
 
     var base = transformBaseImage.data;
@@ -1759,10 +1619,7 @@ function createTempTransform(x,y,w,h){
         globalIndex =
             ((y + py) * canvas.width + (x + px)) * 4;
 
-        /*
-         * Comparer avec le dessin avant la forme.
-         */
-
+        //Comparer avec le dessin avant la forme.
         if(
             d[i]     === base[globalIndex] &&
             d[i + 1] === base[globalIndex + 1] &&
@@ -1781,12 +1638,7 @@ function createTempTransform(x,y,w,h){
         }
     }
 
-    /*
-     * ------------------------------------------------
-     * 4. CRÉER L'ÉLÉMENT TEMPORAIRE
-     * ------------------------------------------------
-     */
-
+    /* 4. CRÉER L'ÉLÉMENT TEMPORAIRE */
     tempTransform = {
 
         x:x,
@@ -1800,24 +1652,14 @@ function createTempTransform(x,y,w,h){
         angle:0
     };
 
-    /*
-     * ------------------------------------------------
-     * 5. RESTAURER LE FOND
-     * ------------------------------------------------
-     */
-
+    /* 5. RESTAURER LE FOND */
     ctx.putImageData(
         transformBaseImage,
         0,
         0
     );
 
-    /*
-     * ------------------------------------------------
-     * 6. AFFICHER L'ÉLÉMENT
-     * ------------------------------------------------
-     */
-
+    /* 6. AFFICHER L'ÉLÉMENT */
     drawTempTransform();
 
     updateDimensions(
@@ -1836,10 +1678,7 @@ canvas.onpointerdown = function(e){
     lastX = p.x;
     lastY = p.y;
 
-    /* =================================================
-       ELEMENT TEMPORAIRE
-       ================================================= */
-
+    /* ELEMENT TEMPORAIRE */
     if(tempTransform){
 
         var handle = getTransformHandle(
@@ -1954,9 +1793,7 @@ if(handle){
         commitTempTransform();
     }
 
-    /* =================================================
-       IMAGE
-       ================================================= */
+    /* IMAGE */
 
     if(currentTool === "image" && tempImage){
 
@@ -2172,16 +2009,10 @@ canvas.onpointermove = function(e){
     if(!drawing) return;
 
     var p = getPos(e);
-    /* =================================================
-       TRANSFORMATION DU DERNIER ELEMENT
-       ================================================= */
-
+    /* TRANSFORMATION DU DERNIER ELEMENT */
     if(tempTransform){
 
-        /*
-         * DEPLACEMENT
-         */
-
+        /* DEPLACEMENT */
         if(transformAction === 1){
 
             tempTransform.x =
@@ -2230,12 +2061,8 @@ canvas.onpointermove = function(e){
         }
 
 
-        /*
-         * REDIMENSIONNEMENT
-         */
-
+        /* REDIMENSIONNEMENT */
 if(transformAction === 2){
-
     /*
      * Centre ORIGINAL de l'élément.
      *
@@ -2272,17 +2099,8 @@ if(transformAction === 2){
     var newW = oldW;
     var newH = oldH;
 
-    /*
-     * ------------------------------------------------
-     * REDIMENSIONNEMENT
-     * ------------------------------------------------
-     */
-
-    /*
-     * COINS
-     * Conserve les proportions.
-     */
-
+    /* REDIMENSIONNEMENT */
+    /* COINS Conserve les proportions. */
     if(transformHandle === "se"){
 
         newW = Math.max(
@@ -2323,10 +2141,7 @@ if(transformAction === 2){
         newH = newW / ratio;
     }
 
-    /*
-     * COTES VERTICAUX
-     */
-
+    /* COTES VERTICAUX */
     else if(transformHandle === "e"){
 
         newW = Math.max(
@@ -2347,10 +2162,7 @@ if(transformAction === 2){
         newH = oldH;
     }
 
-    /*
-     * COTES HORIZONTAUX
-     */
-
+    /* COTES HORIZONTAUX */
     else if(transformHandle === "s"){
 
         newW = oldW;
@@ -2371,14 +2183,7 @@ if(transformAction === 2){
         );
     }
 
-    /*
-     * ------------------------------------------------
-     * NOUVELLE POSITION
-     * ------------------------------------------------
-     *
-     * Le côté opposé à la poignée reste fixe.
-     */
-
+    /* NOUVELLE POSITION Le côté opposé à la poignée reste fixe. */
     var newCenterX = oldCenterX;
     var newCenterY = oldCenterY;
 
@@ -2454,12 +2259,7 @@ if(transformAction === 2){
             (newH - oldH) / 2;
     }
 
-    /*
-     * ------------------------------------------------
-     * APPLIQUER
-     * ------------------------------------------------
-     */
-
+    // APPLIQUER
     tempTransform.w = newW;
     tempTransform.h = newH;
 
@@ -2481,13 +2281,8 @@ if(transformAction === 2){
     }
     var x = p.x, y = p.y;
 
-    /* =================================================
-       IMAGE
-       ================================================= */
-
-        /*
-         * REDIMENSIONNEMENT
-         */
+    /* IMAGE */
+        //REDIMENSIONNEMENT
         if(imageAction === 2){
 
             var c = getImageCenter();
@@ -2964,7 +2759,6 @@ if(moved && window.PointerEvent){
     }
 
     /* DESSIN NORMAL */
-
     if(currentTool==="free"){
         return;
     }
