@@ -1024,11 +1024,36 @@ function confirmText(){
         fontSize = 15;
     }
     ctx.save();
-    ctx.fillStyle = colorInput.value;
     ctx.font = fontSize + "px sans-serif";
     ctx.textBaseline = "top";
     var lineHeight = Math.round(fontSize * 1.2);
     var i;
+    if(rainbowMode){
+        // Mesurer la largeur totale du texte pour que le dégradé couvre réellement toute la longueur.
+        var maxWidth = 0;
+        for(i = 0; i < lines.length; i++){
+            var width = ctx.measureText(lines[i]).width;
+            if(width > maxWidth){
+                maxWidth = width;
+            }
+        }
+        var gradient = ctx.createLinearGradient(
+            textX,
+            textY,
+            textX + maxWidth,
+            textY
+        );
+        gradient.addColorStop(0, "#ff0000");
+        gradient.addColorStop(0.16, "#ff9900");
+        gradient.addColorStop(0.33, "#ffff00");
+        gradient.addColorStop(0.50, "#00ff00");
+        gradient.addColorStop(0.66, "#00ffff");
+        gradient.addColorStop(0.83, "#0000ff");
+        gradient.addColorStop(1, "#ff00ff");
+        ctx.fillStyle = gradient;
+    } else {
+        ctx.fillStyle = colorInput.value;
+    }
     for(i = 0; i < lines.length; i++){
         ctx.fillText(
             lines[i],
