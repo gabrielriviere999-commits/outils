@@ -485,7 +485,9 @@ function drawTempImage(){
     ctx.save();
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-    // Image.
+    // Image : toujours en mode dessin normal
+    var oldComposite = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -493,6 +495,7 @@ function drawTempImage(){
         tempImageW,
         tempImageH
     );
+    ctx.globalCompositeOperation = oldComposite;
     // Cadre.
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
@@ -558,9 +561,7 @@ function commitTempImage(){
     if(!tempImage){
         return;
     }
-    /*
-     * Restaurer le fond.
-     */
+    // Restaurer le fond.
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -576,6 +577,8 @@ function commitTempImage(){
     ctx.save();
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
+    var oldComposite = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -583,10 +586,9 @@ function commitTempImage(){
         tempImageW,
         tempImageH
     );
+    ctx.globalCompositeOperation = oldComposite;
     ctx.restore();
-    /*
-     * Sauvegarder le résultat dans Undo.
-     */
+    // Sauvegarder le résultat dans Undo.
     undoStack.push(
         ctx.getImageData(
             0,
@@ -720,6 +722,11 @@ function setTool(t){
     if(t==="text")    btnText.className = "active";
     if(t==="fill")   btnFill.className = "active";
     if(t==="eraser") btnEraser.className = "active";
+    if(t === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+    }
     if(t==="move")   btnMove.className = "active";
     if(t==="copy")   btnCopy.className = "active";
 }
@@ -754,15 +761,22 @@ function getPos(e){
 }
 /* DRAWING FUNCTIONS */
 function drawFree(x,y){
-    if(rainbowMode){
-        var dx = x - lastX;
-        var dy = y - lastY;
-        var distance = Math.sqrt(dx*dx + dy*dy);
-        rainbowHue += distance * 1.5;
-        if(rainbowHue >= 360){
-            rainbowHue -= 360;
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+        if(rainbowMode){
+            var dx = x - lastX;
+            var dy = y - lastY;
+            var distance = Math.sqrt(dx*dx + dy*dy);
+            rainbowHue += distance * 1.5;
+            while(rainbowHue >= 360){
+                rainbowHue -= 360;
+            }
+            ctx.strokeStyle = rainbowColor(rainbowHue);
+        } else {
+            applyColor();
         }
-        ctx.strokeStyle = rainbowColor(rainbowHue);
     }
     ctx.beginPath();
     ctx.moveTo(lastX,lastY);
@@ -1316,9 +1330,8 @@ canvas.onpointerdown = function(e){
         return;
     }
     if(currentTool==="eraser"){
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth =
-            parseInt(sizeInput.value,10);
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = parseInt(sizeInput.value,10);
     }
 };
 canvas.onpointermove = function(e){
