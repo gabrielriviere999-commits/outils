@@ -76,11 +76,10 @@ canvas{
   <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
   <div id="popupOptionsContent" style="display:none">
     <div id="canvasResolution">
-      Résolution :
-      <input type="number" id="canvasWidth" value="640" min="1" max="10000">
-      x
-      <input type="number" id="canvasHeight" value="480" min="1" max="10000">
-      <button id="applyResolutionBtn" data-action="changeCanvasResolution">OK</button>
+	  <b>Résolution</b><br>
+      Largeur : <input type="number" id="canvasWidth" value="640" min="1" max="10000"><br>
+      Hauteur : <input type="number" id="canvasHeight" value="480" min="1" max="10000"><br>
+      <button id="applyResolutionBtn" data-action="changeCanvasResolution" style="width:100%">OK</button>
     </div>
   </div>
 </div>
@@ -119,7 +118,7 @@ function setToolFill(){ setTool("fill"); }
 function setToolEraser(){ setTool("eraser"); }
 function openOptionsPopup() {
   var container = document.getElementById("popupOptionsContent");
-  openPopup(container);
+  openPopupMenu(container);
 }
 // Changer la couleur du tracé
 attachColorPickerTo(document.getElementById("colorInput"));
@@ -256,10 +255,7 @@ function changeCanvasResolution(){
     // Mettre à jour les champs 
     canvasWidthInput.value = newWidth;
     canvasHeightInput.value = newHeight;
-}
-function openOptionsPopup() {
-  var container = document.getElementById("popupOptionsContent");
-  openPopup(container);
+    closePopup();
 }
 /* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
 var imageFile = document.getElementById("imageFile");
