@@ -41,8 +41,8 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
     </div>
   </div>
   Couleur : <input type="text" id="colorInput" class="ColorPickerZindex" value="#000000" size="8"><div class="previewColorPicker"></div>
+  <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
   Taille : <input type="range" id="sizeInput" min="1" max="50" value="3"><span id="sizeLabel">3</span>
-
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button id="btnLine" data-action="setToolLine">Ligne</button>
   <button id="btnArrow" data-action="setToolArrow">Flèche</button>
@@ -104,12 +104,72 @@ function openOptionsPopup() {
 // Changer la couleur du tracé
 attachColorPickerTo(document.getElementById("colorInput"));
 var colorInput = document.getElementById("colorInput");
+var rainbowMode = false;
+var rainbowHue = 0;
 function applyColor(){
     var col = colorInput.value;
     ctx.strokeStyle = col;
     ctx.fillStyle = col;
 }
 colorInput.oninput = applyColor;
+function toggleRainbow(){
+    rainbowMode = !rainbowMode;
+    var btn = document.getElementById("btnRainbow");
+    if(rainbowMode){
+        btn.className = "active";
+    } else {
+        btn.className = "";
+        applyColor();
+    }
+}
+function rainbowColor(h){
+    var s = 1;
+    var v = 1;
+    var i = Math.floor(h / 60);
+    var f = h / 60 - i;
+    var p = v * (1 - s);
+    var q = v * (1 - s * f);
+    var t = v * (1 - s * (1 - f));
+    var r, g, b;
+    if(i === 0){
+        r = v; g = t; b = p;
+    } else if(i === 1){
+        r = q; g = v; b = p;
+    } else if(i === 2){
+        r = p; g = v; b = t;
+    } else if(i === 3){
+        r = p; g = q; b = v;
+    } else if(i === 4){
+        r = t; g = p; b = v;
+    } else {
+        r = v; g = p; b = q;
+    }
+    return "#" +
+        ("0" + Math.round(r * 255).toString(16)).slice(-2) +
+        ("0" + Math.round(g * 255).toString(16)).slice(-2) +
+        ("0" + Math.round(b * 255).toString(16)).slice(-2);
+}
+function createRainbowGradient(x1,y1,x2,y2){
+    var gradient = ctx.createLinearGradient(x1,y1,x2,y2);
+    gradient.addColorStop(0, "#ff0000");
+    gradient.addColorStop(0.16, "#ff9900");
+    gradient.addColorStop(0.33, "#ffff00");
+    gradient.addColorStop(0.50, "#00ff00");
+    gradient.addColorStop(0.66, "#00ffff");
+    gradient.addColorStop(0.83, "#0000ff");
+    gradient.addColorStop(1, "#ff00ff");
+    return gradient;
+}
+function applyRainbowGradient(x1,y1,x2,y2){
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            x1,y1,x2,y2
+        );
+        ctx.fillStyle = ctx.strokeStyle;
+    } else {
+        applyColor();
+    }
+}
 document.onmouseup = function () {
     draggingHue = false;
     draggingSV  = false;
@@ -134,27 +194,18 @@ sizeInput.oninput = function(){
     sizeLabel.textContent = v;
     ctx.lineWidth = v;
 };
-
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-
-/* =====================================================
-   IMAGE : DEPLACER / REDIMENSIONNER / ROTATION
-   ===================================================== */
-
+/* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
 var imageFile = document.getElementById("imageFile");
-
 var tempImage = null;
-
 var tempImageX = 0;
 var tempImageY = 0;
 var tempImageW = 0;
 var tempImageH = 0;
 var tempImageAngle = 0;
-
 var imageBaseImage = null;
-
 /*
  * 0 = rien
  * 1 = déplacement
@@ -162,190 +213,126 @@ var imageBaseImage = null;
  * 3 = rotation
  */
 var imageAction = 0;
-
 var imageHandle = "";
-
 var imageStartX = 0;
 var imageStartY = 0;
-
 var imageStartW = 0;
 var imageStartH = 0;
-
 var imageStartAngle = 0;
 var imageStartDistance = 0;
 var imageStartPointerAngle = 0;
 
-
-/* -----------------------------------------------------
-   CHARGEMENT
-   ----------------------------------------------------- */
-
+/* CHARGEMENT */
 imageFile.onchange = function(){
-
     if(!imageFile.files || !imageFile.files.length){
         return;
     }
-
     var file = imageFile.files[0];
-
     if(!file.type || file.type.indexOf("image/") !== 0){
         alert("Veuillez sélectionner une image.");
         imageFile.value = "";
         return;
     }
-
     var reader = new FileReader();
-
     reader.onload = function(e){
-
         var img = new Image();
-
         img.onload = function(){
-
-            /*
-             * Si une autre image temporaire existe,
-             * on la valide avant d'en charger une nouvelle.
-             */
+            // Si une autre image temporaire existe, on la valide avant d'en charger une nouvelle.
             if(tempImage){
                 commitTempImage();
             }
-
             tempImage = img;
-
             tempImageW = img.width;
             tempImageH = img.height;
-
-            /*
-             * Taille maximale initiale.
-             */
+            // Taille maximale initiale.
             var maxW = 300;
             var maxH = 300;
-
             if(tempImageW > maxW){
-
                 tempImageH =
                     tempImageH * maxW / tempImageW;
-
                 tempImageW = maxW;
             }
-
             if(tempImageH > maxH){
-
                 tempImageW =
                     tempImageW * maxH / tempImageH;
-
                 tempImageH = maxH;
             }
-
-            /*
-             * Centrer l'image.
-             */
-            tempImageX =
-                (canvas.width - tempImageW) / 2;
-
-            tempImageY =
-                (canvas.height - tempImageH) / 2;
-
+            // Centrer l'image.
+            tempImageX = (canvas.width - tempImageW) / 2;
+            tempImageY = (canvas.height - tempImageH) / 2;
             tempImageAngle = 0;
-
-            /*
-             * Sauvegarder le dessin avant l'image.
-             */
+            // Sauvegarder le dessin avant l'image.
             imageBaseImage = ctx.getImageData(
                 0,
                 0,
                 canvas.width,
                 canvas.height
             );
-
             currentTool = "image";
-
             drawTempImage();
-
             updateDimensions(
                 tempImageW,
                 tempImageH
             );
-
             imageFile.value = "";
         };
-
         img.onerror = function(){
             alert("Impossible de charger cette image.");
             imageFile.value = "";
         };
-
         img.src = e.target.result;
     };
-
     reader.readAsDataURL(file);
 };
-
 
 /* -----------------------------------------------------
    CALCUL DES COORDONNEES
    ----------------------------------------------------- */
-
 function getImageCenter(){
-
     return {
         x: tempImageX + tempImageW / 2,
         y: tempImageY + tempImageH / 2
     };
 }
 
-
 /*
  * Distance entre deux points.
  */
 function imageDistance(x1,y1,x2,y2){
-
     var dx = x2-x1;
     var dy = y2-y1;
-
     return Math.sqrt(dx*dx + dy*dy);
 }
-
 
 /*
  * Angle entre deux points.
  */
 function imagePointerAngle(x1,y1,x2,y2){
-
     return Math.atan2(
         y2-y1,
         x2-x1
     );
 }
 
-
 /* -----------------------------------------------------
    POINT DANS L'IMAGE
    ----------------------------------------------------- */
-
 function pointInTempImage(x,y){
-
     if(!tempImage){
         return false;
     }
-
     var c = getImageCenter();
-
     var dx = x-c.x;
     var dy = y-c.y;
-
     /*
      * Annuler la rotation.
      */
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
-
     var rx =
         dx*cos - dy*sin;
-
     var ry =
         dx*sin + dy*cos;
-
     return (
         rx >= -tempImageW/2 &&
         rx <=  tempImageW/2 &&
@@ -354,36 +341,26 @@ function pointInTempImage(x,y){
     );
 }
 
-
 /* -----------------------------------------------------
    POIGNEES
    ----------------------------------------------------- */
-
 function getImageHandle(x,y){
-
     if(!tempImage){
         return "";
     }
-
     var c = getImageCenter();
-
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
-
     var dx = x-c.x;
     var dy = y-c.y;
-
     /*
      * Coordonnées locales.
      */
     var lx =
         dx*cos - dy*sin;
-
     var ly =
         dx*sin + dy*cos;
-
     var hs = 10;
-
     /*
      * Poignée rotation.
      * Elle est située au-dessus de l'image.
@@ -394,81 +371,67 @@ function getImageHandle(x,y){
     ){
         return "rotate";
     }
-
     /*
      * Poignées de redimensionnement.
      */
-
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly + tempImageH/2) < hs
     ){
         return "nw";
     }
-
     if(
         Math.abs(lx) < hs &&
         Math.abs(ly + tempImageH/2) < hs
     ){
         return "n";
     }
-
     if(
         Math.abs(lx - tempImageW/2) < hs &&
         Math.abs(ly + tempImageH/2) < hs
     ){
         return "ne";
     }
-
     if(
         Math.abs(lx - tempImageW/2) < hs &&
         Math.abs(ly) < hs
     ){
         return "e";
     }
-
     if(
         Math.abs(lx - tempImageW/2) < hs &&
         Math.abs(ly - tempImageH/2) < hs
     ){
         return "se";
     }
-
     if(
         Math.abs(lx) < hs &&
         Math.abs(ly - tempImageH/2) < hs
     ){
         return "s";
     }
-
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly - tempImageH/2) < hs
     ){
         return "sw";
     }
-
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly) < hs
     ){
         return "w";
     }
-
     return "";
 }
-
 
 /* -----------------------------------------------------
    DESSIN DE L'IMAGE + CADRE + POIGNEES
    ----------------------------------------------------- */
-
 function drawTempImage(){
-
     if(!tempImage){
         return;
     }
-
     /*
      * Restaurer le dessin original.
      */
@@ -479,14 +442,10 @@ function drawTempImage(){
             0
         );
     }
-
     var c = getImageCenter();
-
     ctx.save();
-
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-
     /*
      * Image.
      */
@@ -497,25 +456,21 @@ function drawTempImage(){
         tempImageW,
         tempImageH
     );
-
     /*
      * Cadre.
      */
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
-
     ctx.strokeRect(
         -tempImageW/2,
         -tempImageH/2,
         tempImageW,
         tempImageH
     );
-
     /*
      * Retour pour dessiner les poignées
      * dans le même système de coordonnées.
      */
-
     var handles = [
         [-tempImageW/2,-tempImageH/2],
         [0,-tempImageH/2],
@@ -526,27 +481,20 @@ function drawTempImage(){
         [-tempImageW/2,tempImageH/2],
         [-tempImageW/2,0]
     ];
-
     var i;
-
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
-
     for(i=0;i<handles.length;i++){
-
         ctx.beginPath();
-
         ctx.rect(
             handles[i][0]-5,
             handles[i][1]-5,
             10,
             10
         );
-
         ctx.fill();
         ctx.stroke();
     }
-
     /*
      * Ligne vers poignée rotation.
      */
@@ -555,19 +503,15 @@ function drawTempImage(){
         0,
         -tempImageH/2
     );
-
     ctx.lineTo(
         0,
         -tempImageH/2-35
     );
-
     ctx.stroke();
-
     /*
      * Poignée rotation.
      */
     ctx.beginPath();
-
     ctx.arc(
         0,
         -tempImageH/2-35,
@@ -576,24 +520,18 @@ function drawTempImage(){
         Math.PI*2,
         false
     );
-
     ctx.fill();
     ctx.stroke();
-
     ctx.restore();
 }
-
 
 /* -----------------------------------------------------
    VALIDER L'IMAGE
    ----------------------------------------------------- */
-
 function commitTempImage(){
-
     if(!tempImage){
         return;
     }
-
     /*
      * Restaurer le fond.
      */
@@ -604,18 +542,14 @@ function commitTempImage(){
             0
         );
     }
-
     /*
      * L'image devient définitivement
      * une partie du dessin.
      */
     var c = getImageCenter();
-
     ctx.save();
-
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -623,9 +557,7 @@ function commitTempImage(){
         tempImageW,
         tempImageH
     );
-
     ctx.restore();
-
     /*
      * Sauvegarder le résultat dans Undo.
      */
@@ -637,50 +569,33 @@ function commitTempImage(){
             canvas.height
         )
     );
-
     redoStack = [];
-
     tempImage = null;
     imageBaseImage = null;
     imageAction = 0;
     imageHandle = "";
-
     hideDimensions();
 }
-
-/* =====================================================
-   IMPORTER UN DESSIN ENTIER
-   ===================================================== */
-
+/* IMPORTER UN DESSIN ENTIER */
 var drawingFile = document.getElementById("drawingFile");
-
 drawingFile.onchange = function(){
-
     if(!drawingFile.files || !drawingFile.files.length){
         return;
     }
-
     var file = drawingFile.files[0];
-
     if(!file.type || file.type.indexOf("image/") !== 0){
         alert("Veuillez sélectionner une image.");
         return;
     }
-
     var reader = new FileReader();
-
     reader.onload = function(e){
-
         var img = new Image();
-
         img.onload = function(){
-
             /*
              * Sauvegarder l'ancien dessin
              * pour permettre Annuler.
              */
             saveState();
-
             /*
              * Effacer le dessin actuel.
              */
@@ -690,22 +605,17 @@ drawingFile.onchange = function(){
                 canvas.width,
                 canvas.height
             );
-
             /*
              * Adapter l'image au canvas
              * sans déformer ses proportions.
              */
             var scaleX = canvas.width / img.width;
             var scaleY = canvas.height / img.height;
-
             var scale = Math.min(scaleX, scaleY);
-
             var w = img.width * scale;
             var h = img.height * scale;
-
             var x = (canvas.width - w) / 2;
             var y = (canvas.height - h) / 2;
-
             ctx.drawImage(
                 img,
                 x,
@@ -713,53 +623,39 @@ drawingFile.onchange = function(){
                 w,
                 h
             );
-
             drawingFile.value = "";
         };
-
         img.onerror = function(){
             alert("Impossible de charger cette image.");
         };
-
         img.src = e.target.result;
     };
-
     reader.readAsDataURL(file);
 };
-
 var textBox = document.getElementById("textBox");
 var textInput = document.getElementById("textInput");
 var confirmTextBtn = document.getElementById("confirmTextBtn");
 var cancelTextBtn = document.getElementById("cancelTextBtn");
-
 ctx.clearRect(0,0,canvas.width,canvas.height);
-
 var drawing = false;
 var moved = false;
 var moveBaseImage = null;
-
 var startX = 0, startY = 0;
 var lastX = 0, lastY = 0;
-
 var currentTool = "free";
-
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#000000";
 ctx.fillStyle = "rgba(0,0,0,0)";
-
 // Undo / Redo
 var undoStack = [];
 var redoStack = [];
-
 // Selection
 var moveMode = 0;     // 0 = sélection, 1 = déplacement
 var copyMode = 0;     // 0 = sélection, 1 = déplacement
 var moveSelection = null;
-
 var textX = 0;
 var textY = 0;
-
 /* TOOL FUNCTIONS */
 function setTool(t){
     /* Si une image est en cours de manipulation, on la valide avant de changer d'outil. */
@@ -771,13 +667,11 @@ function setTool(t){
         commitTempImage();
     }
     currentTool = t;
-
     // reset move/copy si on change d’outil
     moveMode = 0;
     copyMode = 0;
     selection = null;
     moveSelection = null;
-
     // enlever active partout
     btnFree.className = "";
     btnLine.className = "";
@@ -791,7 +685,6 @@ function setTool(t){
     btnEraser.className = "";
     btnMove.className = "";
     btnCopy.className = "";
-
     // activer le bon bouton
     if(t==="free")   btnFree.className = "active";
     if(t==="line")   btnLine.className = "active";
@@ -807,13 +700,11 @@ function setTool(t){
     if(t==="copy")   btnCopy.className = "active";
 }
 
-
 /* UNDO / REDO */
 function saveState(){
     undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
     redoStack = [];
 }
-
 function undo(){
     if(undoStack.length){
         var img = undoStack.pop();
@@ -821,7 +712,6 @@ function undo(){
         ctx.putImageData(img,0,0);
     }
 }
-
 function redo(){
     if(redoStack.length){
         var img = redoStack.pop();
@@ -829,7 +719,6 @@ function redo(){
         ctx.putImageData(img,0,0);
     }
 }
-
 /* POSITION */
 function getPos(e){
     var rect = canvas.getBoundingClientRect();
@@ -838,9 +727,18 @@ function getPos(e){
         y: e.clientY - rect.top
     };
 }
-
 /* DRAWING FUNCTIONS */
 function drawFree(x,y){
+    if(rainbowMode){
+        var dx = x - lastX;
+        var dy = y - lastY;
+        var distance = Math.sqrt(dx*dx + dy*dy);
+        rainbowHue += distance * 1.5;
+        if(rainbowHue >= 360){
+            rainbowHue -= 360;
+        }
+        ctx.strokeStyle = rainbowColor(rainbowHue);
+    }
     ctx.beginPath();
     ctx.moveTo(lastX,lastY);
     ctx.lineTo(x,y);
@@ -848,60 +746,64 @@ function drawFree(x,y){
     lastX = x;
     lastY = y;
 }
-
 function redrawFromUndoTop(){
     if(undoStack.length){
         ctx.putImageData(undoStack[undoStack.length-1],0,0);
     }
 }
-
 function drawLinePreview(x,y){
     redrawFromUndoTop();
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            startX,startY,x,y
+        );
+    } else {
+        applyColor();
+    }
     ctx.beginPath();
     ctx.moveTo(startX,startY);
     ctx.lineTo(x,y);
     ctx.stroke();
 }
-
 function drawArrowPreview(x,y){
     redrawFromUndoTop();
-
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            startX,
+            startY,
+            x,
+            y
+        );
+        ctx.fillStyle = ctx.strokeStyle;
+    } else {
+        applyColor();
+    }
     var dx = x - startX;
     var dy = y - startY;
     var len = Math.sqrt(dx*dx + dy*dy);
-
     if(len < 1) return;
-
     /* Direction normalisée */
     var ux = dx / len;
     var uy = dy / len;
-
     /* Taille de la pointe */
     var headLen = ctx.lineWidth * 4;
-
     /* Largeur de la pointe */
     var headWidth = headLen * 0.5;
-
     /* Base de la pointe */
     var baseX = x - ux * headLen;
     var baseY = y - uy * headLen;
-
     /* Vecteur perpendiculaire */
     var px = -uy;
     var py = ux;
-
     var x1 = baseX + px * headWidth;
     var y1 = baseY + py * headWidth;
-
     var x2 = baseX - px * headWidth;
     var y2 = baseY - py * headWidth;
-
     /* Ligne */
     ctx.beginPath();
     ctx.moveTo(startX,startY);
     ctx.lineTo(baseX,baseY);
     ctx.stroke();
-
     /* Pointe */
     ctx.beginPath();
     ctx.moveTo(x,y);
@@ -910,30 +812,36 @@ function drawArrowPreview(x,y){
     ctx.closePath();
     ctx.fill();
 }
-
 function drawSquarePreview(x,y){
     redrawFromUndoTop();
-
     var dx = x - startX;
     var dy = y - startY;
-
-    var size = Math.min(Math.abs(dx), Math.abs(dy));
-
+    var size = Math.min(
+        Math.abs(dx),
+        Math.abs(dy)
+    );
     var endX = startX;
     var endY = startY;
-
     if(dx < 0){
         endX = startX - size;
     } else {
         endX = startX + size;
     }
-
     if(dy < 0){
         endY = startY - size;
     } else {
         endY = startY + size;
     }
-
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            Math.min(startX,endX),
+            Math.min(startY,endY),
+            Math.max(startX,endX),
+            Math.max(startY,endY)
+        );
+    } else {
+        applyColor();
+    }
     ctx.beginPath();
     ctx.rect(
         Math.min(startX,endX),
@@ -943,68 +851,107 @@ function drawSquarePreview(x,y){
     );
     ctx.stroke();
 }
-
 function drawRectPreview(x,y){
     redrawFromUndoTop();
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            startX,
+            startY,
+            x,
+            y
+        );
+    } else {
+        applyColor();
+    }
     ctx.beginPath();
-    ctx.rect(startX,startY,x-startX,y-startY);
+    ctx.rect(
+        startX,
+        startY,
+        x-startX,
+        y-startY
+    );
     ctx.stroke();
 }
-
 function drawCirclePreview(x,y){
     redrawFromUndoTop();
-
     var dx = x - startX;
     var dy = y - startY;
-
-    var size = Math.min(Math.abs(dx),Math.abs(dy));
-
+    var size = Math.min(
+        Math.abs(dx),
+        Math.abs(dy)
+    );
     var left = startX;
     var top = startY;
-
     if(dx < 0){
         left = startX - size;
     }
-
     if(dy < 0){
         top = startY - size;
     }
-
     var cx = left + size/2;
     var cy = top + size/2;
     var r = size/2;
-
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            left,
+            top,
+            left + size,
+            top + size
+        );
+    } else {
+        applyColor();
+    }
     ctx.beginPath();
-    ctx.arc(cx,cy,r,0,Math.PI*2,false);
+    ctx.arc(
+        cx,
+        cy,
+        r,
+        0,
+        Math.PI*2,
+        false
+    );
     ctx.stroke();
 }
-
 function drawEllipsePreview(x,y){
     redrawFromUndoTop();
-
     var left = Math.min(startX,x);
     var top = Math.min(startY,y);
     var right = Math.max(startX,x);
     var bottom = Math.max(startY,y);
-
     var w = right-left;
     var h = bottom-top;
-
     var cx = left+w/2;
     var cy = top+h/2;
-
     var rx = w/2;
     var ry = h/2;
-
+    if(rainbowMode){
+        ctx.strokeStyle = createRainbowGradient(
+            left,
+            top,
+            right,
+            bottom
+        );
+    } else {
+        applyColor();
+    }
     ctx.beginPath();
     ctx.save();
     ctx.translate(cx,cy);
-    ctx.scale(1, ry?ry/rx:1);
-    ctx.arc(0,0,rx,0,Math.PI*2,false);
+    ctx.scale(
+        1,
+        ry ? ry/rx : 1
+    );
+    ctx.arc(
+        0,
+        0,
+        rx,
+        0,
+        Math.PI*2,
+        false
+    );
     ctx.restore();
     ctx.stroke();
 }
-
 function updateDimensions(x,y){
     var width = Math.abs(x - startX);
     var height = Math.abs(y - startY);
@@ -1016,30 +963,23 @@ function hideDimensions(){
     document.getElementById("dimensions").textContent =
         "largeur : 0, hauteur : 0";
 }
-
 function drawSelectionPreview(x,y){
     /* Restaurer le dessin avant le rectangle temporaire. */
     if(moveBaseImage){
         ctx.putImageData(moveBaseImage,0,0);
     }
-
     var sx = Math.min(startX,x);
     var sy = Math.min(startY,y);
     var w = Math.abs(x-startX);
     var h = Math.abs(y-startY);
-
     if(w < 1 || h < 1) return;
-
     /* Rectangle temporaire compatible avec les anciens navigateurs. On dessine les pointillés manuellement. */
     ctx.save();
-
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
-
     var dash = 6;
     var gap = 4;
     var i;
-
     /* Haut */
     for(i = sx; i < sx + w; i += dash + gap){
         ctx.beginPath();
@@ -1047,7 +987,6 @@ function drawSelectionPreview(x,y){
         ctx.lineTo(Math.min(i + dash, sx + w) + 0.5, sy + 0.5);
         ctx.stroke();
     }
-
     /* Bas */
     for(i = sx; i < sx + w; i += dash + gap){
         ctx.beginPath();
@@ -1055,7 +994,6 @@ function drawSelectionPreview(x,y){
         ctx.lineTo(Math.min(i + dash, sx + w) + 0.5, sy + h + 0.5);
         ctx.stroke();
     }
-
     /* Gauche */
     for(i = sy; i < sy + h; i += dash + gap){
         ctx.beginPath();
@@ -1063,7 +1001,6 @@ function drawSelectionPreview(x,y){
         ctx.lineTo(sx + 0.5, Math.min(i + dash, sy + h) + 0.5);
         ctx.stroke();
     }
-
     /* Droite */
     for(i = sy; i < sy + h; i += dash + gap){
         ctx.beginPath();
@@ -1071,51 +1008,35 @@ function drawSelectionPreview(x,y){
         ctx.lineTo(sx + w + 0.5, Math.min(i + dash, sy + h) + 0.5);
         ctx.stroke();
     }
-
     ctx.restore();
 }
-
 function confirmText(){
-
     var text = textInput.value;
-
     textBox.style.display = "none";
-
     if(!text){
         textInput.value = "";
         return;
     }
-
     saveState();
-
     var lines = text.split(/\r?\n/);
-
     var fontSize = parseInt(sizeInput.value,10) * 5;
-
     if(!fontSize || fontSize < 1){
         fontSize = 15;
     }
-
     ctx.save();
-
     ctx.fillStyle = colorInput.value;
     ctx.font = fontSize + "px sans-serif";
     ctx.textBaseline = "top";
-
     var lineHeight = Math.round(fontSize * 1.2);
     var i;
-
     for(i = 0; i < lines.length; i++){
-
         ctx.fillText(
             lines[i],
             textX,
             textY + i * lineHeight
         );
     }
-
     ctx.restore();
-
     textInput.value = "";
 }
 function cancelText(){
@@ -1128,7 +1049,6 @@ confirmTextBtn.onclick = function(e){
     confirmText();
     return false;
 };
-
 cancelTextBtn.onclick = function(e){
     e.preventDefault();
     e.stopPropagation();
@@ -1142,28 +1062,22 @@ function startMoveMode(){
     copyMode = 0;
     currentTool = "move";
 }
-
 function startCopyMode(){
 	setTool("copy");
     moveMode = 0;
     copyMode = 0;
     currentTool = "copy";
 }
-
 function extractSelection(x1,y1,x2,y2,keepOriginal){
-
     var sx = Math.floor(Math.min(x1,x2));
     var sy = Math.floor(Math.min(y1,y2));
     var ex = Math.floor(Math.max(x1,x2));
     var ey = Math.floor(Math.max(y1,y2));
-
     var w = ex - sx;
     var h = ey - sy;
-
     if(w < 1 || h < 1){
         return false;
     }
-
     moveSelection = {
         x: sx,
         y: sy,
@@ -1171,7 +1085,6 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
         h: h,
         data: ctx.getImageData(sx,sy,w,h)
     };
-
     /*
      * MOVE :
      * on retire immédiatement l'original.
@@ -1182,7 +1095,6 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
     if(!keepOriginal){
         ctx.clearRect(sx,sy,w,h);
     }
-
     /*
      * Image qui servira de fond pendant
      * le déplacement.
@@ -1193,46 +1105,31 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
         canvas.width,
         canvas.height
     );
-
     return true;
 }
-
 /* MOUSE EVENTS (ASCII LOGIC) */
 var currentPath = "";
 canvas.onpointerdown = function(e){
-
     var p = getPos(e);
-
     startX = p.x;
     startY = p.y;
     lastX = p.x;
     lastY = p.y;
-
-    /* =================================================
-       IMAGE
-       ================================================= */
-
+    /* IMAGE */
     if(currentTool === "image" && tempImage){
-
         var handle = getImageHandle(
             p.x,
             p.y
         );
-
         imageAction = 0;
         imageHandle = "";
-
         /*
          * Rotation
          */
         if(handle === "rotate"){
-
             imageAction = 3;
-
             var c = getImageCenter();
-
             imageStartAngle = tempImageAngle;
-
             imageStartPointerAngle =
                 imagePointerAngle(
                     c.x,
@@ -1240,11 +1137,8 @@ canvas.onpointerdown = function(e){
                     p.x,
                     p.y
                 );
-
             moved = false;
-
             drawing = true;
-
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -1253,27 +1147,20 @@ canvas.onpointerdown = function(e){
                     e.pointerId
                 );
             }
-
             return;
         }
-
         /*
          * Redimensionnement
          */
         if(handle){
-
             imageAction = 2;
             imageHandle = handle;
-
             imageStartX = p.x;
             imageStartY = p.y;
-
             imageStartW = tempImageW;
             imageStartH = tempImageH;
-
             moved = false;
             drawing = true;
-
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -1282,26 +1169,19 @@ canvas.onpointerdown = function(e){
                     e.pointerId
                 );
             }
-
             return;
         }
-
         /*
          * Déplacement
          */
         if(pointInTempImage(p.x,p.y)){
-
             imageAction = 1;
-
             imageStartX =
                 p.x - tempImageX;
-
             imageStartY =
                 p.y - tempImageY;
-
             moved = false;
             drawing = true;
-
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -1310,50 +1190,36 @@ canvas.onpointerdown = function(e){
                     e.pointerId
                 );
             }
-
             return;
         }
-
         /*
          * Clic ailleurs :
          * on valide l'image.
          */
         commitTempImage();
-
         drawing = false;
-
         return;
     }
-
     /* TEXTE */
     if(currentTool === "text"){
-
         drawing = false;
         moved = false;
-
         textX = p.x;
         textY = p.y;
-
         textInput.value = "";
         textBox.style.display = "block";
-
         setTimeout(function(){
             textInput.focus();
         }, 50);
-
         return;
     }
-
     drawing = true;
     moved = false;
-
     if(canvas.setPointerCapture && e.pointerId !== undefined){
         canvas.setPointerCapture(e.pointerId);
     }
-
     /* MOVE / COPY */
     if(currentTool==="move" || currentTool==="copy"){
-
         /*
          * PHASE 1 :
          * aucune sélection n'existe encore.
@@ -1364,19 +1230,15 @@ canvas.onpointerdown = function(e){
             (currentTool==="move" && moveMode===0) ||
             (currentTool==="copy" && copyMode===0)
         ){
-
             moveSelection = null;
-
             moveBaseImage = ctx.getImageData(
                 0,
                 0,
                 canvas.width,
                 canvas.height
             );
-
             return;
         }
-
         /*
          * PHASE 2 :
          * une sélection existe déjà.
@@ -1388,85 +1250,58 @@ canvas.onpointerdown = function(e){
             (currentTool==="move" && moveMode===1) ||
             (currentTool==="copy" && copyMode===1)
         ){
-
             return;
         }
     }
-
     /*
      * Pour les autres outils,
      * sauvegarde normale.
      */
     saveState();
-
     if(currentTool==="free" || currentTool==="eraser"){
         currentPath = "M" + startX + " " + startY;
     }
-
     if(currentTool==="fill"){
-
         floodFill(
             Math.floor(p.x),
             Math.floor(p.y)
         );
-
         drawing = false;
         return;
     }
-
     if(currentTool==="eraser"){
-
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth =
             parseInt(sizeInput.value,10);
     }
 };
-
 canvas.onpointermove = function(e){
     if(!drawing) return;
-
     var p = getPos(e);
     var x = p.x, y = p.y;
-
-    /* =================================================
-       IMAGE
-       ================================================= */
-
-        /*
-         * REDIMENSIONNEMENT
-         */
+    /* IMAGE */
+        //REDIMENSIONNEMENT
         if(imageAction === 2){
-
             var c = getImageCenter();
-
             /*
              * Position du pointeur
              * dans les coordonnées de l'image.
              */
             var dx = x-c.x;
             var dy = y-c.y;
-
             var cos =
                 Math.cos(-tempImageAngle);
-
             var sin =
                 Math.sin(-tempImageAngle);
-
             var lx =
                 dx*cos - dy*sin;
-
             var ly =
                 dx*sin + dy*cos;
-
             var newW = tempImageW;
             var newH = tempImageH;
-
-            /*
-             * On conserve les proportions.
-             */
+            // On conserve les proportions.
             var ratio =
                 imageStartW / imageStartH;
-
 
             if(
                 imageHandle === "e" ||
@@ -1478,11 +1313,9 @@ canvas.onpointermove = function(e){
                         20,
                         lx + tempImageW/2
                     );
-
                 newH =
                     newW / ratio;
             }
-
             else if(
                 imageHandle === "w" ||
                 imageHandle === "nw" ||
@@ -1493,11 +1326,9 @@ canvas.onpointermove = function(e){
                         20,
                         tempImageW/2 - lx
                     );
-
                 newH =
                     newW / ratio;
             }
-
             else if(
                 imageHandle === "n"
             ){
@@ -1506,11 +1337,9 @@ canvas.onpointermove = function(e){
                         20,
                         tempImageH/2 - ly
                     );
-
                 newW =
                     newH * ratio;
             }
-
             else if(
                 imageHandle === "s"
             ){
@@ -1519,34 +1348,23 @@ canvas.onpointermove = function(e){
                         20,
                         ly + tempImageH/2
                     );
-
                 newW =
                     newH * ratio;
             }
-
             tempImageW = newW;
             tempImageH = newH;
-
             moved = true;
-
             drawTempImage();
-
             updateDimensions(
                 tempImageW,
                 tempImageH
             );
-
             return;
         }
 
-
-        /*
-         * ROTATION
-         */
+        // ROTATION
         if(imageAction === 3){
-
             var c2 = getImageCenter();
-
             var currentPointerAngle =
                 imagePointerAngle(
                     c2.x,
@@ -1554,41 +1372,30 @@ canvas.onpointermove = function(e){
                     x,
                     y
                 );
-
             tempImageAngle =
                 imageStartAngle +
                 (
                     currentPointerAngle -
                     imageStartPointerAngle
                 );
-
             moved = true;
-
             drawTempImage();
-
             updateDimensions(
                 tempImageW,
                 tempImageH
             );
-
             return;
         }
-
 if(currentTool === "image" && tempImage && imageAction === 1){
-
     tempImageX =
         p.x - tempImageW / 2;
-
     tempImageY =
         p.y - tempImageH / 2;
-
     drawTempImage();
-
     updateDimensions(
         tempImageW,
         tempImageH
     );
-
     return;
 }
     if(
@@ -1604,11 +1411,9 @@ if(currentTool === "image" && tempImage && imageAction === 1){
         updateDimensions(x,y);
     }
     moved = true;
-
     if(currentTool==="free" || currentTool==="eraser"){
         currentPath += " L" + x + " " + y;
     }
-
     // OUTILS NORMAUX
     if(currentTool==="free") drawFree(x,y);
     else if(currentTool==="line") drawLinePreview(x,y);
@@ -1618,10 +1423,8 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     else if(currentTool==="circle") drawCirclePreview(x,y);
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
     else if(currentTool==="eraser") drawFree(x,y);
-
     /* MOVE / COPY */
     if(currentTool==="move" || currentTool==="copy"){
-
         /* ÉTAPE 1 : sélection */
         if(
             (currentTool==="move" && moveMode===0) ||
@@ -1630,47 +1433,38 @@ if(currentTool === "image" && tempImage && imageAction === 1){
             drawSelectionPreview(x,y);
             return;
         }
-
         /* ÉTAPE 2 : déplacement fantôme */
         if(
             (currentTool==="move" && moveMode===1) ||
             (currentTool==="copy" && copyMode===1)
         ){
-
             if(!moveSelection){
                 return;
             }
-
             /*
              * Restaurer le fond.
              */
             if(moveBaseImage){
                 ctx.putImageData(moveBaseImage,0,0);
             }
-
             var tempCanvas = document.createElement("canvas");
             tempCanvas.width = moveSelection.w;
             tempCanvas.height = moveSelection.h;
-
             var tempCtx = tempCanvas.getContext("2d");
-
             tempCtx.putImageData(
                 moveSelection.data,
                 0,
                 0
             );
-
             /* Afficher la sélection sous la souris. */
             ctx.drawImage(
                 tempCanvas,
                 x - moveSelection.w/2,
                 y - moveSelection.h/2
             );
-
             return;
         }
     }
-
     lastX = x;
     lastY = y;
 };
@@ -1682,39 +1476,29 @@ window.addEventListener("click", function(e){
     }
 });
 canvas.onpointerup = function(e){
-
     if(!drawing){
         return;
     }
-
     drawing = false;
     isDown = false;
-
 if(
     canvas.hasPointerCapture &&
     canvas.hasPointerCapture(e.pointerId)
 ){
     canvas.releasePointerCapture(e.pointerId);
 }
-
 if(moved && window.PointerEvent){
     window._blockNextClick = true;
 }
-
     var p = getPos(e);
     var x = p.x;
     var y = p.y;
-
     /* IMAGE */
     if(currentTool === "image" && tempImage){
-
         if(imageAction !== 0){
-
             imageAction = 0;
             imageHandle = "";
-
             drawTempImage();
-
             if(
                 canvas.hasPointerCapture &&
                 canvas.hasPointerCapture(e.pointerId)
@@ -1723,16 +1507,12 @@ if(moved && window.PointerEvent){
                     e.pointerId
                 );
             }
-
             return;
         }
     }
-
     hideDimensions();
-
     /* MOVE : première étape = sélection */
     if(currentTool==="move" && moveMode===0){
-
         /*
          * IMPORTANT :
          * Le rectangle de sélection est temporaire.
@@ -1742,28 +1522,21 @@ if(moved && window.PointerEvent){
         if(moveBaseImage){
             ctx.putImageData(moveBaseImage,0,0);
         }
-
         if(!extractSelection(startX,startY,x,y,false)){
             return;
         }
-
         // Rendre le blanc transparent dans le fantôme
         var d = moveSelection.data.data;
         var i = 0;
-
         while(i < d.length){
-
             var r = d[i];
             var g = d[i+1];
             var b = d[i+2];
-
             if(r > 200 && g > 200 && b > 200){
                 d[i+3] = 0;
             }
-
             i += 4;
         }
-
         /*
          * Le canvas est maintenant propre :
          * l'original a été retiré et le rectangle
@@ -1775,15 +1548,11 @@ if(moved && window.PointerEvent){
             canvas.width,
             canvas.height
         );
-
         moveMode = 1;
-
         return;
     }
-
     /* COPY : première étape = sélection */
     if(currentTool==="copy" && copyMode===0){
-
         /*
          * Supprimer le rectangle de sélection temporaire
          * avant de récupérer les pixels.
@@ -1791,11 +1560,9 @@ if(moved && window.PointerEvent){
         if(moveBaseImage){
             ctx.putImageData(moveBaseImage,0,0);
         }
-
         if(!extractSelection(startX,startY,x,y,true)){
             return;
         }
-
         /*
          * L'original reste en place.
          * Le rectangle temporaire est déjà supprimé.
@@ -1806,127 +1573,88 @@ if(moved && window.PointerEvent){
             canvas.width,
             canvas.height
         );
-
         copyMode = 1;
-
         return;
     }
-
     /* MOVE : deuxième étape = dépôt */
     if(currentTool==="move" && moveMode===1){
-
         if(!moveSelection){
             moveMode = 0;
             return;
         }
-
         var tempCanvas = document.createElement("canvas");
-
         tempCanvas.width = moveSelection.w;
         tempCanvas.height = moveSelection.h;
-
         var tempCtx = tempCanvas.getContext("2d");
-
         tempCtx.putImageData(
             moveSelection.data,
             0,
             0
         );
-
         ctx.drawImage(
             tempCanvas,
             x - moveSelection.w / 2,
             y - moveSelection.h / 2
         );
-
         moveSelection = null;
         moveBaseImage = null;
-
         moveMode = 0;
         copyMode = 0;
-
         return;
     }
-
     /* COPY : deuxième étape = dépôt */
     if(currentTool==="copy" && copyMode===1){
-
         if(!moveSelection){
             copyMode = 0;
             return;
         }
-
         var tempCanvas2 = document.createElement("canvas");
-
         tempCanvas2.width = moveSelection.w;
         tempCanvas2.height = moveSelection.h;
-
         var tempCtx2 = tempCanvas2.getContext("2d");
-
         tempCtx2.putImageData(
             moveSelection.data,
             0,
             0
         );
-
         ctx.drawImage(
             tempCanvas2,
             x - moveSelection.w / 2,
             y - moveSelection.h / 2
         );
-
         saveState();
-
         moveSelection = null;
         moveBaseImage = null;
-
         copyMode = 0;
         moveMode = 0;
-
         return;
     }
-
     /* DESSIN NORMAL */
-
     if(currentTool==="free"){
         return;
     }
-
     if(currentTool==="eraser"){
         return;
     }
-
     if(currentTool==="line"){
-
         redrawFromUndoTop();
-
         ctx.beginPath();
         ctx.moveTo(startX,startY);
         ctx.lineTo(x,y);
         ctx.stroke();
-
         return;
     }
-
     if(currentTool==="arrow"){
-
         redrawFromUndoTop();
         drawArrowPreview(x,y);
-
         return;
     }
-
     if(currentTool==="square"){
-
         drawSquarePreview(x,y);
-
         return;
     }
-
     if(currentTool==="rect"){
-
         redrawFromUndoTop();
-
         ctx.beginPath();
         ctx.rect(
             startX,
@@ -1934,75 +1662,49 @@ if(moved && window.PointerEvent){
             x-startX,
             y-startY
         );
-
         ctx.stroke();
-
         return;
     }
-
     if(currentTool==="circle"){
-
         drawCirclePreview(x,y);
-
         return;
     }
-
     if(currentTool==="ellipse"){
-
         drawEllipsePreview(x,y);
-
         return;
     }
-
     if(currentTool==="fill"){
         return;
     }
 };
-
 /* COMPATIBILITE ANCIENS NAVIGATEURS / NINTENDO 3DS */
-
 if (!window.PointerEvent) {
-
     canvas.ontouchstart = function(e){
-
         if(!e.touches || !e.touches.length) return;
-
         e.preventDefault();
-
         var t = e.touches[0];
-
         canvas.onpointerdown({
             clientX: t.clientX,
             clientY: t.clientY,
             pointerId: 1
         });
     };
-
     canvas.ontouchmove = function(e){
-
         if(!e.touches || !e.touches.length) return;
-
         e.preventDefault();
-
         var t = e.touches[0];
-
         canvas.onpointermove({
             clientX: t.clientX,
             clientY: t.clientY,
             pointerId: 1
         });
     };
-
     canvas.ontouchend = function(e){
-
         e.preventDefault();
-
         if(!e.changedTouches || !e.changedTouches.length){
             return;
         }
-
         var t = e.changedTouches[0];
-
         canvas.onpointerup({
             clientX: t.clientX,
             clientY: t.clientY,
@@ -2014,39 +1716,28 @@ if (!window.PointerEvent) {
         isDown = false;
     };
 }
-
 /* FLOOD FILL (simple) */
 function floodFill(x,y){
     var img = ctx.getImageData(0,0,canvas.width,canvas.height);
     var data = img.data;
-
     var target = getPixel(data,x,y);
     var fill = hexToRgba(ctx.fillStyle);
-
     if(colorsEqual(target,fill)) return;
-
     var stack = [{x:x,y:y}];
-
     while(stack.length){
         var p = stack.pop();
         var px = p.x, py = p.y;
-
         var idx = (py*canvas.width+px)*4;
         var cur = [data[idx],data[idx+1],data[idx+2],data[idx+3]];
-
         if(!colorsEqual(cur,target)) continue;
-
         setPixel(data,px,py,fill);
-
         if(px>0) stack.push({x:px-1,y:py});
         if(px<canvas.width-1) stack.push({x:px+1,y:py});
         if(py>0) stack.push({x:px,y:py-1});
         if(py<canvas.height-1) stack.push({x:px,y:py+1});
     }
-
     ctx.putImageData(img,0,0);
 }
-
 function getPixel(data,x,y){
     var i = (y*canvas.width+x)*4;
     return [data[i],data[i+1],data[i+2],data[i+3]];
@@ -2065,9 +1756,7 @@ function hexToRgba(hex){
 function colorsEqual(a,b){
     return a[0]===b[0] && a[1]===b[1] && a[2]===b[2] && a[3]===b[3];
 }
-
 saveState();
-
 function exportPNG(){
     var png = canvas.toDataURL("image/png");
     document.getElementById("ioArea").value = png;
@@ -2075,7 +1764,6 @@ function exportPNG(){
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
     if(!base64) return;
-
     var img = new Image();
     img.onload = function(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2122,7 +1810,6 @@ function downloadJPG(){
     link.click();
     document.body.removeChild(link);
 }
-
 window.onload = function() {
     setTool("free");
 };
