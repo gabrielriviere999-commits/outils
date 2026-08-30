@@ -8,7 +8,15 @@
 <link rel="stylesheet" href="color-palette.css">
 <style>
 body{background:#000;}
-canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;}
+canvas{
+  width:100%;
+  height:70vh;
+  border:1px solid #000;
+  touch-action:none;
+  background:#fff;
+  cursor:crosshair;
+  display:block;
+}
 </style>
 </head>
 <body>
@@ -63,6 +71,17 @@ canvas{border:1px solid #000;touch-action:none;background:#fff;cursor:crosshair;
   <button id="btnEraser" data-action="setToolEraser">Gomme</button>
   <button data-action="undo">Annuler</button>
   <button data-action="redo">Rétablir</button>
+  |
+  <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
+  <div id="popupOptionsContent" style="display:none">
+    <div id="canvasResolution">
+      Résolution :
+      <input type="number" id="canvasWidth" value="640" min="1" max="10000">
+      ×
+      <input type="number" id="canvasHeight" value="480" min="1" max="10000">
+      <button id="applyResolutionBtn" data-action="changeCanvasResolution">OK</button>
+    </div>
+  </div>
 </div>
 <div id="dimensions">largeur : 0, hauteur : 0</div>
 <div id="textBox" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#202020;border:1px solid #000;padding:10px;z-index:9999;opacity:0.8;">
@@ -197,6 +216,50 @@ sizeInput.oninput = function(){
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+var canvasWidthInput = document.getElementById("canvasWidth");
+var canvasHeightInput = document.getElementById("canvasHeight");
+function changeCanvasResolution(){
+    var newWidth = parseInt(canvasWidthInput.value, 10);
+    var newHeight = parseInt(canvasHeightInput.value, 10);
+    if(newWidth < 1 || newHeight < 1){
+        alert("Résolution invalide.");
+        return;
+    }
+    // Sauvegarder le dessin actuel
+    var oldCanvas = document.createElement("canvas");
+    oldCanvas.width = canvas.width;
+    oldCanvas.height = canvas.height;
+    var oldCtx = oldCanvas.getContext("2d");
+    oldCtx.drawImage(
+        canvas,
+        0,
+        0
+    );
+    // Changer la résolution réelle
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    // Restaurer l'ancien dessin
+    ctx.drawImage(
+        oldCanvas,
+        0,
+        0
+    );
+    // Restaurer les paramètres du contexte
+    ctx.lineWidth = parseInt(sizeInput.value, 10);
+    ctx.lineCap = "round";
+    applyColor();
+    // Reset Undo / Redo
+    undoStack = [];
+    redoStack = [];
+    saveState();
+    // Mettre à jour les champs 
+    canvasWidthInput.value = newWidth;
+    canvasHeightInput.value = newHeight;
+}
+function openOptionsPopup() {
+  var container = document.getElementById("popupOptionsContent");
+  openPopup(container);
+}
 /* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
 var imageFile = document.getElementById("imageFile");
 var tempImage = null;
@@ -285,9 +348,7 @@ imageFile.onchange = function(){
     reader.readAsDataURL(file);
 };
 
-/* -----------------------------------------------------
-   CALCUL DES COORDONNEES
-   ----------------------------------------------------- */
+/* CALCUL DES COORDONNEES */
 function getImageCenter(){
     return {
         x: tempImageX + tempImageW / 2,
@@ -304,9 +365,7 @@ function imageDistance(x1,y1,x2,y2){
     return Math.sqrt(dx*dx + dy*dy);
 }
 
-/*
- * Angle entre deux points.
- */
+/* Angle entre deux points. */
 function imagePointerAngle(x1,y1,x2,y2){
     return Math.atan2(
         y2-y1,
@@ -314,9 +373,7 @@ function imagePointerAngle(x1,y1,x2,y2){
     );
 }
 
-/* -----------------------------------------------------
-   POINT DANS L'IMAGE
-   ----------------------------------------------------- */
+/* POINT DANS L'IMAGE */
 function pointInTempImage(x,y){
     if(!tempImage){
         return false;
@@ -324,9 +381,7 @@ function pointInTempImage(x,y){
     var c = getImageCenter();
     var dx = x-c.x;
     var dy = y-c.y;
-    /*
-     * Annuler la rotation.
-     */
+    // Annuler la rotation.
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
     var rx =
@@ -341,9 +396,7 @@ function pointInTempImage(x,y){
     );
 }
 
-/* -----------------------------------------------------
-   POIGNEES
-   ----------------------------------------------------- */
+/* POIGNEES */
 function getImageHandle(x,y){
     if(!tempImage){
         return "";
@@ -353,27 +406,20 @@ function getImageHandle(x,y){
     var sin = Math.sin(-tempImageAngle);
     var dx = x-c.x;
     var dy = y-c.y;
-    /*
-     * Coordonnées locales.
-     */
+    // Coordonnées locales.
     var lx =
         dx*cos - dy*sin;
     var ly =
         dx*sin + dy*cos;
     var hs = 10;
-    /*
-     * Poignée rotation.
-     * Elle est située au-dessus de l'image.
-     */
+    // Poignée rotation. Elle est située au-dessus de l'image.
     if(
         Math.abs(lx) < hs &&
         Math.abs(ly + tempImageH/2 + 35) < hs
     ){
         return "rotate";
     }
-    /*
-     * Poignées de redimensionnement.
-     */
+    // Poignées de redimensionnement.
     if(
         Math.abs(lx + tempImageW/2) < hs &&
         Math.abs(ly + tempImageH/2) < hs
@@ -425,16 +471,12 @@ function getImageHandle(x,y){
     return "";
 }
 
-/* -----------------------------------------------------
-   DESSIN DE L'IMAGE + CADRE + POIGNEES
-   ----------------------------------------------------- */
+/* DESSIN DE L'IMAGE + CADRE + POIGNEES */
 function drawTempImage(){
     if(!tempImage){
         return;
     }
-    /*
-     * Restaurer le dessin original.
-     */
+    // Restaurer le dessin original.
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -446,9 +488,7 @@ function drawTempImage(){
     ctx.save();
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-    /*
-     * Image.
-     */
+    // Image.
     ctx.drawImage(
         tempImage,
         -tempImageW/2,
@@ -456,9 +496,7 @@ function drawTempImage(){
         tempImageW,
         tempImageH
     );
-    /*
-     * Cadre.
-     */
+    // Cadre.
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
     ctx.strokeRect(
@@ -467,10 +505,7 @@ function drawTempImage(){
         tempImageW,
         tempImageH
     );
-    /*
-     * Retour pour dessiner les poignées
-     * dans le même système de coordonnées.
-     */
+    // Retour pour dessiner les poignées dans le même système de coordonnées.
     var handles = [
         [-tempImageW/2,-tempImageH/2],
         [0,-tempImageH/2],
@@ -495,9 +530,7 @@ function drawTempImage(){
         ctx.fill();
         ctx.stroke();
     }
-    /*
-     * Ligne vers poignée rotation.
-     */
+    // Ligne vers poignée rotation.
     ctx.beginPath();
     ctx.moveTo(
         0,
@@ -508,9 +541,7 @@ function drawTempImage(){
         -tempImageH/2-35
     );
     ctx.stroke();
-    /*
-     * Poignée rotation.
-     */
+    // Poignée rotation.
     ctx.beginPath();
     ctx.arc(
         0,
@@ -525,9 +556,7 @@ function drawTempImage(){
     ctx.restore();
 }
 
-/* -----------------------------------------------------
-   VALIDER L'IMAGE
-   ----------------------------------------------------- */
+/* VALIDER L'IMAGE */
 function commitTempImage(){
     if(!tempImage){
         return;
@@ -596,9 +625,7 @@ drawingFile.onchange = function(){
              * pour permettre Annuler.
              */
             saveState();
-            /*
-             * Effacer le dessin actuel.
-             */
+            // Effacer le dessin actuel.
             ctx.clearRect(
                 0,
                 0,
@@ -722,9 +749,10 @@ function redo(){
 /* POSITION */
 function getPos(e){
     var rect = canvas.getBoundingClientRect();
+
     return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: (e.clientX - rect.left) * canvas.width / rect.width,
+        y: (e.clientY - rect.top) * canvas.height / rect.height
     };
 }
 /* DRAWING FUNCTIONS */
@@ -1174,9 +1202,7 @@ canvas.onpointerdown = function(e){
             }
             return;
         }
-        /*
-         * Redimensionnement
-         */
+        // Redimensionnement
         if(handle){
             imageAction = 2;
             imageHandle = handle;
@@ -1196,9 +1222,7 @@ canvas.onpointerdown = function(e){
             }
             return;
         }
-        /*
-         * Déplacement
-         */
+        // Déplacement
         if(pointInTempImage(p.x,p.y)){
             imageAction = 1;
             imageStartX =
