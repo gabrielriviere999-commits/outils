@@ -159,31 +159,28 @@ function toggleRainbow(){
     }
 }
 function rainbowColor(h){
-    var s = 1;
-    var v = 1;
     var i = Math.floor(h / 60);
-    var f = h / 60 - i;
-    var p = v * (1 - s);
-    var q = v * (1 - s * f);
-    var t = v * (1 - s * (1 - f));
-    var r, g, b;
+    var f = h - i * 60;
+    var q = 255 - Math.round(255 * f / 60);
+    var t = 255 - q;
+    var r,g,b;
     if(i === 0){
-        r = v; g = t; b = p;
+        r = 255; g = t; b = 0;
     } else if(i === 1){
-        r = q; g = v; b = p;
+        r = q; g = 255; b = 0;
     } else if(i === 2){
-        r = p; g = v; b = t;
+        r = 0; g = 255; b = t;
     } else if(i === 3){
-        r = p; g = q; b = v;
+        r = 0; g = q; b = 255;
     } else if(i === 4){
-        r = t; g = p; b = v;
+        r = t; g = 0; b = 255;
     } else {
-        r = v; g = p; b = q;
+        r = 255; g = 0; b = q;
     }
     return "#" +
-        ("0" + Math.round(r * 255).toString(16)).slice(-2) +
-        ("0" + Math.round(g * 255).toString(16)).slice(-2) +
-        ("0" + Math.round(b * 255).toString(16)).slice(-2);
+        ("0" + r.toString(16)).slice(-2) +
+        ("0" + g.toString(16)).slice(-2) +
+        ("0" + b.toString(16)).slice(-2);
 }
 function createRainbowGradient(x1,y1,x2,y2){
     var gradient = ctx.createLinearGradient(x1,y1,x2,y2);
@@ -766,8 +763,19 @@ function setTool(t){
     if(t==="copy")   btnCopy.className = "active";
 }
 /* UNDO / REDO */
+var MAX_UNDO = 10;
 function saveState(){
-    undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+    undoStack.push(
+        ctx.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        )
+    );
+    if(undoStack.length > MAX_UNDO){
+        undoStack.shift();
+    }
     redoStack = [];
 }
 function undo(){
@@ -794,21 +802,22 @@ function getPos(e){
 }
 /* DRAWING FUNCTIONS */
 function drawFree(x,y){
+    var dx = x-lastX;
+    var dy = y-lastY;
+    var distance = Math.sqrt(dx*dx + dy*dy);
+    if(distance < 1){
+        return;
+    }
     if(currentTool === "eraser"){
         ctx.globalCompositeOperation = "destination-out";
     } else {
         ctx.globalCompositeOperation = "source-over";
         if(rainbowMode){
-            var dx = x - lastX;
-            var dy = y - lastY;
-            var distance = Math.sqrt(dx*dx + dy*dy);
             rainbowHue += distance * 1.5;
-            while(rainbowHue >= 360){
-                rainbowHue -= 360;
+            if(rainbowHue >= 360){
+                rainbowHue %= 360;
             }
             ctx.strokeStyle = rainbowColor(rainbowHue);
-        } else {
-            applyColor();
         }
     }
     ctx.beginPath();
@@ -1217,7 +1226,6 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
     return true;
 }
 /* MOUSE EVENTS (ASCII LOGIC) */
-var currentPath = "";
 canvas.onpointerdown = function(e){
     var p = getPos(e);
     startX = p.x;
@@ -1363,9 +1371,6 @@ canvas.onpointerdown = function(e){
      * sauvegarde normale.
      */
     saveState();
-    if(currentTool==="free" || currentTool==="eraser"){
-        currentPath = "M" + startX + " " + startY;
-    }
     if(currentTool==="fill"){
         floodFill(
             Math.floor(p.x),
@@ -1569,9 +1574,6 @@ if(currentTool === "image" && tempImage && imageAction === 1){
         updateDimensions(x,y);
     }
     moved = true;
-    if(currentTool==="free" || currentTool==="eraser"){
-        currentPath += " L" + x + " " + y;
-    }
     // OUTILS NORMAUX
     if(currentTool==="free") drawFree(x,y);
     else if(currentTool==="line") drawLinePreview(x,y);
