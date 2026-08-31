@@ -996,7 +996,6 @@ function updateDimensions(x,y){
         ", hauteur : " + Math.round(height);
     if(currentTool === "line" || currentTool === "arrow"){
         text +=
-            ", longueur : " + Math.round(length) +
             ", angle : " + angle.toFixed(1) + "°";
     }
     document.getElementById("dimensions").textContent = text;
