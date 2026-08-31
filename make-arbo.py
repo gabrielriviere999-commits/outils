@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import os
 import html
+
 # Dossiers et fichiers à exclure pour GitHub Pages
 EXCLUDE_DIRS = { ".git", ".github"}
+
 EXCLUDE_FILES = {".gitignore", ".gitattributes", "arbo.html"}
+
 def build_tree(path):
     """Construit une structure arborescente."""
     tree = {
@@ -13,8 +17,10 @@ def build_tree(path):
         "folders": [],
         "files": []
     }
+
     with os.scandir(path) as it:
         for entry in sorted(it, key=lambda e: (not e.is_dir(), e.name.lower())):
+
             # exclusions GitHub Pages
             if entry.name in EXCLUDE_DIRS and entry.is_dir():
                 continue
@@ -22,6 +28,7 @@ def build_tree(path):
                 continue
             # if entry.name.startswith("."):
                 # continue
+
             if entry.is_dir():
                 tree["folders"].append(build_tree(entry.path))
             else:
@@ -29,28 +36,36 @@ def build_tree(path):
                     "name": entry.name,
                     "path": entry.path
                 })
+
     return tree
+
 
 def build_ascii_html(node, prefix="", is_root=True):
     """Construit l'arborescence HTML avec classes folder/file/ascii."""
     out = ""
+
     # Racine
     if is_root:
         out += f'<span class="folder">{html.escape(node["name"])}</span>\n'
+
     entries = node["folders"] + node["files"]
     total = len(entries)
+
     for i, entry in enumerate(entries):
         last = (i == total - 1)
         branch = "└── " if last else "├── "
         new_prefix = prefix + ("    " if last else "│   ")
+
         ascii_part = html.escape(prefix + branch)
         ascii_html = f'<span class="ascii">{ascii_part}</span>'
+
         if "folders" in entry:
             out += (
                 ascii_html +
                 f'<span class="folder">{html.escape(entry["name"])}/</span>\n'
             )
             out += build_ascii_html(entry, new_prefix, False)
+
         else:
             rel_path = os.path.relpath(entry["path"], ".").replace("\\", "/")
             name = html.escape(entry["name"])
@@ -58,38 +73,50 @@ def build_ascii_html(node, prefix="", is_root=True):
                 ascii_html +
                 f'<a class="file" href="{rel_path}">{name}</a><a class="file" href="{rel_path}" download> [↓] </a>\n'
             )
+
     return out
+
 
 def build_ascii_text(node, prefix="", is_root=True):
     out = ""
+
     # Racine
     if is_root:
         out += node["name"] + "\n"
+
     entries = node["folders"] + node["files"]
     total = len(entries)
+
     for i, entry in enumerate(entries):
         last = (i == total - 1)
         branch = "└── " if last else "├── "
         new_prefix = prefix + ("    " if last else "│   ")
+
         if "folders" in entry:
             out += prefix + branch + entry["name"] + "/\n"
             out += build_ascii_text(entry, new_prefix, False)
         else:
             out += prefix + branch + entry["name"] + "\n"
+
     return out
+
 
 def count_items(tree):
     """Retourne (nb_dossiers, nb_fichiers) dans toute l'arbo."""
     folders = len(tree["folders"])
     files = len(tree["files"])
+
     for sub in tree["folders"]:
         f2, fi2 = count_items(sub)
         folders += f2
         files += fi2
+
     return folders, files
+
 
 def generate_html(tree, nb_folders, nb_files):
     ascii_text = build_ascii_text(tree)
+
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -117,15 +144,21 @@ pre.tree{{padding:5px;}}
 </html>
 """
 
+
 def main():
     root_name = "outils/"   # Nom de la racine
+
     tree = build_tree(".")
     tree["name"] = root_name
+
     nb_folders, nb_files = count_items(tree)
     html_content = generate_html(tree, nb_folders, nb_files)
+
     with open("arbo.html", "w", encoding="utf-8") as f:
         f.write(html_content)
+
     print("Fichier généré : arbo.html")
+
 
 if __name__ == "__main__":
     main()
