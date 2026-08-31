@@ -9,7 +9,8 @@
 <style>
 body{background:#000;}
 canvas{
-  width:99.8%;
+  width:640px;
+  height:480px;
   border:1px solid #000;
   touch-action:none;
   background:#fff;
@@ -17,6 +18,7 @@ canvas{
   display:block;
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
+#zoomInput{width:100%}
 </style>
 </head>
 <body>
@@ -75,10 +77,13 @@ canvas{
   <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
   <div id="popupOptionsContent" style="display:none">
     <div id="canvasResolution">
+	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
+	  <input type="range" id="zoomInput" min="25" max="1000" value="100"><br>
 	  <b>Résolution</b><br>
       Largeur : <input type="number" id="canvasWidth" value="640" min="1" max="10000"><br>
       Hauteur : <input type="number" id="canvasHeight" value="480" min="1" max="10000"><br>
-      <button id="applyResolutionBtn" data-action="changeCanvasResolution" style="width:100%">OK</button>
+      <button id="applyResolutionBtn" data-action="changeCanvasResolution" style="width:100%">Valider résolution</button>
+      <button data-action="closePopup" style="width:100%">Fermer</button>
     </div>
   </div>
 </div>
@@ -217,6 +222,28 @@ sizeInput.oninput = function(){
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+/* ZOOM DU CANVAS */
+var zoomInput = document.getElementById("zoomInput");
+var zoomLabel = document.getElementById("zoomLabel");
+
+function applyZoom(){
+    var zoom = parseInt(zoomInput.value,10) / 100;
+
+    canvas.style.width =
+        Math.round(canvas.width * zoom) + "px";
+
+    canvas.style.height =
+        Math.round(canvas.height * zoom) + "px";
+
+    zoomLabel.textContent =
+        zoomInput.value + "%";
+}
+
+zoomInput.oninput = function(){
+    applyZoom();
+};
+
+applyZoom();
 var canvasWidthInput = document.getElementById("canvasWidth");
 var canvasHeightInput = document.getElementById("canvasHeight");
 function changeCanvasResolution(){
@@ -256,6 +283,7 @@ function changeCanvasResolution(){
     // Mettre à jour les champs 
     canvasWidthInput.value = newWidth;
     canvasHeightInput.value = newHeight;
+    applyZoom();
     closePopup();
 }
 /* IMAGE : DEPLACER / REDIMENSIONNER / ROTATION */
@@ -1350,7 +1378,7 @@ function updateAutoScroll(e){
         return;
     }
     var rect = canvasScroll.getBoundingClientRect();
-    var edge = 10;      // distance du bord pour commencer le scroll
+    var edge = 25;      // distance du bord pour commencer le scroll
     var speed = 8;      // vitesse du scroll
     autoScrollPointerX = e.clientX;
     autoScrollPointerY = e.clientY;
