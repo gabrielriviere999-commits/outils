@@ -19,6 +19,7 @@ canvas{
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #zoomInput{width:100%}
+#fontInput{width:60px;}
 </style>
 </head>
 <body>
@@ -62,6 +63,16 @@ canvas{
   <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
   |
   <button id="btnText" data-action="setToolText">Texte</button>
+  <select id="fontInput">
+    <option value="sans-serif">Sans-serif</option>
+    <option value="serif">Serif</option>
+    <option value="monospace">Monospace</option>
+    <option value="Arial">Arial</option>
+    <option value="Verdana">Verdana</option>
+    <option value="Georgia">Georgia</option>
+    <option value="Courier New">Courier New</option>
+    <option value="Times New Roman">Times New Roman</option>
+  </select>
   |
   <button id="btnMove" data-action="setToolMove">Déplacer</button>
   <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
@@ -681,6 +692,9 @@ drawingFile.onchange = function(){
 };
 var textBox = document.getElementById("textBox");
 var textInput = document.getElementById("textInput");
+var fontInput = document.getElementById("fontInput");
+var textFont = "sans-serif";
+fontInput.onchange = function(){ textFont = fontInput.value; };
 var confirmTextBtn = document.getElementById("confirmTextBtn");
 var cancelTextBtn = document.getElementById("cancelTextBtn");
 ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -1094,7 +1108,7 @@ function confirmText(){
         fontSize = 15;
     }
     ctx.save();
-    ctx.font = fontSize + "px sans-serif";
+    ctx.font = fontSize + "px " + textFont;
     ctx.textBaseline = "top";
     var lineHeight = Math.round(fontSize * 1.2);
     var i;
