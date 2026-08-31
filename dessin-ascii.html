@@ -32,7 +32,6 @@ select{width:55px;}
   <label>Taille du texte</label><br>
   <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
   <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button> <button data-action="toggleTextColor">Couleur texte</button><br>
-
   <b>Calque</b><br>
   <input type="file" id="imgLoader" class="file-input" style="width:120px;" onchange="loadImageFile(this)"> <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer l'image</button><br>
   <label>Position</label><br>
@@ -105,8 +104,7 @@ select{width:55px;}
   <button onclick="undo()">Annuler</button>
   <button onclick="redo()">Rétablir</button>
 </div>
-
-<div id="textBox" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#202020;border:1px solid #000;padding:10px;z-index:9999;opacity:0.8;">
+<div id="textBox">
   <textarea wrap="off" id="textInput" style="width:300px;height:120px;resize:both;"></textarea><br>
   <button onclick="confirmText()">OK</button>
   <button onclick="cancelText()">Annuler</button>
@@ -137,52 +135,42 @@ var moveMode = 0; // 0=sélection, 1=attente destination
 var copyMode = 0;
 var lastMoveX = 0;
 var lastMoveY = 0;
-
 /* --- MESURE CARACTÈRE --- */
 function autoWidth() {
     var probe = document.createElement("span");
     probe.style.visibility = "hidden";
     probe.style.position = "absolute";
     probe.style.whiteSpace = "pre";
-
     var style = view.currentStyle || window.getComputedStyle(view);
     probe.style.fontFamily = style.fontFamily;
     probe.style.fontSize   = style.fontSize;
-
     var s = "";
     for (var i = 0; i < 100; i++) s += "M";
     probe.innerText = s;
-
     document.body.appendChild(probe);
     var rect = probe.getBoundingClientRect();
     charW = rect.width / 100;
     charH = rect.height;
     document.body.removeChild(probe);
 }
-
 /* --- GRID DYNAMIQUE --- */
 function ensureCell(x, y) {
     while (grid.length <= y) grid.push([]);
     while (grid[y].length <= x) grid[y].push(" ");
 }
-
 /* --- RENDER --- */
 function render() {
     var out = "";
     var y, x;
-
     for (y = 0; y < grid.length; y++) {
         for (x = 0; x < grid[y].length; x++) out += grid[y][x];
         if (y < grid.length - 1) out += "\n";
     }
-
     view.value = out;
 }
-
 /* --- SETTOOL --- */
 function setTool(t) {
     tool = t;
-
     document.getElementById("btnFree").className = "";
     document.getElementById("btnLine").className = "";
     document.getElementById("btnArrow").className = "";
@@ -195,7 +183,6 @@ function setTool(t) {
     document.getElementById("btnEdit").className = "";
     document.getElementById("btnFill").className = "";
     document.getElementById("btnErase").className = "";
-
     if (t === "free") btnFree.className = "active";
     if (t === "line") btnLine.className = "active";
     if (t === "arrow") btnArrow.className = "active";
@@ -222,11 +209,9 @@ function setTool(t) {
     } else {
         enableTouchDrawing(true);  // Android dessine normalement
     }
-
     // Mettre à jour forme en cliquant
     if (isDown){refreshPreview(lastMoveX, lastMoveY);}
 }
-
 function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
 function setToolRect(){ setTool("rect"); }
@@ -234,16 +219,13 @@ function setToolEllipse(){ setTool("ellipse"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
 function setToolClipboard(){ setTool("clipboard"); }
-
 /* --- EXPORT / IMPORT --- */
 function exportTextReturn() {
     return view.value;
 }
-
 function importAscii(txt) {
     var lines = txt.split("\n");
     grid = [];
-
     var i, j;
     for (i = 0; i < lines.length; i++) {
         grid[i] = [];
@@ -253,67 +235,53 @@ function importAscii(txt) {
     }
     render();
 }
-
 function syncFromTextarea() {
     importAscii(view.value);
 }
-
 /* --- UNDO / REDO --- */
 function copyGrid(src) {
     var out = [];
     var y, x;
-
     for (y = 0; y < src.length; y++) {
         out[y] = [];
         for (x = 0; x < src[y].length; x++) out[y][x] = src[y][x];
     }
     return out;
 }
-
 function saveState() {
     undoStack.push(copyGrid(grid));
     redoStack = [];
 }
-
 function undo() {
     if (undoStack.length === 0) return;
     redoStack.push(copyGrid(grid));
     grid = undoStack.pop();
     render();
 }
-
 function redo() {
     if (redoStack.length === 0) return;
     undoStack.push(copyGrid(grid));
     grid = redoStack.pop();
     render();
 }
-
 /* --- POSITION --- */
 function getPos(e) {
     var rect = view.getBoundingClientRect();
-
     var scrollX = view.scrollLeft;
     var scrollY = view.scrollTop;
-
     var x = Math.floor((e.clientX - rect.left + scrollX) / charW);
     var y = Math.floor((e.clientY - rect.top  + scrollY) / charH);
-
     return { x:x, y:y };
 }
-
 /* --- DRAW FREE --- */
 function drawFree(x, y) {
     ensureCell(x, y);
-
     var c = document.getElementById("freeChar").value;
     // if (c === " ") c = "#";
     if (!c || c.length === 0) c = "#"; // caractère par défaut
     grid[y][x] = c;
-
     render();
 }
-
 /* --- LINE --- */
 function drawLine(x1, y1, x2, y2) {
     var dx = Math.abs(x2 - x1);
@@ -321,30 +289,24 @@ function drawLine(x1, y1, x2, y2) {
     var sx = (x1 < x2) ? 1 : -1;
     var sy = (y1 < y2) ? 1 : -1;
     var err = dx - dy;
-
     while (true) {
         ensureCell(x1, y1);
-
         var c = document.getElementById("lineChar").value;
         // if (c === " ") c = "*";
         if (!c || c.length === 0) c = "*";
         grid[y1][x1] = c;
-
         if (x1 === x2 && y1 === y2) break;
-
         var e2 = 2 * err;
         if (e2 > -dy) { err -= dy; x1 += sx; }
         if (e2 < dx) { err += dx; y1 += sy; }
     }
     render();
 }
-
 /* --- ARROW --- */
 function drawArrow(x1, y1, x2, y2) {
     // 1) Segment horizontal
     var midX = x2;
     var midY = y1;
-
     var x;
     if (x1 <= midX) {
         for (x = x1; x <= midX; x++) {
@@ -357,7 +319,6 @@ function drawArrow(x1, y1, x2, y2) {
             grid[midY][x] = "-";
         }
     }
-
     // 2) Segment vertical
     var y;
     if (y1 <= y2) {
@@ -371,10 +332,8 @@ function drawArrow(x1, y1, x2, y2) {
             grid[y][midX] = "|";
         }
     }
-
     // 3) Pointe
     ensureCell(x2, y2);
-
     if (Math.abs(x2 - x1) >= Math.abs(y2 - y1)) {
         // direction horizontale dominante
         if (x2 > x1) grid[y2][x2] = ">";
@@ -384,10 +343,8 @@ function drawArrow(x1, y1, x2, y2) {
         if (y2 > y1) grid[y2][x2] = "v";
         else         grid[y2][x2] = "^";
     }
-
     render();
 }
-
 /* --- RECTANGLE --- */
 var RECT_STYLES = {
   classic: {
@@ -441,61 +398,48 @@ var RECT_STYLES = {
     right: "|"
   }
 };
-
 function drawRectangle(x1, y1, x2, y2) {
     var xMin = Math.min(x1, x2);
     var xMax = Math.max(x1, x2);
     var yMin = Math.min(y1, y2);
     var yMax = Math.max(y1, y2);
-
     ensureCell(xMin, yMin);
     ensureCell(xMax, yMax);
-
     // lire le mode
     var mode = document.getElementById("rectMode").value;
     var style = RECT_STYLES[mode];
-
     // lire le caractère personnalisé
     var c = document.getElementById("rectChar").value;
     var useCustom = (c && c.length > 0);
-
     // si caractère custom → override tout
     var tl = useCustom ? c : style.tl;
     var tr = useCustom ? c : style.tr;
     var bl = useCustom ? c : style.bl;
     var br = useCustom ? c : style.br;
-
     var top    = useCustom ? c : style.top;
     var bottom = useCustom ? c : style.bottom;
     var left   = useCustom ? c : style.left;
     var right  = useCustom ? c : style.right;
-
     var x, y;
-
     // MODE NORMAL
-
     grid[yMin][xMin] = tl;
     grid[yMin][xMax] = tr;
     grid[yMax][xMin] = bl;
     grid[yMax][xMax] = br;
-
     for (x = xMin + 1; x < xMax; x++) {
         ensureCell(x, yMin);
         ensureCell(x, yMax);
         grid[yMin][x] = top;
         grid[yMax][x] = bottom;
     }
-
     for (y = yMin + 1; y < yMax; y++) {
         ensureCell(xMin, y);
         ensureCell(xMax, y);
         grid[y][xMin] = left;
         grid[y][xMax] = right;
     }
-
     render();
 }
-
 document.getElementById("lineChar").oninput = function(){
     if (isDown) refreshPreview(lastMoveX, lastMoveY);
 };
@@ -522,14 +466,12 @@ function setRectModeDotted(){setRectMode("dotted");}
 function setRectModeRounded(){setRectMode("rounded");}
 function setRectModeWavy(){setRectMode("wavy");}
 function setRectModeFancy(){setRectMode("fancy");}
-
 /* --- ELLIPSE --- */
 function drawEllipse(x1, y1, x2, y2) {
     var cx = Math.floor((x1 + x2) / 2);
     var cy = Math.floor((y1 + y2) / 2);
     var rx = Math.abs(x2 - x1) / 2;
     var ry = Math.abs(y2 - y1) / 2;
-
     var x, y;
     for (y = -Math.ceil(ry); y <= Math.ceil(ry); y++) {
         for (x = -Math.ceil(rx); x <= Math.ceil(rx); x++) {
@@ -538,7 +480,6 @@ function drawEllipse(x1, y1, x2, y2) {
                 var px = cx + x;
                 var py = cy + y;
                 ensureCell(px, py);
-
                 var c = document.getElementById("ellipseChar").value;
                 // if (c === " ") c = "o";
                 if (!c || c.length === 0) c = "o";
@@ -548,26 +489,21 @@ function drawEllipse(x1, y1, x2, y2) {
     }
     render();
 }
-
 /* --- DEPLACEMENT --- */
 function safeGet(x, y) {
     if (!grid[y]) return " ";
     if (grid[y][x] == null) return " ";
     return grid[y][x];
 }
-
 function safeSet(x, y, c) {
     ensureCell(x, y);
     grid[y][x] = c;
 }
-
 function captureSelectionGeneric(x1, y1, x2, y2, eraseOriginal) {
-
     var xMin = Math.min(x1, x2);
     var xMax = Math.max(x1, x2);
     var yMin = Math.min(y1, y2);
     var yMax = Math.max(y1, y2);
-
     moveSelection = {
         x: xMin,
         y: yMin,
@@ -575,25 +511,17 @@ function captureSelectionGeneric(x1, y1, x2, y2, eraseOriginal) {
         h: yMax - yMin + 1,
         data: []
     };
-
     var x, y;
-
     for (y = yMin; y <= yMax; y++) {
-
         moveSelection.data.push([]);
-
         for (x = xMin; x <= xMax; x++) {
-
             ensureCell(x, y);
-
             moveSelection.data[y - yMin].push(safeGet(x, y));
-
             if (eraseOriginal) {
                 grid[y][x] = " ";
             }
         }
     }
-
     render();
     tempGrid = copyGrid(grid);
 }
@@ -603,16 +531,11 @@ function captureSelection(x1, y1, x2, y2) {
 function captureSelectionCopy(x1, y1, x2, y2) {
     captureSelectionGeneric(x1, y1, x2, y2, false);
 }
-
 function trimGrid() {
-
     var y, x;
-
     // supprimer espaces de fin de ligne
     for (y = 0; y < grid.length; y++) {
-
         if (!grid[y]) continue;
-
         while (
             grid[y].length > 0 &&
             grid[y][grid[y].length - 1] === " "
@@ -620,130 +543,91 @@ function trimGrid() {
             grid[y].pop();
         }
     }
-
     // supprimer lignes vides finales
     while (grid.length > 0) {
-
         var empty = true;
-
         for (x = 0; x < grid[grid.length - 1].length; x++) {
             if (grid[grid.length - 1][x] !== " ") {
                 empty = false;
                 break;
             }
         }
-
         if (!empty) break;
-
         grid.pop();
     }
 }
-
 function pasteSelection(destX,destY) {
-
     grid = copyGrid(tempGrid);
-
     var x,y;
-
     for(y=0;y<moveSelection.h;y++) {
         for(x=0;x<moveSelection.w;x++) {
-
             var c = moveSelection.data[y][x];
             if (c !== " ") safeSet(destX + x, destY + y, c);
-
             if(c === " ") continue;
-
             ensureCell(destX+x,destY+y);
-
             grid[destY+y][destX+x] = c;
         }
     }
-
     moveSelection = null;
     moveMode = 0;
     copyMode = 0;
     tempGrid = null;
-
     trimGrid();
     render();
 }
-
 function previewMove(destX, destY) {
-
     if (!moveSelection) return;
-
     var realGrid = grid;
-
     var previewGrid = copyGrid(grid);
     grid = previewGrid;
-
     var x, y;
-
     for (y = 0; y < moveSelection.h; y++) {
         for (x = 0; x < moveSelection.w; x++) {
-
             var c = moveSelection.data[y][x];
             if (c === " ") continue;
-
             ensureCell(destX + x, destY + y);
             grid[destY + y][destX + x] = c;
         }
     }
-
     render();
     grid = realGrid;
 }
-
 function copySelectionToClipboard(x1, y1, x2, y2) {
-
     var xMin = Math.min(x1, x2);
     var xMax = Math.max(x1, x2);
     var yMin = Math.min(y1, y2);
     var yMax = Math.max(y1, y2);
-
     var txt = "";
     var x, y;
-
     for (y = yMin; y <= yMax; y++) {
-
         var line = "";
-
         for (x = xMin; x <= xMax; x++) {
             line += safeGet(x, y);
         }
-
         // retire les espaces de fin
         line = line.replace(/\s+$/, "");
-
         txt += line;
-
         if (y < yMax)
             txt += "\n";
     }
-
     var temp = document.createElement("textarea");
     temp.value = txt;
     document.body.appendChild(temp);
     temp.select();
-
     try {
         document.execCommand("copy");
     } catch(e) {}
-
     document.body.removeChild(temp);
 }
-
 /* --- TEXTE --- */
 function placeTextMarker(x, y) {
     textMarkerX = x;
     textMarkerY = y;
     textMarkerActive = true;
-
     ensureCell(x, y);
     grid[y][x] = "█"; // marqueur visuel
     render();
 }
-
 function removeTextMarker() {
     if (!textMarkerActive) return;
     ensureCell(textMarkerX, textMarkerY);
@@ -751,37 +635,27 @@ function removeTextMarker() {
     textMarkerActive = false;
     render();
 }
-
 function placeText(x, y) {
     textStartX = x;
     textStartY = y;
-
     removeTextMarker();      // au cas où
     placeTextMarker(x, y);   // on voit où le texte va commencer
-
     textInput.value = "";
     textBox.style.display = "block";
-
     // focus automatique
     setTimeout(function() {
         textInput.focus();
         textInput.select();
     }, 0);
 }
-
 function confirmText() {
     saveState();
-
     removeTextMarker(); // on nettoie le curseur
-
     var lines = textInput.value.split("\n");
     var i, j;
-
     for (i = 0; i < lines.length; i++) {
         for (j = 0; j < lines[i].length; j++) {
-
             var ch = lines[i].charAt(j);
-
             // n'écrase pas si c'est un espace
             if (ch !== " ") {
                 ensureCell(textStartX + j, textStartY + i);
@@ -789,64 +663,49 @@ function confirmText() {
             }
         }
     }
-
     textBox.style.display = "none";
     render();
 }
-
 function cancelText() {
     removeTextMarker();
     textBox.style.display = "none";
 }
-
 view.addEventListener("input", function() {
     if (textEditTimer) clearTimeout(textEditTimer);
-
     textEditTimer = setTimeout(function() {
         saveState();          // undo/redo pour texte normal
         syncFromTextarea();   // grid = textarea
     }, 300); // 300 ms après la dernière frappe
 });
-
 /* --- REMPLISSAGE --- */
 function floodFill(x, y) {
     ensureCell(x, y);
-
     var target = grid[y][x];
     var fillChar = document.getElementById("fillChar").value;
-
     if (!fillChar || fillChar.length === 0) fillChar = "#";
     if (fillChar === target) return;
-
     var stack = [];
     stack.push({x:x, y:y});
-
     while (stack.length > 0) {
         var p = stack.pop();
         var px = p.x;
         var py = p.y;
-
         if (py < 0 || px < 0) continue;
         if (!grid[py] || grid[py][px] == null) continue;
-
         if (grid[py][px] !== target) continue;
-
         grid[py][px] = fillChar;
-
         stack.push({x:px+1, y:py});
         stack.push({x:px-1, y:py});
         stack.push({x:px,   y:py+1});
         stack.push({x:px,   y:py-1});
     }
 }
-
 /* --- GOMME --- */
 function eraseAt(x, y) {
     ensureCell(x, y);
     grid[y][x] = " ";
     render();
 }
-
 /* --- MOUSE HANDLING --- */
 view.onmousedown = function(e) {
     if (tool === "edit") {
@@ -854,39 +713,27 @@ view.onmousedown = function(e) {
         return;
     }
     syncFromTextarea();
-
     var pos = getPos(e);
     if(tool === "move" && moveMode === 1) {
-
         isDown = true;
-
         lastMoveX = pos.x;
         lastMoveY = pos.y;
-
         previewMove(pos.x, pos.y);
-
         return;
     }
     if(tool === "copy" && copyMode === 1) {
-
         isDown = true;
-
         lastMoveX = pos.x;
         lastMoveY = pos.y;
-
         previewMove(pos.x, pos.y);
-
         return;
     }
     isDown = true;
     startX = pos.x;
     startY = pos.y;
-
     saveState();
-
     // copie de la grille pour affichage temporaire
     tempGrid = copyGrid(grid);
-
     if (tool === "text") {
         placeText(pos.x, pos.y);
         isDown = false;
@@ -901,23 +748,19 @@ view.onmousedown = function(e) {
     if (tool === "free")  drawFree(pos.x, pos.y);
     if (tool === "erase") eraseAt(pos.x, pos.y);
 };
-
 // désactiver sélection de texte
 view.addEventListener("mousedown", function(e){
     if (tool !== "edit") {
         e.preventDefault();      // empêche le début de la sélection
     }
 });
-
 function autoWidthDynamic() {
     autoWidth(); // recalcul charW et charH
 }
-
 // Mettre à jour forme en cliquant
 function refreshPreview(x, y) {
     if (!isDown || !tempGrid) return;
     grid = copyGrid(tempGrid);
-
     if (tool === "line") drawLine(startX, startY, x, y);
     else if (tool === "arrow") drawArrow(startX, startY, x, y);
     else if (tool === "rect") drawRectangle(startX, startY, x, y);
@@ -936,24 +779,18 @@ function refreshPreview(x, y) {
     }
     render();
 }
-
 view.onmousemove = function(e) {
     var pos = getPos(e);
     lastMoveX = pos.x;
     lastMoveY = pos.y;
-
     if (!isDown) return;
-
     var rect = view.getBoundingClientRect();
     var margin = 50;
-
     // scroll auto
     if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 2;
     else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 2;
-
     if (e.clientX > rect.right - margin) view.scrollLeft += charW * 2;
     else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 2;
-
     // move / copy
     if (tool === "move" && moveMode === 1) {
         previewMove(pos.x, pos.y);
@@ -963,11 +800,8 @@ view.onmousemove = function(e) {
         previewMove(pos.x, pos.y);
         return;
     }
-
     if (tool === "edit") return;
-
     autoWidthDynamic();
-
     // free / erase
     if (tool === "free") {
         drawFree(pos.x, pos.y);
@@ -977,7 +811,6 @@ view.onmousemove = function(e) {
         eraseAt(pos.x, pos.y);
         return;
     }
-
     // 1) calcul largeur/hauteur AVANT refreshPreview
     if (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse" || tool === "move" || tool === "copy" || tool === "clipboard") {
         var w = Math.abs(pos.x - startX) + 1;
@@ -1000,11 +833,9 @@ view.onmousemove = function(e) {
         render();
         return;
     }
-
     // 2) redessiner la forme APRÈS
     refreshPreview(pos.x, pos.y);
 };
-
 // Correction Chromium Linux
 document.addEventListener("mousemove", function(e) {
     if (!isDown) return;
@@ -1017,31 +848,24 @@ document.addEventListener("mouseup", function(e) {
         view.onmouseup(e);
     }
 });
-
 view.onmouseup = function(e) {
     if (tool === "edit") return;
-
     var pos = getPos(e);
-
     if (tool === "move" && moveMode === 1) {
         pasteSelection(lastMoveX, lastMoveY);
         isDown = false;
         clearShapeInfo();
         return;
     }
-
     if (tool === "copy" && copyMode === 1) {
         pasteSelection(lastMoveX, lastMoveY);
         isDown = false;
         clearShapeInfo();
         return;
     }
-
     if (!isDown) return;
     isDown = false;
-
     syncFromTextarea();
-
     if (tool === "move") {
         if (moveMode === 0) {
 			grid = copyGrid(tempGrid);
@@ -1052,7 +876,6 @@ view.onmouseup = function(e) {
             return;
         }
     }
-
     if (tool === "copy") {
         if (copyMode === 0) {
 			grid = copyGrid(tempGrid);
@@ -1063,7 +886,6 @@ view.onmouseup = function(e) {
             return;
         }
     }
-
     if (tool === "clipboard") {
 		grid = copyGrid(tempGrid);
 	    render();
@@ -1076,48 +898,39 @@ view.onmouseup = function(e) {
     if (tool === "arrow")   drawArrow(startX, startY, pos.x, pos.y);
     if (tool === "rect")    drawRectangle(startX, startY, pos.x, pos.y);
     if (tool === "ellipse") drawEllipse(startX, startY, pos.x, pos.y);
-
     clearShapeInfo();
     tempGrid = null;
 };
-
 var touchEnabled = true;
-
 function enableTouchDrawing(enable) {
     touchEnabled = enable;
 }
-
 view.addEventListener("touchstart", function(e) {
     if (!touchEnabled) return; // mode édition → laisser Android gérer
     e.preventDefault();
     var t = e.touches[0];
     view.onmousedown({ clientX:t.clientX, clientY:t.clientY });
 }, { passive:false });
-
 view.addEventListener("touchmove", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
     var t = e.touches[0];
     view.onmousemove({ clientX:t.clientX, clientY:t.clientY });
 }, { passive:false });
-
 view.addEventListener("touchend", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
     var t = e.changedTouches[0];
     view.onmouseup({ clientX:t.clientX, clientY:t.clientY });
 }, { passive:false });
-
 /* --- AFFICHAGE DIMENSIONS --- */
 function updateShapeInfo(w, h) {
     var box = document.getElementById("shapeInfo");
     box.textContent = "l : " + w + ", h : " + h;
 }
-
 function clearShapeInfo() {
     document.getElementById("shapeInfo").textContent = "";
 }
-
 /* --- CHANGER TAILLE DU TEXTE ZONE DE DESSIN --- */
 function applyZoomRange() {
     var size = document.getElementById("zoomRange").value;
@@ -1131,7 +944,6 @@ function resetZoom() {
     slider.value = 12;
     applyZoomRange();
 }
-
 var colors = ["#ccc", "#222", "#f00", "#0f0", "#0af", "#ff0"];
 var colorIndex = 0;
 function toggleTextColor() {
@@ -1139,7 +951,6 @@ function toggleTextColor() {
     colorIndex = (colorIndex + 1) % colors.length;
     t.style.color = colors[colorIndex];
 }
-
 /* --- AJOUTER IMAGE EN CALQUE --- */
 addMultiTouch(".multitouchbtn,#popupOptionsContent button,#popupRectModeContent button,input");
 function openOptionsPopup() {
@@ -1153,7 +964,6 @@ function openHelpPopup() {
 function loadImageFile(input) {
   var file = input.files[0];
   if (!file) return;
-
   var reader = new FileReader();
   reader.onload = function(e) {
     img.src = e.target.result;
@@ -1171,7 +981,6 @@ function resetImgScale() {
  document.getElementById("imgScale").value = 100;
  img.style.transform = "scale(1)";
 }
-
 // Image de fond
 var img = document.getElementById("bgImage");
 var step = 10;
@@ -1199,7 +1008,6 @@ function resetImgPosition() {
 function clearImage() {
     img.src = "";
 }
-
 /* --- STARTUP --- */
 window.onload = function() {
     setTool("edit");

@@ -176,6 +176,16 @@ select:hover{background:#404040;}
   opacity:0.8;
   color:#fff;
 }
+#textBox {
+  display:none;
+  position:fixed;
+  top:20%;
+  background:#202020;
+  border:1px solid #000;
+  padding:10px;
+  z-index:9999;
+  opacity:0.8;
+}
 .border-interne {
   background:#000;
   border:2px solid;
