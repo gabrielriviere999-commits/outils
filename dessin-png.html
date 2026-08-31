@@ -984,9 +984,22 @@ function drawEllipsePreview(x,y){
 function updateDimensions(x,y){
     var width = Math.abs(x - startX);
     var height = Math.abs(y - startY);
-    document.getElementById("dimensions").textContent =
+    var dx = x - startX;
+    var dy = y - startY;
+    var length = Math.sqrt(dx * dx + dy * dy);
+    var angle = Math.atan2(-dy, dx) * 180 / Math.PI;
+    if(angle < 0){
+        angle += 360;
+    }
+    var text =
         "largeur : " + Math.round(width) +
         ", hauteur : " + Math.round(height);
+    if(currentTool === "line" || currentTool === "arrow"){
+        text +=
+            ", longueur : " + Math.round(length) +
+            ", angle : " + angle.toFixed(1) + "°";
+    }
+    document.getElementById("dimensions").textContent = text;
 }
 function hideDimensions(){
     document.getElementById("dimensions").textContent =
