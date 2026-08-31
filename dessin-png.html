@@ -233,24 +233,13 @@ var ctx = canvas.getContext("2d");
 /* ZOOM DU CANVAS */
 var zoomInput = document.getElementById("zoomInput");
 var zoomLabel = document.getElementById("zoomLabel");
-
 function applyZoom(){
     var zoom = parseInt(zoomInput.value,10) / 100;
-
-    canvas.style.width =
-        Math.round(canvas.width * zoom) + "px";
-
-    canvas.style.height =
-        Math.round(canvas.height * zoom) + "px";
-
-    zoomLabel.textContent =
-        zoomInput.value + "%";
+    canvas.style.width = Math.round(canvas.width * zoom) + "px";
+    canvas.style.height = Math.round(canvas.height * zoom) + "px";
+    zoomLabel.textContent = zoomInput.value + "%";
 }
-
-zoomInput.oninput = function(){
-    applyZoom();
-};
-
+zoomInput.oninput = function(){ applyZoom(); };
 applyZoom();
 var canvasWidthInput = document.getElementById("canvasWidth");
 var canvasHeightInput = document.getElementById("canvasHeight");
@@ -387,9 +376,7 @@ function getImageCenter(){
         y: tempImageY + tempImageH / 2
     };
 }
-/*
- * Distance entre deux points.
- */
+/* Distance entre deux points. */
 function imageDistance(x1,y1,x2,y2){
     var dx = x2-x1;
     var dy = y2-y1;
