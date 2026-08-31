@@ -9,15 +9,14 @@
 <style>
 body{background:#000;}
 canvas{
-  width:100%;
-  height:500px;
-  height:70vh;
+  width:99.8%;
   border:1px solid #000;
   touch-action:none;
   background:#fff;
   cursor:crosshair;
   display:block;
 }
+#canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 </style>
 </head>
 <body>
@@ -89,7 +88,9 @@ canvas{
   <button id="confirmTextBtn" type="button">OK</button>
   <button id="cancelTextBtn" type="button">Annuler</button>
 </div>
-<canvas id="canvas" width="640" height="480"></canvas>
+<div id="canvasScroll">
+  <canvas id="canvas" width="640" height="480"></canvas>
+</div>
 <textarea id="ioArea" style="width:100%;height:160px;"></textarea>
 <button data-action="exportPNG">Exporter PNG base64</button>
 <button data-action="importPNG">Importer PNG base64</button>
@@ -1336,8 +1337,64 @@ canvas.onpointerdown = function(e){
         ctx.lineWidth = parseInt(sizeInput.value,10);
     }
 };
+/* AUTO-SCROLL DU CANVAS PENDANT LE DESSIN */
+var canvasScroll = document.getElementById("canvasScroll");
+var autoScrollTimer = null;
+var autoScrollX = 0;
+var autoScrollY = 0;
+var autoScrollPointerX = 0;
+var autoScrollPointerY = 0;
+function updateAutoScroll(e){
+    if(!drawing){
+        stopAutoScroll();
+        return;
+    }
+    var rect = canvasScroll.getBoundingClientRect();
+    var edge = 10;      // distance du bord pour commencer le scroll
+    var speed = 8;      // vitesse du scroll
+    autoScrollPointerX = e.clientX;
+    autoScrollPointerY = e.clientY;
+    autoScrollX = 0;
+    autoScrollY = 0;
+    /* Gauche */
+    if(e.clientX < rect.left + edge){
+        autoScrollX = -speed;
+    }
+    /* Droite */
+    else if(e.clientX > rect.right - edge){
+        autoScrollX = speed;
+    }
+
+    /* Haut */
+    if(e.clientY < rect.top + edge){
+        autoScrollY = -speed;
+    }
+    /* Bas */
+    else if(e.clientY > rect.bottom - edge){
+        autoScrollY = speed;
+    }
+    if(autoScrollX !== 0 || autoScrollY !== 0){
+        if(!autoScrollTimer){
+            autoScrollTimer = setInterval(function(){
+                canvasScroll.scrollLeft += autoScrollX;
+                canvasScroll.scrollTop += autoScrollY;
+            }, 20);
+        }
+    } else {
+        stopAutoScroll();
+    }
+}
+function stopAutoScroll(){
+    if(autoScrollTimer){
+        clearInterval(autoScrollTimer);
+        autoScrollTimer = null;
+    }
+    autoScrollX = 0;
+    autoScrollY = 0;
+}
 canvas.onpointermove = function(e){
     if(!drawing) return;
+    updateAutoScroll(e);
     var p = getPos(e);
     var x = p.x, y = p.y;
     /* IMAGE */
@@ -1539,6 +1596,7 @@ canvas.onpointerup = function(e){
         return;
     }
     drawing = false;
+    stopAutoScroll();
     isDown = false;
 if(
     canvas.hasPointerCapture &&
