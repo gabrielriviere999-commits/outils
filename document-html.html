@@ -96,19 +96,15 @@ iframe{background:#fff!important;}
 '</div>\n\n' +
 '</body>\n' +
 '</html>\n';
-
   var output = document.getElementById('output');
   var preview = document.getElementById('preview');
   var statusEl = document.getElementById('status');
-
   // Initialisation
   output.value = baseTemplate;
   updatePreview();
-
   function setStatus(msg) {
     statusEl.innerHTML = msg;
   }
-
   function insertAtCursor(text) {
     var start, end, before, after;
     output.focus();
@@ -119,10 +115,8 @@ iframe{background:#fff!important;}
     output.value = before + text + after;
     output.selectionStart = output.selectionEnd = start + text.length;
   }
-
 function insertTemplate(type) {
   var snippet = "";
-
   if (type === 'page') {
     snippet =
 '<div class="page">\n' +
@@ -151,19 +145,16 @@ function insertTemplate(type) {
     snippet =
 '<a href="lien.html">lien</a>';
   }
-
   // Vérifier si le curseur est dans l'aperçu
   var doc = preview.contentDocument || preview.contentWindow.document;
   doc.body.focus();
   var sel = doc.getSelection();
-
   if (sel && sel.rangeCount > 0 && sel.anchorNode) {
     insertInPreview(snippet);
   } else {
     insertAtCursor(snippet);
   }
 }
-
 function updatePreview() {
   var doc = preview.contentDocument || preview.contentWindow.document;
   doc.open();
@@ -172,191 +163,144 @@ function updatePreview() {
   enableWysiwyg();
   setStatus('Prévisualisation mise à jour.');
 }
-
 function cleanExport(html) {
   return html.replace(/contenteditable="true"/gi, "");
 }
-
 var codeBox = output;
-
 function enableWysiwyg() {
   var doc = preview.contentDocument || preview.contentWindow.document;
-
   // Rendre l'aperçu éditable
   doc.body.contentEditable = "true";
-
   // Quand on tape dans l'aperçu → mise à jour du textarea
   doc.body.onkeyup = function () {
     output.value = prettyHTML(cleanExport(doc.documentElement.outerHTML));
-
     setStatus("Modifié depuis l'aperçu.");
   };
 }
-
 function insertInPreview(html) {
   var doc = preview.contentDocument || preview.contentWindow.document;
   var sel = doc.getSelection();
-
   var range = sel.getRangeAt(0);
   range.deleteContents();
-
   // Créer un fragment HTML compatible vieux navigateurs
   var div = doc.createElement("div");
   div.innerHTML = html;
-
   var frag = doc.createDocumentFragment();
   while (div.firstChild) frag.appendChild(div.firstChild);
-
   range.insertNode(frag);
-
   // Replacer le curseur après l'insertion
   sel.collapseToEnd();
-
   // Mettre à jour le textarea
   output.value = prettyHTML(cleanExport(doc.documentElement.outerHTML));
-
   setStatus("Élément inséré dans l'aperçu.");
 }
-
 function insertList(type) {
   var doc = preview.contentDocument || preview.contentWindow.document;
   doc.body.focus();
   var sel = doc.getSelection();
-
   // Si curseur dans l'aperçu → insertion WYSIWYG
   if (sel && sel.rangeCount > 0 && sel.anchorNode) {
     insertListPreview(type);
     return;
   }
-
   // Sinon → insertion dans le textarea
   insertListTextarea(type);
 }
-
 function insertListPreview(type) {
   var doc = preview.contentDocument || preview.contentWindow.document;
   var sel = doc.getSelection();
   var range = sel.getRangeAt(0);
-
   var list = doc.createElement(type);
   var li = doc.createElement("li");
   li.appendChild(doc.createTextNode("Élément"));
   list.appendChild(li);
-
   range.insertNode(list);
   sel.collapse(li, 1);
-
   output.value = prettyHTML(cleanExport(doc.documentElement.outerHTML));
   setStatus("Liste " + " insérée dans l'aperçu.");
 }
-
 function insertListTextarea(type) {
   var start = output.selectionStart;
   var end = output.selectionEnd;
-
   var list =
 "<" + type + ">\n" +
 "  <li>Élément</li>\n" +
 "</" + type + ">\n";
-
   output.value =
     output.value.substring(0, start) +
     list +
     output.value.substring(end);
-
   output.selectionStart = start;
   output.selectionEnd = start + list.length;
-
   setStatus("Liste " + " insérée dans le code.");
   updatePreview();
 }
-
 function prettyHTML(html) {
   return html.replace(/></g, ">\n<");
 }
-
 function formatText(btn, cmd, value) {
   var doc = preview.contentDocument || preview.contentWindow.document;
   doc.body.focus();
-
   // Si bouton déjà actif → désactiver
   if (btn.className.indexOf("active") !== -1) {
     btn.className = btn.className.replace(" active", "");
-
     // Désactivation du style
     if (cmd === "hiliteColor") {
       doc.execCommand("hiliteColor", false, "transparent");
     }
-
     if (cmd === "foreColor") {
       doc.execCommand("foreColor", false, "#ccc");
     }
-
     if (cmd === "bold" || cmd === "italic" || cmd === "underline" || cmd === "strikethrough") {
       doc.execCommand(cmd, false, null);
     }
-
   } else {
     // Activer
     btn.className += " active";
     doc.execCommand(cmd, false, value);
   }
-
   // Mise à jour du textarea
   output.value = prettyHTML(cleanExport(doc.documentElement.outerHTML));
   setStatus("Format appliqué : " + cmd);
 }
-
 function toggleAlign(btn, align) {
   var doc = preview.contentDocument || preview.contentWindow.document;
-
   // Garder le focus dans l'aperçu
   doc.body.focus();
-
   // Désactiver tous les boutons d'alignement
   var buttons = document.querySelectorAll(".align-btn");
   for (var i = 0; i < buttons.length; i++) {
     buttons[i].className = buttons[i].className.replace(" active", "");
   }
-
   // Si bouton déjà actif → retour à gauche SANS STYLE
   if (btn.className.indexOf("active") !== -1) {
     btn.className = btn.className.replace(" active", "");
-
     // execCommand remet à gauche mais peut ajouter un style
     doc.execCommand("justifyLeft", false, null);
-
     // On nettoie tout
     removeAlignmentStyles(doc);
-
   } else {
     // Activer bouton
     btn.className += " active";
-
     if (align === "center") doc.execCommand("justifyCenter", false, null);
     if (align === "right") doc.execCommand("justifyRight", false, null);
-
     if (align === "left") {
       doc.execCommand("justifyLeft", false, null);
       removeAlignmentStyles(doc); // IMPORTANT
     }
   }
-
   // Mise à jour du textarea
   output.value = prettyHTML(cleanExport(doc.documentElement.outerHTML));
   setStatus("Alignement : " + align);
 }
-
 function removeAlignmentStyles(doc) {
   var all = doc.body.getElementsByTagName("*");
   for (var i = 0; i < all.length; i++) {
     var el = all[i];
-
     // Supprimer style="text-align: left|center|right|justify"
     if (el.style && el.style.textAlign) {
       el.style.textAlign = "";
     }
-
     // Supprimer align="left|center|right|justify"
     if (el.getAttribute("align")) {
       el.removeAttribute("align");
@@ -364,6 +308,5 @@ function removeAlignmentStyles(doc) {
   }
 }
 </script>
-
 </body>
 </html>

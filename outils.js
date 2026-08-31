@@ -1,14 +1,11 @@
 /* --- Copier textarea ---*/
 function copyTextarea(id, btn) {
     var code = document.getElementById(id);
-
     var temp = document.createElement("textarea");
     temp.value = code.value;
     document.body.appendChild(temp);
     temp.select();
-
     try { document.execCommand("copy"); } catch (err) {}
-
     document.body.removeChild(temp);
     btn.focus();
 }
@@ -25,12 +22,10 @@ var mapTextarea = {
 Object.keys(mapTextarea).forEach(function(btnId) {
     var el = document.getElementById(btnId);
     if (!el) return; // ignore proprement si absent
-
     el.onclick = function(e) {
         copyTextarea(mapTextarea[btnId], e.target);
     };
 });
-
 /* --- Glisser-déposer ---*/
 function setupDragDrop(textareaId) {
     var area = document.getElementById(textareaId);
@@ -39,7 +34,6 @@ function setupDragDrop(textareaId) {
         if (e.dataTransfer.types &&
             (e.dataTransfer.types.indexOf("Files") !== -1 ||
              e.dataTransfer.types.indexOf("application/x-moz-file") !== -1)) {
-
             e.preventDefault();
         }
     });
@@ -64,7 +58,6 @@ setupDragDrop("textB");
 setupDragDrop("view");
 setupDragDrop("textInput");
 setupDragDrop("importBox");
-
 /* --- Bouton importer fichier vers textarea ---*/
 function importTextareaFile(buttonId, fileInputId, textareaId) {
     var btn = document.getElementById(buttonId);

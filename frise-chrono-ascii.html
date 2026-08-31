@@ -28,7 +28,6 @@
 <script>
 /* --- Données internes --- */
 var events = [];
-
 /* --- Ajouter un évènement --- */
 function addEventUnshift() {
   events.unshift({
@@ -39,7 +38,6 @@ function addEventUnshift() {
   refreshEditor();
   exportAscii();
 }
-
 function addEventPush() {
   events.push({
     title: "Titre",
@@ -49,7 +47,6 @@ function addEventPush() {
   refreshEditor();
   exportAscii();
 }
-
 function addEventAfter(i) {
   events.splice(i + 1, 0, {
     title: "Titre",
@@ -59,14 +56,12 @@ function addEventAfter(i) {
   refreshEditor();
   exportAscii();
 }
-
 /* --- Supprimer un évènement --- */
 function removeEvent(i) {
   events.splice(i, 1);
   refreshEditor();
   exportAscii();
 }
-
 /* --- Déplacer un évènement --- */
 function moveEventUp(i) {
   if (i <= 0) return;
@@ -76,7 +71,6 @@ function moveEventUp(i) {
   refreshEditor();
   exportAscii();
 }
-
 function moveEventDown(i) {
   if (i >= events.length - 1) return;
   var tmp = events[i + 1];
@@ -85,7 +79,6 @@ function moveEventDown(i) {
   refreshEditor();
   exportAscii();
 }
-
 /* --- Rafraîchir l'éditeur --- */
 function refreshEditor() {
   var html = "";
@@ -99,7 +92,6 @@ function refreshEditor() {
       '<textarea wrap="off" style="width:100%;height:100px;" onchange="events[' + i + '].desc=this.value; exportAscii();">' +
         e.desc +
       '</textarea><br>' +
-
       // Boutons ↑ ↓ + x
       '<button onclick="moveEventUp(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">↑</button>' +
       '<button onclick="moveEventDown(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">↓</button>' +
@@ -109,16 +101,13 @@ function refreshEditor() {
   }
   document.getElementById("eventList").innerHTML = html;
 }
-
 /* --- EXPORT TEXTE --- */
 function exportAscii() {
   if (events.length === 0) {
     document.getElementById("output").value = "";
     return;
   }
-
   var i;
-
   // 1. Largeur de chaque colonne
   var widths = [];
   for (i = 0; i < events.length; i++) {
@@ -126,25 +115,21 @@ function exportAscii() {
     if (events[i].date.length > w) w = events[i].date.length;
     widths[i] = w + 4;
   }
-
   // 2. Centrage
   function center(text, width) {
     var left = Math.floor((width - text.length) / 2);
     var right = width - text.length - left;
     return repeat(" ", left) + text + repeat(" ", right);
   }
-
   // 3. Largeur totale (colonnes + séparateurs)
   var totalWidth = 0;
   for (i = 0; i < widths.length; i++) totalWidth += widths[i];
   totalWidth += (events.length - 1); // les "|"
-
   // 4. Lignes de la flèche (haut et bas)
   var top1 = repeat(" ", totalWidth - 2) + "|\\";
   var sep1 = repeat("-", totalWidth - 1) + " \\";
   var sep2 = repeat("-", totalWidth - 1) + " /";
   var bottomArrow = repeat(" ", totalWidth - 2) + "|/";
-
   // 5. Titres
   var titleRow = "";
   for (i = 0; i < events.length; i++) {
@@ -152,20 +137,17 @@ function exportAscii() {
     if (i < events.length - 1) titleRow += "|";
   }
   titleRow += " }";
-
   // 7. Dates
   var dateRow = "";
   for (i = 0; i < events.length; i++) {
     dateRow += center(events[i].date, widths[i]);
     if (i < events.length - 1) dateRow += " ";
   }
-
   // 8. Descriptions
   var descs = [];
   for (i = 0; i < events.length; i++) {
     descs.push(events[i].date + " : " + events[i].desc);
   }
-
   // 9. Résultat final
   var out =
     top1 + "\n" +
@@ -175,26 +157,21 @@ function exportAscii() {
     bottomArrow + "\n" +
     dateRow + "\n\n" +
     descs.join("\n");
-
   document.getElementById("output").value = out;
 }
-
 function repeat(s, n) {
   var r = "";
   while (n-- > 0) r += s;
   return r;
 }
-
 /* --- IMPORT TEXTE Format : date | titre | desc --- */
 function importAscii() {
   var raw = document.getElementById("output").value;
   var lines = raw.split("\n");
   var i;
-
   var titles = [];
   var dates = [];
   var descs = [];
-
   // 1. Ligne des titres (celle qui contient "}")
   var titleIndex = -1;
   for (i = 0; i < lines.length; i++) {
@@ -204,7 +181,6 @@ function importAscii() {
     }
   }
   if (titleIndex === -1) return;
-
   var titleLine = lines[titleIndex];
   titleLine = titleLine.replace("}", "");
   // découpe par "|"
@@ -213,7 +189,6 @@ function importAscii() {
     var t = trim(parts[i]);
     if (t) titles.push(t);
   }
-
   // 2. Ligne des dates : première ligne non vide après la ligne contenant "|/"
   var arrowIndex = -1;
   for (i = 0; i < lines.length; i++) {
@@ -232,28 +207,23 @@ function importAscii() {
       }
     }
   }
-
   // 3. Descriptions multilignes
   var inDesc = false;
   var currentDesc = "";
-
   for (i = 0; i < lines.length; i++) {
     var line = trim(lines[i]);
-
     // Première ligne de description (contient ":")
     if (line.indexOf(":") !== -1) {
       // Si on était déjà dans une description → on la pousse
       if (currentDesc !== "") {
         descs.push(currentDesc);
       }
-
       // Nouvelle description
       var idx = line.indexOf(":");
       currentDesc = line.substring(idx + 1).replace(/^\s+/, "");
       inDesc = true;
       continue;
     }
-
     // Lignes suivantes (multilignes)
     if (inDesc) {
       // Fin si ligne vide
@@ -263,17 +233,14 @@ function importAscii() {
         inDesc = false;
         continue;
       }
-
       // Sinon → on ajoute la ligne à la description
       currentDesc += "\n" + line;
     }
   }
-
   // Dernière description si non poussée
   if (currentDesc !== "") {
     descs.push(currentDesc);
   }
-
   // 4. Reconstruire events[]
   events = [];
   var maxLen = Math.max(titles.length, dates.length, descs.length);
@@ -284,15 +251,12 @@ function importAscii() {
       desc: descs[i] || "",
     });
   }
-
   refreshEditor();
 }
-
 // trim ES3
 function trim(s) {
   return s.replace(/^\s+/, "").replace(/\s+$/, "");
 }
 </script>
-
 </body>
 </html>

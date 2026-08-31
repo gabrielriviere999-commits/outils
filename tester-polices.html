@@ -47,84 +47,65 @@ p{margin-top:10px;line-height:0;}
 </head>
 <body>
 <h2>Tester polices</h2>
-
 <h3>Texte</h3>
-
 <textarea wrap="off" id="input" onkeyup="updateText();"></textarea><br>
 <button id="importTextareaFileinput">Importer fichier...</button>
 <input type="file" id="textareaFileinput" style="display:none;">
-
 <h3>Affichage des polices</h3>
-
 <div class="container-tpolices">
-
 <div class="card-tpolices border-externe">
 <p class="p1">Courier New</p>
 <div id="preview1" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p2">Lucida Console</p>
 <div id="preview2" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p3">Consolas</p>
 <div id="preview3" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p4">monospace</p>
 <div id="preview4" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p5">Arial</p>
 <div id="preview5" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p6">Verdana</p>
 <div id="preview6" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p7">Times New Roman</p>
 <div id="preview7" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p8">Georgia</p>
 <div id="preview8" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p9">sans-serif</p>
 <div id="preview9" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p10">Comic Sans MS</p>
 <div id="preview10" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p11">Impact</p>
 <div id="preview11" class="preview border-interne"></div>
 </div>
-
 <div class="card-tpolices border-externe">
 <p class="p12">Trebuchet MS</p>
 <div id="preview12" class="preview border-interne"></div>
 </div>
-
 </div>
-
 <script src="outils.js"></script>
 <script>
 function updateText() {
     var txt = document.getElementById("input").value;
-
     document.getElementById("preview1").innerHTML = txt;
     document.getElementById("preview2").innerHTML = txt;
     document.getElementById("preview3").innerHTML = txt;
@@ -139,6 +120,5 @@ function updateText() {
     document.getElementById("preview12").innerHTML = txt;
 }
 </script>
-
 </body>
 </html>

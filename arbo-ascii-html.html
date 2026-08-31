@@ -44,25 +44,19 @@
     + Fichier : Ajouter un fichier.<br>
     ← Remonter : Se déplacer en arrière dans l'arborescence.<br>
     Dossier courant : Affiche le chemin courant.<br><br>
-
     Cliquer sur un <font color=#4af>dossier/</font> pour y aller.<br><br>
-
     <font color=#fa4>[C]</font> : Ajouter un commentaire à droite du <font color=#4af>dossier/</font> ou <font color=#0f0>fichier</font>, laisser vide pour n'en mettre aucun.<br>
     <font color=#fa4>[R]</font> : Renommer le <font color=#4af>dossier/</font> ou <font color=#0f0>fichier</font>.<br>
     <font color=#fa4>[X]</font> : Effacer le <font color=#4af>dossier/</font> ou <font color=#0f0>fichier</font>.<br><br>
-
     Copier texte : Copier le texte brut sans couleurs de l'arborescence dans le presse-papiers.<br>
     Copier HTML couleur : Copier le code HTML avec couleurs de l'arborescence dans le presse-papiers.<br>
     Afficher texte : Afficher le texte brut sans couleurs de l'arborescence en dessous du bouton.<br>
     Afficher HTML couleur : Afficher le code HTML avec couleurs de l'arborescence en dessous du bouton.
-
     <p><hr></p>
-
     <h3>Champ</h3>
     Mettre à jour à partir du texte : Afficher l'arborescence à partir du texte obtenu avec cet outil ou <a href="make-arbo.py" download>le script Python make-arbo.py</a>, <a href="../portfolio/astuces/android/applications/arbo.apk" download>l'application Android Arbo</a>, <a href="arbo-zip.html">la page Arborescence ZIP</a>.<br>
     Importer (commande tree) : Afficher l'arborescence à partir du texte obtenu avec la commande tree.<br>
     Importer fichier... : Choisir un fichier depuis l'appareil à mettre dans le champ de texte.<br><br>
-
     Note : En important l'arborescence de tree, les fichiers sans extensions (sans .txt, .jpg etc...) sont reconnus comme des dossiers.
   </div>
   <p>Dossier courant : <span id="currentPath"></span></p>
@@ -89,7 +83,6 @@ var root = { name: "racine/", folders: [], files: [] };
 // chemin courant sous forme d'indices de dossiers : [] = racine, [0] = premier dossier, etc.
 var currentPath = [];
 var lastAsciiText = "";
-
 // --- Utilitaires ---
 function cloneArray(a) {
     var r = [];
@@ -97,7 +90,6 @@ function cloneArray(a) {
     for (i = 0; i < a.length; i++) r[i] = a[i];
     return r;
 }
-
 function getNodeByPath(pathArr) {
     var node = root;
     var i;
@@ -106,12 +98,10 @@ function getNodeByPath(pathArr) {
     }
     return node;
 }
-
 function pathToString(pathArr) {
     // ex: [0,2,1] -> "0,2,1"
     return pathArr.join(",");
 }
-
 function stringToPath(str) {
     if (str === "") return [];
     var parts = str.split(",");
@@ -121,21 +111,17 @@ function stringToPath(str) {
     }
     return parts;
 }
-
 // --- Actions globales ---
 function renameRoot() {
     var name = prompt("Nom de la racine :", root.name);
     if (!name) return;
-
     // Toujours finir par un slash
     if (name.charAt(name.length - 1) !== "/") {
         name = name + "/";
     }
-
     root.name = name;
     render();
 }
-
 function addFolder() {
     var node = getNodeByPath(currentPath);
     var name = prompt("Nom du dossier :");
@@ -143,7 +129,6 @@ function addFolder() {
     node.folders.push({ name: name, comment: "", folders: [], files: [] });
     render();
 }
-
 function addFile() {
     var node = getNodeByPath(currentPath);
     var name = prompt("Nom du fichier :");
@@ -151,72 +136,58 @@ function addFile() {
     node.files.push({ name: name, comment: "" });
     render();
 }
-
 function goUp() {
     if (currentPath.length > 0) {
         currentPath.pop();
         render();
     }
 }
-
 function copyTree(btn) {
 	var btn = event.target;
     var textarea = document.createElement("textarea");
     textarea.value = lastAsciiText;
     document.body.appendChild(textarea);
-
     textarea.select();
     document.execCommand("copy");
     document.body.removeChild(textarea);
     btn.focus();
 }
-
 function showTreeText() {
     var box = document.getElementById("previewBox");
     box.style.display = "block";
     box.value = lastAsciiText;
 }
-
 function buildHtml() {
     var html = document.getElementById("ascii").innerHTML;
-
     // 1. Supprimer les boutons [C][R][X]
     html = html.replace(/<span class="action"[^>]*>.*?<\/span>/g, "");
-
     // 2. Supprimer les onclick=""
     html = html.replace(/ onclick="[^"]*"/g, "");
-
     // 3. Sauvegarder les commentaires
     var comments = [];
     html = html.replace(/<span class="comment">[\s\S]*?<\/span>/g, function(m){
         comments.push(m);
         return "§COMMENT§";
     });
-
     // 4. Colorer les symboles ASCII
     html = html.replace(/├──/g, '<span class="ascii">├──</span>');
     html = html.replace(/└──/g, '<span class="ascii">└──</span>');
     html = html.replace(/│/g,   '<span class="ascii">│</span>');
-
     // 5. Colorer les fichiers
     html = html.replace(
         /(<span class="ascii">(?:├──|└──)<\/span>)(\s*)([^<\n][^<\n]*)/g,
         function(_, ascii, spaces, name) {
-
             if (name.indexOf('<span class="folder">') === 0) return ascii + spaces + name;
             if (name.indexOf('<span class="comment">') === 0) return ascii + spaces + name;
             if (name.replace(/\s+/g, "") === "") return ascii + spaces + name;
-
             return ascii + spaces + '<span class="file">' + name + '</span>';
         }
     );
-
     // 6. Restaurer les commentaires
     var i = 0;
     html = html.replace(/§COMMENT§/g, function(){
         return comments[i++];
     });
-
     // 7. Générer le bloc HTML complet
     var finalHtml =
         '<style>\n' +
@@ -229,53 +200,40 @@ function buildHtml() {
         '<pre class="tree">\n' +
         html +
         '</pre>';
-
     return finalHtml;
 }
-
 function copyTreeHtml(btn) {
     var finalHtml = buildHtml();
-
     var textarea = document.createElement("textarea");
     textarea.value = finalHtml;
     document.body.appendChild(textarea);
-
     textarea.select();
     document.execCommand("copy");
     document.body.removeChild(textarea);
-
     btn.focus();
 }
-
 function showTreeHtml() {
     var finalHtml = buildHtml();
-
     var box = document.getElementById("previewBox");
     box.style.display = "block";
     box.value = finalHtml;
 }
-
 function restoreTree() {
     var text = document.getElementById("importBox").value;
     if (!text) {
         alert("Le champ de texte est vide.");
         return;
     }
-
     var lines = text.split("\n");
     var stack = [];
     var i;
-
     var newRoot = null;
-
     for (i = 0; i < lines.length; i++) {
         var line = lines[i].replace(/\r/g, "");
         if (line === "") continue;
-
         // --- 1. Indentation (groupes de 4 espaces ou │   )
         var indent = 0;
         var pos = 0;
-
         while (true) {
             var block = line.substr(pos, 4);
             if (block === "│   " || block === "    ") {
@@ -285,39 +243,31 @@ function restoreTree() {
                 break;
             }
         }
-
         // --- 2. Nettoyer ├── et └──
         var clean = line.substr(pos);
         clean = clean.replace(/^├──\s*/, "");
         clean = clean.replace(/^└──\s*/, "");
-
         // --- 3. Séparer nom et commentaire
         var comment = "";
         var arrowPos = clean.indexOf("←");
-
         if (arrowPos !== -1) {
             comment = clean.substring(arrowPos + 1);
             comment = comment.replace(/^\s+/, ""); // trim left
             clean = clean.substring(0, arrowPos);
             clean = clean.replace(/\s+$/, ""); // trim right
         }
-
         // --- 4. Racine
         if (newRoot === null) {
             if (clean.charAt(clean.length - 1) !== "/") clean += "/";
             newRoot = { name: clean, comment: comment, folders: [], files: [] };
-
             stack.push({ node: newRoot, indent: -1 });
             continue;
         }
-
         // --- 5. Trouver parent
         while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
             stack.pop();
         }
-
         var parent = stack[stack.length - 1].node;
-
         // --- 6. Dossier ou fichier ?
         if (clean.charAt(clean.length - 1) === "/") {
             var folderName = clean.substring(0, clean.length - 1);
@@ -328,20 +278,16 @@ function restoreTree() {
             parent.files.push({ name: clean, comment: comment });
         }
     }
-
     // --- 7. Remplacer l'arbre actuel
     root = newRoot;
     currentPath = [];
-
     render();
 }
-
 // --- Navigation par clic ---
 function enterFolder(pathStr) {
     currentPath = stringToPath(pathStr);
     render();
 }
-
 // --- Renommer / supprimer dossiers ---
 function renameFolder(pathStr) {
     var pathArr = stringToPath(pathStr);
@@ -351,24 +297,18 @@ function renameFolder(pathStr) {
     node.name = name;
     render();
 }
-
 function deleteFolder(pathStr) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
-
     if (!confirm('Supprimer le dossier "' + node.name + '" et tout son contenu ?')) return;
-
     if (pathArr.length === 0) {
         alert("Impossible de supprimer la racine.");
         return;
     }
-
     var parentPath = cloneArray(pathArr);
     var idx = parentPath.pop();
     var parent = getNodeByPath(parentPath);
-
     parent.folders.splice(idx, 1);
-
     if (currentPath.length >= pathArr.length) {
         var same = true;
         var i;
@@ -382,34 +322,26 @@ function deleteFolder(pathStr) {
             currentPath = parentPath;
         }
     }
-
     render();
 }
-
 // --- Renommer / supprimer fichiers ---
 function renameFile(pathStr, fileIndex) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
     var file = node.files[fileIndex];
-
     var name = prompt("Nouveau nom :", file.name);
     if (!name) return;
-
     file.name = name;
     render();
 }
-
 function deleteFile(pathStr, fileIndex) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
     var file = node.files[fileIndex];
-
     if (!confirm('Supprimer le fichier "' + file.name + '" ?')) return;
-
     node.files.splice(fileIndex, 1);
     render();
 }
-
 function editCommentFolder(pathStr) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
@@ -418,7 +350,6 @@ function editCommentFolder(pathStr) {
     node.comment = c;
     render();
 }
-
 function editCommentFile(pathStr, fileIndex) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
@@ -427,20 +358,17 @@ function editCommentFile(pathStr, fileIndex) {
     node.files[fileIndex].comment = c;
     render();
 }
-
 // --- Rendu ---
 function render() {
     var node = root;
     var i;
     var parts = [];
-
     // --- Construire le chemin courant ---
     var rootName = root.name;
     if (rootName.charAt(rootName.length - 1) !== "/") {
         rootName = rootName + "/";
     }
     parts.push(rootName);
-
     for (i = 0; i < currentPath.length; i++) {
         node = node.folders[currentPath[i]];
         var name = node.name;
@@ -449,26 +377,20 @@ function render() {
         }
         parts.push(name);
     }
-
     document.getElementById("currentPath").innerHTML = parts.join("");
-
     // --- ASCII HTML (avec clics) ---
     var html = buildAscii(root, "", []);
     document.getElementById("ascii").innerHTML = html;
-
     // --- ASCII TEXTE PUR (sans [R][X], sans <span>) ---
     lastAsciiText = buildAsciiText(root, "", []);
 }
-
 function buildAscii(node, prefix, pathArr) {
     var out = "";
     var i;
-
     // racine
     if (pathArr.length === 0) {
         out += '<span class="folder" onclick="enterFolder(\'\')">' + node.name + '</span>\n';
     }
-
     // construire liste entries (dossiers puis fichiers)
     var entries = [];
     for (i = 0; i < node.folders.length; i++) {
@@ -477,19 +399,15 @@ function buildAscii(node, prefix, pathArr) {
     for (i = 0; i < node.files.length; i++) {
         entries.push({ type: "file", index: i });
     }
-
     for (i = 0; i < entries.length; i++) {
         var entry = entries[i];
         var last = (i === entries.length - 1);
         var branch = last ? "└── " : "├── ";
-
         if (entry.type === "folder") {
-
             var childPath = cloneArray(pathArr);
             childPath.push(entry.index);
             var pathStr = pathToString(childPath);
             var child = node.folders[entry.index];
-
             out += prefix + branch +
                 '<span class="folder" onclick="enterFolder(\'' + pathStr + '\')">' +
                 child.name + '/</span>' +
@@ -498,14 +416,11 @@ function buildAscii(node, prefix, pathArr) {
                 '<span class="action" onclick="renameFolder(\'' + pathStr + '\')">[R]</span>' +
                 '<span class="action" onclick="deleteFolder(\'' + pathStr + '\')">[X]</span>' +
                 "\n";
-
             out += buildAscii(child, prefix + (last ? "    " : "│   "), childPath);
         }
-
         else {
             var filePathStr = pathToString(pathArr);
             var file = node.files[entry.index];
-
             out += prefix + branch + file.name +
                 (file.comment ? ' <span class="comment">← ' + file.comment + '</span>' : '') +
                 '<span class="action" onclick="editCommentFile(\'' + filePathStr + '\',' + entry.index + ')">[C]</span>' +
@@ -514,18 +429,14 @@ function buildAscii(node, prefix, pathArr) {
                 "\n";
         }
     }
-
     return out;
 }
-
 function buildAsciiText(node, prefix, pathArr) {
     var out = "";
     var i;
-
     if (pathArr.length === 0) {
         out += node.name + "\n";
     }
-
     var entries = [];
     for (i = 0; i < node.folders.length; i++) {
         entries.push({ type: "folder", index: i });
@@ -533,21 +444,17 @@ function buildAsciiText(node, prefix, pathArr) {
     for (i = 0; i < node.files.length; i++) {
         entries.push({ type: "file", index: i });
     }
-
     for (i = 0; i < entries.length; i++) {
         var entry = entries[i];
         var last = (i === entries.length - 1);
         var branch = last ? "└── " : "├── ";
-
         if (entry.type === "folder") {
             var child = node.folders[entry.index];
             out += prefix + branch + child.name + "/" +
                    (child.comment ? " ← " + child.comment : "") +
                    "\n";
-
             var childPath = pathArr.concat([entry.index]);
             out += buildAsciiText(child, prefix + (last ? "    " : "│   "), childPath);
-
         } else {
             var file = node.files[entry.index];
             out += prefix + branch + file.name +
@@ -555,29 +462,22 @@ function buildAsciiText(node, prefix, pathArr) {
                    "\n";
         }
     }
-
     return out;
 }
-
 render();
-
 // Parseur universel pour sortie "tree"
 // Entrée : texte brut de "tree" (avec ou sans -F)
 // Sortie : { name, folders, files, comment }
-
 function importTreeUniversal(text) {
     // Normaliser les espaces insécables
     text = text.replace(/\u00A0/g, " ");
-
     // Normaliser Windows : remplacer └─── par └── + espace
     text = text.replace(/└───/g, "└── ");
     text = text.replace(/├───/g, "├── ");
-
     var lines = text.split(/\r?\n/);
     if (lines.length === 0) {
         return { name: "/", folders: [], files: [], comment: "" };
     }
-
     // 1) Déterminer le nom de la racine
     var first = trimLeft(lines[0]);
     if (first === "." || first === "./") {
@@ -585,37 +485,28 @@ function importTreeUniversal(text) {
     }
     first = stripTreeSuffix(first); // enlève /, *, @, etc.
     var root = { name: first, folders: [], files: [], comment: "" };
-
     // Pile des niveaux
     var stack = [root];
-
     var i;
     for (i = 1; i < lines.length; i++) {
         var line = lines[i];
         if (!line || !trim(line)) continue;
-
         // Ignorer les lignes de résumé éventuelles
         if (/^\d+\s+directories?,\s+\d+\s+files?/.test(trim(line))) {
             continue;
         }
-
         // 2) Calculer le niveau d'indentation
         var indentInfo = getTreeIndentLevel(line);
         var level = indentInfo.level;
         var content = indentInfo.content;
-
         if (!content) continue;
-
         // 3) Nettoyer le préfixe ├── / └──
         content = content.replace(/^[├└]\──\s*/, "");
         content = trim(content);
-
         if (!content) continue;
-
         // 4) Déterminer si dossier ou fichier (avec -F ou heuristique)
         var isDir = false;
         var rawName = content;
-
         // Si -F : dossier = nom finissant par /
         if (rawName.charAt(rawName.length - 1) === "/") {
             isDir = true;
@@ -627,15 +518,12 @@ function importTreeUniversal(text) {
                 isDir = true;
             }
         }
-
         rawName = stripTreeSuffix(rawName); // enlève *, @, |, = éventuels
-
         // 5) Ajuster la pile pour correspondre au niveau
         while (stack.length > level + 1) {
             stack.pop();
         }
         var parent = stack[stack.length - 1];
-
         if (isDir) {
             var folder = { name: rawName, folders: [], files: [], comment: "" };
             parent.folders.push(folder);
@@ -644,26 +532,20 @@ function importTreeUniversal(text) {
             parent.files.push({ name: rawName, comment: "" });
         }
     }
-
     return root;
 }
-
 // --------- Helpers ES3 compatibles ---------
-
 function trim(str) {
     return str.replace(/^\s+|\s+$/g, "");
 }
-
 function trimLeft(str) {
     return str.replace(/^\s+/, "");
 }
-
 // Détecter indentation et contenu utile d'une ligne "tree"
 function getTreeIndentLevel(line) {
     var i = 0;
     var level = 0;
     var len = line.length;
-
     // On parcourt les blocs "│   " ou "    "
     while (i < len) {
         var ch = line.charAt(i);
@@ -681,23 +563,19 @@ function getTreeIndentLevel(line) {
             i++;
         }
     }
-
     // Sauter les espaces restants avant le symbole
     while (i < len && (line.charAt(i) === " " || line.charAt(i) === "│")) {
         i++;
     }
-
     // Si on tombe sur ├ ou └, on laisse le reste pour le nettoyage
     if (i < len && (line.charAt(i) === "├" || line.charAt(i) === "└")) {
         // on laisse tel quel, le nettoyage se fera après
     }
-
     return {
         level: level,
         content: line.substr(i)
     };
 }
-
 // Enlever les suffixes de "tree -F" : *, @, |, =
 function stripTreeSuffix(name) {
     var last = name.charAt(name.length - 1);
@@ -706,7 +584,6 @@ function stripTreeSuffix(name) {
     }
     return name;
 }
-
 // Heuristique simple : ressemble à un fichier si contient un point après le premier caractère
 function hasFileLikeExtension(name) {
     var dot = name.indexOf(".");
@@ -714,25 +591,21 @@ function hasFileLikeExtension(name) {
     // on considère que quelque chose comme "README.md" ou "index.html" est un fichier
     return true;
 }
-
 function importTreeFromText() {
     var txt = document.getElementById("importBox").value;
     if (!txt) {
         alert("Le champ de texte est vide.");
         return;
     }
-
     var newRoot = importTreeUniversal(txt);
     root = newRoot;
     currentPath = [];
     render();
 }
-
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
 }
 </script>
-
 </body>
 </html>

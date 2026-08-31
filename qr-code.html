@@ -115,63 +115,50 @@
 var text = document.getElementById("text");
 var qrDiv = document.getElementById("qrcode");
 var btnGen = document.getElementById("btn-generate");
-
 /* --- COLOR PICKERS INIT --- */
 btnGen.onclick = generateCode;
 initColorPicker("qrHex", function(hex){
   document.getElementById("qrColor").value = hex;
   generateCode();
 });
-
 initColorPicker("bgHex", function(hex){
   document.getElementById("bgColor").value = hex;
   generateCode();
 });
-
 /* --- COLOR PICKER --- */
 function cssNameToHex(name) {
   var ctx = document.createElement("canvas").getContext("2d");
   ctx.fillStyle = "#000"; // valeur par défaut
   ctx.fillStyle = name;   // si invalide, reste "#000"
   var computed = ctx.fillStyle;
-
   // Si le navigateur n'a pas reconnu le nom → retourne null
   if (computed === "#000000" && name.toLowerCase() !== "black") {
     return null;
   }
-
   return computed; // retourne "#rrggbb"
 }
-
 function initColorPicker(hexInputId, callback, skipInit) {
   var input = document.getElementById(hexInputId);
   var previewColorPicker = input.nextElementSibling; // previewColorPicker associé
-
   function applyColor(hex, trigger) {
     input.value = hex;
     previewColorPicker.style.background = hex; // mise à jour du previewColorPicker
     if (trigger !== false) callback(hex);
   }
-
   input.onchange = function () {
     this.value = this.value.toLowerCase();
     var v = input.value.trim();
-
     if (/^[0-9A-Fa-f]{6}$/.test(v)) v = "#" + v;
     else if (/^[0-9A-Fa-f]{3}$/.test(v)) v = "#" + v;
-
     if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
       applyColor(v);
       return;
     }
-
     var hex = cssNameToHex(v);
     if (hex) applyColor(hex);
   };
-
   applyColor(input.value, false);
 }
-
 document.getElementById("qrHex").onchange = function () {
     document.getElementById("qrColor").value = this.value;
     generateCode();
@@ -183,7 +170,6 @@ document.getElementById("bgHex").onchange = function () {
 document.onmouseup = function () {
     draggingHue = false;
     draggingSV  = false;
-
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
     }
@@ -191,25 +177,20 @@ document.onmouseup = function () {
 document.ontouchend = function () {
     draggingHue = false;
     draggingSV  = false;
-
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
     }
 };
-
 attachColorPickerTo(document.getElementById("qrHex"));
 attachColorPickerTo(document.getElementById("bgHex"));
-
 /* --- SLIDER OPACITÉ FOND (QR) --- */
 var bgSlider = document.getElementById("bgOpacity");
 var bgPercent = document.getElementById("bgOpacityPercent");
-
 // Slider → met juste à jour le pourcentage
 bgSlider.oninput = function () {
   var v = parseFloat(bgSlider.value);
   bgPercent.value = Math.round(v * 100);
 };
-
 //Quand on lâche le slider → générer
 bgSlider.onmouseup = function () {
   generateCode();
@@ -217,7 +198,6 @@ bgSlider.onmouseup = function () {
 bgSlider.ontouchend = function () {
   generateCode();
 };
-
 // Pourcentage → met juste à jour le slider
 bgPercent.onchange = function () {
   var p = parseInt(bgPercent.value, 10);
@@ -226,7 +206,6 @@ bgPercent.onchange = function () {
   if (p > 100) p = 100;
   bgSlider.value = p / 100;
 };
-
 // Quand on valide le pourcentage → générer
 bgPercent.onchange = function () {
   var p = parseInt(bgPercent.value, 10);
@@ -237,20 +216,16 @@ bgPercent.onchange = function () {
   bgSlider.value = p / 100;
   generateCode();
 };
-
 /* --- GÉNÉRATION QR (SVG) --- */
 function generateSVG(qrObj) {
     var count = qrObj.getModuleCount();
     var cell = 10;
     var size = count * cell;
-
     var fg = document.getElementById("qrColor").value;
     var bg = document.getElementById("bgColor").value;
     var bgOpacity = parseFloat(document.getElementById("bgOpacity").value);
-
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">';
     svg += '<rect width="100%" height="100%" fill="' + bg + '" fill-opacity="' + bgOpacity + '"/>';
-
     for (var y = 0; y < count; y++) {
         for (var x = 0; x < count; x++) {
             if (qrObj.isDark(y, x)) {
@@ -258,11 +233,9 @@ function generateSVG(qrObj) {
             }
         }
     }
-
     svg += '</svg>';
     return svg;
 }
-
 function generateQR() {
     var value = text.value.trim();
     qr = qrcode(0, 'H');
@@ -270,17 +243,13 @@ function generateQR() {
     qr.make();
     qrDiv.innerHTML = generateSVG(qr);
 }
-
 function generateCode() {
     var value = text.value.trim();
     qrDiv.innerHTML = "";
     if (!value) return;
-
     generateQR();
 }
-
 btnGen.onclick = generateCode;
-
 /* --- EXPORT PNG / JPG / SVG --- */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
@@ -290,23 +259,18 @@ function download(filename, dataUrl) {
   a.click();
   document.body.removeChild(a);
 }
-
 function exportCanvas(type) {
   if (!qr) return;
-
   var count = qr.getModuleCount();
   var cell  = 10;
   var size  = count * cell;
-
   var fg = document.getElementById("qrColor").value;
   var bg = document.getElementById("bgColor").value;
   var bgOpacity = parseFloat(document.getElementById("bgOpacity").value);
-
   var canvas = document.createElement("canvas");
   canvas.width  = size;
   canvas.height = size;
   var ctx = canvas.getContext("2d");
-
   // fond transparent si opacité = 0
   if (bgOpacity > 0) {
     ctx.fillStyle = bg;
@@ -314,7 +278,6 @@ function exportCanvas(type) {
     ctx.fillRect(0, 0, size, size);
     ctx.globalAlpha = 1;
   }
-
   // modules
   ctx.fillStyle = fg || "#000000";
   for (var y = 0; y < count; y++) {
@@ -324,123 +287,94 @@ function exportCanvas(type) {
       }
     }
   }
-
   var mime = "image/" + type;
   var data = canvas.toDataURL(mime);
-
   download("qr-code." + (type === "jpeg" ? "jpg" : type), data);
 }
-
 document.getElementById("export-png").onclick = function () {
   exportCanvas("png");
 };
-
 document.getElementById("export-jpg").onclick = function () {
   exportCanvas("jpeg");
 };
-
 document.getElementById("export-svg").onclick = function () {
     if (!qr) return;
-
     var svg = generateSVG(qr);
     var blob = new Blob([svg], { type: "image/svg+xml" });
     var url = URL.createObjectURL(blob);
-
     var a = document.createElement("a");
     a.href = url;
     a.download = "qr-code.svg";
     a.click();
-
     URL.revokeObjectURL(url);
 };
-
 /* --- DÉCODAGE FICHIER --- */
 var fileInput = document.getElementById("file-input");
 var canvasFile = document.getElementById("canvas-file");
 var ctxFile = canvasFile.getContext("2d");
 var decodeFile = document.getElementById("decode-file");
-
 // On suppose ZXing chargé (zxing-browser.min.js)
 var readerZX = new ZXing.BrowserMultiFormatReader();
-
 fileInput.onchange = function (e) {
   var file = e.target.files[0];
   if (!file) return;
-
   var img = new Image();
   img.onload = function () {
     var maxSize = 1000;
     var scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-
     canvasFile.width = img.width * scale;
     canvasFile.height = img.height * scale;
-
     ctxFile.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvasFile.width, canvasFile.height);
-
     var tempImg = new Image();
     tempImg.onload = function () {
       readerZX.decodeFromImageElement(tempImg)
         .then(function(result){ decodeFile.innerText = result.text; })
         .catch(function(){ decodeFile.innerText = "Aucun code détecté."; });
     };
-
     tempImg.src = canvasFile.toDataURL("image/png");
   };
-
   img.src = URL.createObjectURL(file);
 };
-
 // Coller une image depuis le presse‑papier
 var pasteInput = document.getElementById("pasteInput");
-
 pasteInput.onpaste = function(e) {
     var items = (e.clipboardData || e.originalEvent.clipboardData).items;
     var file = null;
-
     for (var i = 0; i < items.length; i++) {
         if (items[i].type.indexOf("image") !== -1) {
             file = items[i].getAsFile();
             break;
         }
     }
-
     if (file) {
         loadFile(file);
     } else {
         alert("Aucune image trouvée dans le presse‑papier.");
     }
 };
-
 function loadFile(file) {
     var img = new Image();
     img.onload = function () {
         var canvas = document.getElementById("canvas-file");
         var ctx = canvas.getContext("2d");
-
         canvas.width = img.width;
         canvas.height = img.height;
-
         ctx.drawImage(img, 0, 0);
-
         var tempImg = new Image();
         tempImg.onload = function () {
             readerZX.decodeFromImageElement(tempImg)
                 .then(function(result){ decodeFile.innerText = result.text; })
                 .catch(function(){ decodeFile.innerText = "Aucun QR détecté."; });
         };
-
         tempImg.src = canvas.toDataURL("image/png");
     };
-
     img.src = URL.createObjectURL(file);
 }
-
 // Décodage caméra
 var qrReader = new ZXing.BrowserQRCodeReader();
 var camList = [];
 var currentCam = 0;
 var torchOn = false;
-
 // 1) Récupérer les caméras via l'API native
 navigator.mediaDevices.enumerateDevices()
   .then(function (devices) {
@@ -448,50 +382,40 @@ navigator.mediaDevices.enumerateDevices()
       return d.kind === "videoinput";
     });
   });
-
 // 2) Démarrer la caméra
 function flashHighlight(el) {
   el.style.background = "yellow";
   el.style.color = "black";
-
   setTimeout(function () {
     el.style.background = "";
     el.style.color = "";
   }, 300);
 }
-
 function toggleTorch() {
   var video = document.getElementById("qrVideo");
   if (!video.srcObject) return;
-
   var track = video.srcObject.getVideoTracks()[0];
   if (!track) return;
-
   torchOn = !torchOn;
-
   track.applyConstraints({
     advanced: [{ torch: torchOn }]
   }).catch(function(e) {
     console.log("Torch error:", e);
   });
 }
-
 function startCamera() {
   var video = document.getElementById("qrVideo");
   var resultBox = document.getElementById("qrResult");
-
   if (camList.length === 0) {
     resultBox.innerHTML = "Aucune caméra détectée.";
     return;
   }
-
   // IMPORTANT : arrêter l'ancienne caméra
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(function (t) { t.stop(); });
     video.srcObject = null;
   }
   qrReader.reset();
-
   // 3) Forcer ZXing à utiliser le bon deviceId
   qrReader.decodeFromVideoDevice(
     camList[currentCam].deviceId,
@@ -504,41 +428,30 @@ function startCamera() {
     }
   );
 }
-
 document.getElementById("startScan").onclick = function () {
   startCamera();
 };
-
 // 4) Changer de caméra
 document.getElementById("switchCam").onclick = function () {
   if (camList.length < 2) return;
-
   currentCam = (currentCam + 1) % camList.length;
-
   startCamera();
 };
-
 document.getElementById("toggleTorch").onclick = function () {
   var video = document.getElementById("qrVideo");
   if (!video.srcObject) return;
-
   var track = video.srcObject.getVideoTracks()[0];
   if (!track) return;
-
   var caps = track.getCapabilities();
-
   if (!caps.torch) {
     alert("Allumez la torche via les réglages rapides pour cette caméra.");
     return;
   }
-
   toggleTorch();
 };
-
 // 5) Stop
 document.getElementById("stopScan").onclick = function () {
   torchOn = false;
-
   var video = document.getElementById("qrVideo");
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(function (t) { t.stop(); });
@@ -546,38 +459,30 @@ document.getElementById("stopScan").onclick = function () {
   }
   qrReader.reset();
 };
-
 // Copier
 function copyTextFrom(elementId, btn) {
   var btn = event.target;
   var txt = document.getElementById(elementId).textContent;
-
   var t = document.createElement("textarea");
   t.value = txt;
   document.body.appendChild(t);
   t.select();
-
   try { document.execCommand("copy"); } catch (e) {}
-
   document.body.removeChild(t);
   btn.focus();
 }
-
 document.getElementById("copyQR").onclick = function (e) {
   copyTextFrom("qrResult", e.target);
 };
-
 /* --- COPIER --- */
 document.getElementById("copy-btn").onclick = function () {
   var btn = event.target;
   var text = document.getElementById("decode-file").innerText;
-
   var temp = document.createElement("textarea");
   temp.value = text;
   temp.style.position = "fixed";
   temp.style.opacity = "0";
   document.body.appendChild(temp);
-
   temp.select();
   document.execCommand("copy");
   document.body.removeChild(temp);
