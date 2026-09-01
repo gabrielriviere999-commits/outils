@@ -1226,50 +1226,102 @@ function hideDimensions(){
     document.getElementById("dimensions").textContent =
         "largeur : 0, hauteur : 0";
 }
+function drawPixel1px(x,y){
+    x = Math.round(x);
+    y = Math.round(y);
+    ctx.fillRect(
+        x,
+        y,
+        1,
+        1
+    );
+}
+function drawPixelLine1px(x1,y1,x2,y2){
+    x1 = Math.round(x1);
+    y1 = Math.round(y1);
+    x2 = Math.round(x2);
+    y2 = Math.round(y2);
+    var dx = Math.abs(x2-x1);
+    var dy = Math.abs(y2-y1);
+    var sx = x1 < x2 ? 1 : -1;
+    var sy = y1 < y2 ? 1 : -1;
+    var err = dx-dy;
+    while(true){
+        drawPixel1px(x1,y1);
+        if(x1 === x2 && y1 === y2){
+            break;
+        }
+        var e2 = 2*err;
+        if(e2 > -dy){
+            err -= dy;
+            x1 += sx;
+        }
+        if(e2 < dx){
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
 function drawSelectionPreview(x,y){
     /* Restaurer le dessin avant le rectangle temporaire. */
     if(moveBaseImage){
         ctx.putImageData(moveBaseImage,0,0);
     }
-    var sx = Math.min(startX,x);
-    var sy = Math.min(startY,y);
-    var w = Math.abs(x-startX);
-    var h = Math.abs(y-startY);
-    if(w < 1 || h < 1) return;
-    /* Rectangle temporaire compatible avec les anciens navigateurs. On dessine les pointillés manuellement. */
+    var sx = Math.floor(Math.min(startX,x));
+    var sy = Math.floor(Math.min(startY,y));
+    var ex = Math.floor(Math.max(startX,x));
+    var ey = Math.floor(Math.max(startY,y));
+    var w = ex - sx;
+    var h = ey - sy;
+    if(w < 1 || h < 1){
+        return;
+    }
     ctx.save();
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
+    /*
+     * Sélection fantôme :
+     * toujours 1 pixel, quelle que soit
+     * la taille du pinceau sélectionnée.
+     */
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#000000";
     var dash = 6;
     var gap = 4;
     var i;
     /* Haut */
-    for(i = sx; i < sx + w; i += dash + gap){
-        ctx.beginPath();
-        ctx.moveTo(i + 0.5, sy + 0.5);
-        ctx.lineTo(Math.min(i + dash, sx + w) + 0.5, sy + 0.5);
-        ctx.stroke();
+    for(i = sx; i < ex; i += dash + gap){
+        drawPixelLine1px(
+            i,
+            sy,
+            Math.min(i + dash - 1, ex),
+            sy
+        );
     }
     /* Bas */
-    for(i = sx; i < sx + w; i += dash + gap){
-        ctx.beginPath();
-        ctx.moveTo(i + 0.5, sy + h + 0.5);
-        ctx.lineTo(Math.min(i + dash, sx + w) + 0.5, sy + h + 0.5);
-        ctx.stroke();
+    for(i = sx; i < ex; i += dash + gap){
+        drawPixelLine1px(
+            i,
+            ey,
+            Math.min(i + dash - 1, ex),
+            ey
+        );
     }
     /* Gauche */
-    for(i = sy; i < sy + h; i += dash + gap){
-        ctx.beginPath();
-        ctx.moveTo(sx + 0.5, i + 0.5);
-        ctx.lineTo(sx + 0.5, Math.min(i + dash, sy + h) + 0.5);
-        ctx.stroke();
+    for(i = sy; i < ey; i += dash + gap){
+        drawPixelLine1px(
+            sx,
+            i,
+            sx,
+            Math.min(i + dash - 1, ey)
+        );
     }
     /* Droite */
-    for(i = sy; i < sy + h; i += dash + gap){
-        ctx.beginPath();
-        ctx.moveTo(sx + w + 0.5, i + 0.5);
-        ctx.lineTo(sx + w + 0.5, Math.min(i + dash, sy + h) + 0.5);
-        ctx.stroke();
+    for(i = sy; i < ey; i += dash + gap){
+        drawPixelLine1px(
+            ex,
+            i,
+            ex,
+            Math.min(i + dash - 1, ey)
+        );
     }
     ctx.restore();
 }
@@ -1356,7 +1408,26 @@ function startCopyMode(){
     copyMode = 0;
     currentTool = "copy";
 }
-function extractSelection(x1,y1,x2,y2,keepOriginal){
+/* =========================================================
+   DEPLACER / DUPLIQUER EN PIXELS
+   ========================================================= */
+var selection = null;
+/*
+ * selection :
+ * {
+ *   x: 0,
+ *   y: 0,
+ *   w: 0,
+ *   h: 0,
+ *   data: ImageData
+ * }
+ */
+var selectionBaseImage = null;
+var selectionMoving = false;
+/*
+ * Crée une sélection pixel parfaite.
+ */
+function createPixelSelection(x1,y1,x2,y2,removeOriginal){
     var sx = Math.floor(Math.min(x1,x2));
     var sy = Math.floor(Math.min(y1,y2));
     var ex = Math.floor(Math.max(x1,x2));
@@ -1366,34 +1437,211 @@ function extractSelection(x1,y1,x2,y2,keepOriginal){
     if(w < 1 || h < 1){
         return false;
     }
-    moveSelection = {
+    /*
+     * ImageData conserve EXACTEMENT :
+     *
+     * R
+     * G
+     * B
+     * A
+     *
+     * Aucun changement de transparence.
+     */
+    var data = ctx.getImageData(
+        sx,
+        sy,
+        w,
+        h
+    );
+    selection = {
         x: sx,
         y: sy,
         w: w,
         h: h,
-        data: ctx.getImageData(sx,sy,w,h)
+        data: data
     };
     /*
-     * MOVE :
-     * on retire immédiatement l'original.
+     * Pour MOVE :
+     * on retire les pixels de l'endroit original.
      *
-     * COPY :
-     * on laisse l'original en place.
+     * Pour COPY :
+     * on ne retire rien.
      */
-    if(!keepOriginal){
-        ctx.clearRect(sx,sy,w,h);
+    if(removeOriginal){
+        ctx.clearRect(
+            sx,
+            sy,
+            w,
+            h
+        );
     }
     /*
-     * Image qui servira de fond pendant
-     * le déplacement.
+     * Fond permettant d'afficher le déplacement
+     * sans accumuler les anciennes positions.
      */
-    moveBaseImage = ctx.getImageData(
+    selectionBaseImage = ctx.getImageData(
         0,
         0,
         canvas.width,
         canvas.height
     );
     return true;
+}
+
+/*
+ * Affiche la sélection à une position donnée.
+ *
+ * IMPORTANT :
+ * putImageData() ne fait aucun redimensionnement,
+ * aucune interpolation et aucune modification alpha.
+ */
+function drawPixelSelectionAt(x,y){
+    if(!selection){
+        return;
+    }
+    /*
+     * Restaurer le fond.
+     */
+    if(selectionBaseImage){
+        ctx.putImageData(
+            selectionBaseImage,
+            0,
+            0
+        );
+    }
+    var px = Math.round(
+        x - selection.w / 2
+    );
+    var py = Math.round(
+        y - selection.h / 2
+    );
+    /*
+     * Copier uniquement les pixels visibles.
+     * Les pixels alpha = 0 ne doivent pas
+     * effacer ce qu'il y a derrière.
+     */
+    var temp = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+    var src = selection.data.data;
+    var dst = temp.data;
+    var sx, sy;
+    var dx, dy;
+    var si, di;
+    for(sy = 0; sy < selection.h; sy++){
+        dy = py + sy;
+        if(dy < 0 || dy >= canvas.height){
+            continue;
+        }
+        for(sx = 0; sx < selection.w; sx++){
+            dx = px + sx;
+            if(dx < 0 || dx >= canvas.width){
+                continue;
+            }
+            si = (sy * selection.w + sx) * 4;
+            di = (dy * canvas.width + dx) * 4;
+            /*
+             * Copier uniquement si le pixel
+             * possède réellement quelque chose.
+             */
+            if(src[si + 3] !== 0){
+                dst[di]     = src[si];
+                dst[di + 1] = src[si + 1];
+                dst[di + 2] = src[si + 2];
+                dst[di + 3] = src[si + 3];
+            }
+        }
+    }
+    ctx.putImageData(
+        temp,
+        0,
+        0
+    );
+}
+
+/*
+ * Dépose définitivement la sélection.
+ */
+function commitPixelSelection(x,y){
+    if(!selection){
+        return;
+    }
+    /*
+     * Restaurer le fond original.
+     */
+    if(selectionBaseImage){
+        ctx.putImageData(
+            selectionBaseImage,
+            0,
+            0
+        );
+    }
+    var px = Math.round(
+        x - selection.w / 2
+    );
+    var py = Math.round(
+        y - selection.h / 2
+    );
+    /*
+     * On utilise exactement la même logique que
+     * pendant l'aperçu :
+     *
+     * - alpha = 0 : on ne touche PAS au fond
+     * - alpha > 0 : on copie le pixel
+     *
+     * Cela conserve la transparence autour de l'élément.
+     */
+    var temp = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+    var src = selection.data.data;
+    var dst = temp.data;
+    var sx, sy;
+    var dx, dy;
+    var si, di;
+    for(sy = 0; sy < selection.h; sy++){
+        dy = py + sy;
+        if(dy < 0 || dy >= canvas.height){
+            continue;
+        }
+        for(sx = 0; sx < selection.w; sx++){
+            dx = px + sx;
+            if(dx < 0 || dx >= canvas.width){
+                continue;
+            }
+            si = (sy * selection.w + sx) * 4;
+            di = (dy * canvas.width + dx) * 4;
+            /*
+             * Pixel totalement transparent :
+             * surtout ne pas modifier le pixel
+             * qui se trouve derrière.
+             */
+            if(src[si + 3] === 0){
+                continue;
+            }
+            /*
+             * Copier le pixel avec son alpha exact.
+             */
+            dst[di]     = src[si];
+            dst[di + 1] = src[si + 1];
+            dst[di + 2] = src[si + 2];
+            dst[di + 3] = src[si + 3];
+        }
+    }
+    ctx.putImageData(
+        temp,
+        0,
+        0
+    );
+    selection = null;
+    selectionBaseImage = null;
+    selectionMoving = false;
 }
 /* MOUSE EVENTS (ASCII LOGIC) */
 canvas.onpointerdown = function(e){
@@ -1502,40 +1750,37 @@ canvas.onpointerdown = function(e){
         canvas.setPointerCapture(e.pointerId);
     }
     /* MOVE / COPY */
-    if(currentTool==="move" || currentTool==="copy"){
-        /*
-         * PHASE 1 :
-         * aucune sélection n'existe encore.
-         * On prépare le fond pour afficher
-         * le rectangle de sélection.
-         */
-        if(
-            (currentTool==="move" && moveMode===0) ||
-            (currentTool==="copy" && copyMode===0)
-        ){
-            moveSelection = null;
-            moveBaseImage = ctx.getImageData(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-            return;
-        }
-        /*
-         * PHASE 2 :
-         * une sélection existe déjà.
-         *
-         * SURTOUT :
-         * ne pas remettre moveSelection à null.
-         */
-        if(
-            (currentTool==="move" && moveMode===1) ||
-            (currentTool==="copy" && copyMode===1)
-        ){
-            return;
-        }
-    }
+	if(currentTool === "move" || currentTool === "copy"){
+		/*
+		 * PREMIERE ETAPE :
+		 * créer la sélection.
+		 */
+		if(
+			(currentTool === "move" && moveMode === 0) ||
+			(currentTool === "copy" && copyMode === 0)
+		){
+			moveBaseImage = ctx.getImageData(
+				0,
+				0,
+				canvas.width,
+				canvas.height
+			);
+			selection = null;
+			selectionMoving = false;
+			return;
+		}
+		/*
+		 * DEUXIEME ETAPE :
+		 * la sélection existe déjà.
+		 */
+		if(
+			(currentTool === "move" && moveMode === 1) ||
+			(currentTool === "copy" && copyMode === 1)
+		){
+			selectionMoving = true;
+			return;
+		}
+	}
     /*
      * Pour les autres outils,
      * sauvegarde normale.
@@ -1753,47 +1998,36 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
     else if(currentTool==="eraser") drawFree(x,y);
     /* MOVE / COPY */
-    if(currentTool==="move" || currentTool==="copy"){
-        /* ÉTAPE 1 : sélection */
-        if(
-            (currentTool==="move" && moveMode===0) ||
-            (currentTool==="copy" && copyMode===0)
-        ){
-            drawSelectionPreview(x,y);
-            return;
-        }
-        /* ÉTAPE 2 : déplacement fantôme */
-        if(
-            (currentTool==="move" && moveMode===1) ||
-            (currentTool==="copy" && copyMode===1)
-        ){
-            if(!moveSelection){
-                return;
-            }
-            /*
-             * Restaurer le fond.
-             */
-            if(moveBaseImage){
-                ctx.putImageData(moveBaseImage,0,0);
-            }
-            var tempCanvas = document.createElement("canvas");
-            tempCanvas.width = moveSelection.w;
-            tempCanvas.height = moveSelection.h;
-            var tempCtx = tempCanvas.getContext("2d");
-            tempCtx.putImageData(
-                moveSelection.data,
-                0,
-                0
-            );
-            /* Afficher la sélection sous la souris. */
-            ctx.drawImage(
-                tempCanvas,
-                x - moveSelection.w/2,
-                y - moveSelection.h/2
-            );
-            return;
-        }
-    }
+	if(
+		currentTool === "move" ||
+		currentTool === "copy"
+	){
+		/*
+		 * ETAPE 1 :
+		 * rectangle de sélection.
+		 */
+		if(
+			(currentTool === "move" && moveMode === 0) ||
+			(currentTool === "copy" && copyMode === 0)
+		){
+			drawSelectionPreview(x,y);
+			return;
+		}
+		/*
+		 * ETAPE 2 :
+		 * déplacement pixel par pixel.
+		 */
+		if(
+			(currentTool === "move" && moveMode === 1) ||
+			(currentTool === "copy" && copyMode === 1)
+		){
+			drawPixelSelectionAt(
+				x,
+				y
+			);
+			return;
+		}
+	}
     lastX = x;
     lastY = y;
 };
@@ -1842,123 +2076,94 @@ if(moved && window.PointerEvent){
     }
     hideDimensions();
     /* MOVE : première étape = sélection */
-    if(currentTool==="move" && moveMode===0){
-        /*
-         * IMPORTANT :
-         * Le rectangle de sélection est temporaire.
-         * On restaure donc le canvas AVANT
-         * de récupérer les pixels de la sélection.
-         */
-        if(moveBaseImage){
-            ctx.putImageData(moveBaseImage,0,0);
-        }
-        if(!extractSelection(startX,startY,x,y,false)){
-            return;
-        }
-        // Rendre le blanc transparent dans le fantôme
-        var d = moveSelection.data.data;
-        var i = 0;
-        while(i < d.length){
-            var r = d[i];
-            var g = d[i+1];
-            var b = d[i+2];
-            if(r > 200 && g > 200 && b > 200){
-                d[i+3] = 0;
-            }
-            i += 4;
-        }
-        /*
-         * Le canvas est maintenant propre :
-         * l'original a été retiré et le rectangle
-         * temporaire a disparu.
-         */
-        moveBaseImage = ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        moveMode = 1;
-        return;
-    }
+	if(
+		currentTool === "move" &&
+		moveMode === 0
+	){
+		/*
+		 * Restaurer le canvas avant de capturer
+		 * les pixels.
+		 */
+		if(moveBaseImage){
+			ctx.putImageData(
+				moveBaseImage,
+				0,
+				0
+			);
+		}
+		if(!createPixelSelection(
+			startX,
+			startY,
+			x,
+			y,
+			true
+		)){
+			return;
+		}
+		moveMode = 1;
+		hideDimensions();
+		return;
+	}
     /* COPY : première étape = sélection */
-    if(currentTool==="copy" && copyMode===0){
-        /*
-         * Supprimer le rectangle de sélection temporaire
-         * avant de récupérer les pixels.
-         */
-        if(moveBaseImage){
-            ctx.putImageData(moveBaseImage,0,0);
-        }
-        if(!extractSelection(startX,startY,x,y,true)){
-            return;
-        }
-        /*
-         * L'original reste en place.
-         * Le rectangle temporaire est déjà supprimé.
-         */
-        moveBaseImage = ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        copyMode = 1;
-        return;
-    }
+	if(
+		currentTool === "copy" &&
+		copyMode === 0
+	){
+		/*
+		 * Restaurer le canvas avant la capture.
+		 */
+		if(moveBaseImage){
+			ctx.putImageData(
+				moveBaseImage,
+				0,
+				0
+			);
+		}
+		if(!createPixelSelection(
+			startX,
+			startY,
+			x,
+			y,
+			false
+		)){
+			return;
+		}
+		copyMode = 1;
+		hideDimensions();
+		return;
+	}
     /* MOVE : deuxième étape = dépôt */
-    if(currentTool==="move" && moveMode===1){
-        if(!moveSelection){
-            moveMode = 0;
-            return;
-        }
-        var tempCanvas = document.createElement("canvas");
-        tempCanvas.width = moveSelection.w;
-        tempCanvas.height = moveSelection.h;
-        var tempCtx = tempCanvas.getContext("2d");
-        tempCtx.putImageData(
-            moveSelection.data,
-            0,
-            0
-        );
-        ctx.drawImage(
-            tempCanvas,
-            x - moveSelection.w / 2,
-            y - moveSelection.h / 2
-        );
-        moveSelection = null;
-        moveBaseImage = null;
-        moveMode = 0;
-        copyMode = 0;
-        return;
-    }
+	if(
+		currentTool === "move" &&
+		moveMode === 1
+	){
+		commitPixelSelection(
+			x,
+			y
+		);
+		moveMode = 0;
+		copyMode = 0;
+		moveSelection = null;
+		moveBaseImage = null;
+		saveState();
+		return;
+	}
     /* COPY : deuxième étape = dépôt */
-    if(currentTool==="copy" && copyMode===1){
-        if(!moveSelection){
-            copyMode = 0;
-            return;
-        }
-        var tempCanvas2 = document.createElement("canvas");
-        tempCanvas2.width = moveSelection.w;
-        tempCanvas2.height = moveSelection.h;
-        var tempCtx2 = tempCanvas2.getContext("2d");
-        tempCtx2.putImageData(
-            moveSelection.data,
-            0,
-            0
-        );
-        ctx.drawImage(
-            tempCanvas2,
-            x - moveSelection.w / 2,
-            y - moveSelection.h / 2
-        );
-        saveState();
-        moveSelection = null;
-        moveBaseImage = null;
-        copyMode = 0;
-        moveMode = 0;
-        return;
-    }
+	if(
+		currentTool === "copy" &&
+		copyMode === 1
+	){
+		commitPixelSelection(
+			x,
+			y
+		);
+		copyMode = 0;
+		moveMode = 0;
+		moveSelection = null;
+		moveBaseImage = null;
+		saveState();
+		return;
+	}
     /* DESSIN NORMAL */
     if(currentTool==="free"){
         return;
