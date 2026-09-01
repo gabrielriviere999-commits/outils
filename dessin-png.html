@@ -2316,14 +2316,25 @@ function floodFill(x,y){
     var img = ctx.getImageData(0,0,canvas.width,canvas.height);
     var data = img.data;
     var target = getPixel(data,x,y);
-    var fill = hexToRgba(ctx.fillStyle);
+    var fill;
+    if(eraserMode){
+        // Gomme : pixels complètement transparents
+        fill = [0,0,0,0];
+    } else {
+        fill = hexToRgba(ctx.fillStyle);
+    }
     if(colorsEqual(target,fill)) return;
     var stack = [{x:x,y:y}];
     while(stack.length){
         var p = stack.pop();
         var px = p.x, py = p.y;
         var idx = (py*canvas.width+px)*4;
-        var cur = [data[idx],data[idx+1],data[idx+2],data[idx+3]];
+        var cur = [
+            data[idx],
+            data[idx+1],
+            data[idx+2],
+            data[idx+3]
+        ];
         if(!colorsEqual(cur,target)) continue;
         setPixel(data,px,py,fill);
         if(px>0) stack.push({x:px-1,y:py});
