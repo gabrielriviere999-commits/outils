@@ -103,8 +103,8 @@ canvas{
 <div id="dimensions">largeur : 0, hauteur : 0</div>
 <div id="textBox">
   <textarea wrap="off" id="textInput" style="width:300px;height:120px;resize:both;"></textarea><br>
-  <button id="confirmTextBtn" type="button">OK</button>
-  <button id="cancelTextBtn" type="button">Annuler</button>
+  <button id="confirmTextBtn">OK</button>
+  <button id="cancelTextBtn">Annuler</button>
 </div>
 <div id="canvasScroll">
   <canvas id="canvas" width="640" height="480"></canvas>
@@ -1451,6 +1451,12 @@ function cancelText(){
     textBox.style.display = "none";
     textInput.value = "";
 }
+cancelTextBtn.onclick = function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    cancelText();
+    return false;
+};
 confirmTextBtn.onclick = function(e){
     e.preventDefault();
     e.stopPropagation();
