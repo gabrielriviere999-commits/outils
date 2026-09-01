@@ -55,6 +55,7 @@ canvas{
   </div>
   Couleur : <input type="text" id="colorInput" class="ColorPickerZindex" value="#000000" size="8"><div class="previewColorPicker"></div>
   <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
+  <button id="btnPixel" data-action="togglePixelMode">Pixels</button>
   Taille : <input type="range" id="sizeInput" min="1" max="50" value="3"><span id="sizeLabel">3</span>
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button id="btnLine" data-action="setToolLine">Ligne</button>
@@ -144,6 +145,7 @@ attachColorPickerTo(document.getElementById("colorInput"));
 var colorInput = document.getElementById("colorInput");
 var rainbowMode = false;
 var rainbowHue = 0;
+var pixelMode = false;
 function applyColor(){
     var col = colorInput.value;
     ctx.strokeStyle = col;
@@ -158,6 +160,15 @@ function toggleRainbow(){
     } else {
         btn.className = "";
         applyColor();
+    }
+}
+function togglePixelMode(){
+    pixelMode = !pixelMode;
+    var btn = document.getElementById("btnPixel");
+    if(pixelMode){
+        btn.className = "active";
+    } else {
+        btn.className = "";
     }
 }
 function rainbowColor(h){
@@ -791,6 +802,41 @@ function getPos(e){
     };
 }
 /* DRAWING FUNCTIONS */
+function drawPixelLine(x1,y1,x2,y2){
+    var x0 = Math.floor(x1);
+    var y0 = Math.floor(y1);
+    var xEnd = Math.floor(x2);
+    var yEnd = Math.floor(y2);
+    var dx = Math.abs(xEnd-x0);
+    var dy = Math.abs(yEnd-y0);
+    var sx = x0 < xEnd ? 1 : -1;
+    var sy = y0 < yEnd ? 1 : -1;
+    var err = dx-dy;
+    var size = Math.max(
+        1,
+        Math.floor(ctx.lineWidth)
+    );
+    while(true){
+        ctx.fillRect(
+            x0 - Math.floor(size/2),
+            y0 - Math.floor(size/2),
+            size,
+            size
+        );
+        if(x0 === xEnd && y0 === yEnd){
+            break;
+        }
+        var e2 = 2*err;
+        if(e2 > -dy){
+            err -= dy;
+            x0 += sx;
+        }
+        if(e2 < dx){
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
 function drawFree(x,y){
     var dx = x-lastX;
     var dy = y-lastY;
@@ -798,6 +844,52 @@ function drawFree(x,y){
     if(distance < 0.1){
         return;
     }
+    if(pixelMode){
+        if(currentTool === "eraser"){
+            ctx.globalCompositeOperation = "destination-out";
+        } else {
+            ctx.globalCompositeOperation = "source-over";
+        }
+        /* Arc-en-ciel pixelisé */
+        if(rainbowMode){
+            var steps = Math.max(
+                1,
+                Math.floor(distance)
+            );
+            var i;
+            for(i=0;i<=steps;i++){
+                var t = i / steps;
+                var px =
+                    lastX + dx * t;
+                var py =
+                    lastY + dy * t;
+                ctx.fillStyle =
+                    rainbowColor(rainbowHue);
+                drawPixelLine(
+                    px,
+                    py,
+                    px,
+                    py
+                );
+                rainbowHue += 1.5;
+                if(rainbowHue >= 360){
+                    rainbowHue %= 360;
+                }
+            }
+        } else {
+            ctx.fillStyle = ctx.strokeStyle;
+            drawPixelLine(
+                lastX,
+                lastY,
+                x,
+                y
+            );
+        }
+        lastX = x;
+        lastY = y;
+        return;
+    }
+    /* TRACÉ NORMAL */
     if(currentTool === "eraser"){
         ctx.globalCompositeOperation = "destination-out";
     } else {
@@ -807,7 +899,8 @@ function drawFree(x,y){
             if(rainbowHue >= 360){
                 rainbowHue %= 360;
             }
-            ctx.strokeStyle = rainbowColor(rainbowHue);
+            ctx.strokeStyle =
+                rainbowColor(rainbowHue);
         }
     }
     ctx.beginPath();
