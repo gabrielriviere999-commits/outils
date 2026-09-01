@@ -1861,6 +1861,15 @@ canvas.onpointerdown = function(e){
      * sauvegarde normale.
      */
     saveState();
+	if(currentTool === "free"){
+		if(rainbowMode){
+			ctx.fillStyle = rainbowColor(rainbowHue);
+			rainbowHue += 1.5;
+		} else {
+			ctx.fillStyle = ctx.strokeStyle;
+		}
+		drawPixelLine(startX, startY, startX, startY);
+	}
     if(currentTool==="fill"){
         floodFill(
             Math.floor(p.x),
