@@ -1031,15 +1031,30 @@ function drawArrowPreview(x,y){
         baseX - px*headWidth;
     var y2 =
         baseY - py*headWidth;
-    /*
-     * Corps de la flèche
-     */
     if(rainbowMode){
         drawPixelRainbowLine(
             startX,
             startY,
             baseX,
             baseY
+        );
+        drawPixelRainbowLine(
+            x,
+            y,
+            x1,
+            y1
+        );
+        drawPixelRainbowLine(
+            x1,
+            y1,
+            x2,
+            y2
+        );
+        drawPixelRainbowLine(
+            x2,
+            y2,
+            x,
+            y
         );
     } else {
         ctx.fillStyle = ctx.strokeStyle;
@@ -1049,28 +1064,23 @@ function drawArrowPreview(x,y){
             baseX,
             baseY
         );
-    }
-    /*
-     * Pointe pleine
-     */
-    if(rainbowMode){
-        drawPixelTriangle(
+        drawPixelLine(
             x,
             y,
+            x1,
+            y1
+        );
+        drawPixelLine(
             x1,
             y1,
             x2,
             y2
         );
-    } else {
-        ctx.fillStyle = ctx.strokeStyle;
-        drawPixelTriangle(
-            x,
-            y,
-            x1,
-            y1,
+        drawPixelLine(
             x2,
-            y2
+            y2,
+            x,
+            y
         );
     }
 }
