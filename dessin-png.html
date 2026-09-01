@@ -492,7 +492,6 @@ function drawTempImage(){
     if(!tempImage){
         return;
     }
-    // Restaurer le dessin original.
     if(imageBaseImage){
         ctx.putImageData(
             imageBaseImage,
@@ -504,8 +503,7 @@ function drawTempImage(){
     ctx.save();
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-    // Image : toujours en mode dessin normal
-    var oldComposite = ctx.globalCompositeOperation;
+    /* Image */
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(
         tempImage,
@@ -514,17 +512,18 @@ function drawTempImage(){
         tempImageW,
         tempImageH
     );
-    ctx.globalCompositeOperation = oldComposite;
-    // Cadre.
-    ctx.strokeStyle = "#000000";
+    /* Cadre */
+    ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000000";
+    ctx.fillStyle = "#ffffff";
     ctx.strokeRect(
         -tempImageW/2,
         -tempImageH/2,
         tempImageW,
         tempImageH
     );
-    // Retour pour dessiner les poignées dans le même système de coordonnées.
+    /* Poignées */
     var handles = [
         [-tempImageW/2,-tempImageH/2],
         [0,-tempImageH/2],
@@ -536,9 +535,10 @@ function drawTempImage(){
         [-tempImageW/2,0]
     ];
     var i;
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#000000";
     for(i=0;i<handles.length;i++){
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.rect(
             handles[i][0]-5,
@@ -549,7 +549,9 @@ function drawTempImage(){
         ctx.fill();
         ctx.stroke();
     }
-    // Ligne vers poignée rotation.
+    /* Ligne de rotation */
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(
         0,
@@ -560,7 +562,10 @@ function drawTempImage(){
         -tempImageH/2-35
     );
     ctx.stroke();
-    // Poignée rotation.
+    /* Poignée de rotation */
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(
         0,
@@ -642,6 +647,15 @@ drawingFile.onchange = function(){
              * pour permettre Annuler.
              */
             saveState();
+            /*
+             * IMPORTANT :
+             * l'import doit toujours utiliser
+             * le mode de dessin normal.
+             *
+             * Sinon, si la gomme était active,
+             * destination-out effacerait l'image.
+             */
+            ctx.globalCompositeOperation = "source-over";
             // Effacer le dessin actuel.
             ctx.clearRect(
                 0,
@@ -667,6 +681,17 @@ drawingFile.onchange = function(){
                 w,
                 h
             );
+            /*
+             * Si la gomme était l'outil actif,
+             * on remet destination-out après
+             * l'import pour qu'elle continue
+             * à fonctionner normalement.
+             */
+            if(currentTool === "eraser"){
+                ctx.globalCompositeOperation = "destination-out";
+            } else {
+                ctx.globalCompositeOperation = "source-over";
+            }
             drawingFile.value = "";
         };
         img.onerror = function(){
