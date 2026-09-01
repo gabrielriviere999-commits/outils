@@ -16,6 +16,8 @@ canvas{
   background:#fff;
   cursor:crosshair;
   display:block;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #zoomInput{width:100%}
@@ -230,6 +232,7 @@ sizeInput.oninput = function(){
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
 /* ZOOM DU CANVAS */
 var zoomInput = document.getElementById("zoomInput");
 var zoomLabel = document.getElementById("zoomLabel");
