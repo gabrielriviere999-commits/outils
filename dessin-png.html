@@ -1466,12 +1466,6 @@ confirmTextBtn.onclick = function(e){
     confirmText();
     return false;
 };
-cancelTextBtn.onclick = function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    cancelText();
-    return false;
-};
 /* SELECTION */
 function startMoveMode(){
 	setTool("move");
@@ -1485,9 +1479,7 @@ function startCopyMode(){
     copyMode = 0;
     currentTool = "copy";
 }
-/* =========================================================
-   DEPLACER / DUPLIQUER EN PIXELS
-   ========================================================= */
+/* DEPLACER / DUPLIQUER EN PIXELS */
 var selection = null;
 /*
  * selection :
