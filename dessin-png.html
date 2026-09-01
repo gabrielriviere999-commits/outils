@@ -2308,10 +2308,32 @@ function exportPNG(){
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
     if(!base64) return;
+
     var img = new Image();
+
     img.onload = function(){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(img,0,0);
+        /* Toujours importer en mode normal, même si la gomme était active. */
+        ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+        ctx.drawImage(
+            img,
+            0,
+            0
+        );
+        /* Restaurer les paramètres du dessin après l'import. */
+        ctx.lineWidth = parseInt(sizeInput.value,10);
+        ctx.lineCap = "round";
+        if(currentTool === "eraser"){
+            ctx.globalCompositeOperation = "destination-out";
+        } else {
+            ctx.globalCompositeOperation = "source-over";
+        }
+        applyColor();
         saveState();
         redrawFromUndoTop();
     };
