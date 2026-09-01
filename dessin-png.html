@@ -1031,30 +1031,15 @@ function drawArrowPreview(x,y){
         baseX - px*headWidth;
     var y2 =
         baseY - py*headWidth;
+    /*
+     * Corps de la flèche
+     */
     if(rainbowMode){
         drawPixelRainbowLine(
             startX,
             startY,
             baseX,
             baseY
-        );
-        drawPixelRainbowLine(
-            x,
-            y,
-            x1,
-            y1
-        );
-        drawPixelRainbowLine(
-            x1,
-            y1,
-            x2,
-            y2
-        );
-        drawPixelRainbowLine(
-            x2,
-            y2,
-            x,
-            y
         );
     } else {
         ctx.fillStyle = ctx.strokeStyle;
@@ -1064,25 +1049,82 @@ function drawArrowPreview(x,y){
             baseX,
             baseY
         );
-        drawPixelLine(
+    }
+    /*
+     * Pointe pleine
+     */
+    if(rainbowMode){
+        drawPixelTriangle(
             x,
             y,
-            x1,
-            y1
-        );
-        drawPixelLine(
             x1,
             y1,
             x2,
             y2
         );
-        drawPixelLine(
-            x2,
-            y2,
+    } else {
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelTriangle(
             x,
-            y
+            y,
+            x1,
+            y1,
+            x2,
+            y2
         );
     }
+}
+function drawPixelTriangle(x1,y1,x2,y2,x3,y3){
+    var minX = Math.floor(
+        Math.min(x1,x2,x3)
+    );
+    var maxX = Math.ceil(
+        Math.max(x1,x2,x3)
+    );
+    var minY = Math.floor(
+        Math.min(y1,y2,y3)
+    );
+    var maxY = Math.ceil(
+        Math.max(y1,y2,y3)
+    );
+    var x,y;
+    for(y=minY;y<=maxY;y++){
+        for(x=minX;x<=maxX;x++){
+            var d1 =
+                (x2-x1)*(y-y1) -
+                (y2-y1)*(x-x1);
+            var d2 =
+                (x3-x2)*(y-y2) -
+                (y3-y2)*(x-x2);
+            var d3 =
+                (x1-x3)*(y-y3) -
+                (y1-y3)*(x-x3);
+            if(
+                (d1 >= 0 && d2 >= 0 && d3 >= 0) ||
+                (d1 <= 0 && d2 <= 0 && d3 <= 0)
+            ){
+                drawPixel(
+                    x,
+                    y
+                );
+            }
+        }
+    }
+    /*
+     * Contour de la pointe
+     */
+    drawPixelLine(
+        x1,y1,
+        x2,y2
+    );
+    drawPixelLine(
+        x2,y2,
+        x3,y3
+    );
+    drawPixelLine(
+        x3,y3,
+        x1,y1
+    );
 }
 function drawSquarePreview(x,y){
     redrawFromUndoTop();
@@ -1512,7 +1554,6 @@ function createPixelSelection(x1,y1,x2,y2,removeOriginal){
     );
     return true;
 }
-
 /*
  * Affiche la sélection à une position donnée.
  *
@@ -1586,7 +1627,6 @@ function drawPixelSelectionAt(x,y){
         0
     );
 }
-
 /*
  * Dépose définitivement la sélection.
  */
@@ -2333,9 +2373,7 @@ function exportPNG(){
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
     if(!base64) return;
-
     var img = new Image();
-
     img.onload = function(){
         /* Toujours importer en mode normal, même si la gomme était active. */
         ctx.globalCompositeOperation = "source-over";
