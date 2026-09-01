@@ -895,21 +895,14 @@ function drawPixelEllipse(cx,cy,rx,ry){
         var y = Math.round(
             cy + Math.sin(a)*ry
         );
-        if(rainbowMode){
-            drawPixelRainbowLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
-        } else {
-            drawPixelLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
-        }
+			if(rainbowMode){
+				var t = i / steps;      // 0 → 1
+				var hue = t * 359;      // dégradé complet
+				ctx.fillStyle = rainbowColor(hue);
+				drawPixel(x, y);
+			} else {
+				drawPixelLine(oldX, oldY, x, y);
+			}
         oldX = x;
         oldY = y;
     }
@@ -1229,21 +1222,14 @@ function drawPixelCircle(cx,cy,r){
         var y = Math.round(
             cy + Math.sin(a)*r
         );
-        if(rainbowMode){
-            drawPixelRainbowLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
-        } else {
-            drawPixelLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
-        }
+		if(rainbowMode){
+			var t = i / steps;      // 0 → 1
+			var hue = t * 359;      // dégradé complet
+			ctx.fillStyle = rainbowColor(hue);
+			drawPixel(x, y);
+		} else {
+			drawPixelLine(oldX, oldY, x, y);
+		}
         oldX = x;
         oldY = y;
     }
