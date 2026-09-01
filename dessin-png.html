@@ -162,6 +162,7 @@ function toggleRainbow(){
         btn.className = "";
         applyColor();
     }
+    refreshShapePreview();
 }
 function rainbowColor(h){
     var i = Math.floor(h / 60);
@@ -231,6 +232,7 @@ sizeInput.oninput = function(){
     var v = parseInt(sizeInput.value, 10);
     sizeLabel.textContent = v;
     ctx.lineWidth = v;
+    refreshShapePreview();
 };
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
@@ -754,6 +756,7 @@ function setTool(t){
             ctx.globalCompositeOperation = "source-over";
             btnEraser.className = "";
         }
+        refreshShapePreview();
         return;
     }
     /* Changement d'outil. */
@@ -794,6 +797,7 @@ function setTool(t){
         ctx.globalCompositeOperation = "source-over";
         btnEraser.className = "";
     }
+    refreshShapePreview();
 }
 /* UNDO / REDO */
 var MAX_UNDO = 10;
@@ -1276,6 +1280,31 @@ function drawEllipsePreview(x,y){
         rx,ry
     );
 }
+function refreshShapePreview(){
+    if(!drawing){
+        return;
+    }
+    switch(currentTool){
+        case "line":
+            drawLinePreview(previewX, previewY);
+            break;
+        case "arrow":
+            drawArrowPreview(previewX, previewY);
+            break;
+        case "square":
+            drawSquarePreview(previewX, previewY);
+            break;
+        case "rect":
+            drawRectPreview(previewX, previewY);
+            break;
+        case "circle":
+            drawCirclePreview(previewX, previewY);
+            break;
+        case "ellipse":
+            drawEllipsePreview(previewX, previewY);
+            break;
+    }
+}
 function updateDimensions(x,y){
     var width = Math.abs(x - startX);
     var height = Math.abs(y - startY);
@@ -1468,19 +1497,6 @@ confirmTextBtn.onclick = function(e){
     confirmText();
     return false;
 };
-/* SELECTION */
-function startMoveMode(){
-	setTool("move");
-    moveMode = 0;
-    copyMode = 0;
-    currentTool = "move";
-}
-function startCopyMode(){
-	setTool("copy");
-    moveMode = 0;
-    copyMode = 0;
-    currentTool = "copy";
-}
 /* DEPLACER / DUPLIQUER EN PIXELS*/
 var selection = null;
 /*
@@ -1933,6 +1949,31 @@ function stopAutoScroll(){
 }
 canvas.onpointermove = function(e){
     if(!drawing) return;
+    var rect = canvas.getBoundingClientRect();
+    var x = (e.clientX - rect.left) *
+            canvas.width / rect.width;
+    var y = (e.clientY - rect.top) *
+            canvas.height / rect.height;
+    previewX = x;
+    previewY = y;
+    if(currentTool === "line"){
+        drawLinePreview(x,y);
+    }
+    else if(currentTool === "arrow"){
+        drawArrowPreview(x,y);
+    }
+    else if(currentTool === "square"){
+        drawSquarePreview(x,y);
+    }
+    else if(currentTool === "rect"){
+        drawRectPreview(x,y);
+    }
+    else if(currentTool === "circle"){
+        drawCirclePreview(x,y);
+    }
+    else if(currentTool === "ellipse"){
+        drawEllipsePreview(x,y);
+    }
     updateAutoScroll(e);
     var p = getPos(e);
     var x = p.x, y = p.y;
