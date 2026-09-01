@@ -795,7 +795,7 @@ function drawFree(x,y){
     var dx = x-lastX;
     var dy = y-lastY;
     var distance = Math.sqrt(dx*dx + dy*dy);
-    if(distance < 1){
+    if(distance < 0.1){
         return;
     }
     if(currentTool === "eraser"){
