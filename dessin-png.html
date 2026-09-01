@@ -55,7 +55,6 @@ canvas{
   </div>
   Couleur : <input type="text" id="colorInput" class="ColorPickerZindex" value="#000000" size="8"><div class="previewColorPicker"></div>
   <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
-  <button id="btnPixel" data-action="togglePixelMode">Pixels</button>
   Taille : <input type="range" id="sizeInput" min="1" max="50" value="3"><span id="sizeLabel">3</span>
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button id="btnLine" data-action="setToolLine">Ligne</button>
@@ -145,7 +144,6 @@ attachColorPickerTo(document.getElementById("colorInput"));
 var colorInput = document.getElementById("colorInput");
 var rainbowMode = false;
 var rainbowHue = 0;
-var pixelMode = false;
 function applyColor(){
     var col = colorInput.value;
     ctx.strokeStyle = col;
@@ -160,15 +158,6 @@ function toggleRainbow(){
     } else {
         btn.className = "";
         applyColor();
-    }
-}
-function togglePixelMode(){
-    pixelMode = !pixelMode;
-    var btn = document.getElementById("btnPixel");
-    if(pixelMode){
-        btn.className = "active";
-    } else {
-        btn.className = "";
     }
 }
 function rainbowColor(h){
@@ -243,7 +232,6 @@ sizeInput.oninput = function(){
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
 /* ZOOM DU CANVAS */
 var zoomInput = document.getElementById("zoomInput");
 var zoomLabel = document.getElementById("zoomLabel");
@@ -802,111 +790,129 @@ function getPos(e){
     };
 }
 /* DRAWING FUNCTIONS */
-function drawPixelLine(x1,y1,x2,y2){
-    var x0 = Math.floor(x1);
-    var y0 = Math.floor(y1);
-    var xEnd = Math.floor(x2);
-    var yEnd = Math.floor(y2);
-    var dx = Math.abs(xEnd-x0);
-    var dy = Math.abs(yEnd-y0);
-    var sx = x0 < xEnd ? 1 : -1;
-    var sy = y0 < yEnd ? 1 : -1;
-    var err = dx-dy;
+/* DESSIN PIXEL */
+function drawPixel(x,y){
+    x = Math.round(x);
+    y = Math.round(y);
     var size = Math.max(
         1,
-        Math.floor(ctx.lineWidth)
+        Math.round(parseInt(sizeInput.value,10))
     );
+    ctx.fillRect(
+        x - Math.floor(size / 2),
+        y - Math.floor(size / 2),
+        size,
+        size
+    );
+}
+function drawPixelLine(x1,y1,x2,y2){
+    x1 = Math.round(x1);
+    y1 = Math.round(y1);
+    x2 = Math.round(x2);
+    y2 = Math.round(y2);
+    var dx = Math.abs(x2-x1);
+    var dy = Math.abs(y2-y1);
+    var sx = x1 < x2 ? 1 : -1;
+    var sy = y1 < y2 ? 1 : -1;
+    var err = dx-dy;
     while(true){
-        ctx.fillRect(
-            x0 - Math.floor(size/2),
-            y0 - Math.floor(size/2),
-            size,
-            size
-        );
-        if(x0 === xEnd && y0 === yEnd){
+        drawPixel(x1,y1);
+        if(x1 === x2 && y1 === y2){
             break;
         }
         var e2 = 2*err;
         if(e2 > -dy){
             err -= dy;
-            x0 += sx;
+            x1 += sx;
         }
         if(e2 < dx){
             err += dx;
-            y0 += sy;
+            y1 += sy;
         }
+    }
+}
+function drawPixelEllipse(cx,cy,rx,ry){
+    rx = Math.abs(rx);
+    ry = Math.abs(ry);
+    if(rx < 0.5){
+        if(rainbowMode){
+            drawPixelRainbowLine(cx,cy-ry,cx,cy+ry);
+        } else {
+            drawPixelLine(cx,cy-ry,cx,cy+ry);
+        }
+        return;
+    }
+    if(ry < 0.5){
+        if(rainbowMode){
+            drawPixelRainbowLine(cx-rx,cy,cx+rx,cy);
+        } else {
+            drawPixelLine(cx-rx,cy,cx+rx,cy);
+        }
+        return;
+    }
+    var steps = Math.max(
+        8,
+        Math.round(2*Math.PI*Math.max(rx,ry))
+    );
+    var oldX = Math.round(
+        cx + Math.cos(0)*rx
+    );
+    var oldY = Math.round(
+        cy + Math.sin(0)*ry
+    );
+    var i;
+    for(i=1;i<=steps;i++){
+        var a =
+            i / steps * Math.PI * 2;
+        var x = Math.round(
+            cx + Math.cos(a)*rx
+        );
+        var y = Math.round(
+            cy + Math.sin(a)*ry
+        );
+        if(rainbowMode){
+            drawPixelRainbowLine(
+                oldX,
+                oldY,
+                x,
+                y
+            );
+        } else {
+            drawPixelLine(
+                oldX,
+                oldY,
+                x,
+                y
+            );
+        }
+        oldX = x;
+        oldY = y;
     }
 }
 function drawFree(x,y){
     var dx = x-lastX;
     var dy = y-lastY;
-    var distance = Math.sqrt(dx*dx + dy*dy);
+    var distance = Math.sqrt(dx*dx+dy*dy);
     if(distance < 0.1){
         return;
     }
-    if(pixelMode){
-        if(currentTool === "eraser"){
-            ctx.globalCompositeOperation = "destination-out";
-        } else {
-            ctx.globalCompositeOperation = "source-over";
-        }
-        /* Arc-en-ciel pixelisé */
-        if(rainbowMode){
-            var steps = Math.max(
-                1,
-                Math.floor(distance)
-            );
-            var i;
-            for(i=0;i<=steps;i++){
-                var t = i / steps;
-                var px =
-                    lastX + dx * t;
-                var py =
-                    lastY + dy * t;
-                ctx.fillStyle =
-                    rainbowColor(rainbowHue);
-                drawPixelLine(
-                    px,
-                    py,
-                    px,
-                    py
-                );
-                rainbowHue += 1.5;
-                if(rainbowHue >= 360){
-                    rainbowHue %= 360;
-                }
-            }
-        } else {
-            ctx.fillStyle = ctx.strokeStyle;
-            drawPixelLine(
-                lastX,
-                lastY,
-                x,
-                y
-            );
-        }
-        lastX = x;
-        lastY = y;
-        return;
-    }
-    /* TRACÉ NORMAL */
     if(currentTool === "eraser"){
         ctx.globalCompositeOperation = "destination-out";
     } else {
         ctx.globalCompositeOperation = "source-over";
-        if(rainbowMode){
-            rainbowHue += distance * 1.5;
-            if(rainbowHue >= 360){
-                rainbowHue %= 360;
-            }
-            ctx.strokeStyle =
-                rainbowColor(rainbowHue);
-        }
     }
-    ctx.beginPath();
-    ctx.moveTo(lastX,lastY);
-    ctx.lineTo(x,y);
-    ctx.stroke();
+    if(rainbowMode){
+        drawPixelRainbowLine(
+            lastX,lastY,
+            x,y
+        );
+    } else {
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelLine(
+            lastX,lastY,
+            x,y
+        );
+    }
     lastX = x;
     lastY = y;
 }
@@ -917,129 +923,202 @@ function redrawFromUndoTop(){
 }
 function drawLinePreview(x,y){
     redrawFromUndoTop();
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+    }
     if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
-            startX,startY,x,y
+        drawPixelRainbowLine(
+            startX,startY,
+            x,y
         );
     } else {
-        applyColor();
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelLine(
+            startX,startY,
+            x,y
+        );
     }
-    ctx.beginPath();
-    ctx.moveTo(startX,startY);
-    ctx.lineTo(x,y);
-    ctx.stroke();
+}
+function drawPixelRainbowLine(x1,y1,x2,y2){
+    var dx = x2-x1;
+    var dy = y2-y1;
+    var distance = Math.sqrt(dx*dx+dy*dy);
+    var steps = Math.max(
+        1,
+        Math.floor(distance)
+    );
+    var i;
+    for(i=0;i<=steps;i++){
+        var t = i/steps;
+        var px = x1+dx*t;
+        var py = y1+dy*t;
+        ctx.fillStyle =
+            rainbowColor(rainbowHue);
+        drawPixelLine(
+            px,py,
+            px,py
+        );
+        rainbowHue += 1.5;
+        if(rainbowHue >= 360){
+            rainbowHue %= 360;
+        }
+    }
 }
 function drawArrowPreview(x,y){
     redrawFromUndoTop();
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+    }
+    var dx = x-startX;
+    var dy = y-startY;
+    var len = Math.sqrt(
+        dx*dx + dy*dy
+    );
+    if(len < 1){
+        return;
+    }
+    var ux = dx/len;
+    var uy = dy/len;
+    var headLen =
+        Math.max(
+            4,
+            Math.round(
+                parseInt(sizeInput.value,10) * 4
+            )
+        );
+    var headWidth =
+        headLen * 0.5;
+    var baseX =
+        x - ux*headLen;
+    var baseY =
+        y - uy*headLen;
+    var px = -uy;
+    var py = ux;
+    var x1 =
+        baseX + px*headWidth;
+    var y1 =
+        baseY + py*headWidth;
+    var x2 =
+        baseX - px*headWidth;
+    var y2 =
+        baseY - py*headWidth;
     if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
+        drawPixelRainbowLine(
             startX,
             startY,
+            baseX,
+            baseY
+        );
+        drawPixelRainbowLine(
+            x,
+            y,
+            x1,
+            y1
+        );
+        drawPixelRainbowLine(
+            x1,
+            y1,
+            x2,
+            y2
+        );
+        drawPixelRainbowLine(
+            x2,
+            y2,
             x,
             y
         );
-        ctx.fillStyle = ctx.strokeStyle;
     } else {
-        applyColor();
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelLine(
+            startX,
+            startY,
+            baseX,
+            baseY
+        );
+        drawPixelLine(
+            x,
+            y,
+            x1,
+            y1
+        );
+        drawPixelLine(
+            x1,
+            y1,
+            x2,
+            y2
+        );
+        drawPixelLine(
+            x2,
+            y2,
+            x,
+            y
+        );
     }
-    var dx = x - startX;
-    var dy = y - startY;
-    var len = Math.sqrt(dx*dx + dy*dy);
-    if(len < 1) return;
-    /* Direction normalisée */
-    var ux = dx / len;
-    var uy = dy / len;
-    /* Taille de la pointe */
-    var headLen = ctx.lineWidth * 4;
-    /* Largeur de la pointe */
-    var headWidth = headLen * 0.5;
-    /* Base de la pointe */
-    var baseX = x - ux * headLen;
-    var baseY = y - uy * headLen;
-    /* Vecteur perpendiculaire */
-    var px = -uy;
-    var py = ux;
-    var x1 = baseX + px * headWidth;
-    var y1 = baseY + py * headWidth;
-    var x2 = baseX - px * headWidth;
-    var y2 = baseY - py * headWidth;
-    /* Ligne */
-    ctx.beginPath();
-    ctx.moveTo(startX,startY);
-    ctx.lineTo(baseX,baseY);
-    ctx.stroke();
-    /* Pointe */
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-    ctx.lineTo(x1,y1);
-    ctx.lineTo(x2,y2);
-    ctx.closePath();
-    ctx.fill();
 }
 function drawSquarePreview(x,y){
     redrawFromUndoTop();
-    var dx = x - startX;
-    var dy = y - startY;
+    var dx = x-startX;
+    var dy = y-startY;
     var size = Math.min(
         Math.abs(dx),
         Math.abs(dy)
     );
-    var endX = startX;
-    var endY = startY;
-    if(dx < 0){
-        endX = startX - size;
+    var endX = startX + (dx < 0 ? -size : size);
+    var endY = startY + (dy < 0 ? -size : size);
+    var left = Math.min(startX,endX);
+    var top = Math.min(startY,endY);
+    var right = Math.max(startX,endX);
+    var bottom = Math.max(startY,endY);
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        endX = startX + size;
-    }
-    if(dy < 0){
-        endY = startY - size;
-    } else {
-        endY = startY + size;
+        ctx.globalCompositeOperation = "source-over";
     }
     if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
-            Math.min(startX,endX),
-            Math.min(startY,endY),
-            Math.max(startX,endX),
-            Math.max(startY,endY)
-        );
+        drawPixelRainbowLine(left,top,right,top);
+        drawPixelRainbowLine(right,top,right,bottom);
+        drawPixelRainbowLine(right,bottom,left,bottom);
+        drawPixelRainbowLine(left,bottom,left,top);
     } else {
-        applyColor();
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelLine(left,top,right,top);
+        drawPixelLine(right,top,right,bottom);
+        drawPixelLine(right,bottom,left,bottom);
+        drawPixelLine(left,bottom,left,top);
     }
-    ctx.beginPath();
-    ctx.rect(
-        Math.min(startX,endX),
-        Math.min(startY,endY),
-        size,
-        size
-    );
-    ctx.stroke();
 }
 function drawRectPreview(x,y){
     redrawFromUndoTop();
-    if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
-            startX,
-            startY,
-            x,
-            y
-        );
+    var left = Math.min(startX,x);
+    var top = Math.min(startY,y);
+    var right = Math.max(startX,x);
+    var bottom = Math.max(startY,y);
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        applyColor();
+        ctx.globalCompositeOperation = "source-over";
     }
-    ctx.beginPath();
-    ctx.rect(
-        startX,
-        startY,
-        x-startX,
-        y-startY
-    );
-    ctx.stroke();
+    if(rainbowMode){
+        drawPixelRainbowLine(left,top,right,top);
+        drawPixelRainbowLine(right,top,right,bottom);
+        drawPixelRainbowLine(right,bottom,left,bottom);
+        drawPixelRainbowLine(left,bottom,left,top);
+    } else {
+        ctx.fillStyle = ctx.strokeStyle;
+        drawPixelLine(left,top,right,top);
+        drawPixelLine(right,top,right,bottom);
+        drawPixelLine(right,bottom,left,bottom);
+        drawPixelLine(left,bottom,left,top);
+    }
 }
 function drawCirclePreview(x,y){
     redrawFromUndoTop();
-    var dx = x - startX;
-    var dy = y - startY;
+    var dx = x-startX;
+    var dy = y-startY;
     var size = Math.min(
         Math.abs(dx),
         Math.abs(dy)
@@ -1047,34 +1126,59 @@ function drawCirclePreview(x,y){
     var left = startX;
     var top = startY;
     if(dx < 0){
-        left = startX - size;
+        left = startX-size;
     }
     if(dy < 0){
-        top = startY - size;
+        top = startY-size;
     }
-    var cx = left + size/2;
-    var cy = top + size/2;
+    var cx = left+size/2;
+    var cy = top+size/2;
     var r = size/2;
-    if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
-            left,
-            top,
-            left + size,
-            top + size
-        );
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        applyColor();
+        ctx.globalCompositeOperation = "source-over";
     }
-    ctx.beginPath();
-    ctx.arc(
-        cx,
-        cy,
-        r,
-        0,
-        Math.PI*2,
-        false
+    if(!rainbowMode){
+        ctx.fillStyle = ctx.strokeStyle;
+    }
+    drawPixelCircle(cx,cy,r);
+}
+function drawPixelCircle(cx,cy,r){
+    var steps = Math.max(
+        8,
+        Math.round(2*Math.PI*r)
     );
-    ctx.stroke();
+    var oldX = Math.round(cx+r);
+    var oldY = Math.round(cy);
+    var i;
+    for(i=1;i<=steps;i++){
+        var a =
+            i / steps * Math.PI * 2;
+        var x = Math.round(
+            cx + Math.cos(a)*r
+        );
+        var y = Math.round(
+            cy + Math.sin(a)*r
+        );
+        if(rainbowMode){
+            drawPixelRainbowLine(
+                oldX,
+                oldY,
+                x,
+                y
+            );
+        } else {
+            drawPixelLine(
+                oldX,
+                oldY,
+                x,
+                y
+            );
+        }
+        oldX = x;
+        oldY = y;
+    }
 }
 function drawEllipsePreview(x,y){
     redrawFromUndoTop();
@@ -1082,39 +1186,22 @@ function drawEllipsePreview(x,y){
     var top = Math.min(startY,y);
     var right = Math.max(startX,x);
     var bottom = Math.max(startY,y);
-    var w = right-left;
-    var h = bottom-top;
-    var cx = left+w/2;
-    var cy = top+h/2;
-    var rx = w/2;
-    var ry = h/2;
-    if(rainbowMode){
-        ctx.strokeStyle = createRainbowGradient(
-            left,
-            top,
-            right,
-            bottom
-        );
+    var cx = (left+right)/2;
+    var cy = (top+bottom)/2;
+    var rx = (right-left)/2;
+    var ry = (bottom-top)/2;
+    if(currentTool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        applyColor();
+        ctx.globalCompositeOperation = "source-over";
     }
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.scale(
-        1,
-        ry ? ry/rx : 1
+    if(!rainbowMode){
+        ctx.fillStyle = ctx.strokeStyle;
+    }
+    drawPixelEllipse(
+        cx,cy,
+        rx,ry
     );
-    ctx.arc(
-        0,
-        0,
-        rx,
-        0,
-        Math.PI*2,
-        false
-    );
-    ctx.restore();
-    ctx.stroke();
 }
 function updateDimensions(x,y){
     var width = Math.abs(x - startX);
@@ -1494,7 +1581,6 @@ function updateAutoScroll(e){
     else if(e.clientX > rect.right - edge){
         autoScrollX = speed;
     }
-
     /* Haut */
     if(e.clientY < rect.top + edge){
         autoScrollY = -speed;
@@ -1880,14 +1966,31 @@ if(moved && window.PointerEvent){
     if(currentTool==="eraser"){
         return;
     }
-    if(currentTool==="line"){
-        redrawFromUndoTop();
-        ctx.beginPath();
-        ctx.moveTo(startX,startY);
-        ctx.lineTo(x,y);
-        ctx.stroke();
-        return;
-    }
+	if(currentTool==="line"){
+		redrawFromUndoTop();
+		if(currentTool === "eraser"){
+			ctx.globalCompositeOperation = "destination-out";
+		} else {
+			ctx.globalCompositeOperation = "source-over";
+		}
+		if(rainbowMode){
+			drawPixelRainbowLine(
+				startX,
+				startY,
+				x,
+				y
+			);
+		} else {
+			ctx.fillStyle = ctx.strokeStyle;
+			drawPixelLine(
+				startX,
+				startY,
+				x,
+				y
+			);
+		}
+		return;
+	}
     if(currentTool==="arrow"){
         redrawFromUndoTop();
         drawArrowPreview(x,y);
@@ -1897,18 +2000,10 @@ if(moved && window.PointerEvent){
         drawSquarePreview(x,y);
         return;
     }
-    if(currentTool==="rect"){
-        redrawFromUndoTop();
-        ctx.beginPath();
-        ctx.rect(
-            startX,
-            startY,
-            x-startX,
-            y-startY
-        );
-        ctx.stroke();
-        return;
-    }
+	if(currentTool==="rect"){
+		drawRectPreview(x,y);
+		return;
+	}
     if(currentTool==="circle"){
         drawCirclePreview(x,y);
         return;
