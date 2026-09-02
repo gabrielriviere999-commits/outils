@@ -702,7 +702,9 @@ document.getElementById('clearTdStyle').onclick = function () {
     }
   }
 };
+var colorInput = document.getElementById("colorInput");
 attachColorPickerTo(document.getElementById("colorInput"));
+updatePickerFromInput(colorInput, colorInput.nextElementSibling);
 /* --- EPAISSEUR --- */
 document.getElementById('borderWidth').onchange = function() {
   globalBorderWidth = this.value;

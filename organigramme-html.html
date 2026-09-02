@@ -472,7 +472,9 @@ function applyColor() {
   renderOrgTree(orgRoot);
   updateSelectionHighlight();
 }
+var colorInput = document.getElementById("colorInput");
 attachColorPickerTo(document.getElementById("colorInput"));
+updatePickerFromInput(colorInput, colorInput.nextElementSibling);
 /* --- Boutons de sélection d'action --- */
 function changeGlobalTextColor(btn) {
   pendingColorAction = "globalText";
