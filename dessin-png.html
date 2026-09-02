@@ -67,13 +67,15 @@ canvas{
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button data-action="openFormePopup">Forme</button>
   <div id="popupFormeContent" style="display:none">
+	<div style="width:153px;max-width:100%">
     <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
     <button id="btnSquare" data-action="setToolSquare" style="width:35px;">□</button>
-    <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button><br>
+    <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button>
     <button id="btnTriangle" data-action="setToolTriangle" style="width:35px;">△</button>
     <button id="btnCircle" data-action="setToolCircle" style="width:35px;">○</button>
     <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button><br>
+    </div>
     <hr>
     <button id="btnStar" data-action="setToolStar" style="width:35px;">☆ <span id="starBranchesValue">5</span></button>
     <input type="range" id="starBranchesInput" min="3" max="20" value="5">
