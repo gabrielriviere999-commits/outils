@@ -100,27 +100,14 @@ canvas{
   </select>
   |
   <button data-action="openSelectionPopup">Sélection</button>
-  <div id="popupSelectionContent" style="display:none">
-    <button id="btnMove" data-action="setToolMove">Déplacer</button><br>
-    <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
-    <button id="btnRotate" data-action="setToolRotate">Pivoter</button><br>
-    <button id="btnFlipH" data-action="setToolFlipH">Mirroir H</button><br>
-    <button id="btnFlipV" data-action="setToolFlipV">Mirroir V</button><hr>
-<div>
-    <label>
-        <input type="radio"
-               name="pixelSelectionType"
-               value="rectangle"
-               checked>
-        Rectangle
-    </label>
-    <label>
-        <input type="radio"
-               name="pixelSelectionType"
-               value="free">
-        Libre
-    </label>
-</div>
+    <div id="popupSelectionContent" style="display:none">
+      <button id="btnMove" data-action="setToolMove">Déplacer</button><br>
+      <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
+      <button id="btnRotate" data-action="setToolRotate">Pivoter</button><br>
+      <button id="btnFlipH" data-action="setToolFlipH">Mirroir H</button><br>
+      <button id="btnFlipV" data-action="setToolFlipV">Mirroir V</button><hr>
+    <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rectangle</label><br>
+    <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
   |
