@@ -102,6 +102,8 @@ canvas{
   <button id="btnMove" data-action="setToolMove">Déplacer</button>
   <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
   <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
+  <button id="btnFlipH" data-action="setToolFlipH">flipH</button>
+  <button id="btnFlipV" data-action="setToolFlipV">flipV</button>
   |
   <input type="file" id="imageFile" style="width:115px;">
   |
@@ -163,6 +165,8 @@ function setToolText(){ setTool("text"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
 function setToolRotate(){ setTool("rotate"); }
+function setToolFlipH(){ setTool("fliph"); }
+function setToolFlipV(){ setTool("flipv"); }
 function setToolFill(){ setTool("fill"); }
 function setToolEraser(){ setTool("eraser"); }
 function openOptionsPopup() {
@@ -836,6 +840,8 @@ function setTool(t){
     btnMove.className = "";
     btnCopy.className = "";
     btnRotate.className = "";
+    btnFlipH.className = "";
+    btnFlipV.className = "";
     /* Activer l'outil choisi. */
     if(t==="free") btnFree.className = "active";
     if(t==="line") btnLine.className = "active";
@@ -853,6 +859,8 @@ function setTool(t){
     if(t==="move") btnMove.className = "active";
     if(t==="copy") btnCopy.className = "active";
     if(t==="rotate") btnRotate.className = "active";
+    if(t==="fliph") btnFlipH.className = "active";
+    if(t==="flipv") btnFlipV.className = "active";
     /* La gomme reste active même lorsqu'on change d'outil. */
     refreshShapePreview();
 }
@@ -2424,6 +2432,56 @@ function drawRotatedSelectionAt(angle){
     }
     ctx.putImageData(img, selection.x, selection.y);
 }
+function flipSelectionHorizontal(){
+    if(!selection) return;
+    var w = selection.w;
+    var h = selection.h;
+    var src = selection.data.data;
+    // Nouveau buffer
+    var img = ctx.createImageData(w, h);
+    var dst = img.data;
+    for(var sy=0; sy<h; sy++){
+        for(var sx=0; sx<w; sx++){
+            var si = (sy*w + sx)*4;
+            var tx = w - 1 - sx;   // miroir horizontal
+            var ty = sy;
+            var di = (ty*w + tx)*4;
+            dst[di]   = src[si];
+            dst[di+1] = src[si+1];
+            dst[di+2] = src[si+2];
+            dst[di+3] = src[si+3];
+        }
+    }
+    // Remplace la sélection par sa version retournée
+    selection.data = img;
+    // Efface la zone d'origine
+    ctx.clearRect(selection.x, selection.y, w, h);
+    // Dessine la version retournée
+    ctx.putImageData(img, selection.x, selection.y);
+}
+function flipSelectionVertical(){
+    if(!selection) return;
+    var w = selection.w;
+    var h = selection.h;
+    var src = selection.data.data;
+    var img = ctx.createImageData(w, h);
+    var dst = img.data;
+    for(var sy=0; sy<h; sy++){
+        for(var sx=0; sx<w; sx++){
+            var si = (sy*w + sx)*4;
+            var tx = sx;
+            var ty = h - 1 - sy;   // miroir vertical
+            var di = (ty*w + tx)*4;
+            dst[di]   = src[si];
+            dst[di+1] = src[si+1];
+            dst[di+2] = src[si+2];
+            dst[di+3] = src[si+3];
+        }
+    }
+    selection.data = img;
+    ctx.clearRect(selection.x, selection.y, w, h);
+    ctx.putImageData(img, selection.x, selection.y);
+}
 /*
  * Dépose définitivement la sélection.
  */
@@ -2611,12 +2669,15 @@ canvas.onpointerdown = function(e){
     if(canvas.setPointerCapture && e.pointerId !== undefined){
         canvas.setPointerCapture(e.pointerId);
     }
-/* MOVE / COPY / ROTATE */
-if(
-    currentTool === "move" ||
-    currentTool === "copy" ||
-    currentTool === "rotate"
-){
+	/* MOVE / COPY / ROTATE */
+	if(
+		currentTool === "move" ||
+		currentTool === "copy" ||
+		currentTool === "rotate" ||
+		currentTool === "fliph" ||
+		currentTool === "flipv"
+	){
+	saveState();
     /*
      * ETAPE 1 : rectangle de sélection
      */
@@ -2634,6 +2695,13 @@ if(
         selectionMoving = false;
         return;
     }
+if(currentTool === "fliph" || currentTool === "flipv"){
+    // créer la sélection rectangle
+    moveBaseImage = ctx.getImageData(0,0,canvas.width,canvas.height);
+    selection = null;
+    selectionMoving = false;
+    return;
+}
     /*
      * ETAPE 2 : la sélection existe déjà
      */
@@ -2917,7 +2985,9 @@ if(currentTool === "image" && tempImage && imageAction === 1){
         currentTool==="ellipse" ||
         currentTool==="move" ||
         currentTool==="copy" ||
-        currentTool==="rotate"
+        currentTool==="rotate" ||
+        currentTool==="fliph" ||
+        currentTool==="flipv"
     ){
         updateDimensions(x,y);
     }
@@ -2934,34 +3004,36 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     else if(currentTool==="star") drawStarPreview(x,y);
     else if(currentTool==="circle") drawCirclePreview(x,y);
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
-/* MOVE / COPY / ROTATE */
+/* MOVE / COPY / ROTATE / FLIP */
 if(
     currentTool === "move" ||
     currentTool === "copy" ||
-    currentTool === "rotate"
+    currentTool === "rotate" ||
+    currentTool === "fliph" ||
+    currentTool === "flipv"
 ){
     /*
-     * ETAPE 1 :
-     * rectangle de sélection.
+     * ETAPE 1 : rectangle de sélection.
      */
-if(
-    (currentTool === "move" && moveMode === 0) ||
-    (currentTool === "copy" && copyMode === 0) ||
-    (currentTool === "rotate" && rotateMode === 0)
-){
-    if(currentTool === "rotate" && rotateBaseImage){
-        ctx.putImageData(
-            rotateBaseImage,
-            0,
-            0
-        );
+    if(
+        (currentTool === "move" && moveMode === 0) ||
+        (currentTool === "copy" && copyMode === 0) ||
+        (currentTool === "rotate" && rotateMode === 0) ||
+        (currentTool === "fliph") ||
+        (currentTool === "flipv")
+    ){
+        if(currentTool === "rotate" && rotateBaseImage){
+            ctx.putImageData(
+                rotateBaseImage,
+                0,
+                0
+            );
+        }
+        drawSelectionPreview(x,y);
+        return;
     }
-    drawSelectionPreview(x,y);
-    return;
-}
     /*
-     * ETAPE 2 :
-     * déplacement pixel par pixel.
+     * ETAPE 2 : déplacement pixel par pixel.
      */
     if(
         (currentTool === "move" && moveMode === 1) ||
@@ -3084,29 +3156,70 @@ canvas.onpointerup = function(e){
 		return;
 	}
 	// ROTATE : créer la sélection
-if(currentTool === "rotate" && rotateMode === 0){
-    if(rotateBaseImage){
-        ctx.putImageData(
-            rotateBaseImage,
-            0,
-            0
-        );
-    }
-    if(createPixelSelection(
-        startX,
-        startY,
-        x,
-        y,
-        false
-    )){
-        rotateMode = 1;
-    } else {
-        rotateMode = 0;
-        rotateBaseImage = null;
-    }
-    selectionMoving = false;
-    return;
-}
+	if(currentTool === "rotate" && rotateMode === 0){
+		if(rotateBaseImage){
+			ctx.putImageData(
+				rotateBaseImage,
+				0,
+				0
+			);
+		}
+		if(createPixelSelection(
+			startX,
+			startY,
+			x,
+			y,
+			false
+		)){
+			rotateMode = 1;
+		} else {
+			rotateMode = 0;
+			rotateBaseImage = null;
+		}
+		selectionMoving = false;
+		return;
+	}
+	// FLIP HORIZONTAL
+	if(currentTool === "fliph"){
+		if(moveBaseImage){
+			ctx.putImageData(moveBaseImage, 0, 0);
+		}
+		if(!createPixelSelection(startX, startY, x, y, false)){
+			return;
+		}
+		flipSelectionHorizontal();
+		selection = null;
+		selectionMoving = false;
+		moveMode = 0;
+		copyMode = 0;
+		rotateMode = 0;
+		drawing = false;
+		// ❌ NE PAS remettre currentTool = ""
+		// currentTool reste "fliph"
+		return;
+	}
+
+	// FLIP VERTICAL
+	if(currentTool === "flipv"){
+		if(moveBaseImage){
+			ctx.putImageData(
+				moveBaseImage,
+				0,
+				0
+			);
+		}
+		if(!createPixelSelection(startX, startY, x, y, false)){
+			return;
+		}
+		flipSelectionVertical();
+		selection = null;
+		selectionMoving = false;
+		moveMode = 0;
+		copyMode = 0;
+		rotateMode = 0;
+		drawing = false;
+		return;
+	}
     /* MOVE : deuxième étape = dépôt */
 	if(
 		currentTool === "move" &&
@@ -3120,7 +3233,6 @@ if(currentTool === "rotate" && rotateMode === 0){
 		copyMode = 0;
 		moveSelection = null;
 		moveBaseImage = null;
-		saveState();
 		return;
 	}
     /* COPY : deuxième étape = dépôt */
@@ -3136,13 +3248,11 @@ if(currentTool === "rotate" && rotateMode === 0){
 		moveMode = 0;
 		moveSelection = null;
 		moveBaseImage = null;
-		saveState();
 		return;
 	}
 	// ROTATE : déposer la rotation
 	if(currentTool === "rotate" && rotateMode === 1){
 		drawRotatedSelectionAt(rotateAngle);
-		saveState();
 		selection = null;
 		rotateBaseImage = null;
 		rotateMode = 0;
