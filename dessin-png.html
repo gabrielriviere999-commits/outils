@@ -54,6 +54,7 @@ canvas{
   </div>
   <button data-action="openPinceauPopup">Pinceau</button>
   <div id="popupPinceauContent" style="display:none">
+    <b class="holoheaderb">Pinceau</b><hr class="holoheaderhr">
 	<b>Couleur</b><br>
 	<input type="text" id="colorInput" class="ColorPickerZindex" value="#000000" size="8"><div class="previewColorPicker"></div><br>
 	<b>Taille</b> <span id="sizeLabel">3</span><br>
@@ -67,6 +68,7 @@ canvas{
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button data-action="openFormePopup">Forme</button>
   <div id="popupFormeContent" style="display:none">
+    <b class="holoheaderb">Forme</b><hr class="holoheaderhr">
 	<div style="width:153px;max-width:100%;">
     <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
@@ -99,6 +101,7 @@ canvas{
   |
   <button data-action="openSelectionPopup">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
+    <b class="holoheaderb">Sélection</b><hr class="holoheaderhr">
     <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rect</label>
     <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <button id="btnMove" data-action="setToolMove" style="width:70px;">Déplacer</button>
@@ -118,6 +121,7 @@ canvas{
   |
   <button data-action="openOptionsPopup">Options</button>
   <div id="popupOptionsContent" style="display:none">
+    <b class="holoheaderb">Options</b><hr class="holoheaderhr">
     <div id="canvasResolution">
 	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
 	  <input type="range" id="zoomInput" min="25" max="1000" value="100"><br>
