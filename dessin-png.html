@@ -21,7 +21,6 @@ canvas{
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #fontInput{width:60px;}
-input[type=range]{}
 </style>
 </head>
 <body>
@@ -59,22 +58,26 @@ input[type=range]{}
 	<input type="text" id="colorInput" class="ColorPickerZindex" value="#000000" size="8"><div class="previewColorPicker"></div><br>
 	<b>Taille</b> <span id="sizeLabel">3</span><br>
 	<input type="range" id="sizeInput" min="1" max="50" value="3"><hr>
-    <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button><br>
-    <button id="btnDotted" data-action="toggleDotted">Pointillés</button><br>
-    <button id="btnEraser" data-action="setToolEraser">Gomme</button><br><hr>
-    <button data-action="closePopup">Fermer</button>
+    <button id="btnRainbow" data-action="toggleRainbow" style="width:100%;">Arc-en-ciel</button><br>
+    <button id="btnDotted" data-action="toggleDotted" style="width:100%;">Pointillés : <span id="dottedGapValue">2</span></button><br>
+    <input type="range" style="" id="dottedGapInput" min="1" max="20" value="2">
+    <button id="btnEraser" data-action="setToolEraser" style="width:100%;">Gomme</button><br><hr>
+    <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
   <button id="btnFree" data-action="setToolFree">Tracer</button>
   <button data-action="openFormePopup">Forme</button>
   <div id="popupFormeContent" style="display:none">
     <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
-    <button id="btnSquare" data-action="setToolSquare" style="width:35px;">□</button><br>
-    <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button>
+    <button id="btnSquare" data-action="setToolSquare" style="width:35px;">□</button>
+    <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button><br>
     <button id="btnTriangle" data-action="setToolTriangle" style="width:35px;">△</button>
-    <button id="btnStar" data-action="setToolStar" style="width:35px;">☆</button><br>
     <button id="btnCircle" data-action="setToolCircle" style="width:35px;">○</button>
     <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button><br>
+    <hr>
+    <button id="btnStar" data-action="setToolStar" style="width:35px;">☆ <span id="starBranchesValue">5</span></button>
+    <input type="range" id="starBranchesInput" min="3" max="20" value="5">
+    <hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
   |
@@ -110,8 +113,8 @@ input[type=range]{}
 	  <b>Résolution</b><br>
       l : <input type="number" id="canvasWidth" value="640" min="1" max="10000"><br>
       h : <input type="number" id="canvasHeight" value="480" min="1" max="10000"><br>
-      <button id="applyResolutionBtn" data-action="changeCanvasResolution">Valider résolution</button><hr>
-      <button data-action="closePopup">Fermer</button>
+      <button id="applyResolutionBtn" data-action="changeCanvasResolution" style="width:100%;">Valider résolution</button><hr>
+      <button data-action="closePopup" style="width:100%;">Fermer</button>
     </div>
   </div>
 </div>
@@ -139,14 +142,14 @@ input[type=range]{}
 /* Multitouch, popup et color-palette */
 addMultiTouch("button,input");
 function setToolFree(){ setTool("free"); }
-function setToolLine(){ setTool("line"); closePopup(); }
-function setToolArrow(){ setTool("arrow"); closePopup(); }
-function setToolSquare(){ setTool("square"); closePopup(); }
-function setToolRect(){ setTool("rect"); closePopup(); }
-function setToolTriangle(){ setTool("triangle"); closePopup(); }
-function setToolStar(){ setTool("star"); closePopup(); }
-function setToolCircle(){ setTool("circle"); closePopup(); }
-function setToolEllipse(){ setTool("ellipse"); closePopup(); }
+function setToolLine(){ setTool("line"); }
+function setToolArrow(){ setTool("arrow"); }
+function setToolSquare(){ setTool("square"); }
+function setToolRect(){ setTool("rect"); }
+function setToolTriangle(){ setTool("triangle"); }
+function setToolStar(){ setTool("star"); }
+function setToolCircle(){ setTool("circle"); }
+function setToolEllipse(){ setTool("ellipse"); }
 function setToolText(){ setTool("text"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
@@ -912,6 +915,12 @@ function drawPixelLine(x1,y1,x2,y2){
     }
 }
 /* LIGNE POINTILLÉE La longueur des tirets dépend de la taille du tracé. */
+var dottedGapInput = document.getElementById("dottedGapInput");
+var dottedGapValue = document.getElementById("dottedGapValue");
+dottedGapInput.oninput = function(){
+    dottedGapValue.innerHTML = dottedGapInput.value;
+    refreshShapePreview();
+};
 function drawPixelDottedLine(x1,y1,x2,y2){
     var dx = x2-x1;
     var dy = y2-y1;
@@ -941,7 +950,7 @@ function drawPixelDottedLine(x1,y1,x2,y2){
     );
     var gapLength = Math.max(
         2,
-        size * 2
+        size * parseInt(dottedGapInput.value,10)
     );
     var period =
         dashLength +
@@ -1104,7 +1113,7 @@ function drawPixelEllipse(cx,cy,rx,ry){
     var gapLength =
         Math.max(
             2,
-            size*2
+            size * parseInt(dottedGapInput.value,10)
         );
     var period =
         dashLength +
@@ -1230,7 +1239,7 @@ function drawFree(x,y){
         var gapLength =
             Math.max(
                 2,
-                size*2
+                size * parseInt(dottedGapInput.value,10)
             );
         var period =
             dashLength +
@@ -1608,6 +1617,13 @@ function drawTrianglePreview(x,y){
     );
 }
 /* ETOILE */
+var starBranchesInput = document.getElementById("starBranchesInput");
+var starBranchesValue = document.getElementById("starBranchesValue");
+starBranchesInput.oninput = function(){
+    starBranchesValue.innerHTML = starBranchesInput.value;
+    refreshShapePreview();
+};
+/* ETOILE */
 function drawPixelStar(x1,y1,x2,y2){
     var left;
     var right;
@@ -1618,6 +1634,8 @@ function drawPixelStar(x1,y1,x2,y2){
     var rx;
     var ry;
     var points = [];
+    var branches;
+    var totalPoints;
     var i;
     var a;
     var rrX;
@@ -1626,16 +1644,29 @@ function drawPixelStar(x1,y1,x2,y2){
     var y;
     var p1;
     var p2;
+
     left = Math.min(x1,x2);
     right = Math.max(x1,x2);
     top = Math.min(y1,y2);
     bottom = Math.max(y1,y2);
+
     cx = (left+right)/2;
     cy = (top+bottom)/2;
+
     rx = (right-left)/2;
     ry = (bottom-top)/2;
-    for(i=0;i<10;i++){
-        a = -Math.PI/2 + i*Math.PI/5;
+
+    branches = parseInt(starBranchesInput.value,10);
+
+    if(!branches || branches < 3){
+        branches = 5;
+    }
+
+    totalPoints = branches * 2;
+
+    for(i=0;i<totalPoints;i++){
+        a = -Math.PI/2 + i*Math.PI/branches;
+
         if(i % 2 === 0){
             rrX = rx;
             rrY = ry;
@@ -1643,16 +1674,20 @@ function drawPixelStar(x1,y1,x2,y2){
             rrX = rx*0.4;
             rrY = ry*0.4;
         }
+
         x = cx + Math.cos(a)*rrX;
         y = cy + Math.sin(a)*rrY;
+
         points.push({
             x:x,
             y:y
         });
     }
-    for(i=0;i<10;i++){
+
+    for(i=0;i<totalPoints;i++){
         p1 = points[i];
-        p2 = points[(i+1)%10];
+        p2 = points[(i+1)%totalPoints];
+
         drawStyledPixelLine(
             p1.x,p1.y,
             p2.x,p2.y
@@ -1742,7 +1777,7 @@ function drawPixelCircle(cx,cy,r){
     var gapLength =
         Math.max(
             2,
-            size*2
+            size * parseInt(dottedGapInput.value,10)
         );
     var period =
         dashLength +
