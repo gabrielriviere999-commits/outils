@@ -2043,26 +2043,30 @@ function confirmText(){
     if(!fontSize || fontSize < 1){
         fontSize = 15;
     }
-    ctx.save();
-    ctx.font = fontSize + "px " + textFont;
-    ctx.textBaseline = "top";
-    var lineHeight = Math.round(fontSize * 1.2);
-    var i;
-    if(rainbowMode){
-        // Mesurer la largeur totale du texte pour que le dégradé couvre réellement toute la longueur.
-        var maxWidth = 0;
-        for(i = 0; i < lines.length; i++){
-            var width = ctx.measureText(lines[i]).width;
-            if(width > maxWidth){
-                maxWidth = width;
-            }
+    // Canvas temporaire pour transformer le texte en image manipulable
+    var tempCanvas = document.createElement("canvas");
+    var tempCtx = tempCanvas.getContext("2d");
+    tempCtx.font = fontSize + "px " + textFont;
+    tempCtx.textBaseline = "top";
+    // Mesurer la largeur max
+    var maxWidth = 0;
+    for(var i = 0; i < lines.length; i++){
+        var w = tempCtx.measureText(lines[i]).width;
+        if(w > maxWidth){
+            maxWidth = w;
         }
-        var gradient = ctx.createLinearGradient(
-            textX,
-            textY,
-            textX + maxWidth,
-            textY
-        );
+    }
+    var lineHeight = Math.round(fontSize * 1.2);
+    var totalHeight = lines.length * lineHeight;
+    // Dimensionner le canvas
+    tempCanvas.width = Math.ceil(maxWidth);
+    tempCanvas.height = Math.ceil(totalHeight);
+    // Redessiner avec les bonnes dimensions
+    tempCtx.font = fontSize + "px " + textFont;
+    tempCtx.textBaseline = "top";
+    // Dégradé arc-en-ciel ou couleur simple
+    if(rainbowMode){
+        var gradient = tempCtx.createLinearGradient(0,0,maxWidth,0);
         gradient.addColorStop(0, "#ff0000");
         gradient.addColorStop(0.16, "#ff9900");
         gradient.addColorStop(0.33, "#ffff00");
@@ -2070,18 +2074,32 @@ function confirmText(){
         gradient.addColorStop(0.66, "#00ffff");
         gradient.addColorStop(0.83, "#0000ff");
         gradient.addColorStop(1, "#ff00ff");
-        ctx.fillStyle = gradient;
+        tempCtx.fillStyle = gradient;
     } else {
-        ctx.fillStyle = colorInput.value;
+        tempCtx.fillStyle = colorInput.value;
     }
-    for(i = 0; i < lines.length; i++){
-        ctx.fillText(
-            lines[i],
-            textX,
-            textY + i * lineHeight
-        );
+    // Dessiner le texte dans le canvas temporaire
+    for(var i = 0; i < lines.length; i++){
+        tempCtx.fillText(lines[i], 0, i * lineHeight);
     }
-    ctx.restore();
+    // Injecter le texte comme image manipulable
+    tempImage = tempCanvas;
+    tempImageX = textX;
+    tempImageY = textY;
+    tempImageW = tempCanvas.width;
+    tempImageH = tempCanvas.height;
+    tempImageAngle = 0;
+    // FIGER LE FOND AVANT MANIPULATION (CORRECTION CRITIQUE)
+    imageBaseImage = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+    // Activer l'outil image
+    currentTool = "image";
+    // Afficher l'image temporaire
+    drawTempImage();
     textInput.value = "";
 }
 function cancelText(){
