@@ -65,12 +65,18 @@ input[type=range]{}
     <button data-action="closePopup">Fermer</button>
   </div>
   <button id="btnFree" data-action="setToolFree">Tracer</button>
-  <button id="btnLine" data-action="setToolLine">Ligne</button>
-  <button id="btnArrow" data-action="setToolArrow">Flèche</button>
-  <button id="btnSquare" data-action="setToolSquare">Carré</button>
-  <button id="btnRect" data-action="setToolRect">Rectangle</button>
-  <button id="btnCircle" data-action="setToolCircle">Rond</button>
-  <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
+  <button data-action="openFormePopup">Forme</button>
+  <div id="popupFormeContent" style="display:none">
+    <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
+    <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
+    <button id="btnSquare" data-action="setToolSquare" style="width:35px;">□</button><br>
+    <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button>
+    <button id="btnTriangle" data-action="setToolTriangle" style="width:35px;">△</button>
+    <button id="btnStar" data-action="setToolStar" style="width:35px;">☆</button><br>
+    <button id="btnCircle" data-action="setToolCircle" style="width:35px;">○</button>
+    <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button><br>
+    <button data-action="closePopup" style="width:100%;">Fermer</button>
+  </div>
   |
   <button id="btnText" data-action="setToolText">Texte</button>
   <select id="fontInput">
@@ -133,12 +139,14 @@ input[type=range]{}
 /* Multitouch, popup et color-palette */
 addMultiTouch("button,input");
 function setToolFree(){ setTool("free"); }
-function setToolLine(){ setTool("line"); }
-function setToolArrow(){ setTool("arrow"); }
-function setToolSquare(){ setTool("square"); }
-function setToolRect(){ setTool("rect"); }
-function setToolCircle(){ setTool("circle"); }
-function setToolEllipse(){ setTool("ellipse"); }
+function setToolLine(){ setTool("line"); closePopup(); }
+function setToolArrow(){ setTool("arrow"); closePopup(); }
+function setToolSquare(){ setTool("square"); closePopup(); }
+function setToolRect(){ setTool("rect"); closePopup(); }
+function setToolTriangle(){ setTool("triangle"); closePopup(); }
+function setToolStar(){ setTool("star"); closePopup(); }
+function setToolCircle(){ setTool("circle"); closePopup(); }
+function setToolEllipse(){ setTool("ellipse"); closePopup(); }
 function setToolText(){ setTool("text"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
@@ -150,6 +158,10 @@ function openOptionsPopup() {
 }
 function openPinceauPopup() {
   var container = document.getElementById("popupPinceauContent");
+  openPopupMenu(container);
+}
+function openFormePopup() {
+  var container = document.getElementById("popupFormeContent");
   openPopupMenu(container);
 }
 // Changer la couleur du tracé
@@ -793,6 +805,8 @@ function setTool(t){
     btnArrow.className = "";
     btnSquare.className = "";
     btnRect.className = "";
+    btnTriangle.className = "";
+    btnStar.className = "";
     btnCircle.className = "";
     btnEllipse.className = "";
     btnText.className = "";
@@ -800,25 +814,20 @@ function setTool(t){
     btnMove.className = "";
     btnCopy.className = "";
     /* Activer l'outil choisi. */
-    if(t==="free")    btnFree.className = "active";
-    if(t==="line")    btnLine.className = "active";
-    if(t==="arrow")   btnArrow.className = "active";
-    if(t==="square")  btnSquare.className = "active";
-    if(t==="rect")    btnRect.className = "active";
-    if(t==="circle")  btnCircle.className = "active";
+    if(t==="free") btnFree.className = "active";
+    if(t==="line") btnLine.className = "active";
+    if(t==="arrow") btnArrow.className = "active";
+    if(t==="square") btnSquare.className = "active";
+    if(t==="rect") btnRect.className = "active";
+    if(t==="triangle") btnTriangle.className = "active";
+    if(t==="star") btnStar.className = "active";
+    if(t==="circle") btnCircle.className = "active";
     if(t==="ellipse") btnEllipse.className = "active";
-    if(t==="text")    btnText.className = "active";
-    if(t==="fill")    btnFill.className = "active";
-    if(t==="move")    btnMove.className = "active";
-    if(t==="copy")    btnCopy.className = "active";
+    if(t==="text") btnText.className = "active";
+    if(t==="fill") btnFill.className = "active";
+    if(t==="move") btnMove.className = "active";
+    if(t==="copy") btnCopy.className = "active";
     /* La gomme reste active même lorsqu'on change d'outil. */
-    if(eraserMode){
-        ctx.globalCompositeOperation = "destination-out";
-        btnEraser.className = "active";
-    } else {
-        ctx.globalCompositeOperation = "source-over";
-        btnEraser.className = "";
-    }
     refreshShapePreview();
 }
 /* UNDO / REDO */
@@ -1547,6 +1556,118 @@ function drawRectPreview(x,y){
         top
     );
 }
+/* TRIANGLE */
+function drawPixelTriangle(x1,y1,x2,y2){
+    var left;
+    var right;
+    var top;
+    var bottom;
+    var cx;
+    var cy;
+    var w;
+    var h;
+    var p1x;
+    var p1y;
+    var p2x;
+    var p2y;
+    var p3x;
+    var p3y;
+    left = Math.min(x1,x2);
+    right = Math.max(x1,x2);
+    top = Math.min(y1,y2);
+    bottom = Math.max(y1,y2);
+    w = right-left;
+    h = bottom-top;
+    cx = (left+right)/2;
+    p1x = cx;
+    p1y = top;
+    p2x = left;
+    p2y = bottom;
+    p3x = right;
+    p3y = bottom;
+    drawStyledPixelLine(
+        p1x,p1y,
+        p2x,p2y
+    );
+    drawStyledPixelLine(
+        p2x,p2y,
+        p3x,p3y
+    );
+    drawStyledPixelLine(
+        p3x,p3y,
+        p1x,p1y
+    );
+}
+function drawTrianglePreview(x,y){
+    redrawFromUndoTop();
+    drawPixelTriangle(
+        startX,
+        startY,
+        x,
+        y
+    );
+}
+/* ETOILE */
+function drawPixelStar(x1,y1,x2,y2){
+    var left;
+    var right;
+    var top;
+    var bottom;
+    var cx;
+    var cy;
+    var rx;
+    var ry;
+    var points = [];
+    var i;
+    var a;
+    var rrX;
+    var rrY;
+    var x;
+    var y;
+    var p1;
+    var p2;
+    left = Math.min(x1,x2);
+    right = Math.max(x1,x2);
+    top = Math.min(y1,y2);
+    bottom = Math.max(y1,y2);
+    cx = (left+right)/2;
+    cy = (top+bottom)/2;
+    rx = (right-left)/2;
+    ry = (bottom-top)/2;
+    for(i=0;i<10;i++){
+        a = -Math.PI/2 + i*Math.PI/5;
+        if(i % 2 === 0){
+            rrX = rx;
+            rrY = ry;
+        } else {
+            rrX = rx*0.4;
+            rrY = ry*0.4;
+        }
+        x = cx + Math.cos(a)*rrX;
+        y = cy + Math.sin(a)*rrY;
+        points.push({
+            x:x,
+            y:y
+        });
+    }
+    for(i=0;i<10;i++){
+        p1 = points[i];
+        p2 = points[(i+1)%10];
+        drawStyledPixelLine(
+            p1.x,p1.y,
+            p2.x,p2.y
+        );
+    }
+}
+function drawStarPreview(x,y){
+    redrawFromUndoTop();
+    drawPixelStar(
+        startX,
+        startY,
+        x,
+        y
+    );
+}
 /* CERCLE */
 function drawCirclePreview(x,y){
     redrawFromUndoTop();
@@ -1772,6 +1893,12 @@ function refreshShapePreview(){
             break;
         case "rect":
             drawRectPreview(previewX, previewY);
+            break;
+        case "triangle":
+            drawTrianglePreview(previewX, previewY);
+            break;
+        case "star":
+            drawStarPreview(previewX, previewY);
             break;
         case "circle":
             drawCirclePreview(previewX, previewY);
@@ -2459,6 +2586,12 @@ canvas.onpointermove = function(e){
     else if(currentTool === "rect"){
         drawRectPreview(x,y);
     }
+    else if(currentTool === "triangle"){
+        drawTrianglePreview(x,y);
+    }
+    else if(currentTool === "star"){
+        drawStarPreview(x,y);
+    }
     else if(currentTool === "circle"){
         drawCirclePreview(x,y);
     }
@@ -2590,6 +2723,8 @@ if(currentTool === "image" && tempImage && imageAction === 1){
         currentTool==="arrow" ||
         currentTool==="square" ||
         currentTool==="rect" ||
+        currentTool==="triangle" ||
+        currentTool==="star" ||
         currentTool==="circle" ||
         currentTool==="ellipse" ||
         currentTool==="move" ||
@@ -2604,6 +2739,8 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     else if(currentTool==="arrow") drawArrowPreview(x,y);
     else if(currentTool==="square") drawSquarePreview(x,y);
     else if(currentTool==="rect") drawRectPreview(x,y);
+    else if(currentTool==="triangle") drawTrianglePreview(x,y);
+    else if(currentTool==="star") drawStarPreview(x,y);
     else if(currentTool==="circle") drawCirclePreview(x,y);
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
     /* MOVE / COPY */
@@ -2808,6 +2945,14 @@ if(moved && window.PointerEvent){
     }
 	if(currentTool==="rect"){
 		drawRectPreview(x,y);
+		return;
+	}
+	if(currentTool==="triangle"){
+		drawTrianglePreview(x,y);
+		return;
+	}
+	if(currentTool==="star"){
+		drawStarPreview(x,y);
 		return;
 	}
     if(currentTool==="circle"){
