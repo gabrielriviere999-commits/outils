@@ -99,11 +99,15 @@ canvas{
     <option value="Times New Roman">Times New Roman</option>
   </select>
   |
-  <button id="btnMove" data-action="setToolMove">Déplacer</button>
-  <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
-  <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
-  <button id="btnFlipH" data-action="setToolFlipH">flipH</button>
-  <button id="btnFlipV" data-action="setToolFlipV">flipV</button>
+  <button data-action="openSelectionPopup">Sélection</button>
+  <div id="popupSelectionContent" style="display:none">
+    <button id="btnMove" data-action="setToolMove">Déplacer</button><br>
+    <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
+    <button id="btnRotate" data-action="setToolRotate">Pivoter</button><br>
+    <button id="btnFlipH" data-action="setToolFlipH">Mirroir H</button><br>
+    <button id="btnFlipV" data-action="setToolFlipV">Mirroir V</button><hr>
+    <button data-action="closePopup" style="width:100%;">Fermer</button>
+  </div>
   |
   <input type="file" id="imageFile" style="width:115px;">
   |
@@ -162,23 +166,27 @@ function setToolStar(){ setTool("star"); }
 function setToolCircle(){ setTool("circle"); }
 function setToolEllipse(){ setTool("ellipse"); }
 function setToolText(){ setTool("text"); }
-function setToolMove(){ setTool("move"); }
-function setToolCopy(){ setTool("copy"); }
-function setToolRotate(){ setTool("rotate"); }
-function setToolFlipH(){ setTool("fliph"); }
-function setToolFlipV(){ setTool("flipv"); }
+function setToolMove(){ setTool("move"); closePopup(); }
+function setToolCopy(){ setTool("copy"); closePopup(); }
+function setToolRotate(){ setTool("rotate"); closePopup(); }
+function setToolFlipH(){ setTool("fliph"); closePopup(); }
+function setToolFlipV(){ setTool("flipv"); closePopup(); }
 function setToolFill(){ setTool("fill"); }
 function setToolEraser(){ setTool("eraser"); }
-function openOptionsPopup() {
-  var container = document.getElementById("popupOptionsContent");
-  openPopupMenu(container);
-}
 function openPinceauPopup() {
   var container = document.getElementById("popupPinceauContent");
   openPopupMenu(container);
 }
 function openFormePopup() {
   var container = document.getElementById("popupFormeContent");
+  openPopupMenu(container);
+}
+function openSelectionPopup() {
+  var container = document.getElementById("popupSelectionContent");
+  openPopupMenu(container);
+}
+function openOptionsPopup() {
+  var container = document.getElementById("popupOptionsContent");
   openPopupMenu(container);
 }
 // Changer la couleur du tracé
