@@ -168,9 +168,12 @@ function openFormePopup() {
   openPopupMenu(container);
 }
 // Changer la couleur du tracé
-attachColorPickerTo(document.getElementById("colorInput"));
-attachColorPickerTo(document.getElementById("canvasBg"));
 var colorInput = document.getElementById("colorInput");
+attachColorPickerTo(document.getElementById("colorInput"));
+updatePickerFromInput(colorInput, colorInput.nextElementSibling);
+var canvasBg = document.getElementById("canvasBg");
+attachColorPickerTo(document.getElementById("canvasBg"))
+updatePickerFromInput(canvasBg, canvasBg.nextElementSibling);
 var rainbowMode = false;
 var rainbowHue = 0;
 var dottedMode = false;
