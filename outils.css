@@ -177,6 +177,7 @@ select:hover{background:#404040;}
   color:#fff;
 }
 .popup-window-menu input[type=range]{width:120px;}
+.popup-window-menu hr{width:118px;margin-left:0;margin-top:6px;}
 #textBox {
   display:none;
   position:fixed;
