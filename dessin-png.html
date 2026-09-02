@@ -100,12 +100,12 @@ canvas{
   </select>
   |
   <button data-action="openSelectionPopup">Sélection</button>
-    <div id="popupSelectionContent" style="display:none">
-      <button id="btnMove" data-action="setToolMove">Déplacer</button><br>
-      <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
-      <button id="btnRotate" data-action="setToolRotate">Pivoter</button><br>
-      <button id="btnFlipH" data-action="setToolFlipH">Mirroir H</button><br>
-      <button id="btnFlipV" data-action="setToolFlipV">Mirroir V</button><hr>
+  <div id="popupSelectionContent" style="display:none">
+    <button id="btnMove" data-action="setToolMove" style="width:70px;">Déplacer</button>
+    <button id="btnCopy" data-action="setToolCopy" style="width:70px;">Dupliquer</button><hr>
+    <button id="btnRotate" data-action="setToolRotate" style="width:70px">Pivoter</button><label><input type="checkbox" id="rotateCopy">Copier</label><hr>
+    <button id="btnFlipH" data-action="setToolFlipH" style="width:70px;">Invers H</button>
+    <button id="btnFlipV" data-action="setToolFlipV" style="width:70px;">Invers V</button><hr>
     <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rectangle</label><br>
     <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
@@ -3305,11 +3305,7 @@ canvas.onpointerdown = function(e){
             return;
         }
     }
-    /*
-     * =========================
-     * MODE RECTANGLE ACTUEL
-     * =========================
-     */
+    /* MODE RECTANGLE ACTUEL */
     if(
         (currentTool === "move" && moveMode === 0) ||
         (currentTool === "copy" && copyMode === 0) ||
@@ -3851,11 +3847,14 @@ if(
      * MOVE retire l'original.
      * COPY / ROTATE / FLIP le conservent.
      */
-var removeOriginal =
-    currentTool === "move" ||
-    currentTool === "rotate" ||
-    currentTool === "fliph" ||
-    currentTool === "flipv";
+	var removeOriginal =
+		currentTool === "move" ||
+		(
+			currentTool === "rotate" &&
+			!document.getElementById("rotateCopy").checked
+		) ||
+		currentTool === "fliph" ||
+		currentTool === "flipv";
 	/*
 	 * Fermer automatiquement le contour.
 	 */
@@ -3988,12 +3987,14 @@ var removeOriginal =
 				0
 			);
 		}
+		var rotateRemoveOriginal =
+			!document.getElementById("rotateCopy").checked;
 		if(createPixelSelection(
 			startX,
 			startY,
 			x,
 			y,
-			true
+			rotateRemoveOriginal
 		)){
 			rotateMode = 1;
 		} else {
