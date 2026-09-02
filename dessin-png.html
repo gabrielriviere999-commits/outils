@@ -70,6 +70,7 @@ canvas{
 	<div style="width:153px;max-width:100%;">
     <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
+    <button id="btnDoubleArrow" data-action="setToolDoubleArrow" style="width:35px;">↔</button>
     <button id="btnSquare" data-action="setToolSquare" style="width:35px;">□</button>
     <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button>
     <button id="btnTriangle" data-action="setToolTriangle" style="width:35px;">△</button>
@@ -146,6 +147,7 @@ addMultiTouch("button,input");
 function setToolFree(){ setTool("free"); }
 function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
+function setToolDoubleArrow(){ setTool("doublearrow"); }
 function setToolSquare(){ setTool("square"); }
 function setToolRect(){ setTool("rect"); }
 function setToolTriangle(){ setTool("triangle"); }
@@ -811,6 +813,7 @@ function setTool(t){
     btnFree.className = "";
     btnLine.className = "";
     btnArrow.className = "";
+    btnDoubleArrow.className = "";
     btnSquare.className = "";
     btnRect.className = "";
     btnTriangle.className = "";
@@ -825,6 +828,7 @@ function setTool(t){
     if(t==="free") btnFree.className = "active";
     if(t==="line") btnLine.className = "active";
     if(t==="arrow") btnArrow.className = "active";
+    if(t==="doublearrow") btnDoubleArrow.className = "active";
     if(t==="square") btnSquare.className = "active";
     if(t==="rect") btnRect.className = "active";
     if(t==="triangle") btnTriangle.className = "active";
@@ -1347,7 +1351,7 @@ function drawLinePreview(x,y){
     );
 }
 /* FLÈCHE */
-function drawArrowPreview(x,y){
+function drawArrowPreviewBase(x,y,doubleArrow){
     redrawFromUndoTop();
     if(eraserMode){
         ctx.globalCompositeOperation =
@@ -1356,94 +1360,83 @@ function drawArrowPreview(x,y){
         ctx.globalCompositeOperation =
             "source-over";
     }
-    var dx =
-        x-startX;
-    var dy =
-        y-startY;
-    var len =
-        Math.sqrt(
-            dx*dx +
-            dy*dy
-        );
+    var dx = x-startX;
+    var dy = y-startY;
+    var len = Math.sqrt(dx*dx + dy*dy);
     if(len < 1){
         return;
     }
-    var ux =
-        dx/len;
-    var uy =
-        dy/len;
-    /*
-     * Taille de la pointe dépendant
-     * de la taille du tracé.
-     */
-    var headLen =
-        Math.max(
-            4,
-            Math.round(
-                parseInt(
-                    sizeInput.value,
-                    10
-                ) * 4
-            )
-        );
-    var headWidth =
-        headLen*0.5;
-    var baseX =
-        x-ux*headLen;
-    var baseY =
-        y-uy*headLen;
-    var px =
-        -uy;
-    var py =
-        ux;
-    var x1 =
-        baseX +
-        px*headWidth;
-    var y1 =
-        baseY +
-        py*headWidth;
-    var x2 =
-        baseX -
-        px*headWidth;
-    var y2 =
-        baseY -
-        py*headWidth;
-    /*
-     * Tige
-     */
-    drawStyledPixelLine(
-        startX,
-        startY,
-        baseX,
-        baseY
+    var ux = dx/len;
+    var uy = dy/len;
+    var headLen = Math.max(
+        4,
+        Math.round(
+            parseInt(sizeInput.value,10) * 4
+        )
     );
-    /*
-     * Première partie de la pointe.
-     */
-    drawStyledPixelLine(
+    var headWidth = headLen*0.5;
+    var px = -uy;
+    var py = ux;
+    /* Dessine une pointe à une extrémité. */
+    function drawHead(px0,py0,dir){
+        var bx = px0-ux*headLen*dir;
+        var by = py0-uy*headLen*dir;
+        var aX = bx+px*headWidth;
+        var aY = by+py*headWidth;
+        var bX = bx-px*headWidth;
+        var bY = by-py*headWidth;
+        drawStyledPixelLine(
+            px0,py0,
+            aX,aY
+        );
+        drawStyledPixelLine(
+            aX,aY,
+            bX,bY
+        );
+        drawStyledPixelLine(
+            bX,bY,
+            px0,py0
+        );
+        return {
+            x:bx,
+            y:by
+        };
+    }
+    /* Pointe droite. */
+    var rightBase = drawHead(
         x,
         y,
-        x1,
-        y1
+        1
     );
-    /*
-     * Base de la pointe.
-     */
-    drawStyledPixelLine(
-        x1,
-        y1,
-        x2,
-        y2
-    );
-    /*
-     * Deuxième partie.
-     */
-    drawStyledPixelLine(
-        x2,
-        y2,
-        x,
-        y
-    );
+    /* Pointe gauche. */
+    if(doubleArrow){
+        var leftBase = drawHead(
+            startX,
+            startY,
+            -1
+        );
+        /* Bâton entre les deux bases. */
+        drawStyledPixelLine(
+            leftBase.x,
+            leftBase.y,
+            rightBase.x,
+            rightBase.y
+        );
+    } else {
+        /* Bâton jusqu'à la base de la pointe droite. */
+        drawStyledPixelLine(
+            startX,
+            startY,
+            rightBase.x,
+            rightBase.y
+        );
+    }
+}
+function drawArrowPreview(x,y){
+    drawArrowPreviewBase(x,y,false);
+}
+function drawDoubleArrowPreview(x,y){
+    drawArrowPreviewBase(x,y,true);
 }
 /* CARRÉ */
 function drawSquarePreview(x,y){
@@ -1928,6 +1921,9 @@ function refreshShapePreview(){
         case "arrow":
             drawArrowPreview(previewX, previewY);
             break;
+        case "doublearrow":
+            drawDoubleArrowPreview(previewX, previewY);
+            break;
         case "square":
             drawSquarePreview(previewX, previewY);
             break;
@@ -1961,7 +1957,7 @@ function updateDimensions(x,y){
     var text =
         "largeur : " + Math.round(width) +
         ", hauteur : " + Math.round(height);
-    if(currentTool === "line" || currentTool === "arrow"){
+    if(currentTool === "line" || currentTool === "arrow" || currentTool === "doublearrow"){
         text +=
             ", angle : " + angle.toFixed(1) + "°";
     }
@@ -2638,6 +2634,9 @@ canvas.onpointermove = function(e){
     else if(currentTool === "arrow"){
         drawArrowPreview(x,y);
     }
+    else if(currentTool === "doublearrow"){
+        drawDoubleArrowPreview(x,y);
+    }
     else if(currentTool === "square"){
         drawSquarePreview(x,y);
     }
@@ -2779,6 +2778,7 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     if(
         currentTool==="line" ||
         currentTool==="arrow" ||
+        currentTool==="doublearrow" ||
         currentTool==="square" ||
         currentTool==="rect" ||
         currentTool==="triangle" ||
@@ -2795,6 +2795,7 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     if(currentTool==="free") drawFree(x,y);
     else if(currentTool==="line") drawLinePreview(x,y);
     else if(currentTool==="arrow") drawArrowPreview(x,y);
+    else if(currentTool==="doublearrow") drawDoubleArrowPreview(x,y);
     else if(currentTool==="square") drawSquarePreview(x,y);
     else if(currentTool==="rect") drawRectPreview(x,y);
     else if(currentTool==="triangle") drawTrianglePreview(x,y);
@@ -2995,6 +2996,11 @@ if(moved && window.PointerEvent){
     if(currentTool==="arrow"){
         redrawFromUndoTop();
         drawArrowPreview(x,y);
+        return;
+    }
+    if(currentTool==="doublearrow"){
+        redrawFromUndoTop();
+        drawDoubleArrowPreview(x,y);
         return;
     }
     if(currentTool==="square"){
