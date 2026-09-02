@@ -3864,10 +3864,8 @@ if(
      * MOVE retire l'original.
      * COPY / ROTATE / FLIP le conservent.
      */
-    var removeOriginal =
-    currentTool === "move" ||
-    currentTool === "fliph" ||
-    currentTool === "flipv";
+var removeOriginal =
+    currentTool === "move";
 	/*
 	 * Fermer automatiquement le contour.
 	 */
