@@ -3852,7 +3852,10 @@ if(
      * COPY / ROTATE / FLIP le conservent.
      */
 var removeOriginal =
-    currentTool === "move";
+    currentTool === "move" ||
+    currentTool === "rotate" ||
+    currentTool === "fliph" ||
+    currentTool === "flipv";
 	/*
 	 * Fermer automatiquement le contour.
 	 */
@@ -3990,7 +3993,7 @@ var removeOriginal =
 			startY,
 			x,
 			y,
-			false
+			true
 		)){
 			rotateMode = 1;
 		} else {
