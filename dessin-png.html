@@ -75,12 +75,10 @@ canvas{
     <button id="btnRect" data-action="setToolRect" style="width:35px;">▭</button>
     <button id="btnTriangle" data-action="setToolTriangle" style="width:35px;">△</button>
     <button id="btnCircle" data-action="setToolCircle" style="width:35px;">○</button>
-    <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button><br>
+    <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button>
     </div>
-    <hr>
     <button id="btnPolygon" data-action="setToolPolygon" style="width:35px;">⬠ <span id="polygonSidesValue">5</span></button>
-    <input type="range" id="polygonSidesInput" min="3" max="20" value="5">
-    <hr>
+    <input type="range" id="polygonSidesInput" min="3" max="20" value="5"><br>
     <button id="btnStar" data-action="setToolStar" style="width:35px;">☆ <span id="starBranchesValue">5</span></button>
     <input type="range" id="starBranchesInput" min="3" max="20" value="5">
     <hr>
@@ -101,13 +99,13 @@ canvas{
   |
   <button data-action="openSelectionPopup">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
+    <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rect</label>
+    <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <button id="btnMove" data-action="setToolMove" style="width:70px;">Déplacer</button>
-    <button id="btnCopy" data-action="setToolCopy" style="width:70px;">Dupliquer</button><hr>
-    <button id="btnRotate" data-action="setToolRotate" style="width:70px">Pivoter</button><label><input type="checkbox" id="rotateCopy">Copier</label><hr>
+    <button id="btnCopy" data-action="setToolCopy" style="width:70px;">Dupliquer</button><br>
+    <button id="btnRotate" data-action="setToolRotate" style="width:70px">Pivoter</button><label><input type="checkbox" id="rotateCopy">Copier</label><br>
     <button id="btnFlipH" data-action="setToolFlipH" style="width:70px;">Invers H</button>
     <button id="btnFlipV" data-action="setToolFlipV" style="width:70px;">Invers V</button><hr>
-    <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rectangle</label><br>
-    <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
   |
