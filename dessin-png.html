@@ -101,6 +101,7 @@ canvas{
   |
   <button id="btnMove" data-action="setToolMove">Déplacer</button>
   <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
+  <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
   |
   <input type="file" id="imageFile" style="width:115px;">
   |
@@ -161,6 +162,7 @@ function setToolEllipse(){ setTool("ellipse"); }
 function setToolText(){ setTool("text"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
+function setToolRotate(){ setTool("rotate"); }
 function setToolFill(){ setTool("fill"); }
 function setToolEraser(){ setTool("eraser"); }
 function openOptionsPopup() {
@@ -784,6 +786,10 @@ var copyMode = 0;     // 0 = sélection, 1 = déplacement
 var moveSelection = null;
 var textX = 0;
 var textY = 0;
+var rotateMode = 0;
+var rotateSelection = null;
+var rotateBaseImage = null;
+var rotateAngle = 0;
 /* TOOL FUNCTIONS */
 function setTool(t){
     /* Si une image est en cours de manipulation, on la valide avant de changer d'outil. */
@@ -829,6 +835,7 @@ function setTool(t){
     btnFill.className = "";
     btnMove.className = "";
     btnCopy.className = "";
+    btnRotate.className = "";
     /* Activer l'outil choisi. */
     if(t==="free") btnFree.className = "active";
     if(t==="line") btnLine.className = "active";
@@ -845,6 +852,7 @@ function setTool(t){
     if(t==="fill") btnFill.className = "active";
     if(t==="move") btnMove.className = "active";
     if(t==="copy") btnCopy.className = "active";
+    if(t==="rotate") btnRotate.className = "active";
     /* La gomme reste active même lorsqu'on change d'outil. */
     refreshShapePreview();
 }
@@ -1724,29 +1732,21 @@ function drawPixelStar(x1,y1,x2,y2){
     var y;
     var p1;
     var p2;
-
     left = Math.min(x1,x2);
     right = Math.max(x1,x2);
     top = Math.min(y1,y2);
     bottom = Math.max(y1,y2);
-
     cx = (left+right)/2;
     cy = (top+bottom)/2;
-
     rx = (right-left)/2;
     ry = (bottom-top)/2;
-
     branches = parseInt(starBranchesInput.value,10);
-
     if(!branches || branches < 3){
         branches = 5;
     }
-
     totalPoints = branches * 2;
-
     for(i=0;i<totalPoints;i++){
         a = -Math.PI/2 + i*Math.PI/branches;
-
         if(i % 2 === 0){
             rrX = rx;
             rrY = ry;
@@ -1754,20 +1754,16 @@ function drawPixelStar(x1,y1,x2,y2){
             rrX = rx*0.4;
             rrY = ry*0.4;
         }
-
         x = cx + Math.cos(a)*rrX;
         y = cy + Math.sin(a)*rrY;
-
         points.push({
             x:x,
             y:y
         });
     }
-
     for(i=0;i<totalPoints;i++){
         p1 = points[i];
         p2 = points[(i+1)%totalPoints];
-
         drawStyledPixelLine(
             p1.x,p1.y,
             p2.x,p2.y
@@ -2389,6 +2385,45 @@ function drawPixelSelectionAt(x,y){
         0
     );
 }
+function drawRotatedSelectionAt(angle){
+    if(!selection){
+        return;
+    }
+    // Effacer en transparent la zone d'origine
+    ctx.clearRect(selection.x, selection.y, selection.w, selection.h);
+    var w = selection.w;
+    var h = selection.h;
+    var src = selection.data.data;
+    var cx = w/2;
+    var cy = h/2;
+    // Buffer local
+    var img = ctx.getImageData(selection.x, selection.y, w, h);
+    var dst = img.data;
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    for(var sy=0; sy<h; sy++){
+        for(var sx=0; sx<w; sx++){
+            var si = (sy*w + sx)*4;
+            var a = src[si+3];
+            if(a === 0) continue;
+            var dx = sx - cx;
+            var dy = sy - cy;
+            var rx = dx*cos - dy*sin;
+            var ry = dx*sin + dy*cos;
+            var tx = Math.round(cx + rx);
+            var ty = Math.round(cy + ry);
+            if(tx < 0 || ty < 0 || tx >= w || ty >= h){
+                continue;
+            }
+            var di = (ty*w + tx)*4;
+            dst[di]   = src[si];
+            dst[di+1] = src[si+1];
+            dst[di+2] = src[si+2];
+            dst[di+3] = a;
+        }
+    }
+    ctx.putImageData(img, selection.x, selection.y);
+}
 /*
  * Dépose définitivement la sélection.
  */
@@ -2576,38 +2611,44 @@ canvas.onpointerdown = function(e){
     if(canvas.setPointerCapture && e.pointerId !== undefined){
         canvas.setPointerCapture(e.pointerId);
     }
-    /* MOVE / COPY */
-	if(currentTool === "move" || currentTool === "copy"){
-		/*
-		 * PREMIERE ETAPE :
-		 * créer la sélection.
-		 */
-		if(
-			(currentTool === "move" && moveMode === 0) ||
-			(currentTool === "copy" && copyMode === 0)
-		){
-			moveBaseImage = ctx.getImageData(
-				0,
-				0,
-				canvas.width,
-				canvas.height
-			);
-			selection = null;
-			selectionMoving = false;
-			return;
-		}
-		/*
-		 * DEUXIEME ETAPE :
-		 * la sélection existe déjà.
-		 */
-		if(
-			(currentTool === "move" && moveMode === 1) ||
-			(currentTool === "copy" && copyMode === 1)
-		){
-			selectionMoving = true;
-			return;
-		}
-	}
+/* MOVE / COPY / ROTATE */
+if(
+    currentTool === "move" ||
+    currentTool === "copy" ||
+    currentTool === "rotate"
+){
+    /*
+     * ETAPE 1 : rectangle de sélection
+     */
+    if(
+        (currentTool === "move" && moveMode === 0) ||
+        (currentTool === "copy" && copyMode === 0) ||
+        (currentTool === "rotate" && rotateMode === 0)
+    ){
+        if(currentTool === "rotate"){
+            rotateBaseImage = ctx.getImageData(0,0,canvas.width,canvas.height);
+        } else {
+            moveBaseImage = ctx.getImageData(0,0,canvas.width,canvas.height);
+        }
+        selection = null;
+        selectionMoving = false;
+        return;
+    }
+    /*
+     * ETAPE 2 : la sélection existe déjà
+     */
+    if(
+        (currentTool === "move" && moveMode === 1) ||
+        (currentTool === "copy" && copyMode === 1) ||
+        (currentTool === "rotate" && rotateMode === 1)
+    ){
+        if(currentTool === "rotate"){
+            rotateAngle = 0;
+        }
+        selectionMoving = true;
+        return;
+    }
+}
     /*
      * Pour les autres outils,
      * sauvegarde normale.
@@ -2875,7 +2916,8 @@ if(currentTool === "image" && tempImage && imageAction === 1){
         currentTool==="circle" ||
         currentTool==="ellipse" ||
         currentTool==="move" ||
-        currentTool==="copy"
+        currentTool==="copy" ||
+        currentTool==="rotate"
     ){
         updateDimensions(x,y);
     }
@@ -2892,37 +2934,51 @@ if(currentTool === "image" && tempImage && imageAction === 1){
     else if(currentTool==="star") drawStarPreview(x,y);
     else if(currentTool==="circle") drawCirclePreview(x,y);
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
-    /* MOVE / COPY */
-	if(
-		currentTool === "move" ||
-		currentTool === "copy"
-	){
-		/*
-		 * ETAPE 1 :
-		 * rectangle de sélection.
-		 */
-		if(
-			(currentTool === "move" && moveMode === 0) ||
-			(currentTool === "copy" && copyMode === 0)
-		){
-			drawSelectionPreview(x,y);
-			return;
-		}
-		/*
-		 * ETAPE 2 :
-		 * déplacement pixel par pixel.
-		 */
-		if(
-			(currentTool === "move" && moveMode === 1) ||
-			(currentTool === "copy" && copyMode === 1)
-		){
-			drawPixelSelectionAt(
-				x,
-				y
-			);
-			return;
-		}
-	}
+/* MOVE / COPY / ROTATE */
+if(
+    currentTool === "move" ||
+    currentTool === "copy" ||
+    currentTool === "rotate"
+){
+    /*
+     * ETAPE 1 :
+     * rectangle de sélection.
+     */
+if(
+    (currentTool === "move" && moveMode === 0) ||
+    (currentTool === "copy" && copyMode === 0) ||
+    (currentTool === "rotate" && rotateMode === 0)
+){
+    if(currentTool === "rotate" && rotateBaseImage){
+        ctx.putImageData(
+            rotateBaseImage,
+            0,
+            0
+        );
+    }
+    drawSelectionPreview(x,y);
+    return;
+}
+    /*
+     * ETAPE 2 :
+     * déplacement pixel par pixel.
+     */
+    if(
+        (currentTool === "move" && moveMode === 1) ||
+        (currentTool === "copy" && copyMode === 1) ||
+        (currentTool === "rotate" && rotateMode === 1 && selectionMoving)
+    ){
+        if(currentTool === "rotate"){
+            var cx = selection.x + selection.w/2;
+            var cy = selection.y + selection.h/2;
+            rotateAngle = Math.atan2(y - cy, x - cx);
+            drawRotatedSelectionAt(rotateAngle);
+        } else {
+            drawPixelSelectionAt(x,y);
+        }
+        return;
+    }
+}
     lastX = x;
     lastY = y;
 };
@@ -2940,15 +2996,15 @@ canvas.onpointerup = function(e){
     drawing = false;
     stopAutoScroll();
     isDown = false;
-if(
-    canvas.hasPointerCapture &&
-    canvas.hasPointerCapture(e.pointerId)
-){
-    canvas.releasePointerCapture(e.pointerId);
-}
-if(moved && window.PointerEvent){
-    window._blockNextClick = true;
-}
+	if(
+		canvas.hasPointerCapture &&
+		canvas.hasPointerCapture(e.pointerId)
+	){
+		canvas.releasePointerCapture(e.pointerId);
+	}
+	if(moved && window.PointerEvent){
+		window._blockNextClick = true;
+	}
     var p = getPos(e);
     var x = p.x;
     var y = p.y;
@@ -3027,6 +3083,30 @@ if(moved && window.PointerEvent){
 		hideDimensions();
 		return;
 	}
+	// ROTATE : créer la sélection
+if(currentTool === "rotate" && rotateMode === 0){
+    if(rotateBaseImage){
+        ctx.putImageData(
+            rotateBaseImage,
+            0,
+            0
+        );
+    }
+    if(createPixelSelection(
+        startX,
+        startY,
+        x,
+        y,
+        false
+    )){
+        rotateMode = 1;
+    } else {
+        rotateMode = 0;
+        rotateBaseImage = null;
+    }
+    selectionMoving = false;
+    return;
+}
     /* MOVE : deuxième étape = dépôt */
 	if(
 		currentTool === "move" &&
@@ -3057,6 +3137,16 @@ if(moved && window.PointerEvent){
 		moveSelection = null;
 		moveBaseImage = null;
 		saveState();
+		return;
+	}
+	// ROTATE : déposer la rotation
+	if(currentTool === "rotate" && rotateMode === 1){
+		drawRotatedSelectionAt(rotateAngle);
+		saveState();
+		selection = null;
+		rotateBaseImage = null;
+		rotateMode = 0;
+		selectionMoving = false;
 		return;
 	}
     /* DESSIN NORMAL */
