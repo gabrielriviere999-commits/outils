@@ -101,6 +101,10 @@
   vertical-align:middle;
   margin-left:6px;
 }
+#previewColorPicker:hover,.previewColorPicker:hover,.qc:hover,#previewColorPicker:active,.previewColorPicker:active,.qc:active {
+  background:none;
+  border:1px solid #444;
+}
 .quick-colors {
   margin-top:6px;
   overflow:hidden;
