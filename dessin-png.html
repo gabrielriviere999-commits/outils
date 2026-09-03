@@ -325,7 +325,12 @@ sizeInput.oninput = function(){
 };
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
-canvasBg.oninput = function() { canvas.style.backgroundColor = this.value; };
+canvasBg.oninput = function() {
+    canvas.style.backgroundColor = this.value;    
+    if(lastLoupeEvent){
+        showLoupe(lastLoupeEvent);
+    }
+};
 var ctx = canvas.getContext("2d");
 /* ZOOM DU CANVAS */
 var zoomInput = document.getElementById("zoomInput");
@@ -4331,7 +4336,9 @@ var loupeCtx =
     loupeCanvas.getContext("2d");
 var loupeSize = 120;
 var loupeZoom = 2;
+var lastLoupeEvent = null;
 function showLoupe(e){
+	lastLoupeEvent = e;
     if(!e){
         return;
     }
@@ -4392,6 +4399,15 @@ function showLoupe(e){
      * Nettoyer la loupe.
      */
     loupeCtx.clearRect(
+        0,
+        0,
+        loupeSize,
+        loupeSize
+    );
+    loupeCtx.fillStyle =
+        canvas.style.backgroundColor ||
+        "#ffffff";
+    loupeCtx.fillRect(
         0,
         0,
         loupeSize,
