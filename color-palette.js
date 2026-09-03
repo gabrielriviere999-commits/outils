@@ -36,6 +36,11 @@ function attachColorPickerTo(inputElement) {
     }
     // Clic souris
     preview.addEventListener("click", openPicker);
+    // tactile multitouch
+    preview.addEventListener("touchstart", function(e){
+        openPicker(e);
+        e.preventDefault();
+    });
     // Entrée / Espace
     preview.addEventListener("keydown", function(e) {
         if (e.key === "Enter" || e.key === " ") {
