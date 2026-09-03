@@ -33,7 +33,7 @@ function attachColorPickerTo(inputElement) {
         updatePickerFromInput(inputElement, preview);
     }
     preview.addEventListener("click", openPicker);
-    preview.addEventListener("touchstart", openPicker, {
+    preview.addEventListener("touchend", openPicker, {
         passive: false
     });
 }
@@ -125,7 +125,7 @@ for (var i = 0; i < quickColors.length; i++) {
         // click souris
         btn.addEventListener("click", activateQuickColor);
         // tactile (multitouch)
-        btn.addEventListener("touchstart", activateQuickColor, { passive:false });
+        btn.addEventListener("touchend", activateQuickColor, { passive:false });
     })(quickColors[i]);
 }
 
