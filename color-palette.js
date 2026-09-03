@@ -21,7 +21,6 @@ function attachColorPickerTo(inputElement) {
     inputElement.onblur = function() {
         updatePickerFromInput(inputElement, preview);
     };
-    // Permet au preview d'avoir le focus clavier
     preview.setAttribute("tabindex", "0");
     function openPicker(e) {
         if (e) {
@@ -31,17 +30,12 @@ function attachColorPickerTo(inputElement) {
         activeInput = inputElement;
         activepreviewColorPicker = preview;
         overlay.style.display = "block";
-        // Synchroniser le picker avec la couleur actuelle
         updatePickerFromInput(inputElement, preview);
     }
-    // Clic souris
     preview.addEventListener("click", openPicker);
-    // tactile multitouch
-    preview.addEventListener("touchstart", function(e){
-        openPicker(e);
-        e.preventDefault();
+    preview.addEventListener("touchstart", openPicker, {
+        passive: false
     });
-    // Entrée / Espace
     preview.addEventListener("keydown", function(e) {
         if (e.key === "Enter" || e.key === " ") {
             openPicker(e);
