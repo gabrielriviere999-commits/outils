@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-#text,#pasteInput,#bgOpacity {
+#text,#pasteInput {
   width:100%;
   box-sizing:border-box;
 }
@@ -66,11 +66,7 @@
   </div><br>
   <div class="color-picker">
     <label>Couleur du fond :</label><br>
-    <input id="bgHex" class="hex-input" value="#ffffff"><button class="previewColorPicker"></button><br><br>
-    <label>Opacité du fond :</label>
-    <input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1">
-    <input type="number" id="bgOpacityPercent" min="0" max="100" value="100" style="width:70px;">
-    <span>%</span>
+    <input id="bgHex" class="hex-input" value="#ffffff"><button class="previewColorPicker"></button>
   </div><br>
   <input type="hidden" id="qrColor" value="#000000">
   <input type="hidden" id="bgColor" value="#ffffff">
@@ -115,50 +111,8 @@
 var text = document.getElementById("text");
 var qrDiv = document.getElementById("qrcode");
 var btnGen = document.getElementById("btn-generate");
-/* --- COLOR PICKERS INIT --- */
 btnGen.onclick = generateCode;
-initColorPicker("qrHex", function(hex){
-  document.getElementById("qrColor").value = hex;
-  generateCode();
-});
-initColorPicker("bgHex", function(hex){
-  document.getElementById("bgColor").value = hex;
-  generateCode();
-});
 /* --- COLOR PICKER --- */
-function cssNameToHex(name) {
-  var ctx = document.createElement("canvas").getContext("2d");
-  ctx.fillStyle = "#000"; // valeur par défaut
-  ctx.fillStyle = name;   // si invalide, reste "#000"
-  var computed = ctx.fillStyle;
-  // Si le navigateur n'a pas reconnu le nom → retourne null
-  if (computed === "#000000" && name.toLowerCase() !== "black") {
-    return null;
-  }
-  return computed; // retourne "#rrggbb"
-}
-function initColorPicker(hexInputId, callback, skipInit) {
-  var input = document.getElementById(hexInputId);
-  var previewColorPicker = input.nextElementSibling; // previewColorPicker associé
-  function applyColor(hex, trigger) {
-    input.value = hex;
-    previewColorPicker.style.background = hex; // mise à jour du previewColorPicker
-    if (trigger !== false) callback(hex);
-  }
-  input.onchange = function () {
-    this.value = this.value.toLowerCase();
-    var v = input.value.trim();
-    if (/^[0-9A-Fa-f]{6}$/.test(v)) v = "#" + v;
-    else if (/^[0-9A-Fa-f]{3}$/.test(v)) v = "#" + v;
-    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
-      applyColor(v);
-      return;
-    }
-    var hex = cssNameToHex(v);
-    if (hex) applyColor(hex);
-  };
-  applyColor(input.value, false);
-}
 document.getElementById("qrHex").onchange = function () {
     document.getElementById("qrColor").value = this.value;
     generateCode();
@@ -181,41 +135,12 @@ document.ontouchend = function () {
         activeInput.dispatchEvent(new Event("change"));
     }
 };
+var colorInput = document.getElementById("qrHex");
 attachColorPickerTo(document.getElementById("qrHex"));
+updatePickerFromInput(qrHex, qrHex.nextElementSibling);
+var colorInput = document.getElementById("bgHex");
 attachColorPickerTo(document.getElementById("bgHex"));
-/* --- SLIDER OPACITÉ FOND (QR) --- */
-var bgSlider = document.getElementById("bgOpacity");
-var bgPercent = document.getElementById("bgOpacityPercent");
-// Slider → met juste à jour le pourcentage
-bgSlider.oninput = function () {
-  var v = parseFloat(bgSlider.value);
-  bgPercent.value = Math.round(v * 100);
-};
-//Quand on lâche le slider → générer
-bgSlider.onmouseup = function () {
-  generateCode();
-};
-bgSlider.ontouchend = function () {
-  generateCode();
-};
-// Pourcentage → met juste à jour le slider
-bgPercent.onchange = function () {
-  var p = parseInt(bgPercent.value, 10);
-  if (isNaN(p)) p = 0;
-  if (p < 0) p = 0;
-  if (p > 100) p = 100;
-  bgSlider.value = p / 100;
-};
-// Quand on valide le pourcentage → générer
-bgPercent.onchange = function () {
-  var p = parseInt(bgPercent.value, 10);
-  if (isNaN(p)) p = 0;
-  if (p < 0) p = 0;
-  if (p > 100) p = 100;
-  bgPercent.value = p;
-  bgSlider.value = p / 100;
-  generateCode();
-};
+updatePickerFromInput(bgHex, bgHex.nextElementSibling);
 /* --- GÉNÉRATION QR (SVG) --- */
 function generateSVG(qrObj) {
     var count = qrObj.getModuleCount();
@@ -223,9 +148,8 @@ function generateSVG(qrObj) {
     var size = count * cell;
     var fg = document.getElementById("qrColor").value;
     var bg = document.getElementById("bgColor").value;
-    var bgOpacity = parseFloat(document.getElementById("bgOpacity").value);
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">';
-    svg += '<rect width="100%" height="100%" fill="' + bg + '" fill-opacity="' + bgOpacity + '"/>';
+    svg += '<rect width="100%" height="100%" fill="' + bg + '"/>';
     for (var y = 0; y < count; y++) {
         for (var x = 0; x < count; x++) {
             if (qrObj.isDark(y, x)) {
@@ -249,7 +173,6 @@ function generateCode() {
     if (!value) return;
     generateQR();
 }
-btnGen.onclick = generateCode;
 /* --- EXPORT PNG / JPG / SVG --- */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
@@ -266,18 +189,10 @@ function exportCanvas(type) {
   var size  = count * cell;
   var fg = document.getElementById("qrColor").value;
   var bg = document.getElementById("bgColor").value;
-  var bgOpacity = parseFloat(document.getElementById("bgOpacity").value);
   var canvas = document.createElement("canvas");
   canvas.width  = size;
   canvas.height = size;
   var ctx = canvas.getContext("2d");
-  // fond transparent si opacité = 0
-  if (bgOpacity > 0) {
-    ctx.fillStyle = bg;
-    ctx.globalAlpha = bgOpacity;
-    ctx.fillRect(0, 0, size, size);
-    ctx.globalAlpha = 1;
-  }
   // modules
   ctx.fillStyle = fg || "#000000";
   for (var y = 0; y < count; y++) {

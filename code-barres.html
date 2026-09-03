@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-#text,#pasteInput,#bgOpacity {
+#text,#pasteInput {
   width:100%;
   box-sizing:border-box;
 }
@@ -74,11 +74,7 @@
   </div><br>
   <div class="color-picker">
     <label>Couleur du fond :</label><br>
-    <input id="bgHex" class="hex-input" value="#ffffff"><button class="previewColorPicker"></button><br><br>
-    <label>Opacité du fond :</label>
-    <input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1">
-    <input type="number" id="bgOpacityPercent" min="0" max="100" value="100" style="width:70px;">
-    <span>%</span>
+    <input id="bgHex" class="hex-input" value="#ffffff"><button class="previewColorPicker"></button>
   </div><br>
   <input type="hidden" id="barcodeColor" value="#000000">
   <input type="hidden" id="bgColor" value="#ffffff">
@@ -95,14 +91,14 @@
   <input type="file" id="file-input" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
   <canvas id="canvas-file" style="display:none;"></canvas>
   <input id="pasteInput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V">
-  <div id="decode-file"></div>
+  <pre id="decode-file"></pre>
   <button id="copy-btn" class="btn-color" style="background:#4caf50;">Copier</button>
 </div>
 <br>
 <div class="section">
   <h2>Décoder un Code-barres (caméra)</h2>
   <video id="barVideo" autoplay playsinline style="width:300px;"></video>
-  <div id="barResult"></div>
+  <pre id="barResult"></pre>
   <button id="copyBar" class="btn-color" style="background:#4caf50;">Copier</button>
   <button id="startScan">Scanner</button>
   <button id="switcCam">Changer de caméra</button>
@@ -124,48 +120,10 @@
 var text = document.getElementById("text");
 var barcode = document.getElementById("barcode");
 var btnGen = document.getElementById("btn-generate");
+btnGen.onclick = generateBarcode;
 var barcodeColorInput = document.getElementById("barcodeColor");
 var bgColorInput = document.getElementById("bgColor");
-/* --- COLOR PICKERS INIT --- */
-initColorPicker("barcodeHex", function (hex) {
-  barcodeColorInput.value = hex;
-  generateBarcode();
-});
-initColorPicker("bgHex", function (hex) {
-  bgColorInput.value = hex;
-  generateBarcode();
-});
 /* --- COLOR PICKER --- */
-function cssNameToHex(name) {
-  var ctx = document.createElement("canvas").getContext("2d");
-  ctx.fillStyle = "#000000";
-  ctx.fillStyle = name;
-  var computed = ctx.fillStyle;
-  if (computed === "#000000" && name.toLowerCase() !== "black") return null;
-  return computed;
-}
-function initColorPicker(hexInputId, callback) {
-  var input   = document.getElementById(hexInputId);
-  var previewColorPicker = input.nextElementSibling; // ⭐ previewColorPicker juste après l’input
-  function applyColor(hex, trigger) {
-    input.value = hex;
-    previewColorPicker.style.background = hex;
-    if (trigger !== false) callback(hex);
-  }
-  input.onchange = function () {
-    this.value = this.value.toLowerCase();
-    var v = input.value.trim();
-    if (/^[0-9A-Fa-f]{6}$/.test(v)) v = "#" + v;
-    else if (/^[0-9A-Fa-f]{3}$/.test(v)) v = "#" + v;
-    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
-      applyColor(v);
-      return;
-    }
-    var hex = cssNameToHex(v);
-    if (hex) applyColor(hex);
-  };
-  applyColor(input.value, false);
-}
 document.getElementById("barcodeHex").onchange = function () {
     document.getElementById("barcodeColor").value = this.value;
     generateBarcode();
@@ -188,41 +146,12 @@ document.ontouchend = function () {
         activeInput.dispatchEvent(new Event("change"));
     }
 };
+var colorInput = document.getElementById("barcodeHex");
 attachColorPickerTo(document.getElementById("barcodeHex"));
+updatePickerFromInput(barcodeHex, barcodeHex.nextElementSibling);
+var colorInput = document.getElementById("bgHex");
 attachColorPickerTo(document.getElementById("bgHex"));
-/* --- SLIDER OPACITÉ FOND --- */
-var bgSlider = document.getElementById("bgOpacity");
-var bgPercent = document.getElementById("bgOpacityPercent");
-// Slider → met juste à jour le pourcentage
-bgSlider.oninput = function () {
-  var v = parseFloat(bgSlider.value);
-  bgPercent.value = Math.round(v * 100);
-};
-// Quand on lâche le slider → générer
-bgSlider.onmouseup = function () {
-  generateBarcode();
-};
-bgSlider.ontouchend = function () {
-  generateBarcode();
-};
-// Pourcentage → met juste à jour le slider
-bgPercent.onchange = function () {
-  var p = parseInt(bgPercent.value, 10);
-  if (isNaN(p)) p = 0;
-  if (p < 0) p = 0;
-  if (p > 100) p = 100;
-  bgSlider.value = p / 100;
-};
-// Quand on valide le pourcentage → générer
-bgPercent.onchange = function () {
-  var p = parseInt(bgPercent.value, 10);
-  if (isNaN(p)) p = 0;
-  if (p < 0) p = 0;
-  if (p > 100) p = 100;
-  bgPercent.value = p;
-  bgSlider.value = p / 100;
-  generateBarcode();
-};
+updatePickerFromInput(bgHex, bgHex.nextElementSibling);
 /* --- HELPERS CHECKSUM --- */
 // Calcule la clé mod10 type EAN/UPC/ITF à partir de n-1 chiffres
 function computeMod10Check(digits) {
@@ -273,16 +202,6 @@ function isValidITF14(value) {
   return computeMod10Check(body) === check;
 }
 /* --- GÉNÉRATION CODE-BARRES (SVG) --- */
-function hexToRgba(hex, alpha) {
-  hex = hex.replace("#", "");
-  if (hex.length === 3) {
-    hex = hex[0]+hex[0] + hex[1]+hex[1] + hex[2]+hex[2];
-  }
-  var r = parseInt(hex.substr(0, 2), 16);
-  var g = parseInt(hex.substr(2, 2), 16);
-  var b = parseInt(hex.substr(4, 2), 16);
-  return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
-}
 function generateBarcode() {
   var value = text.value.trim();
   barcode.innerHTML = "";
@@ -326,14 +245,8 @@ function generateBarcode() {
     displayValue: true
   });
   // GÉNÉRATION CANVAS POUR EXPORT PNG/JPG
-  var bgOpacity = parseFloat(document.getElementById("bgOpacity").value) || 0;
   var canvasBg;
-  if (bgOpacity <= 0) {
-    // fond totalement transparent
-    canvasBg = "rgba(0,0,0,0)";
-  } else {
-    canvasBg = hexToRgba(bg, bgOpacity);
-  }
+  canvasBg = (bg);
   JsBarcode("#barcodeCanvas", value, {
     format: format,
     lineColor: fg,
@@ -346,13 +259,6 @@ function generateBarcode() {
   svg.removeAttribute("viewBox");
   // affichage
   svg.style.display = "block";
-  // opacité du fond
-  var bgOpacitySlider = document.getElementById("bgOpacity");
-  var bgOpacity = bgOpacitySlider ? parseFloat(bgOpacitySlider.value) : 1;
-  var rects = svg.querySelectorAll("rect");
-  if (rects.length > 0) {
-    rects[0].setAttribute("fill-opacity", bgOpacity);
-  }
   // NETTOYAGE DU SVG
   // 1) Supprimer version="1.1"
   svg.removeAttribute("version");
@@ -374,7 +280,6 @@ function generateBarcode() {
   }
   barcode.appendChild(svg);
 }
-btnGen.onclick = generateBarcode;
 /* --- EXPORT PNG / JPG / SVG --- */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
