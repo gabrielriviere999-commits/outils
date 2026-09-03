@@ -94,8 +94,6 @@
 }
 /* previewColorPicker */
 #previewColorPicker,.previewColorPicker {
-  position:relative;
-  z-index:9999;
   width:20px;
   height:20px;
   border:1px solid #444;
