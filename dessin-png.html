@@ -21,6 +21,26 @@ canvas{
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #fontInput{width:60px;}
+#canvasLoupe{
+  position:fixed;
+  width:120px;
+  height:120px;
+  display:none;
+  z-index:999;
+  pointer-events:none;
+  background:#fff;
+  border:3px solid #000;
+  box-sizing:border-box;
+  border-radius:50%;
+  overflow:hidden;
+}
+
+#loupeCanvas{
+    width:120px;
+    height:120px;
+    display:block;
+    image-rendering:pixelated;
+}
 </style>
 </head>
 <body>
@@ -143,6 +163,9 @@ canvas{
 </div>
 <div id="canvasScroll">
   <canvas id="canvas" width="640" height="480"></canvas>
+</div>
+<div id="canvasLoupe">
+  <canvas id="loupeCanvas" width="120" height="120"></canvas>
 </div>
 <textarea id="ioArea" style="width:100%;height:160px;"></textarea>
 <button data-action="exportPNG">Exporter PNG base64</button>
@@ -3140,6 +3163,9 @@ function drawFreeSelectionPreview(){
 /* MOUSE EVENTS (ASCII LOGIC) */
 canvas.onpointerdown = function(e){
     var p = getPos(e);
+    if(e.pointerType === "touch"){
+        showLoupe(e);
+    }
     startX = p.x;
     startY = p.y;
     lastX = p.x;
@@ -3466,6 +3492,9 @@ function stopAutoScroll(){
 }
 canvas.onpointermove = function(e){
     if(!drawing) return;
+    if(e.pointerType === "touch"){
+        showLoupe(e);
+    }
     var rect = canvas.getBoundingClientRect();
     var x = (e.clientX - rect.left) *
             canvas.width / rect.width;
@@ -3755,6 +3784,7 @@ canvas.onpointerup = function(e){
     if(!drawing){
         return;
     }
+    hideLoupe();
     drawing = false;
     stopAutoScroll();
     isDown = false;
@@ -4294,6 +4324,126 @@ saveState();
 function exportPNG(){
     var png = canvas.toDataURL("image/png");
     document.getElementById("ioArea").value = png;
+}
+var canvasLoupe = document.getElementById("canvasLoupe");
+var loupeCanvas =
+    document.getElementById("loupeCanvas");
+var loupeCtx =
+    loupeCanvas.getContext("2d");
+var loupeSize = 120;
+var loupeZoom = 2;
+function showLoupe(e){
+    if(!e){
+        return;
+    }
+    var rect = canvas.getBoundingClientRect();
+    /*
+     * Position du doigt dans le canvas.
+     */
+    var cx =
+        (e.clientX - rect.left) *
+        canvas.width / rect.width;
+    var cy =
+        (e.clientY - rect.top) *
+        canvas.height / rect.height;
+    /*
+     * Taille de la zone source.
+     */
+    var sourceSize =
+        loupeSize / loupeZoom;
+    /*
+     * Position du doigt à l'écran.
+     */
+    var screenX = e.clientX;
+    var screenY = e.clientY;
+    /*
+     * Position de la loupe :
+     * d'abord au-dessus du doigt.
+     */
+    var left =
+        screenX - loupeSize / 2;
+    var top =
+        screenY - loupeSize - 25;
+    /*
+     * Si la loupe sortirait par le haut,
+     * on la met sous le doigt.
+     */
+    if(top < 5){
+        top =
+            screenY + 25;
+    }
+    /*
+     * Éviter de sortir à gauche/droite.
+     */
+    if(left < 5){
+        left = 5;
+    }
+    if(left + loupeSize >
+       window.innerWidth - 5){
+        left =
+            window.innerWidth -
+            loupeSize -
+            5;
+    }
+    canvasLoupe.style.left =
+        left + "px";
+    canvasLoupe.style.top =
+        top + "px";
+    /*
+     * Nettoyer la loupe.
+     */
+    loupeCtx.clearRect(
+        0,
+        0,
+        loupeSize,
+        loupeSize
+    );
+    /*
+     * Agrandir la zone autour du doigt.
+     */
+    loupeCtx.imageSmoothingEnabled = false;
+    loupeCtx.drawImage(
+        canvas,
+        cx - sourceSize / 2,
+        cy - sourceSize / 2,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        loupeSize,
+        loupeSize
+    );
+    /*
+     * Croix centrale.
+     */
+    loupeCtx.save();
+    loupeCtx.strokeStyle = "#000";
+    loupeCtx.lineWidth = 1;
+    loupeCtx.beginPath();
+    loupeCtx.moveTo(
+        loupeSize / 2 - 8,
+        loupeSize / 2
+    );
+    loupeCtx.lineTo(
+        loupeSize / 2 + 8,
+        loupeSize / 2
+    );
+    loupeCtx.moveTo(
+        loupeSize / 2,
+        loupeSize / 2 - 8
+    );
+    loupeCtx.lineTo(
+        loupeSize / 2,
+        loupeSize / 2 + 8
+    );
+    loupeCtx.stroke();
+    loupeCtx.restore();
+    canvasLoupe.style.display =
+        "block";
+}
+function hideLoupe(){
+    canvasLoupe.style.display =
+        "none";
 }
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
