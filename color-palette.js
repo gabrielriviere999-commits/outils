@@ -13,19 +13,35 @@ var alphaSlider = document.getElementById("alphaSlider");
 var alphaCursor = document.getElementById("alphaCursor");
 var alpha255 = 255;
 function attachColorPickerTo(inputElement) {
-    inputElement.onfocus = function(){
-        setTimeout(function(){
-            activeInput = inputElement;
-            activepreviewColorPicker = inputElement.nextElementSibling;
-            overlay.style.display = "block";
-            // optionnel : synchroniser immédiatement le picker avec la valeur de l'input
-            updatePickerFromInput(inputElement, activepreviewColorPicker);
-        }, 5);
+    var preview = inputElement.nextElementSibling;
+    inputElement.onfocus = function() {
+        activeInput = inputElement;
+        activepreviewColorPicker = preview;
     };
-    inputElement.onblur = function(){
-        // ici on utilise l'input qui se floute, pas activeInput
-        updatePickerFromInput(inputElement, inputElement.nextElementSibling);
+    inputElement.onblur = function() {
+        updatePickerFromInput(inputElement, preview);
     };
+    // Permet au preview d'avoir le focus clavier
+    preview.setAttribute("tabindex", "0");
+    function openPicker(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        activeInput = inputElement;
+        activepreviewColorPicker = preview;
+        overlay.style.display = "block";
+        // Synchroniser le picker avec la couleur actuelle
+        updatePickerFromInput(inputElement, preview);
+    }
+    // Clic souris
+    preview.addEventListener("click", openPicker);
+    // Entrée / Espace
+    preview.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " ") {
+            openPicker(e);
+        }
+    });
 }
 function hsvToHex(h, s, v) {
   s /= 100; v /= 100;
