@@ -4133,6 +4133,9 @@ if(
 	}
     /* DESSIN NORMAL */
     if(currentTool==="free"){
+        if(rainbowMode){
+            rainbowHue = 0;
+        }
         return;
     }
     if(currentTool==="eraser"){
