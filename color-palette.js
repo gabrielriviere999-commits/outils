@@ -128,7 +128,6 @@ for (var i = 0; i < quickColors.length; i++) {
         btn.addEventListener("touchend", activateQuickColor, { passive:false });
     })(quickColors[i]);
 }
-
 function applyQuickColor(hex){
     if (alpha255 < 255) {
         var a = alpha255.toString(16);
