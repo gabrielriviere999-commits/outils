@@ -28,6 +28,7 @@ select{width:55px;}
 <input type="file" id="textareaFileview" style="display:none">
 <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
 <div id="popupOptionsContent" style="display:none">
+  <b class="holoheaderb">Options</b><hr class="holoheaderhr">
   <b>Zone de dessin</b><br>
   <label>Taille du texte</label><br>
   <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
@@ -45,6 +46,7 @@ select{width:55px;}
 </div>
   <button data-action="openHelpPopup" class="multitouchbtn">?</button>
   <div id="popupHelpContent" style="display:none">
+	<b class="holoheaderb">Aide</b><hr class="holoheaderhr">
     • <font color=#4caf50>Copier</font> : tout le texte de la zone de dessin vers le presse-papiers.<br>
     • Import... : mettre le texte d'un fichier dans la zone de dessin, l'ancien texte est supprimé.<br>
     • Options : popup d'options (zoom, calque) en lien avec l'affichage de la zone de dessin, ce popup peut être ouvert en même temps (multitouch) que la manipulation de la zone de dessin.<br>
@@ -79,11 +81,13 @@ select{width:55px;}
     <option value="fancy">/=\|</option>
   </select>
   <div id="popupRectModeContent" style="display:none;">
+	<b class="holoheaderb">Style rect</b><hr class="holoheaderhr">
     <button data-action="setRectModeClassic">+-| Classique</button><br>
     <button data-action="setRectModeDotted">.: Pointillé</button><br>
     <button data-action="setRectModeRounded">.-|:+ Arrondi</button><br>
     <button data-action="setRectModeWavy">¤~¦ Ondulé</button><br>
-    <button data-action="setRectModeFancy">/=\| Fancy</button>
+    <button data-action="setRectModeFancy">/=\| Fancy</button><hr>
+    <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
   <input type="text" id="rectChar" maxlength="1">
   |
