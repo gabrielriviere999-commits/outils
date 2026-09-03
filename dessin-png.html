@@ -699,6 +699,10 @@ function commitTempImage(){
     imageAction = 0;
     imageHandle = "";
     hideDimensions();
+    // Repasser en mode texte
+    currentTool = "text";
+    drawing = false;
+    moved = false;
 }
 /* IMPORTER UN DESSIN ENTIER */
 var drawingFile = document.getElementById("drawingFile");
