@@ -154,6 +154,37 @@ canvas{
       <button data-action="closePopup" style="width:100%;">Fermer</button>
     </div>
   </div>
+  <button data-action="openHelpPopup" class="multitouchbtn">?</button>
+  <div id="popupHelpContent" style="display:none">
+	<b class="holoheaderb">Aide</b><hr class="holoheaderhr">
+    <b>Pinceau</b>
+    <style>#pinceau td{border:1px solid #808080;text-align:center;}</style>
+    <table style="border-collapse: collapse;" id="pinceau">
+      <tbody>
+        <tr><td><br></td><td>Couleur</td><td>Taille</td><td>Arc-en-ciel</td><td>Pointillés</td><td>Gomme</td>
+        </tr>
+        <tr><td>Tracer</td><td>V</td><td>V</td><td>V</td><td>V</td><td>V</td>
+        </tr>
+        <tr><td>Formes</td><td>V</td><td>V</td><td>V</td><td>V</td><td>V</td>
+        </tr>
+        <tr><td>Texte</td><td>V</td><td>V</td><td>V</td><td>X</td><td>V</td>
+        </tr>
+        <tr><td>Sélection</td><td>V</td><td>X</td><td>X</td><td>X</td><td>X</td>
+        </tr>
+        <tr><td>Remplir</td><td>V</td><td>X</td><td>X</td><td>X</td><td>V</td>
+        </tr>
+      </tbody>
+    </table><br>
+    • Texte : ajouter du texte sur le dessin, il peut ensuite être déplacé, redimensionné, pivoté.<br><br>
+    <b>Sélection</b>
+    • Déplacer/Dupliquer : changer de place un morceau de dessin en sélectionnant puis en glissant.<br>
+    • Pivoter : tourner un morceau de dessin en sélectionnant puis en glissant, cocher copier pour superposer le dessin pivoté.<br>
+    • Invers H : sélectionner un morceau de dessin inverse sa position de façon horizontale.<br>
+    • Invers V : sélectionner un morceau de dessin inverse sa position de façon verticale.<br><br>
+    • Sélecteur de fichiers : Ajouter une image sur le dessin, elle peut ensuite être déplacée, redimensionnée, pivotée, cliquer sur le bouton de l'outil pour y revenir sinon le mode texte est utilisé.<br>
+    • Options : zone de dessin (zoom, loupe, couleur de l'affichage de la transparence, résolution du dessin.)<br><br>
+    • Sélecteur de fichiers : Charger une image pour commencer un nouveau dessin.
+  </div>
 </div>
 <div id="dimensions" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div id="textBox">
@@ -215,6 +246,10 @@ function openSelectionPopup() {
 function openOptionsPopup() {
   var container = document.getElementById("popupOptionsContent");
   openPopupMenu(container);
+}
+function openHelpPopup() {
+  var container = document.getElementById("popupHelpContent");
+  openPopup(container);
 }
 // Changer la couleur du tracé
 var colorInput = document.getElementById("colorInput");
@@ -830,7 +865,7 @@ function setTool(t){
         rect: "Rectangle",
         polygon: "Polygone",
         triangle: "Triangle",
-        star: "Etoile",
+        star: "Étoile",
         circle: "Cercle",
         ellipse: "Ellipse",
         text: "Texte",
