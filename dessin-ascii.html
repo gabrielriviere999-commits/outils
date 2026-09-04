@@ -96,21 +96,14 @@ select{width:55px;}
   |
   <button id="btnRect" class="multitouchbtn" data-action="setToolRect">Rectangle</button>
   <button id="rectModeBtn" data-action="openRectModePopup" class="multitouchbtn"><span id="rectModeLabel">+-|</span></button>
-  <select id="rectMode" style="display:none">
-    <option value="classic">+-|</option>
-    <option value="dotted">.:</option>
-    <option value="rounded">.-|:+</option>
-    <option value="wavy">¤~¦</option>
-    <option value="fancy">/=\|</option>
-  </select>
   <div id="popupRectModeContent" style="display:none;">
-	<b class="holoheaderb">Style rect</b><hr class="holoheaderhr">
-    <button data-action="setRectModeClassic">+-| Classique</button><br>
-    <button data-action="setRectModeDotted">.: Pointillé</button><br>
-    <button data-action="setRectModeRounded">.-|:+ Arrondi</button><br>
-    <button data-action="setRectModeWavy">¤~¦ Ondulé</button><br>
-    <button data-action="setRectModeFancy">/=\| Fancy</button><hr>
-    <button data-action="closePopup" style="width:100%;">Fermer</button>
+    <b class="holoheaderb">Style rect</b><hr class="holoheaderhr">
+    <button id="btnRectClassic" data-action="setRectModeClassic" data-style="classic">+-| Classique</button><br>
+    <button id="btnRectDotted" data-action="setRectModeDotted" data-style="dotted">.: Pointillé</button><br>
+    <button id="btnRectRounded" data-action="setRectModeRounded" data-style="rounded">.-|:+ Arrondi</button><br>
+    <button id="btnRectWavy" data-action="setRectModeWavy" data-style="wavy">¤~¦ Ondulé</button><br>
+    <button id="btnRectFancy" data-action="setRectModeFancy" data-style="fancy">/=\| Fancy</button><hr>
+    <button data-action="closePopup">Fermer</button>
   </div>
   <input type="text" id="rectChar" maxlength="1">
   |
@@ -441,8 +434,7 @@ function drawRectangle(x1, y1, x2, y2) {
     ensureCell(xMin, yMin);
     ensureCell(xMax, yMax);
     // lire le mode
-    var mode = document.getElementById("rectMode").value;
-    var style = RECT_STYLES[mode];
+    var style = RECT_STYLES[rectMode];
     // lire le caractère personnalisé
     var c = document.getElementById("rectChar").value;
     var useCustom = (c && c.length > 0);
@@ -484,13 +476,44 @@ document.getElementById("rectChar").oninput = function(){
 document.getElementById("ellipseChar").oninput = function(){
     if (isDown) refreshPreview(lastMoveX, lastMoveY);
 };
-function setRectMode(val){
-    var sel = document.getElementById("rectMode");
-    sel.value = val;
-    var label = document.getElementById("rectModeLabel");
-    label.textContent = sel.options[sel.selectedIndex].textContent;
+var rectMode = "classic";
+function setRectMode(val) {
+    rectMode = val;
+    // Enlever active de tous les boutons
+    document.getElementById("btnRectClassic").className = "";
+    document.getElementById("btnRectDotted").className = "";
+    document.getElementById("btnRectRounded").className = "";
+    document.getElementById("btnRectWavy").className = "";
+    document.getElementById("btnRectFancy").className = "";
+    // Mettre active sur le bouton sélectionné
+    if (val === "classic") {
+        document.getElementById("btnRectClassic").className = "active";
+    }
+    if (val === "dotted") {
+        document.getElementById("btnRectDotted").className = "active";
+    }
+    if (val === "rounded") {
+        document.getElementById("btnRectRounded").className = "active";
+    }
+    if (val === "wavy") {
+        document.getElementById("btnRectWavy").className = "active";
+    }
+    if (val === "fancy") {
+        document.getElementById("btnRectFancy").className = "active";
+    }
+    // Texte du bouton qui ouvre le menu
+    var labels = {
+        classic: "+-|",
+        dotted: ".:",
+        rounded: ".-|:+",
+        wavy: "¤~¦",
+        fancy: "/=\\|"
+    };
+    document.getElementById("rectModeLabel").textContent = labels[val];
     closePopup();
-    if (isDown) refreshPreview(lastMoveX, lastMoveY);
+    if (isDown) {
+        refreshPreview(lastMoveX, lastMoveY);
+    }
 }
 function openRectModePopup() {
     var container = document.getElementById("popupRectModeContent");
@@ -802,14 +825,12 @@ function refreshPreview(x, y) {
     else if (tool === "ellipse") drawEllipse(startX, startY, x, y);
     else if (tool === "move" || tool === "copy" || tool === "clipboard") {
         // Sauvegarder l'ancien mode et caractère
-        var oldMode = rectMode.value;
+        var oldMode = rectMode;
         var oldChar = rectChar.value;
-        // Forcer style dotted + désactiver caractère custom
-        rectMode.value = "dotted";
+        rectMode = "dotted";
         rectChar.value = "";
         drawRectangle(startX, startY, x, y);
-        // Restaurer
-        rectMode.value = oldMode;
+        rectMode = oldMode;
         rectChar.value = oldChar;
     }
     render();
@@ -863,13 +884,11 @@ view.onmousemove = function(e) {
         grid = copyGrid(tempGrid);
         // Sauvegarder l'ancien caractère
         var oldChar = rectChar.value;
-        var oldMode = rectMode.value;
-        // Forcer style dotted + désactiver caractère custom
-        rectMode.value = "dotted";
-        rectChar.value = ""; // désactive useCustom
+        var oldMode = rectMode;
+        rectMode = "dotted";
+        rectChar.value = "";
         drawRectangle(startX, startY, pos.x, pos.y);
-        // Restaurer
-        rectMode.value = oldMode;
+        rectMode = oldMode;
         rectChar.value = oldChar;
         render();
         return;
@@ -1143,6 +1162,7 @@ function hideAsciiLoupe() {
 /* --- STARTUP --- */
 window.onload = function() {
     setTool("edit");
+    setRectMode("classic");
     autoWidth();
     grid = [[]];
     render();
