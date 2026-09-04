@@ -45,34 +45,36 @@ select{width:55px;}
 <div id="asciiLoupe">
   <div id="asciiLoupeText"></div>
 </div>
-<button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
-<button id="importTextareaFileview">Import...</button>
-<input type="file" id="textareaFileview" style="display:none">
-<button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
-<div id="popupOptionsContent" style="display:none">
-  <b class="holoheaderb">Options</b><hr class="holoheaderhr">
-  <b>Zone de dessin</b><br>
-  <label>Taille du texte</label><br>
-  <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
-  <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button> <button data-action="toggleTextColor">Couleur texte</button><br>
-  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
-  <b>Calque</b><br>
-  <input type="file" id="imgLoader" class="file-input" style="width:120px;" onchange="loadImageFile(this)"> <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer l'image</button><br>
-  <label>Position</label><br>
-  <button data-action="moveImgLeft">←</button> <button data-action="moveImgRight">→</button>
-  <button data-action="moveImgUp">↑</button> <button data-action="moveImgDown">↓</button>
-  <button class="btn-color" style="background:#ff4444;" data-action="resetImgPosition">Reset</button>
-  <br>
-  <label>Taille</label><br>
-  <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
-  <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button>
-</div>
+<div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div>
+<div class="toolbar">
+  <button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button id="importTextareaFileview">Import...</button>
+  <input type="file" id="textareaFileview" style="display:none">
+  <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
+  <div id="popupOptionsContent" style="display:none">
+    <b class="holoheaderb">Options</b><hr class="holoheaderhr">
+    <b>Zone de dessin</b><br>
+    <label>Taille du texte</label><br>
+    <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
+    <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button> <button data-action="toggleTextColor">Couleur texte</button><br>
+    <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
+    <b>Calque</b><br>
+    <input type="file" id="imgLoader" class="file-input" style="width:120px;" onchange="loadImageFile(this)"> <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer l'image</button><br>
+    <label>Position</label><br>
+    <button data-action="moveImgLeft">←</button> <button data-action="moveImgRight">→</button>
+    <button data-action="moveImgUp">↑</button> <button data-action="moveImgDown">↓</button>
+    <button class="btn-color" style="background:#ff4444;" data-action="resetImgPosition">Reset</button>
+    <br>
+    <label>Taille</label><br>
+    <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
+    <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button>
+  </div>
   <button data-action="openHelpPopup" class="multitouchbtn">?</button>
   <div id="popupHelpContent" style="display:none">
 	<b class="holoheaderb">Aide</b><hr class="holoheaderhr">
     • <font color=#4caf50>Copier</font> : tout le texte de la zone de dessin vers le presse-papiers.<br>
     • Import... : mettre le texte d'un fichier dans la zone de dessin, l'ancien texte est supprimé.<br>
-    • Options : popup d'options (zoom, calque) en lien avec l'affichage de la zone de dessin, ce popup peut être ouvert en même temps (multitouch) que la manipulation de la zone de dessin.<br>
+    • Options : popup d'options (zoom, calque) en lien avec l'affichage de la zone de dessin.<br>
     • Caractère personnalisé pour tracé libre, ligne, rectangle, ellipse, remplir : champ vide = caractère par défaut, espace = gomme.<br>
     • Rectangle : modèles au choix.<br>
     • Déplacer/Dupliquer : changer de place un rectangle d'éléments en sélectionnant puis en glissant.<br>
@@ -81,11 +83,9 @@ select{width:55px;}
     • Édition texte : mode édition normale.<br>
     • Remplir : remplir d'un caractère l'intérieur d'une forme ou caractères identiques.<br>
     • Gomme : comme tracé libre avec espace.<br>
-    • Annuler/Rétablir : n'importe quelle opération, cliquer 1 fois sur annuler après avoir annulé texte libre, et 2 fois après avoir OK texte libre pour l'annuler.<br><br>
-    • Boutons multitouch : Options, ?, Ligne, Flèche, Rectangle, Sélecteur de modèle rectangle, Ellipse, Déplacer, Dupliquer, Copier.
+    • Annuler/Rétablir : n'importe quelle opération, cliquer 1 fois sur annuler après avoir annulé texte libre, et 2 fois après avoir OK texte libre pour l'annuler.
   </div>
-<div id="shapeInfo" style="display:inline-block;"></div>
-<div class="toolbar">
+  |
   <button id="btnFree" onclick="setTool('free')">Tracer</button>
   <input type="text" id="freeChar" value="#" maxlength="1">
   |
@@ -1009,7 +1009,7 @@ function updateShapeInfo(w, h) {
     box.textContent = "l : " + w + ", h : " + h;
 }
 function clearShapeInfo() {
-    document.getElementById("shapeInfo").textContent = "";
+    document.getElementById("shapeInfo").textContent = "l : 0, h : 0";
 }
 /* --- CHANGER TAILLE DU TEXTE ZONE DE DESSIN --- */
 function applyZoomRange() {
