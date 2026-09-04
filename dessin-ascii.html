@@ -48,7 +48,7 @@ select{width:55px;}
   <textarea wrap="off" id="view" style="position:relative;z-index:1;background:rgba(0,0,0,0);cursor:crosshair;"></textarea>
 </div>
 <div id="asciiLoupe">
-    <div id="asciiLoupeText"></div>
+  <div id="asciiLoupeText"></div>
 </div>
 <button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
 <button id="importTextareaFileview">Import...</button>
@@ -166,6 +166,9 @@ var moveMode = 0; // 0=sélection, 1=attente destination
 var copyMode = 0;
 var lastMoveX = 0;
 var lastMoveY = 0;
+var lastTouchX = 0;
+var lastTouchY = 0;
+var touchActive = false;
 /* --- MESURE CARACTÈRE --- */
 function autoWidth() {
     var probe = document.createElement("span");
@@ -241,7 +244,12 @@ function setTool(t) {
         enableTouchDrawing(true);  // Android dessine normalement
     }
     // Mettre à jour forme en cliquant
-    if (isDown){refreshPreview(lastMoveX, lastMoveY);}
+    if (isDown) {
+        refreshPreview(lastMoveX, lastMoveY);
+        if (touchActive) {
+            showAsciiLoupe(lastTouchX, lastTouchY);
+        }
+    }
 }
 function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
@@ -809,6 +817,12 @@ function refreshPreview(x, y) {
         rectChar.value = oldChar;
     }
     render();
+    if (touchActive) {
+        showAsciiLoupe(
+            lastTouchX,
+            lastTouchY
+        );
+    }
 }
 view.onmousemove = function(e) {
     var pos = getPos(e);
@@ -937,24 +951,41 @@ function enableTouchDrawing(enable) {
     touchEnabled = enable;
 }
 view.addEventListener("touchstart", function(e) {
-    if (!touchEnabled) return; // mode édition → laisser Android gérer
+    if (!touchEnabled) return;
     e.preventDefault();
     var t = e.touches[0];
-    showAsciiLoupe(t.clientX, t.clientY);
-    view.onmousedown({ clientX:t.clientX, clientY:t.clientY });
+    touchActive = true;
+    lastTouchX = t.clientX;
+    lastTouchY = t.clientY;
+    showAsciiLoupe(lastTouchX, lastTouchY);
+    view.onmousedown({
+        clientX:lastTouchX,
+        clientY:lastTouchY
+    });
 }, { passive:false });
 view.addEventListener("touchmove", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
     var t = e.touches[0];
-    showAsciiLoupe(t.clientX, t.clientY);
-    view.onmousemove({ clientX:t.clientX, clientY:t.clientY });
+    lastTouchX = t.clientX;
+    lastTouchY = t.clientY;
+    showAsciiLoupe(lastTouchX, lastTouchY);
+    view.onmousemove({
+        clientX:lastTouchX,
+        clientY:lastTouchY
+    });
 }, { passive:false });
 view.addEventListener("touchend", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
     var t = e.changedTouches[0];
-    view.onmouseup({ clientX:t.clientX, clientY:t.clientY });
+    lastTouchX = t.clientX;
+    lastTouchY = t.clientY;
+    view.onmouseup({
+        clientX:lastTouchX,
+        clientY:lastTouchY
+    });
+    touchActive = false;
     hideAsciiLoupe();
 }, { passive:false });
 /* --- AFFICHAGE DIMENSIONS --- */
