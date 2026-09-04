@@ -3006,6 +3006,7 @@ canvas.onpointerup = function(e){
         return;
     }
     hideLoupe();
+    lastLoupeEvent = null;
     drawing = false;
     stopAutoScroll();
     isDown = false;
