@@ -2776,13 +2776,10 @@ function stopAutoScroll(){
     autoScrollY = 0;
 }
 canvas.onpointermove = function(e){
-    if(e.pointerType === "touch"){
-        lastLoupeEvent = e;
-        if(document.getElementById("loupeEnabled").checked){
-            showLoupe(e);
-        }
-    }
     if(!drawing) return;
+    if(e.pointerType === "touch"){
+        showLoupe(e);
+    }
     var rect = canvas.getBoundingClientRect();
     var x = (e.clientX - rect.left) * canvas.width / rect.width;
     var y = (e.clientY - rect.top) * canvas.height / rect.height;
