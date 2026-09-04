@@ -3062,11 +3062,11 @@ window.addEventListener("click", function(e){
     }
 });
 canvas.onpointerup = function(e){
+    hideLoupe();
+    lastLoupeEvent = null;
     if(!drawing){
         return;
     }
-    hideLoupe();
-    lastLoupeEvent = null;
     drawing = false;
     stopAutoScroll();
     isDown = false;
