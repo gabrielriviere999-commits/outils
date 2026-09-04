@@ -16,12 +16,40 @@ select{width:55px;}
   padding:0;
   margin:0;
 }
+#asciiLoupe {
+  position:fixed;
+  z-index:3;
+  width:120px;
+  height:120px;
+  border:3px solid #fff;
+  border-radius:50%;
+  background:#222;
+  color:#ccc;
+  overflow:hidden;
+  pointer-events:none;
+  display:none;
+  box-sizing:border-box;
+}
+#asciiLoupeText {
+  position:absolute;
+  left:50%;
+  top:50%;
+  white-space:pre;
+  font-family:monospace;
+  font-size:24px;
+  line-height:24px;
+  text-align:center;
+  transform:translate(-50%, -50%);
+}
 </style>
 </head>
 <body>
 <div id="drawContainer" style="position:relative;overflow:hidden;">
   <img id="bgImage" style="position:absolute;top:0;left:0;z-index:0;pointer-events:none;">
   <textarea wrap="off" id="view" style="position:relative;z-index:1;background:rgba(0,0,0,0);cursor:crosshair;"></textarea>
+</div>
+<div id="asciiLoupe">
+    <div id="asciiLoupeText"></div>
 </div>
 <button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
 <button id="importTextareaFileview">Import...</button>
@@ -913,12 +941,14 @@ view.addEventListener("touchstart", function(e) {
     if (!touchEnabled) return; // mode édition → laisser Android gérer
     e.preventDefault();
     var t = e.touches[0];
+    showAsciiLoupe(t.clientX, t.clientY);
     view.onmousedown({ clientX:t.clientX, clientY:t.clientY });
 }, { passive:false });
 view.addEventListener("touchmove", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
     var t = e.touches[0];
+    showAsciiLoupe(t.clientX, t.clientY);
     view.onmousemove({ clientX:t.clientX, clientY:t.clientY });
 }, { passive:false });
 view.addEventListener("touchend", function(e) {
@@ -926,6 +956,7 @@ view.addEventListener("touchend", function(e) {
     e.preventDefault();
     var t = e.changedTouches[0];
     view.onmouseup({ clientX:t.clientX, clientY:t.clientY });
+    hideAsciiLoupe();
 }, { passive:false });
 /* --- AFFICHAGE DIMENSIONS --- */
 function updateShapeInfo(w, h) {
@@ -1011,6 +1042,75 @@ function resetImgPosition() {
 }
 function clearImage() {
     img.src = "";
+}
+/* LOUPE */
+var asciiLoupe = document.getElementById("asciiLoupe");
+function showAsciiLoupe(clientX, clientY) {
+    if (tool === "edit") {
+        asciiLoupe.style.display = "none";
+        return;
+    }
+    var pos = getPos({
+        clientX: clientX,
+        clientY: clientY
+    });
+    var radiusX = 7;
+    var radiusY = 7;
+    var s = "";
+    var x, y, c;
+    for (y = pos.y - radiusY; y <= pos.y + radiusY; y++) {
+        for (x = pos.x - radiusX; x <= pos.x + radiusX; x++) {
+            c = safeGet(x, y);
+            if (c === "") {
+                c = " ";
+            }
+            s += c;
+        }
+        if (y < pos.y + radiusY) {
+            s += "\n";
+        }
+    }
+    asciiLoupeText.textContent = s;
+    /*
+     * Taille du texte de la loupe.
+     * Change uniquement cette valeur pour zoomer.
+     */
+    var loupeFontSize = 14;
+    var loupeLineHeight = 14;
+    asciiLoupeText.style.fontSize =
+        loupeFontSize + "px";
+    asciiLoupeText.style.lineHeight =
+        loupeLineHeight + "px";
+    /*
+     * Position de la loupe.
+     */
+    var loupeWidth = 120;
+    var loupeHeight = 120;
+    var loupeX =
+        clientX - loupeWidth / 2;
+    var loupeY =
+        clientY - 145;
+    if (loupeX < 5) {
+        loupeX = 5;
+    }
+    if (loupeX + loupeWidth >
+        window.innerWidth - 5) {
+        loupeX =
+            window.innerWidth -
+            loupeWidth -
+            5;
+    }
+    if (loupeY < 5) {
+        loupeY = clientY + 25;
+    }
+    asciiLoupe.style.left =
+        loupeX + "px";
+    asciiLoupe.style.top =
+        loupeY + "px";
+    asciiLoupe.style.display = "block";
+}
+function hideAsciiLoupe() {
+    asciiLoupe.style.display = "none";
 }
 /* --- STARTUP --- */
 window.onload = function() {
