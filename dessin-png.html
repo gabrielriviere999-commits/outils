@@ -242,6 +242,7 @@ function toggleRainbow(){
         applyColor();
     }
     refreshShapePreview();
+    refreshLoupe();
 }
 function toggleDotted(){
     dottedMode = !dottedMode;
@@ -252,6 +253,7 @@ function toggleDotted(){
         btn.className = "";
     }
     refreshShapePreview();
+    refreshLoupe();
 }
 function rainbowColor(h){
     var i = Math.floor(h / 60);
@@ -322,6 +324,7 @@ sizeInput.oninput = function(){
     sizeLabel.textContent = v;
     ctx.lineWidth = v;
     refreshShapePreview();
+    refreshLoupe();
 };
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
@@ -837,6 +840,7 @@ function setTool(t){
             btnEraser.className = "";
         }
         refreshShapePreview();
+        refreshLoupe();
         return;
     }
     // Changement d'outil.
@@ -885,6 +889,7 @@ function setTool(t){
     if(t==="flipv") btnFlipV.className = "active";
     // La gomme reste active même lorsqu'on change d'outil.
     refreshShapePreview();
+    refreshLoupe();
 }
 /* UNDO / REDO */
 var MAX_UNDO = 10;
@@ -973,6 +978,7 @@ var dottedGapValue = document.getElementById("dottedGapValue");
 dottedGapInput.oninput = function(){
     dottedGapValue.innerHTML = dottedGapInput.value;
     refreshShapePreview();
+    refreshLoupe();
 };
 function drawPixelDottedLine(x1,y1,x2,y2){
     var dx = x2-x1;
@@ -1468,6 +1474,7 @@ var polygonSidesValue = document.getElementById("polygonSidesValue");
 polygonSidesInput.oninput = function(){
     polygonSidesValue.innerHTML = polygonSidesInput.value;
     refreshShapePreview();
+    refreshLoupe();
 };
 /* POLYGONE */
 function drawPixelPolygon(x1,y1,x2,y2){
@@ -1559,6 +1566,7 @@ var starBranchesValue = document.getElementById("starBranchesValue");
 starBranchesInput.oninput = function(){
     starBranchesValue.innerHTML = starBranchesInput.value;
     refreshShapePreview();
+    refreshLoupe();
 };
 /* ETOILE */
 function drawPixelStar(x1,y1,x2,y2){
@@ -3489,6 +3497,14 @@ document.getElementById("loupeEnabled").onchange = function() {
         hideLoupe();
     }
 };
+function refreshLoupe(){
+    if(!document.getElementById("loupeEnabled").checked){
+        return;
+    }
+    if(lastLoupeEvent){
+        showLoupe(lastLoupeEvent);
+    }
+}
 function hideLoupe(){
     canvasLoupe.style.display = "none";
 }
