@@ -1013,8 +1013,10 @@ var colors = ["#ccc", "#222", "#f00", "#0f0", "#0af", "#ff0"];
 var colorIndex = 0;
 function toggleTextColor() {
     var t = document.getElementById("view");
+    var loupeText = document.getElementById("asciiLoupeText");
     colorIndex = (colorIndex + 1) % colors.length;
     t.style.color = colors[colorIndex];
+    loupeText.style.color = colors[colorIndex];
 }
 /* --- AJOUTER IMAGE EN CALQUE --- */
 addMultiTouch(".multitouchbtn,#popupOptionsContent button,#popupRectModeContent button,input");
