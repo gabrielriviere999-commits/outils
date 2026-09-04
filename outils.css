@@ -169,7 +169,6 @@ select:hover{background:#404040;}
   overflow:auto;
 }
 .popup-window-menu button {
-  width:120px;
   height:35px;
   margin-bottom:2px;
   opacity:0.8;
