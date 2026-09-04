@@ -155,7 +155,7 @@ canvas{
     </div>
   </div>
 </div>
-<div id="dimensions">largeur : 0, hauteur : 0</div>
+<div id="dimensions" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div id="textBox">
   <textarea wrap="off" id="textInput" style="width:300px;height:120px;resize:both;"></textarea><br>
   <button id="confirmTextBtn">OK</button>
@@ -821,6 +821,29 @@ var rotateBaseImage = null;
 var rotateAngle = 0;
 /* TOOL FUNCTIONS */
 function setTool(t){
+    var toolNames = {
+        free: "Tracer",
+        line: "Ligne",
+        arrow: "Flèche",
+        doublearrow: "Double flèche",
+        square: "Carré",
+        rect: "Rectangle",
+        polygon: "Polygone",
+        triangle: "Triangle",
+        star: "Etoile",
+        circle: "Cercle",
+        ellipse: "Ellipse",
+        text: "Texte",
+        fill: "Remplir",
+        move: "Déplacer",
+        copy: "Dupliquer",
+        rotate: "Pivoter",
+        fliph: "Inverser horizontalement",
+        flipv: "Inverser verticalement",
+        text: "Texte",
+        edit: "Édition"
+    };
+    document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
     // Si une image est en cours de manipulation, on la valide avant de changer d'outil.
     if(
         tempImage &&
@@ -1764,15 +1787,15 @@ function updateDimensions(x,y){
         angle += 360;
     }
     var text =
-        "largeur : " + Math.round(width) +
-        ", hauteur : " + Math.round(height);
+        "l : " + Math.round(width) +
+        ", h : " + Math.round(height);
     if(currentTool === "line" || currentTool === "arrow" || currentTool === "doublearrow"){
         text += ", angle : " + angle.toFixed(1) + "°";
     }
     document.getElementById("dimensions").textContent = text;
 }
 function hideDimensions(){
-    document.getElementById("dimensions").textContent = "largeur : 0, hauteur : 0";
+    document.getElementById("dimensions").textContent = "l : 0, h : 0";
 }
 function drawPixel1px(x,y){
     x = Math.round(x);

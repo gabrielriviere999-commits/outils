@@ -45,7 +45,7 @@ select{width:55px;}
 <div id="asciiLoupe">
   <div id="asciiLoupeText"></div>
 </div>
-<div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div>
+<div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div class="toolbar">
   <button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
   <button id="importTextareaFileview">Import...</button>
@@ -110,11 +110,16 @@ select{width:55px;}
   <button id="btnEllipse" class="multitouchbtn" data-action="setToolEllipse">Ellipse</button>
   <input type="text" id="ellipseChar" value="o" maxlength="1">
   |
-  <button id="btnMove" class="multitouchbtn" data-action="setToolMove">Déplacer</button>
-  <button id="btnCopy" class="multitouchbtn" data-action="setToolCopy">Dupliquer</button>
-  <button id="btnClipboard" class="multitouchbtn" data-action="setToolClipboard">Copier</button>
-  <button id="btnFlipH" class="multitouchbtn" data-action="setToolFlipH">Inverser H</button>
-  <button id="btnFlipV" class="multitouchbtn" data-action="setToolFlipV">Inverser V</button>
+  <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
+  <div id="popupSelectionContent" style="display:none">
+	<b class="holoheaderb">Sélection</b><hr class="holoheaderhr">
+    <button id="btnMove" data-action="setToolMove" style="width:70px;">Déplacer</button>
+    <button id="btnCopy" data-action="setToolCopy" style="width:70px;">Dupliquer</button><br>
+    <button id="btnClipboard" data-action="setToolClipboard" style="width:100%;">Copier</button><br>
+    <button id="btnFlipH" data-action="setToolFlipH" style="width:70px;">Invers H</button>
+    <button id="btnFlipV" data-action="setToolFlipV" style="width:70px;">Invers V</button><hr>
+	<button data-action="closePopup" style="width:100%;">Fermer</button>
+  </div>
   |
   <button id="btnText" onclick="setTool('text')">Texte libre</button>
   <button id="btnEdit" onclick="setTool('edit')">Édition</button>
@@ -195,6 +200,23 @@ function render() {
 }
 /* --- SETTOOL --- */
 function setTool(t) {
+    var toolNames = {
+        free: "Tracer",
+        line: "Ligne",
+        arrow: "Flèche",
+        rect: "Rectangle",
+        ellipse: "Ellipse",
+        move: "Déplacer",
+        copy: "Dupliquer",
+        clipboard: "Copier",
+        fliph: "Inverser horizontalement",
+        flipv: "Inverser verticalement",
+        text: "Texte libre",
+        edit: "Édition",
+        fill: "Remplir",
+        erase: "Gomme"
+    };
+    document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
     tool = t;
     document.getElementById("btnFree").className = "";
     document.getElementById("btnLine").className = "";
@@ -249,11 +271,11 @@ function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
 function setToolRect(){ setTool("rect"); }
 function setToolEllipse(){ setTool("ellipse"); }
-function setToolMove(){ setTool("move"); }
-function setToolCopy(){ setTool("copy"); }
-function setToolClipboard(){ setTool("clipboard"); }
-function setToolFlipH(){ setTool("fliph"); }
-function setToolFlipV(){ setTool("flipv"); }
+function setToolMove(){ setTool("move"); closePopup(); }
+function setToolCopy(){ setTool("copy"); closePopup(); }
+function setToolClipboard(){ setTool("clipboard"); closePopup(); }
+function setToolFlipH(){ setTool("fliph"); closePopup(); }
+function setToolFlipV(){ setTool("flipv"); closePopup(); }
 /* --- EXPORT / IMPORT --- */
 function exportTextReturn() {
     return view.value;
@@ -1064,7 +1086,7 @@ function toggleTextColor() {
     loupeText.style.color = colors[colorIndex];
 }
 /* --- AJOUTER IMAGE EN CALQUE --- */
-addMultiTouch(".multitouchbtn,#popupOptionsContent button,#popupRectModeContent button,input");
+addMultiTouch(".multitouchbtn,#popupOptionsContent button,#popupRectModeContent button,#popupSelectionContent button");
 function openOptionsPopup() {
   var container = document.getElementById("popupOptionsContent");
   openPopup(container);
@@ -1072,6 +1094,10 @@ function openOptionsPopup() {
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
+}
+function openSelectionPopup() {
+  var container = document.getElementById("popupSelectionContent");
+  openPopupMenu(container);
 }
 function loadImageFile(input) {
   var file = input.files[0];
