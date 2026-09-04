@@ -55,6 +55,7 @@ select{width:55px;}
   <label>Taille du texte</label><br>
   <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
   <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button> <button data-action="toggleTextColor">Couleur texte</button><br>
+  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
   <b>Calque</b><br>
   <input type="file" id="imgLoader" class="file-input" style="width:120px;" onchange="loadImageFile(this)"> <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer l'image</button><br>
   <label>Position</label><br>
@@ -1073,6 +1074,10 @@ function clearImage() {
 /* LOUPE */
 var asciiLoupe = document.getElementById("asciiLoupe");
 function showAsciiLoupe(clientX, clientY) {
+    if (!document.getElementById("loupeEnabled").checked) {
+        asciiLoupe.style.display = "none";
+        return;
+    }
     if (tool === "edit") {
         asciiLoupe.style.display = "none";
         return;
@@ -1123,6 +1128,15 @@ function showAsciiLoupe(clientX, clientY) {
     asciiLoupe.style.top = loupeY + "px";
     asciiLoupe.style.display = "block";
 }
+document.getElementById("loupeEnabled").onchange = function() {
+    if (this.checked) {
+        if (touchActive) {
+            showAsciiLoupe(lastTouchX, lastTouchY);
+        }
+    } else {
+        hideAsciiLoupe();
+    }
+};
 function hideAsciiLoupe() {
     asciiLoupe.style.display = "none";
 }
