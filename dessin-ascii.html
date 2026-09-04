@@ -113,6 +113,8 @@ select{width:55px;}
   <button id="btnMove" class="multitouchbtn" data-action="setToolMove">Déplacer</button>
   <button id="btnCopy" class="multitouchbtn" data-action="setToolCopy">Dupliquer</button>
   <button id="btnClipboard" class="multitouchbtn" data-action="setToolClipboard">Copier</button>
+  <button id="btnFlipH" class="multitouchbtn" data-action="setToolFlipH">Inverser H</button>
+  <button id="btnFlipV" class="multitouchbtn" data-action="setToolFlipV">Inverser V</button>
   |
   <button id="btnText" onclick="setTool('text')">Texte libre</button>
   <button id="btnEdit" onclick="setTool('edit')">Édition</button>
@@ -202,6 +204,8 @@ function setTool(t) {
     document.getElementById("btnMove").className = "";
     document.getElementById("btnCopy").className = "";
     document.getElementById("btnClipboard").className = "";
+    document.getElementById("btnFlipH").className = "";
+    document.getElementById("btnFlipV").className = "";
     document.getElementById("btnText").className = "";
     document.getElementById("btnEdit").className = "";
     document.getElementById("btnFill").className = "";
@@ -222,11 +226,12 @@ function setTool(t) {
         copyMode = 0;
     }
     if (t === "clipboard") btnClipboard.className = "active";
+    if (t === "fliph") btnFlipH.className = "active";
+    if (t === "flipv") btnFlipV.className = "active";
     if (t === "fill") btnFill.className = "active";
     if (t === "erase") btnErase.className = "active";
     if (t === "text") btnText.className = "active";
     if (t === "edit") btnEdit.className = "active";
-    
     if (t === "edit") {
         enableTouchDrawing(false); // Android peut éditer normalement
     } else {
@@ -247,6 +252,8 @@ function setToolEllipse(){ setTool("ellipse"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
 function setToolClipboard(){ setTool("clipboard"); }
+function setToolFlipH(){ setTool("fliph"); }
+function setToolFlipV(){ setTool("flipv"); }
 /* --- EXPORT / IMPORT --- */
 function exportTextReturn() {
     return view.value;
@@ -365,11 +372,11 @@ function drawArrow(x1, y1, x2, y2) {
     if (Math.abs(x2 - x1) >= Math.abs(y2 - y1)) {
         // direction horizontale dominante
         if (x2 > x1) grid[y2][x2] = ">";
-        else         grid[y2][x2] = "<";
+        else grid[y2][x2] = "<";
     } else {
         // direction verticale dominante
         if (y2 > y1) grid[y2][x2] = "v";
-        else         grid[y2][x2] = "^";
+        else grid[y2][x2] = "^";
     }
     render();
 }
@@ -443,10 +450,10 @@ function drawRectangle(x1, y1, x2, y2) {
     var tr = useCustom ? c : style.tr;
     var bl = useCustom ? c : style.bl;
     var br = useCustom ? c : style.br;
-    var top    = useCustom ? c : style.top;
+    var top = useCustom ? c : style.top;
     var bottom = useCustom ? c : style.bottom;
-    var left   = useCustom ? c : style.left;
-    var right  = useCustom ? c : style.right;
+    var left = useCustom ? c : style.left;
+    var right = useCustom ? c : style.right;
     var x, y;
     // MODE NORMAL
     grid[yMin][xMin] = tl;
@@ -588,6 +595,33 @@ function captureSelection(x1, y1, x2, y2) {
 }
 function captureSelectionCopy(x1, y1, x2, y2) {
     captureSelectionGeneric(x1, y1, x2, y2, false);
+}
+function flipSelection(horizontal) {
+    if (!moveSelection) return;
+    var data = moveSelection.data;
+    var w = moveSelection.w;
+    var h = moveSelection.h;
+    var flipped = [];
+    var x, y;
+    for (y = 0; y < h; y++) {
+        flipped[y] = [];
+        for (x = 0; x < w; x++) {
+            if (horizontal) {
+                flipped[y][x] = data[y][w - 1 - x];
+            } else {
+                flipped[y][x] = data[h - 1 - y][x];
+            }
+        }
+    }
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            safeSet(moveSelection.x + x, moveSelection.y + y, flipped[y][x]);
+        }
+    }
+    moveSelection = null;
+    tempGrid = null;
+    trimGrid();
+    render();
 }
 function trimGrid() {
     var y, x;
@@ -731,8 +765,8 @@ function cancelText() {
 view.addEventListener("input", function() {
     if (textEditTimer) clearTimeout(textEditTimer);
     textEditTimer = setTimeout(function() {
-        saveState();          // undo/redo pour texte normal
-        syncFromTextarea();   // grid = textarea
+        saveState(); // undo/redo pour texte normal
+        syncFromTextarea(); // grid = textarea
     }, 300); // 300 ms après la dernière frappe
 });
 /* --- REMPLISSAGE --- */
@@ -754,8 +788,8 @@ function floodFill(x, y) {
         grid[py][px] = fillChar;
         stack.push({x:px+1, y:py});
         stack.push({x:px-1, y:py});
-        stack.push({x:px,   y:py+1});
-        stack.push({x:px,   y:py-1});
+        stack.push({x:px, y:py+1});
+        stack.push({x:px, y:py-1});
     }
 }
 /* --- GOMME --- */
@@ -823,7 +857,7 @@ function refreshPreview(x, y) {
     else if (tool === "arrow") drawArrow(startX, startY, x, y);
     else if (tool === "rect") drawRectangle(startX, startY, x, y);
     else if (tool === "ellipse") drawEllipse(startX, startY, x, y);
-    else if (tool === "move" || tool === "copy" || tool === "clipboard") {
+    else if (tool === "move" || tool === "copy" || tool === "clipboard" || tool === "fliph" || tool === "flipv") {
         // Sauvegarder l'ancien mode et caractère
         var oldMode = rectMode;
         var oldChar = rectChar.value;
@@ -835,10 +869,7 @@ function refreshPreview(x, y) {
     }
     render();
     if (touchActive) {
-        showAsciiLoupe(
-            lastTouchX,
-            lastTouchY
-        );
+        showAsciiLoupe(lastTouchX, lastTouchY);
     }
 }
 view.onmousemove = function(e) {
@@ -874,13 +905,13 @@ view.onmousemove = function(e) {
         return;
     }
     // 1) calcul largeur/hauteur AVANT refreshPreview
-    if (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse" || tool === "move" || tool === "copy" || tool === "clipboard") {
+    if (tool === "line" || tool === "arrow" || tool === "rect" || tool === "ellipse" || tool === "move" || tool === "copy" || tool === "clipboard" || tool === "fliph" || tool === "flipv") {
         var w = Math.abs(pos.x - startX) + 1;
         var h = Math.abs(pos.y - startY) + 1;
         updateShapeInfo(w, h);
     }
     // Rectangle temporaire pour sélection MOVE / COPY / CLIPBOARD
-    if (tool === "move" || tool === "copy" || tool === "clipboard") {
+    if (tool === "move" || tool === "copy" || tool === "clipboard" || tool === "fliph" || tool === "flipv") {
         grid = copyGrid(tempGrid);
         // Sauvegarder l'ancien caractère
         var oldChar = rectChar.value;
@@ -953,10 +984,18 @@ view.onmouseup = function(e) {
         clearShapeInfo();
         return;
     }
+    if (tool === "fliph" || tool === "flipv") {
+        grid = copyGrid(tempGrid);
+        render();
+        captureSelectionCopy(startX, startY, pos.x, pos.y);
+        flipSelection(tool === "fliph");
+        clearShapeInfo();
+        return;
+    }
     // formes finales
-    if (tool === "line")    drawLine(startX, startY, pos.x, pos.y);
-    if (tool === "arrow")   drawArrow(startX, startY, pos.x, pos.y);
-    if (tool === "rect")    drawRectangle(startX, startY, pos.x, pos.y);
+    if (tool === "line") drawLine(startX, startY, pos.x, pos.y);
+    if (tool === "arrow")drawArrow(startX, startY, pos.x, pos.y);
+    if (tool === "rect") drawRectangle(startX, startY, pos.x, pos.y);
     if (tool === "ellipse") drawEllipse(startX, startY, pos.x, pos.y);
     clearShapeInfo();
     tempGrid = null;
@@ -973,10 +1012,7 @@ view.addEventListener("touchstart", function(e) {
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
     showAsciiLoupe(lastTouchX, lastTouchY);
-    view.onmousedown({
-        clientX:lastTouchX,
-        clientY:lastTouchY
-    });
+    view.onmousedown({ clientX:lastTouchX, clientY:lastTouchY });
 }, { passive:false });
 view.addEventListener("touchmove", function(e) {
     if (!touchEnabled) return;
@@ -985,10 +1021,7 @@ view.addEventListener("touchmove", function(e) {
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
     showAsciiLoupe(lastTouchX, lastTouchY);
-    view.onmousemove({
-        clientX:lastTouchX,
-        clientY:lastTouchY
-    });
+    view.onmousemove({ clientX:lastTouchX, clientY:lastTouchY });
 }, { passive:false });
 view.addEventListener("touchend", function(e) {
     if (!touchEnabled) return;
@@ -996,10 +1029,7 @@ view.addEventListener("touchend", function(e) {
     var t = e.changedTouches[0];
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
-    view.onmouseup({
-        clientX:lastTouchX,
-        clientY:lastTouchY
-    });
+    view.onmouseup({ clientX:lastTouchX, clientY:lastTouchY });
     touchActive = false;
     hideAsciiLoupe();
 }, { passive:false });
