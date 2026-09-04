@@ -32,14 +32,13 @@ select{width:55px;}
 }
 #asciiLoupeText {
   position:absolute;
-  left:50%;
-  top:50%;
+  left:0;
+  top:0;
   white-space:pre;
   font-family:monospace;
   font-size:24px;
   line-height:24px;
   text-align:center;
-  transform:translate(-50%, -50%);
 }
 </style>
 </head>
@@ -1061,52 +1060,39 @@ function showAsciiLoupe(clientX, clientY) {
     for (y = pos.y - radiusY; y <= pos.y + radiusY; y++) {
         for (x = pos.x - radiusX; x <= pos.x + radiusX; x++) {
             c = safeGet(x, y);
-            if (c === "") {
-                c = " ";
-            }
+            if (c === "") { c = " "; }
             s += c;
         }
-        if (y < pos.y + radiusY) {
-            s += "\n";
-        }
+        if (y < pos.y + radiusY) { s += "\n"; }
     }
     asciiLoupeText.textContent = s;
-    /*
-     * Taille du texte de la loupe.
-     * Change uniquement cette valeur pour zoomer.
-     */
+    // Taille du texte de la loupe
     var loupeFontSize = 14;
     var loupeLineHeight = 14;
-    asciiLoupeText.style.fontSize =
-        loupeFontSize + "px";
-    asciiLoupeText.style.lineHeight =
-        loupeLineHeight + "px";
-    /*
-     * Position de la loupe.
-     */
+    asciiLoupeText.style.fontSize = loupeFontSize + "px";
+    asciiLoupeText.style.lineHeight = loupeLineHeight + "px";
+    // Centrage vertical du texte. 15 lignes au total (7 + caractère central + 7)
+    var rows = radiusY * 2 + 1;
+    asciiLoupeText.style.top = (60 - (rows * loupeLineHeight / 2)) + "px";
+    // Petit décalage horizontal pour compenser le centrage de la police.
+    asciiLoupeText.style.left = "-5px";
+    asciiLoupeText.style.width = "124px";
+    // Position de la loupe
     var loupeWidth = 120;
     var loupeHeight = 120;
-    var loupeX =
-        clientX - loupeWidth / 2;
-    var loupeY =
-        clientY - 145;
-    if (loupeX < 5) {
-        loupeX = 5;
-    }
+    var loupeX = clientX - loupeWidth / 2;
+    var loupeY = clientY - 145;
+    if (loupeX < 5) { loupeX = 5; }
     if (loupeX + loupeWidth >
         window.innerWidth - 5) {
-        loupeX =
-            window.innerWidth -
-            loupeWidth -
-            5;
+        loupeX = window.innerWidth - loupeWidth - 5;
     }
+    // Si la loupe dépasse en haut, on la place sous le doigt.
     if (loupeY < 5) {
         loupeY = clientY + 25;
     }
-    asciiLoupe.style.left =
-        loupeX + "px";
-    asciiLoupe.style.top =
-        loupeY + "px";
+    asciiLoupe.style.left = loupeX + "px";
+    asciiLoupe.style.top = loupeY + "px";
     asciiLoupe.style.display = "block";
 }
 function hideAsciiLoupe() {
