@@ -19,6 +19,7 @@
   max-height:500px;
   max-height:70vh;
 }
+#canvas{touch-action:none;}
 #loupe {
   position:absolute;
   width:80px;
@@ -107,27 +108,27 @@
 <div class="section">
   <div style="-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;">
     <div id="preview" class="border-interne"></div>
-    <button class="scroll-btn" onmousedown="active.left = true" onmouseup="active.left = false" ontouchstart="active.left = true" ontouchend="active.left = false">←</button>
-    <button class="scroll-btn" onmousedown="active.right = true" onmouseup="active.right = false" ontouchstart="active.right = true" ontouchend="active.right = false">→</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button class="scroll-btn" onmousedown="active.up = true" onmouseup="active.up = false" ontouchstart="active.up = true" ontouchend="active.up = false">↑</button>
-    <button class="scroll-btn" onmousedown="active.down = true" onmouseup="active.down = false" ontouchstart="active.down = true" ontouchend="active.down = false">↓</button>
+    <button class="scroll-btn" data-dir="left">←</button>
+    <button class="scroll-btn" data-dir="right">→</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button class="scroll-btn" data-dir="up">↑</button>
+    <button class="scroll-btn" data-dir="down">↓</button>
   </div>
-    <div class="line">HEX :
-      <span id="hexValue" class="value">-</span>
-      <button onclick="copyText('hexValue', this)">Copier</button>
-    </div>
-    <div class="line">RGB :
-      <span id="rgbValue" class="value">-</span>
-      <button onclick="copyText('rgbValue', this)">Copier</button>
-    </div>
-    <div class="line">HSL :
-      <span id="hslValue" class="value">-</span>
-      <button onclick="copyText('hslValue', this)">Copier</button>
-    </div>
-    <div class="line">HSV :
-      <span id="hsvValue" class="value">-</span>
-      <button onclick="copyText('hsvValue', this)">Copier</button>
-    </div>
+  <div class="line">HEX :
+    <span id="hexValue" class="value">-</span>
+    <button onclick="copyText('hexValue', this)">Copier</button>
+  </div>
+  <div class="line">RGB :
+    <span id="rgbValue" class="value">-</span>
+    <button onclick="copyText('rgbValue', this)">Copier</button>
+  </div>
+  <div class="line">HSL :
+    <span id="hslValue" class="value">-</span>
+    <button onclick="copyText('hslValue', this)">Copier</button>
+  </div>
+  <div class="line">HSV :
+    <span id="hsvValue" class="value">-</span>
+    <button onclick="copyText('hsvValue', this)">Copier</button>
+  </div>
 </div>
 <script>
 /* --- Variables --- */
@@ -311,45 +312,58 @@ function hideCross(){
 /* --- Coordonnées souris / touch --- */
 function getPos(e){
     var rect = canvas.getBoundingClientRect();
-    var x, y;
-    if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].clientX - rect.left;
-        y = e.touches[0].clientY - rect.top;
-    } else {
-        x = e.clientX - rect.left;
-        y = e.clientY - rect.top;
-    }
-    return { x: Math.floor(x), y: Math.floor(y) };
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    return {
+        x: Math.floor(x),
+        y: Math.floor(y)
+    };
 }
-/* --- Events --- */
-canvas.onmousemove = function(e){
+/* --- Events canvas --- */
+var draggingCross = false;
+canvas.onpointerdown = function(e){
     var p = getPos(e);
-    showLoupe(p.x, p.y);
-};
-canvas.onmouseleave = function(){
-    hideLoupe();
-};
-canvas.onclick = function(e){
-    var p = getPos(e);
+    draggingCross = true;
+    if (e.pointerType === "touch") {
+        canvas.setPointerCapture(e.pointerId);
+        showLoupe(p.x, p.y);
+    }
     readPixel(p.x, p.y);
-    showCross(p.x,p.y);
-};
-canvas.ontouchstart = function(e){
-    var p = getPos(e);
-    showLoupe(p.x, p.y);
-    readPixel(p.x, p.y);
-    showCross(p.x,p.y);
+    showCross(p.x, p.y);
     e.preventDefault();
 };
-canvas.ontouchmove = function(e){
+canvas.onpointermove = function(e){
+    /* Souris : loupe même sans clic */
+    if (e.pointerType === "mouse" && !draggingCross) {
+        var p = getPos(e);
+        showLoupe(p.x, p.y);
+        return;
+    }
     var p = getPos(e);
-    showLoupe(p.x, p.y);
     readPixel(p.x, p.y);
-    showCross(p.x,p.y);
+    showCross(p.x, p.y);
+    /* Loupe pendant le déplacement */
+    showLoupe(p.x, p.y);
     e.preventDefault();
 };
-canvas.ontouchend = function(e){
-    hideLoupe();
+canvas.onpointerup = function(e){
+    draggingCross = false;
+    if (e.pointerType === "touch") {
+        if (canvas.hasPointerCapture(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+        }
+        hideLoupe();
+    }
+    e.preventDefault();
+};
+canvas.onpointercancel = function(e){
+    draggingCross = false;
+    if (e.pointerType === "touch") {
+        if (canvas.hasPointerCapture(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+        }
+        hideLoupe();
+    }
     e.preventDefault();
 };
 /* --- Boutons de scroll --- */
@@ -361,6 +375,32 @@ var active = {
     left: false,
     right: false
 };
+function addScrollButton(selector) {
+    var buttons = document.querySelectorAll(selector);
+    for (var i = 0; i < buttons.length; i++) {
+        (function(btn) {
+            var dir = btn.getAttribute("data-dir");
+            btn.onpointerdown = function(e) {
+                active[dir] = true;
+                e.preventDefault();
+            };
+            btn.onpointerup = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointercancel = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointerleave = function(e) {
+                if (e.pointerType === "mouse") {
+                    active[dir] = false;
+                }
+            };
+        })(buttons[i]);
+    }
+}
+addScrollButton(".scroll-btn");
 /* vitesse */
 var speed = 15;
 /* boucle unique */
