@@ -144,7 +144,6 @@ var hexSpan = document.getElementById("hexValue");
 var rgbSpan = document.getElementById("rgbValue");
 var hslSpan = document.getElementById("hslValue");
 var hsvSpan = document.getElementById("hsvValue");
-var label = document.getElementById("label");
 var currentImage = null;
 /* --- Utils --- */
 function prevent(e) {
@@ -183,7 +182,6 @@ function drawImageToCanvas(img){
     canvas.width = displayWidth;
     canvas.height = displayHeight;
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
-    label.innerHTML = "Cliquez ou touchez l'image pour lire une couleur.";
 }
 /* --- Coller l'image --- */
 var pastezone = document.getElementById("pastezone");
