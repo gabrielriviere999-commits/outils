@@ -21,9 +21,15 @@ input,textarea {
   color:#ccc;
   border:2px groove #808080;
 }
-input[type=range]{touch-action:none;}
+input[type=range]{touch-action:none;vertical-align:middle;}
 input[type=file]{width:115px;}
-.rangebtn{width:20px;height:20px;padding:0}
+.rangebtn {
+  width:20px;
+  height:20px;
+  padding:0;
+  vertical-align:middle;
+  line-height:20px; /* important */
+}
 @media (hover:none) and (pointer:coarse) {
   ::-webkit-scrollbar {
     width:24px;
