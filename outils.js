@@ -26,7 +26,7 @@ Object.keys(mapTextarea).forEach(function(btnId) {
         copyTextarea(mapTextarea[btnId], e.target);
     };
 });
-/* --- Glisser-déposer ---*/
+/* --- Glisser-déposer textarea ---*/
 function setupDragDrop(textareaId) {
     var area = document.getElementById(textareaId);
     if (!area) return; // ignore proprement si absent
@@ -58,17 +58,12 @@ setupDragDrop("textB");
 setupDragDrop("view");
 setupDragDrop("textInput");
 setupDragDrop("importBox");
-/* --- Bouton importer fichier vers textarea ---*/
-function importTextareaFile(buttonId, fileInputId, textareaId) {
-    var btn = document.getElementById(buttonId);
+/* --- Sélecteur de fichiers importer textarea ---*/
+function importTextareaFile(fileInputId, textareaId) {
     var file = document.getElementById(fileInputId);
     var area = document.getElementById(textareaId);
     // Si un des éléments n'existe pas → on ignore proprement
-    if (!btn || !file || !area) return;
-    // Bouton → ouvre le sélecteur de fichier
-    btn.onclick = function () {
-        file.click();
-    };
+    if (!file || !area) return;
     // Input fichier → lit le fichier et le met dans le textarea
     file.addEventListener("change", function () {
         var f = this.files[0];
@@ -80,10 +75,10 @@ function importTextareaFile(buttonId, fileInputId, textareaId) {
         reader.readAsText(f);
     });
 }
-importTextareaFile("importTextareaFileinput", "textareaFileinput", "input");
-importTextareaFile("importTextareaFileoutput", "textareaFileoutput", "output");
-importTextareaFile("importTextareaFileimportBox", "textareaFileimportBox", "importBox");
-importTextareaFile("importTextareaFileview", "textareaFileview", "view");
-importTextareaFile("importTextareaFiletext", "textareaFiletext", "text");
-importTextareaFile("importTextareaFiletextA", "textareaFiletextA", "textA");
-importTextareaFile("importTextareaFiletextB", "textareaFiletextB", "textB");
+importTextareaFile("textareaFileinput", "input");
+importTextareaFile("textareaFileoutput", "output");
+importTextareaFile("textareaFileimportBox", "importBox");
+importTextareaFile("textareaFileview", "view");
+importTextareaFile("textareaFiletext", "text");
+importTextareaFile("textareaFiletextA", "textA");
+importTextareaFile("textareaFiletextB", "textB");

@@ -57,7 +57,7 @@
     <b>Champ</b><br>
     • Mettre à jour à partir du texte : Afficher l'arborescence à partir du texte obtenu avec cet outil ou <a href="make-arbo.py" download>le script Python make-arbo.py</a>, <a href="../portfolio/astuces/android/applications/arbo.apk" download>l'application Android Arbo</a>, <a href="arbo-zip.html">la page Arborescence ZIP</a>.<br>
     • Importer (commande tree) : Afficher l'arborescence à partir du texte obtenu avec la commande tree.<br>
-    • Importer fichier... : Choisir un fichier depuis l'appareil à mettre dans le champ de texte.<br><br>
+    • Sélecteur de fichiers : Choisir un fichier depuis l'appareil à mettre dans le champ de texte.<br><br>
     Note : En important l'arborescence de tree, les fichiers sans extensions (sans .txt, .jpg etc...) sont reconnus comme des dossiers.
   </div>
   <p>Dossier courant : <span id="currentPath"></span></p>
@@ -72,8 +72,7 @@
   <textarea wrap="off" id="importBox"></textarea><br>
   <button onclick="restoreTree()" class="btn-color" style="background:#ff8800;">Mettre à jour à partir du texte</button>
   <button onclick="importTreeFromText()" class="btn-color" style="background:#ff8800;">Importer (commande tree)</button>
-  <button id="importTextareaFileimportBox">Importer fichier...</button>
-  <input type="file" id="textareaFileimportBox" style="display:none;">
+  <input type="file" id="textareaFileimportBox">
 </div>
 </div>
 <script src="outils.js"></script>
