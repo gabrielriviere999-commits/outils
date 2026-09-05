@@ -23,13 +23,7 @@ input,textarea {
 }
 input[type=range]{touch-action:none;vertical-align:middle;}
 input[type=file]{width:115px;}
-.rangebtn {
-  width:20px;
-  height:20px;
-  padding:0;
-  vertical-align:middle;
-  line-height:20px; /* important */
-}
+.rangebtn{width:20px;height:20px;padding:0;}
 @media (hover:none) and (pointer:coarse) {
   ::-webkit-scrollbar {
     width:24px;
