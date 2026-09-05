@@ -1025,35 +1025,54 @@ view.onmouseup = function(e) {
     tempGrid = null;
 };
 var touchEnabled = true;
+var drawingTouchId = null;
 function enableTouchDrawing(enable) {
     touchEnabled = enable;
 }
 view.addEventListener("touchstart", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
-    var t = e.touches[0];
+    var t = e.changedTouches[0];
+    drawingTouchId = t.identifier;
     touchActive = true;
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
     showAsciiLoupe(lastTouchX, lastTouchY);
-    view.onmousedown({ clientX:lastTouchX, clientY:lastTouchY });
+    view.onmousedown({ clientX: lastTouchX,  clientY: lastTouchY });
 }, { passive:false });
 view.addEventListener("touchmove", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
-    var t = e.touches[0];
+    var t = null;
+    var i;
+    for (i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === drawingTouchId) {
+            t = e.touches[i];
+            break;
+        }
+    }
+    if (!t) return;
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
     showAsciiLoupe(lastTouchX, lastTouchY);
-    view.onmousemove({ clientX:lastTouchX, clientY:lastTouchY });
+    view.onmousemove({ clientX: lastTouchX, clientY: lastTouchY });
 }, { passive:false });
 view.addEventListener("touchend", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
-    var t = e.changedTouches[0];
+    var t = null;
+    var i;
+    for (i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === drawingTouchId) {
+            t = e.changedTouches[i];
+            break;
+        }
+    }
+    if (!t) return;
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
-    view.onmouseup({ clientX:lastTouchX, clientY:lastTouchY });
+    view.onmouseup({ clientX: lastTouchX, clientY: lastTouchY });
+    drawingTouchId = null;
     touchActive = false;
     hideAsciiLoupe();
 }, { passive:false });
