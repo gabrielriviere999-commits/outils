@@ -81,12 +81,22 @@ body.block-touch{touch-action:none;}
 	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
 	<button class="rangebtn" data-action="sizeInputPlus">+</button><hr>
-    <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button><br>
+
+<div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <button id="btnEraser" data-action="setToolEraser">Gomme</button>
+        </div>
+        <div style="display:table-cell;">
+          <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
+        </div>
+      </div>
+    </div>
+    <hr>
     <button id="btnDotted" data-action="toggleDotted">Pointillés : <span id="dottedGapLabel">2</span></button><br>
     <button class="rangebtn" data-action="dottedGapInputMinus">−</button>
     <input type="range" id="dottedGapInput" min="1" max="20" value="2">
-    <button class="rangebtn" data-action="dottedGapInputPlus">+</button><br>
-    <button id="btnEraser" data-action="setToolEraser">Gomme</button><br><hr>
+    <button class="rangebtn" data-action="dottedGapInputPlus">+</button><hr>
     <button data-action="closePopup">Fermer</button>
   </div>
   <button id="btnFree" data-action="setToolFree">Tracer</button>
@@ -101,11 +111,11 @@ body.block-touch{touch-action:none;}
     <button id="btnTriangle" data-action="setToolTriangle" style="width:30px;">△</button>
     <button id="btnCircle" data-action="setToolCircle" style="width:30px;">○</button>
     <button id="btnEllipse" data-action="setToolEllipse" style="width:30px;">⬭</button><hr>
-    <button id="btnPolygon" data-action="setToolPolygon">⬠ <span id="polygonSidesLabel">5</span></button>
+    <button id="btnPolygon" data-action="setToolPolygon">⬠ Polygone : <span id="polygonSidesLabel">5</span></button>
     <button class="rangebtn" data-action="polygonSidesInputMinus">−</button>
     <input type="range" id="polygonSidesInput" min="3" max="20" value="5">
     <button class="rangebtn" data-action="polygonSidesInputPlus">+</button><hr>
-    <button id="btnStar" data-action="setToolStar">☆ <span id="starBranchesLabel">5</span></button>
+    <button id="btnStar" data-action="setToolStar">☆ Étoile : <span id="starBranchesLabel">5</span></button>
     <button class="rangebtn" data-action="starBranchesInputMinus">−</button>
     <input type="range" id="starBranchesInput" min="3" max="20" value="5">
     <button class="rangebtn" data-action="starBranchesInputPlus">+</button>

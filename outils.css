@@ -21,7 +21,8 @@ input,textarea {
   color:#ccc;
   border:2px groove #808080;
 }
-input[type=range],input[type=checkbox]{touch-action:none;vertical-align:middle;}
+input[type=range]{touch-action:none;vertical-align:middle;}
+input[type=checkbox]{vertical-align:middle;}
 input[type=file]{width:115px;}
 .rangebtn{width:20px!important;height:20px!important;padding:0;}
 @media (hover:none) and (pointer:coarse) {
