@@ -2586,7 +2586,7 @@ function drawFreeSelectionPreview(){
     }
     ctx.restore();
 }
-/* MOUSE EVENTS (ASCII LOGIC) */
+/* MOUSE EVENTS */
 canvas.onpointerdown = function(e){
     var p = getPos(e);
     if(e.pointerType === "touch"){
@@ -3421,21 +3421,13 @@ if (!window.PointerEvent) {
         if(!e.touches || !e.touches.length) return;
         e.preventDefault();
         var t = e.touches[0];
-        canvas.onpointerdown({
-            clientX: t.clientX,
-            clientY: t.clientY,
-            pointerId: 1
-        });
+        canvas.onpointerdown({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
     };
     canvas.ontouchmove = function(e){
         if(!e.touches || !e.touches.length) return;
         e.preventDefault();
         var t = e.touches[0];
-        canvas.onpointermove({
-            clientX: t.clientX,
-            clientY: t.clientY,
-            pointerId: 1
-        });
+        canvas.onpointermove({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
     };
     canvas.ontouchend = function(e){
         e.preventDefault();
@@ -3443,11 +3435,7 @@ if (!window.PointerEvent) {
             return;
         }
         var t = e.changedTouches[0];
-        canvas.onpointerup({
-            clientX: t.clientX,
-            clientY: t.clientY,
-            pointerId: 1
-        });
+        canvas.onpointerup({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
     };
     canvas.ontouchcancel = function(){
         drawing = false;
