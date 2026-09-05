@@ -82,3 +82,31 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
+/* --- Boutons - et + sliders ---*/
+var sliders = {
+    zoomRange: "applyZoomRange",
+    imgScale: "zoomImage"
+};
+function changeSlider(id, amount) {
+    var slider = document.getElementById(id);
+    if (!slider) return;
+    var value = parseInt(slider.value, 10);
+    var min = parseInt(slider.min, 10);
+    var max = parseInt(slider.max, 10);
+    value += amount;
+    if (value < min) value = min;
+    if (value > max) value = max;
+    slider.value = value;
+    if (sliders[id] && typeof window[sliders[id]] === "function") {
+        window[sliders[id]](value);
+    }
+}
+document.addEventListener("pointerdown", function(e) {
+    var action = e.target.getAttribute("data-action");
+    if (!action) return;
+    var parts = action.match(/^(.*)(Minus|Plus)$/);
+    if (!parts) return;
+    var id = parts[1];
+    var amount = parts[2] === "Minus" ? -1 : 1;
+    changeSlider(id, amount);
+});
