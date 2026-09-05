@@ -40,6 +40,9 @@ canvas{
   display:block;
   image-rendering:pixelated;
 }
+body.block-touch {
+    touch-action:none;
+}
 </style>
 </head>
 <body>
@@ -2606,6 +2609,7 @@ canvas.onpointerdown = function(e){
             imageStartPointerAngle = imagePointerAngle(c.x, c.y, p.x, p.y);
             moved = false;
             drawing = true;
+            document.body.classList.add('block-touch');
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -2626,6 +2630,7 @@ canvas.onpointerdown = function(e){
             imageStartH = tempImageH;
             moved = false;
             drawing = true;
+            document.body.classList.add('block-touch');
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -2643,6 +2648,7 @@ canvas.onpointerdown = function(e){
             imageStartY = p.y - tempImageY;
             moved = false;
             drawing = true;
+            document.body.classList.add('block-touch');
             if(
                 canvas.setPointerCapture &&
                 e.pointerId !== undefined
@@ -2672,6 +2678,7 @@ canvas.onpointerdown = function(e){
         return;
     }
     drawing = true;
+    document.body.classList.add('block-touch');
     moved = false;
     if(canvas.setPointerCapture && e.pointerId !== undefined){
         canvas.setPointerCapture(e.pointerId);
@@ -3078,6 +3085,7 @@ canvas.onpointerup = function(e){
         return;
     }
     drawing = false;
+    document.body.classList.remove('block-touch');
     stopAutoScroll();
     isDown = false;
 	if(
@@ -3278,6 +3286,7 @@ canvas.onpointerup = function(e){
 		copyMode = 0;
 		rotateMode = 0;
 		drawing = false;
+		document.body.classList.remove('block-touch');
 		// ❌ NE PAS remettre currentTool = ""
 		// currentTool reste "fliph"
 		return;
@@ -3308,6 +3317,7 @@ canvas.onpointerup = function(e){
 		copyMode = 0;
 		rotateMode = 0;
 		drawing = false;
+		document.body.classList.remove('block-touch');
 		return;
 	}
     // MOVE : deuxième étape = dépôt
@@ -3441,6 +3451,7 @@ if (!window.PointerEvent) {
     };
     canvas.ontouchcancel = function(){
         drawing = false;
+        document.body.classList.remove('block-touch');
         isDown = false;
     };
 }
