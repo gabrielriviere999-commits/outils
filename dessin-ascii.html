@@ -36,6 +36,7 @@ select{width:55px;}
   white-space:pre;
   font-family:monospace;
 }
+body.block-touch{touch-action:none;}
 </style>
 </head>
 <body>
@@ -1037,6 +1038,7 @@ function enableTouchDrawing(enable) {
 view.addEventListener("touchstart", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
+    document.body.classList.add('block-touch');
     var t = e.changedTouches[0];
     drawingTouchId = t.identifier;
     touchActive = true;
@@ -1065,6 +1067,7 @@ view.addEventListener("touchmove", function(e) {
 view.addEventListener("touchend", function(e) {
     if (!touchEnabled) return;
     e.preventDefault();
+    document.body.classList.remove('block-touch');
     var t = null;
     var i;
     for (i = 0; i < e.changedTouches.length; i++) {
