@@ -172,12 +172,8 @@ select:hover{background:#404040;}
 .popup-window-menu button {
   width:100%;
   margin-bottom:2px;
-  opacity:0.8;
-  color:#fff;
 }
-.popup-window-menu input[type=range]{
-  width:calc(100% - 60px);
-}
+.popup-window-menu input[type=range]{width:calc(100% - 60px);}
 .holoheaderb{color:#33b5e5;}
 .holoheaderhr{border:1px inset #33b5e5;}
 #textBox {
