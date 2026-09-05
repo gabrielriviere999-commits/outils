@@ -1784,6 +1784,12 @@ function drawEllipsePreview(x,y){
     drawPixelEllipse(cx, cy, rx, ry);
 }
 /* RAFRAÎCHISSEMENT DES FORMES */
+var changeSliderOriginal = window.changeSlider;
+window.changeSlider = function(id, amount) {
+    changeSliderOriginal(id, amount);
+    refreshShapePreview();
+    refreshLoupe();
+};
 function refreshShapePreview(){
     if(!drawing){
         return;

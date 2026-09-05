@@ -88,11 +88,15 @@ var sliders = {
     imgScale: ["zoomImage", 1],
     zoomInput: ["applyZoom", 25],
     sizeInput: ["sizeInput", 1],
-    dottedGapInput: ["dottedGapValue", 1]
+    dottedGapInput: ["dottedGapValue", 1],
+    polygonSidesInput: ["polygonSidesInput", 1],
+    starBranchesInput: ["starBranchesInput", 1]
 };
 var sliderLabels = {
     sizeInput: "sizeLabel",
-    dottedGapInput: "dottedGapLabel"
+    dottedGapInput: "dottedGapLabel",
+    polygonSidesInput: "polygonSidesLabel",
+    starBranchesInput: "starBranchesLabel"
 };
 function changeSlider(id, amount) {
     var slider = document.getElementById(id);
