@@ -156,11 +156,12 @@ select:hover{background:#404040;}
 .popup-window-menu li{line-height:1.5;}
 .popup-window-menu {
   position:absolute;
-  top:20%;
-  left:50%;
-  margin-left:-70px;
+  top:10%;left:10%;right:10%;
   max-width:70%;
+  max-width:235px;
   max-height:70%;
+  margin-left:auto;
+  margin-right:auto;
   background:rgba(0,0,0,0.6);
   color:#ccc;
   padding:10px;
@@ -169,12 +170,14 @@ select:hover{background:#404040;}
   overflow:auto;
 }
 .popup-window-menu button {
-  height:35px;
+  width:100%;
   margin-bottom:2px;
   opacity:0.8;
   color:#fff;
 }
-.popup-window-menu input[type=range]{width:120px;}
+.popup-window-menu input[type=range]{
+  width:calc(100% - 60px);
+}
 .holoheaderb{color:#33b5e5;}
 .holoheaderhr{border:1px inset #33b5e5;}
 #textBox {

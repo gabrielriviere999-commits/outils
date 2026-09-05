@@ -59,20 +59,57 @@ body.block-touch{touch-action:none;}
     <button class="multitouchbtn rangebtn" data-action="zoomRangeMinus">−</button>
     <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
     <button class="multitouchbtn rangebtn" data-action="zoomRangePlus">+</button>
-    <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button> <button data-action="toggleTextColor">Couleur texte</button><br>
-    <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="toggleTextColor">Couleur</button>
+        </div>
+        <div style="display:table-cell;">
+          <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
+        </div>
+      </div>
+    </div><hr>
     <b>Calque</b><br>
-    <input type="file" id="imgLoader" onchange="loadImageFile(this)"> <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer l'image</button><br>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <input type="file" id="imgLoader" onchange="loadImageFile(this)">
+        </div>
+        <div style="display:table-cell;">
+          <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer</button>
+        </div>
+      </div>
+    </div>
     <label>Position</label><br>
-    <button data-action="moveImgLeft">←</button> <button data-action="moveImgRight">→</button>
-    <button data-action="moveImgUp">↑</button> <button data-action="moveImgDown">↓</button>
-    <button class="btn-color" style="background:#ff4444;" data-action="resetImgPosition">Reset</button>
-    <br>
+ 
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <button data-action="moveImgLeft">←</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="moveImgRight">→</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="moveImgUp">↑</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="moveImgDown">↓</button>
+        </div>
+        <div style="display:table-cell;">
+          <button class="btn-color" style="background:#ff4444;" data-action="resetImgPosition">Reset</button>
+        </div>
+      </div>
+    </div>
     <label>Taille</label><br>
     <button class="multitouchbtn rangebtn" data-action="imgScaleMinus">−</button>
     <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
     <button class="multitouchbtn rangebtn" data-action="imgScalePlus">+</button>
-    <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button>
+    <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button><hr>
+    <button data-action="closePopup">Fermer</button>
   </div>
   <button data-action="openHelpPopup" class="multitouchbtn">?</button>
   <div id="popupHelpContent" style="display:none">
@@ -105,13 +142,13 @@ body.block-touch{touch-action:none;}
   <button id="btnRect" class="multitouchbtn" data-action="setToolRect">Rectangle</button>
   <button data-action="openRectModePopup" class="multitouchbtn"><span id="rectModeLabel">+-|</span></button>
   <div id="popupRectModeContent" style="display:none;">
-    <b class="holoheaderb">Style rect</b><hr class="holoheaderhr">
-    <button id="btnRectClassic" data-action="setRectModeClassic" data-style="classic" style="width:120px;">+-| Classique</button><br>
-    <button id="btnRectDotted" data-action="setRectModeDotted" data-style="dotted" style="width:120px;">.: Pointillé</button><br>
-    <button id="btnRectRounded" data-action="setRectModeRounded" data-style="rounded" style="width:120px;">.-|:+ Arrondi</button><br>
-    <button id="btnRectWavy" data-action="setRectModeWavy" data-style="wavy" style="width:120px;">¤~¦ Ondulé</button><br>
-    <button id="btnRectFancy" data-action="setRectModeFancy" data-style="fancy" style="width:120px;">/=\| Fancy</button><hr>
-    <button data-action="closePopup" style="width:120px;">Fermer</button>
+    <b class="holoheaderb">Style rectangle</b><hr class="holoheaderhr">
+    <button id="btnRectClassic" data-action="setRectModeClassic" data-style="classic">+-| Classique</button><br>
+    <button id="btnRectDotted" data-action="setRectModeDotted" data-style="dotted">.: Pointillé</button><br>
+    <button id="btnRectRounded" data-action="setRectModeRounded" data-style="rounded">.-|:+ Arrondi</button><br>
+    <button id="btnRectWavy" data-action="setRectModeWavy" data-style="wavy">¤~¦ Ondulé</button><br>
+    <button id="btnRectFancy" data-action="setRectModeFancy" data-style="fancy">/=\| Fancy</button><hr>
+    <button data-action="closePopup">Fermer</button>
   </div>
   <input type="text" id="rectChar" maxlength="1">
   |
@@ -121,12 +158,12 @@ body.block-touch{touch-action:none;}
   <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
 	<b class="holoheaderb">Sélection</b><hr class="holoheaderhr">
-    <button id="btnMove" data-action="setToolMove" style="width:70px;">Déplacer</button>
-    <button id="btnCopy" data-action="setToolCopy" style="width:70px;">Dupliquer</button><br>
-    <button id="btnClipboard" data-action="setToolClipboard" style="width:100%;">Copier</button><br>
-    <button id="btnFlipH" data-action="setToolFlipH" style="width:70px;">Invers H</button>
-    <button id="btnFlipV" data-action="setToolFlipV" style="width:70px;">Invers V</button><hr>
-	<button data-action="closePopup" style="width:100%;">Fermer</button>
+    <button id="btnMove" data-action="setToolMove">Déplacer</button>
+    <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
+    <button id="btnClipboard" data-action="setToolClipboard">Copier</button><br>
+    <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
+    <button id="btnFlipV" data-action="setToolFlipV">Invers V</button><hr>
+	<button data-action="closePopup">Fermer</button>
   </div>
   |
   <button id="btnText" onclick="setTool('text')">Texte libre</button>
@@ -1118,7 +1155,7 @@ function toggleTextColor() {
 addMultiTouch(".multitouchbtn,input,#popupOptionsContent button,#popupRectModeContent button,#popupSelectionContent button");
 function openOptionsPopup() {
   var container = document.getElementById("popupOptionsContent");
-  openPopup(container);
+  openPopupMenu(container);
 }
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
