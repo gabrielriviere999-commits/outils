@@ -85,7 +85,7 @@ importTextareaFile("textareaFiletextB", "textB");
 /* --- Boutons - et + sliders ---*/
 var sliders = {
     zoomRange: ["applyZoomRange", 1],
-    imgScale: ["zoomImage", 1],
+    imgScale: ["zoomImage", 5],
     zoomInput: ["applyZoom", 25],
     sizeInput: ["sizeInput", 1],
     dottedGapInput: ["dottedGapValue", 1],
