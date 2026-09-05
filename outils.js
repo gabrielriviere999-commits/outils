@@ -115,7 +115,7 @@ function changeSlider(id, amount) {
         window[sliders[id][0]](value);
     }
 }
-var sliderEvent = ("PointerEvent" in window) ? "pointerdown" : "click";
+var sliderEvent = ("PointerEvent" in window) ? "pointerup" : "click";
 document.addEventListener(sliderEvent, function(e) {
     var action = e.target.getAttribute("data-action");
     if (!action) return;
