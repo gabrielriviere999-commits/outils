@@ -321,51 +321,88 @@ function getPos(e){
 }
 /* --- Events canvas --- */
 var draggingCross = false;
-canvas.onpointerdown = function(e){
-    var p = getPos(e);
-    draggingCross = true;
-    if (e.pointerType === "touch") {
-        canvas.setPointerCapture(e.pointerId);
-        showLoupe(p.x, p.y);
-    }
-    readPixel(p.x, p.y);
-    showCross(p.x, p.y);
-    e.preventDefault();
-};
-canvas.onpointermove = function(e){
-    /* Souris : loupe même sans clic */
-    if (e.pointerType === "mouse" && !draggingCross) {
+/* Pointer Events si disponibles */
+if ("onpointerdown" in canvas) {
+    canvas.onpointerdown = function(e){
         var p = getPos(e);
+        draggingCross = true;
+        if (e.pointerType === "touch") {
+            if (canvas.setPointerCapture) {
+                canvas.setPointerCapture(e.pointerId);
+            }
+            showLoupe(p.x, p.y);
+        }
+        readPixel(p.x, p.y);
+        showCross(p.x, p.y);
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.onpointermove = function(e){
+        if (e.pointerType === "mouse" && !draggingCross) {
+            var p = getPos(e);
+            showLoupe(p.x, p.y);
+            return;
+        }
+        var p = getPos(e);
+        readPixel(p.x, p.y);
+        showCross(p.x, p.y);
         showLoupe(p.x, p.y);
-        return;
-    }
-    var p = getPos(e);
-    readPixel(p.x, p.y);
-    showCross(p.x, p.y);
-    /* Loupe pendant le déplacement */
-    showLoupe(p.x, p.y);
-    e.preventDefault();
-};
-canvas.onpointerup = function(e){
-    draggingCross = false;
-    if (e.pointerType === "touch") {
-        if (canvas.hasPointerCapture(e.pointerId)) {
-            canvas.releasePointerCapture(e.pointerId);
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.onpointerup = function(e){
+        draggingCross = false;
+        if (e.pointerType === "touch") {
+            if (canvas.hasPointerCapture &&
+                canvas.hasPointerCapture(e.pointerId)) {
+                canvas.releasePointerCapture(e.pointerId);
+            }
+            hideLoupe();
         }
-        hideLoupe();
-    }
-    e.preventDefault();
-};
-canvas.onpointercancel = function(e){
-    draggingCross = false;
-    if (e.pointerType === "touch") {
-        if (canvas.hasPointerCapture(e.pointerId)) {
-            canvas.releasePointerCapture(e.pointerId);
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.onpointercancel = function(e){
+        draggingCross = false;
+        if (e.pointerType === "touch") {
+            if (canvas.hasPointerCapture &&
+                canvas.hasPointerCapture(e.pointerId)) {
+                canvas.releasePointerCapture(e.pointerId);
+            }
+            hideLoupe();
         }
+        if (e.preventDefault) e.preventDefault();
+    };
+} else {
+    /* --- Ancien navigateur / Nintendo 3DS --- */
+    canvas.ontouchstart = function(e){
+        if (!e.touches || !e.touches.length) return;
+        var t = e.touches[0];
+        var p = getPos(t);
+        draggingCross = true;
+        readPixel(p.x, p.y);
+        showCross(p.x, p.y);
+        showLoupe(p.x, p.y);
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.ontouchmove = function(e){
+        if (!e.touches || !e.touches.length) return;
+        var t = e.touches[0];
+        var p = getPos(t);
+        if (!draggingCross) return;
+        readPixel(p.x, p.y);
+        showCross(p.x, p.y);
+        showLoupe(p.x, p.y);
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.ontouchend = function(e){
+        draggingCross = false;
         hideLoupe();
-    }
-    e.preventDefault();
-};
+        if (e.preventDefault) e.preventDefault();
+    };
+    canvas.ontouchcancel = function(e){
+        draggingCross = false;
+        hideLoupe();
+        if (e.preventDefault) e.preventDefault();
+    };
+}
 /* --- Boutons de scroll --- */
 var wrapper = document.getElementById("canvasWrapper");
 /* état des boutons */
