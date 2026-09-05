@@ -23,7 +23,7 @@ input,textarea {
 }
 input[type=range]{touch-action:none;}
 input[type=file]{width:115px;}
-.range{position:relative;top:8px;}
+.rangebtn{width:20px;height:20px;padding:0}
 @media (hover:none) and (pointer:coarse) {
   ::-webkit-scrollbar {
     width:24px;
