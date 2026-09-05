@@ -77,14 +77,14 @@ canvas{
 	<b>Couleur</b><br>
 	<input type="text" id="colorInput" value="#000000" size="8"><button class="previewColorPicker"></button><br>
 	<b>Taille</b> <span id="sizeLabel">3</span><br>
-	<button class="multitouchbtn rangebtn" data-action="sizeInputMinus">−</button>
+	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
-	<button class="multitouchbtn rangebtn" data-action="sizeInputPlus">+</button><hr>
+	<button class="rangebtn" data-action="sizeInputPlus">+</button><hr>
     <button id="btnRainbow" data-action="toggleRainbow" style="width:100%;">Arc-en-ciel</button><br>
     <button id="btnDotted" data-action="toggleDotted" style="width:100%;">Pointillés : <span id="dottedGapLabel">2</span></button><br>
-    <button class="multitouchbtn rangebtn" data-action="dottedGapInputMinus">−</button>
+    <button class="rangebtn" data-action="dottedGapInputMinus">−</button>
     <input type="range" id="dottedGapInput" min="1" max="20" value="2">
-    <button class="multitouchbtn rangebtn" data-action="dottedGapInputPlus">+</button><br>
+    <button class="rangebtn" data-action="dottedGapInputPlus">+</button><br>
     <button id="btnEraser" data-action="setToolEraser" style="width:100%;">Gomme</button><br><hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
@@ -92,7 +92,7 @@ canvas{
   <button data-action="openFormePopup">Forme</button>
   <div id="popupFormeContent" style="display:none">
     <b class="holoheaderb">Forme</b><hr class="holoheaderhr">
-	<div style="width:153px;max-width:100%;">
+	<div style="width:192px;max-width:100%;">
     <button id="btnLine" data-action="setToolLine" style="width:35px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:35px;">→</button>
     <button id="btnDoubleArrow" data-action="setToolDoubleArrow" style="width:35px;">↔</button>
@@ -102,10 +102,14 @@ canvas{
     <button id="btnCircle" data-action="setToolCircle" style="width:35px;">○</button>
     <button id="btnEllipse" data-action="setToolEllipse" style="width:35px;">⬭</button>
     </div>
-    <button id="btnPolygon" data-action="setToolPolygon" style="width:35px;">⬠ <span id="polygonSidesValue">5</span></button>
-    <input type="range" id="polygonSidesInput" min="3" max="20" value="5"><br>
-    <button id="btnStar" data-action="setToolStar" style="width:35px;">☆ <span id="starBranchesValue">5</span></button>
+    <button id="btnPolygon" data-action="setToolPolygon" style="width:35px;">⬠ <span id="polygonSidesLabel">5</span></button>
+    <button class="rangebtn" data-action="polygonSidesInputMinus">−</button>
+    <input type="range" id="polygonSidesInput" min="3" max="20" value="5">
+    <button class="rangebtn" data-action="polygonSidesInputPlus">+</button><br>
+    <button id="btnStar" data-action="setToolStar" style="width:35px;">☆ <span id="starBranchesLabel">5</span></button>
+    <button class="rangebtn" data-action="starBranchesInputMinus">−</button>
     <input type="range" id="starBranchesInput" min="3" max="20" value="5">
+    <button class="rangebtn" data-action="starBranchesInputPlus">+</button>
     <hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
@@ -147,9 +151,9 @@ canvas{
     <b class="holoheaderb">Options</b><hr class="holoheaderhr">
     <div id="canvasResolution">
 	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
-	  <button class="multitouchbtn rangebtn" data-action="zoomInputMinus">−</button>
+	  <button class="rangebtn" data-action="zoomInputMinus">−</button>
 	  <input type="range" id="zoomInput" min="25" max="1000" value="100">
-	  <button class="multitouchbtn rangebtn" data-action="zoomInputPlus">+</button><br>
+	  <button class="rangebtn" data-action="zoomInputPlus">+</button><br>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
@@ -160,7 +164,7 @@ canvas{
       <button data-action="closePopup" style="width:100%;">Fermer</button>
     </div>
   </div>
-  <button data-action="openHelpPopup" class="multitouchbtn">?</button>
+  <button data-action="openHelpPopup">?</button>
   <div id="popupHelpContent" style="display:none">
 	<b class="holoheaderb">Aide</b><hr class="holoheaderhr">
     <b>Pinceau</b>
@@ -1533,9 +1537,9 @@ function drawRectPreview(x,y){
 }
 /* POLYGONE */
 var polygonSidesInput = document.getElementById("polygonSidesInput");
-var polygonSidesValue = document.getElementById("polygonSidesValue");
+var polygonSidesLabel = document.getElementById("polygonSidesLabel");
 polygonSidesInput.oninput = function(){
-    polygonSidesValue.innerHTML = polygonSidesInput.value;
+    polygonSidesLabel.innerHTML = polygonSidesInput.value;
     refreshShapePreview();
     refreshLoupe();
 };
@@ -1625,9 +1629,9 @@ function drawTrianglePreview(x,y){
 }
 /* ETOILE */
 var starBranchesInput = document.getElementById("starBranchesInput");
-var starBranchesValue = document.getElementById("starBranchesValue");
+var starBranchesLabel = document.getElementById("starBranchesLabel");
 starBranchesInput.oninput = function(){
-    starBranchesValue.innerHTML = starBranchesInput.value;
+    starBranchesLabel.innerHTML = starBranchesInput.value;
     refreshShapePreview();
     refreshLoupe();
 };
