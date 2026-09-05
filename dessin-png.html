@@ -77,10 +77,14 @@ canvas{
 	<b>Couleur</b><br>
 	<input type="text" id="colorInput" value="#000000" size="8"><button class="previewColorPicker"></button><br>
 	<b>Taille</b> <span id="sizeLabel">3</span><br>
-	<input type="range" id="sizeInput" min="1" max="50" value="3"><hr>
+	<button class="multitouchbtn rangebtn" data-action="sizeInputMinus">−</button>
+	<input type="range" id="sizeInput" min="1" max="50" value="3">
+	<button class="multitouchbtn rangebtn" data-action="sizeInputPlus">+</button><hr>
     <button id="btnRainbow" data-action="toggleRainbow" style="width:100%;">Arc-en-ciel</button><br>
-    <button id="btnDotted" data-action="toggleDotted" style="width:100%;">Pointillés : <span id="dottedGapValue">2</span></button><br>
-    <input type="range" id="dottedGapInput" min="1" max="20" value="2"><br>
+    <button id="btnDotted" data-action="toggleDotted" style="width:100%;">Pointillés : <span id="dottedGapLabel">2</span></button><br>
+    <button class="multitouchbtn rangebtn" data-action="dottedGapInputMinus">−</button>
+    <input type="range" id="dottedGapInput" min="1" max="20" value="2">
+    <button class="multitouchbtn rangebtn" data-action="dottedGapInputPlus">+</button><br>
     <button id="btnEraser" data-action="setToolEraser" style="width:100%;">Gomme</button><br><hr>
     <button data-action="closePopup" style="width:100%;">Fermer</button>
   </div>
@@ -143,7 +147,9 @@ canvas{
     <b class="holoheaderb">Options</b><hr class="holoheaderhr">
     <div id="canvasResolution">
 	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
-	  <input type="range" id="zoomInput" min="25" max="1000" value="100"><br>
+	  <button class="multitouchbtn rangebtn" data-action="zoomInputMinus">−</button>
+	  <input type="range" id="zoomInput" min="25" max="1000" value="100">
+	  <button class="multitouchbtn rangebtn" data-action="zoomInputPlus">+</button><br>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
@@ -1031,9 +1037,9 @@ function drawPixelLine(x1,y1,x2,y2){
 }
 /* LIGNE POINTILLÉE La longueur des tirets dépend de la taille du tracé. */
 var dottedGapInput = document.getElementById("dottedGapInput");
-var dottedGapValue = document.getElementById("dottedGapValue");
+var dottedGapLabel = document.getElementById("dottedGapLabel");
 dottedGapInput.oninput = function(){
-    dottedGapValue.innerHTML = dottedGapInput.value;
+    dottedGapLabel.innerHTML = dottedGapInput.value;
     refreshShapePreview();
     refreshLoupe();
 };

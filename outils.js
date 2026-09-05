@@ -84,8 +84,15 @@ importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
 /* --- Boutons - et + sliders ---*/
 var sliders = {
-    zoomRange: "applyZoomRange",
-    imgScale: "zoomImage"
+    zoomRange: ["applyZoomRange", 1],
+    imgScale: ["zoomImage", 1],
+    zoomInput: ["applyZoom", 25],
+    sizeInput: ["sizeInput", 1],
+    dottedGapInput: ["dottedGapValue", 1]
+};
+var sliderLabels = {
+    sizeInput: "sizeLabel",
+    dottedGapInput: "dottedGapLabel"
 };
 function changeSlider(id, amount) {
     var slider = document.getElementById(id);
@@ -97,8 +104,11 @@ function changeSlider(id, amount) {
     if (value < min) value = min;
     if (value > max) value = max;
     slider.value = value;
-    if (sliders[id] && typeof window[sliders[id]] === "function") {
-        window[sliders[id]](value);
+    if (sliderLabels[id]) {
+        document.getElementById(sliderLabels[id]).textContent = value;
+    }
+    if (sliders[id] && typeof window[sliders[id][0]] === "function") {
+        window[sliders[id][0]](value);
     }
 }
 document.addEventListener("pointerdown", function(e) {
@@ -107,6 +117,9 @@ document.addEventListener("pointerdown", function(e) {
     var parts = action.match(/^(.*)(Minus|Plus)$/);
     if (!parts) return;
     var id = parts[1];
-    var amount = parts[2] === "Minus" ? -1 : 1;
+    if (!sliders[id]) return;
+    var amount = parts[2] === "Minus"
+        ? -sliders[id][1]
+        : sliders[id][1];
     changeSlider(id, amount);
 });
