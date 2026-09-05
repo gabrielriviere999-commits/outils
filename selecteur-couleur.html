@@ -29,6 +29,7 @@
   padding-top:75%;
   cursor:crosshair;
   margin-bottom:10px;
+  touch-action:none;
 }
 #sv-white,#sv-black {
   position:absolute;
@@ -339,38 +340,109 @@ function updateUI(){
     }
     saveState();
 }
+// Dragging souris
 var dragging=false;
-svArea.onmousedown=function(e){dragging=true;moveSV(e);};
-document.onmouseup=function(){dragging=false;};
-document.onmousemove=function(e){if(dragging) moveSV(e);};
-function moveSVFromPoint(clientX, clientY){
-    var rct = svArea.getBoundingClientRect();
-    var x = clamp(clientX - rct.left, 0, rct.width);
-    var y = clamp(clientY - rct.top, 0, rct.height);
-    s = x / rct.width;
-    v = 1 - (y / rct.height);
-    var rgb = hsvToRgb(h, s * 100, v * 100);
-    r = rgb.r; g = rgb.g; b = rgb.b;
+svArea.onmousedown=function(e){
+    dragging=true;
+    moveSV(e);
+};
+document.onmouseup=function(){
+    dragging=false;
+};
+document.onmousemove=function(e){
+    if(dragging) moveSV(e);
+};
+// Touch SV indépendant
+var svTouching=false;
+svArea.addEventListener("touchstart",function(e){
+    if(svTouching) return;
+    svTouching=true;
+    var t=e.touches[0];
+    moveSVFromPoint(t.clientX,t.clientY);
+    e.preventDefault();
+},false);
+svArea.addEventListener("touchmove",function(e){
+    if(!svTouching) return;
+    var t=e.touches[0];
+    moveSVFromPoint(t.clientX,t.clientY);
+    e.preventDefault();
+},false);
+
+svArea.addEventListener("touchend",function(e){
+    svTouching=false;
+},false);
+
+svArea.addEventListener("touchcancel",function(e){
+    svTouching=false;
+},false);
+
+function moveSVFromPoint(clientX,clientY){
+    var rect=svArea.getBoundingClientRect();
+    var x=clamp(clientX-rect.left,0,rect.width);
+    var y=clamp(clientY-rect.top,0,rect.height);
+    s=x/rect.width;
+    v=1-(y/rect.height);
+    var rgb=hsvToRgb(h,s*100,v*100);
+    r=rgb.r;
+    g=rgb.g;
+    b=rgb.b;
     updateUI();
 }
 function moveSV(e){
-    moveSVFromPoint(e.clientX, e.clientY);
+    moveSVFromPoint(e.clientX,e.clientY);
 }
-svArea.addEventListener("touchstart", function(e){
+// Dragging souris
+var dragging=false;
+svArea.onmousedown=function(e){
+    dragging=true;
+    moveSV(e);
+};
+document.onmouseup=function(){
+    dragging=false;
+};
+document.onmousemove=function(e){
+    if(dragging) moveSV(e);
+};
+// Touch SV indépendant
+var svTouchId=null;
+svArea.addEventListener("touchstart",function(e){
+    if(svTouchId!==null) return;
+    var t=e.targetTouches[0];
+    if(!t) return;
+    svTouchId=t.identifier;
+    moveSVFromPoint(t.clientX,t.clientY);
     e.preventDefault();
-    dragging = true;
-    var t = e.touches[0];
-    moveSVFromPoint(t.clientX, t.clientY);
-});
-document.addEventListener("touchmove", function(e){
-    if(!dragging) return;
+},false);
+svArea.addEventListener("touchmove",function(e){
+    if(svTouchId===null) return;
+    var i;
+    for(i=0;i<e.targetTouches.length;i++){
+        var t=e.targetTouches[i];
+        if(t.identifier===svTouchId){
+            moveSVFromPoint(t.clientX,t.clientY);
+            break;
+        }
+    }
     e.preventDefault();
-    var t = e.touches[0];
-    moveSVFromPoint(t.clientX, t.clientY);
-});
-document.addEventListener("touchend", function(){
-    dragging = false;
-});
+},false);
+svArea.addEventListener("touchend",function(e){
+    var i;
+    for(i=0;i<e.changedTouches.length;i++){
+        if(e.changedTouches[i].identifier===svTouchId){
+            svTouchId=null;
+            break;
+        }
+    }
+},false);
+svArea.addEventListener("touchcancel",function(e){
+    var i;
+    for(i=0;i<e.changedTouches.length;i++){
+        if(e.changedTouches[i].identifier===svTouchId){
+            svTouchId=null;
+            break;
+        }
+    }
+},false);
 // --- Système multi-touches pour le carré SV ---
 var keys = {};
 // Enregistrer les touches pressées
