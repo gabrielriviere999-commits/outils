@@ -487,9 +487,16 @@ function svKeyboardLoop(){
             updateUI();
         }
     }
-    requestAnimationFrame(svKeyboardLoop);
+    requestAnimFrame(svKeyboardLoop);
 }
 // Démarrer la boucle
+var requestAnimFrame =
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    function(callback){
+        return setTimeout(callback, 16);
+    };
 svKeyboardLoop();
 var step = 0.005;
 var holdIntervals = {};
