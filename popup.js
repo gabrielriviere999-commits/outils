@@ -2,7 +2,7 @@ var popupOrigin = null;
 var popupMouseDownInside = false;
 function openPopupGeneric(container, type) {
     setTimeout(function(){
-		if (document.querySelector('.popup-overlay')) return;
+        if (document.querySelector('.popup-overlay')) return;
         popupOrigin = container;
         var d = document.createElement('div');
         d.className = "popup-overlay";
