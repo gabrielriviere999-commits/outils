@@ -184,7 +184,8 @@ body.block-touch{touch-action:none;}
 	  <input type="range" id="zoomInput" min="25" max="1000" value="100">
 	  <button class="rangebtn" data-action="zoomInputPlus">+</button><br>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
-	  <label><input type="checkbox" id="gridCheckbox">Grille</label><br>
+	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
+	  <input type="number" id="gridStepInput" value="10" min="1" max="100"><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
 	  <b>Résolution</b><br>
@@ -3590,18 +3591,31 @@ function showLoupe(e){
         loupeCtx.strokeStyle = "#ccc";
         loupeCtx.lineWidth = 1;
         // Décalage de la grille selon la position du doigt
-        var offsetX = (cx % step) * loupeZoom;
-        var offsetY = (cy % step) * loupeZoom;
+        var sourceLeft = cx - sourceSize / 2;
+        var sourceTop  = cy - sourceSize / 2;
+        // Position de la première ligne de grille visible
+        var firstGridX = Math.ceil(sourceLeft / step) * step;
+        var firstGridY = Math.ceil(sourceTop / step) * step;
+        var offsetX = (firstGridX - sourceLeft) * loupeZoom;
+        var offsetY = (firstGridY - sourceTop) * loupeZoom;
         var x, y;
         // Lignes verticales
-        for (x = -offsetX; x < loupeSize; x += scaledStep) {
+        for (
+            x = offsetX;
+            x < loupeSize;
+            x += scaledStep
+        ) {
             loupeCtx.beginPath();
             loupeCtx.moveTo(x, 0);
             loupeCtx.lineTo(x, loupeSize);
             loupeCtx.stroke();
         }
         // Lignes horizontales
-        for (y = -offsetY; y < loupeSize; y += scaledStep) {
+        for (
+            y = offsetY;
+            y < loupeSize;
+            y += scaledStep
+        ) {
             loupeCtx.beginPath();
             loupeCtx.moveTo(0, y);
             loupeCtx.lineTo(loupeSize, y);
@@ -3642,6 +3656,13 @@ function hideLoupe(){
     canvasLoupe.style.display = "none";
 }
 var gridStep = 10;
+document.getElementById("gridStepInput").onchange = function() {
+    gridStep = parseInt(this.value, 10);
+    if (isNaN(gridStep) || gridStep < 1) gridStep = 1;
+    this.value = gridStep;
+    applyGridState();
+    refreshLoupe();
+};
 var gridEnabled = false;
 function applyGridState() {
     var canvas = document.getElementById("canvas");
