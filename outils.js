@@ -86,7 +86,7 @@ importTextareaFile("textareaFiletextB", "textB");
 var sliders = {
     zoomRange: ["applyZoomRange", 1],
     imgScale: ["zoomImage", 5],
-    zoomInput: ["applyZoom", 25],
+    zoomInput: ["applyZoom", 20],
     sizeInput: ["sizeInput", 1],
     dottedGapInput: ["dottedGapValue", 1],
     polygonSidesInput: ["polygonSidesInput", 1],
