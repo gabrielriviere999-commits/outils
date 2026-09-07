@@ -36,15 +36,32 @@ select{width:55px;}
   white-space:pre;
   font-family:monospace;
 }
+#asciiLoupeCanvas {
+  position:absolute;
+  left:0;
+  top:0;
+  width:120px;
+  height:120px;
+  image-rendering:pixelated;
+}
+#bgImage {
+  position:absolute;
+  top:0;
+  left:0;
+  z-index:0;
+  pointer-events:none;
+  transform-origin:top left;
+}
 body.block-touch{touch-action:none;}
 </style>
 </head>
 <body>
 <div id="drawContainer" style="position:relative;overflow:hidden;">
-  <img id="bgImage" style="position:absolute;top:0;left:0;z-index:0;pointer-events:none;">
+  <canvas id="bgImage"></canvas>
   <textarea wrap="off" id="view" style="position:relative;z-index:1;background:rgba(0,0,0,0);cursor:crosshair;"></textarea>
 </div>
 <div id="asciiLoupe">
+  <canvas id="asciiLoupeCanvas" width="120" height="120"></canvas>
   <div id="asciiLoupeText"></div>
 </div>
 <div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
@@ -906,9 +923,6 @@ function refreshPreview(x, y) {
         drawRectangle(startX, startY, x, y, RECT_STYLES.dotted);
     }
     render();
-    if (touchActive) {
-        showAsciiLoupe(lastTouchX, lastTouchY);
-    }
 }
 view.onmousemove = function(e) {
     var pos = getPos(e);
@@ -1133,14 +1147,24 @@ function openSelectionPopup() {
   openPopupMenu(container);
 }
 function loadImageFile(input) {
-  var file = input.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    img.src = e.target.result;
-    img.style.height = "100%";
-  };
-  reader.readAsDataURL(file);
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var image = new Image();
+        image.onload = function() {
+            img.width = image.width;
+            img.height = image.height;
+            var ctx = img.getContext("2d");
+            ctx.clearRect(0, 0, img.width, img.height);
+            ctx.drawImage(image, 0, 0);
+            var ratio = image.width / image.height;
+            img.style.height = view.offsetHeight + "px";
+            img.style.width = (view.offsetHeight * ratio) + "px";
+        };
+        image.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 var lastScaleValue = 100;
 function zoomImage(v) {
@@ -1177,10 +1201,13 @@ function resetImgPosition() {
     img.style.top = "0px";
 }
 function clearImage() {
-    img.src = "";
+    var ctx = img.getContext("2d");
+    ctx.clearRect(0, 0, img.width, img.height);
 }
 /* LOUPE */
 var asciiLoupe = document.getElementById("asciiLoupe");
+var asciiLoupeCanvas = document.getElementById("asciiLoupeCanvas");
+var asciiLoupeCtx = asciiLoupeCanvas.getContext("2d");
 function showAsciiLoupe(clientX, clientY) {
     if (!document.getElementById("loupeEnabled").checked) {
         asciiLoupe.style.display = "none";
@@ -1191,6 +1218,7 @@ function showAsciiLoupe(clientX, clientY) {
         return;
     }
     var pos = getPos({ clientX: clientX, clientY: clientY });
+    /* --- TEXTE ASCII --- */
     var radiusX = 7;
     var radiusY = 7;
     var s = "";
@@ -1198,34 +1226,48 @@ function showAsciiLoupe(clientX, clientY) {
     for (y = pos.y - radiusY; y <= pos.y + radiusY; y++) {
         for (x = pos.x - radiusX; x <= pos.x + radiusX; x++) {
             c = safeGet(x, y);
-            if (c === "") { c = " "; }
+            if (c === "") c = " ";
             s += c;
         }
-        if (y < pos.y + radiusY) { s += "\n"; }
+        if (y < pos.y + radiusY) s += "\n";
     }
     asciiLoupeText.textContent = s;
-    // Taille du texte de la loupe
+    /* --- IMAGE --- */
+    if (img.width && img.height) {
+        var rect = img.getBoundingClientRect();
+        // Position du doigt dans le canvas affiché, convertie en coordonnées réelles du canvas.
+        var ix = (clientX - rect.left) * img.width / rect.width;
+        var iy = (clientY - rect.top) * img.height / rect.height;
+        // Petite zone de l'image copiée dans la loupe.
+        var sourceW = 120 * img.width / rect.width;
+        var sourceH = 120 * img.height / rect.height;
+        var sourceX = ix - sourceW / 2;
+        var sourceY = iy - sourceH / 2;
+        asciiLoupeCtx.clearRect(0, 0, 120, 120);
+        asciiLoupeCtx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 120, 120);
+    } else {
+        asciiLoupeCtx.clearRect(0, 0, 120, 120);
+    }
+    /* --- TEXTE DE LA LOUPE --- */
     var loupeFontSize = 14;
     var loupeLineHeight = 14;
     asciiLoupeText.style.fontSize = loupeFontSize + "px";
     asciiLoupeText.style.lineHeight = loupeLineHeight + "px";
-    // Centrage vertical du texte. 15 lignes au total (7 + caractère central + 7)
     var rows = radiusY * 2 + 1;
     asciiLoupeText.style.top = (60 - (rows * loupeLineHeight / 2)) + "px";
-    // Petit décalage horizontal pour compenser le centrage de la police.
     asciiLoupeText.style.left = "-5px";
     asciiLoupeText.style.width = "124px";
-    // Position de la loupe
+    /* --- POSITION DE LA LOUPE --- */
     var loupeWidth = 120;
     var loupeHeight = 120;
     var loupeX = clientX - loupeWidth / 2;
     var loupeY = clientY - 145;
-    if (loupeX < 5) { loupeX = 5; }
-    if (loupeX + loupeWidth >
-        window.innerWidth - 5) {
+    if (loupeX < 5) {
+        loupeX = 5;
+    }
+    if (loupeX + loupeWidth > window.innerWidth - 5) {
         loupeX = window.innerWidth - loupeWidth - 5;
     }
-    // Si la loupe dépasse en haut, on la place sous le doigt.
     if (loupeY < 5) {
         loupeY = clientY + 25;
     }
