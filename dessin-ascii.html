@@ -56,9 +56,9 @@ body.block-touch{touch-action:none;}
     <b class="holoheaderb">Options</b><hr class="holoheaderhr">
     <b>Zone de dessin</b><br>
     <label>Taille du texte</label><br>
-    <button rangebtn" data-action="zoomRangeMinus">−</button>
+    <button class="rangebtn" data-action="zoomRangeMinus">−</button>
     <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
-    <button rangebtn" data-action="zoomRangePlus">+</button>
+    <button class="rangebtn" data-action="zoomRangePlus">+</button>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
@@ -104,9 +104,9 @@ body.block-touch{touch-action:none;}
       </div>
     </div>
     <label>Taille</label><br>
-    <button rangebtn" data-action="imgScaleMinus">−</button>
+    <button class="rangebtn" data-action="imgScaleMinus">−</button>
     <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
-    <button rangebtn" data-action="imgScalePlus">+</button>
+    <button class="rangebtn" data-action="imgScalePlus">+</button>
     <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button><hr>
     <button data-action="closePopup">Fermer</button>
   </div>
@@ -132,28 +132,49 @@ body.block-touch{touch-action:none;}
   |
   <button id="btnFree" onclick="setTool('free')">Tracer</button>
   <input type="text" id="freeChar" value="#" maxlength="1">
-  |
-  <button id="btnLine" class="multitouchbtn" data-action="setToolLine">Ligne</button>
-  <input type="text" id="lineChar" value="*" maxlength="1">
-  |
-  <button id="btnArrow" class="multitouchbtn" data-action="setToolArrow">Flèche</button>
-  |
-  <button id="btnRect" class="multitouchbtn" data-action="setToolRect">Rectangle</button>
-  <button data-action="openRectModePopup" class="multitouchbtn"><span id="rectModeLabel">+-|</span></button>
-  <div id="popupRectModeContent" style="display:none;">
-    <b class="holoheaderb">Style rectangle</b><hr class="holoheaderhr">
-    <button id="btnRectClassic" data-action="setRectModeClassic" data-style="classic">+-| Classique</button><br>
-    <button id="btnRectDotted" data-action="setRectModeDotted" data-style="dotted">.: Pointillé</button><br>
-    <button id="btnRectRounded" data-action="setRectModeRounded" data-style="rounded">.-|:+ Arrondi</button><br>
-    <button id="btnRectWavy" data-action="setRectModeWavy" data-style="wavy">¤~¦ Ondulé</button><br>
-    <button id="btnRectFancy" data-action="setRectModeFancy" data-style="fancy">/=\| Fancy</button><hr>
+  <button data-action="openFormePopup" class="multitouchbtn">Forme</button>
+  <div id="popupFormeContent" style="display:none">
+    <b class="holoheaderb">Forme</b><hr class="holoheaderhr">
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;width:85%;">
+          <button id="btnLine" data-action="setToolLine">Ligne</button>
+        </div>
+        <div style="display:table-cell;width:15%;">
+		  <input type="text" id="lineChar" value="*" maxlength="1">
+        </div>
+      </div>
+    </div>
+    <button id="btnArrow" data-action="setToolArrow">Flèche</button><hr>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;width:85%;">
+          <button id="btnRect" data-action="setToolRect">Rectangle</button>
+        </div>
+        <div style="display:table-cell;width:15%;">
+		  <input type="text" id="rectChar" maxlength="1">
+        </div>
+      </div>
+    </div>
+    <div id="rectModeRadios">
+      <label><input type="radio" name="rectModeRadio" value="classic" checked>+-| Classique</label>
+      <label><input type="radio" name="rectModeRadio" value="dotted">.: Pointillé</label>
+      <label><input type="radio" name="rectModeRadio" value="rounded">.-|:+ Arrondi</label>
+      <label><input type="radio" name="rectModeRadio" value="wavy">¤~¦ Ondulé</label>
+      <label><input type="radio" name="rectModeRadio" value="fancy">/=\| Fancy</label>
+    </div><hr>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell;width:85%;">
+          <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
+        </div>
+        <div style="display:table-cell;width:15%;">
+		  <input type="text" id="ellipseChar" value="o" maxlength="1">
+        </div>
+      </div>
+    </div><hr>
     <button data-action="closePopup">Fermer</button>
   </div>
-  <input type="text" id="rectChar" maxlength="1">
-  |
-  <button id="btnEllipse" class="multitouchbtn" data-action="setToolEllipse">Ellipse</button>
-  <input type="text" id="ellipseChar" value="o" maxlength="1">
-  |
   <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
 	<b class="holoheaderb">Sélection</b><hr class="holoheaderhr">
@@ -499,7 +520,7 @@ var RECT_STYLES = {
     right: "|"
   }
 };
-function drawRectangle(x1, y1, x2, y2) {
+function drawRectangle(x1, y1, x2, y2, forcedStyle) {
     var xMin = Math.min(x1, x2);
     var xMax = Math.max(x1, x2);
     var yMin = Math.min(y1, y2);
@@ -507,7 +528,8 @@ function drawRectangle(x1, y1, x2, y2) {
     ensureCell(xMin, yMin);
     ensureCell(xMax, yMax);
     // lire le mode
-    var style = RECT_STYLES[rectMode];
+    var selected = document.querySelector('input[name="rectModeRadio"]:checked');
+    var style = forcedStyle || RECT_STYLES[selected ? selected.value : "classic"];
     // lire le caractère personnalisé
     var c = document.getElementById("rectChar").value;
     var useCustom = (c && c.length > 0);
@@ -549,54 +571,14 @@ document.getElementById("rectChar").oninput = function(){
 document.getElementById("ellipseChar").oninput = function(){
     if (isDown) refreshPreview(lastMoveX, lastMoveY);
 };
-var rectMode = "classic";
-function setRectMode(val) {
-    rectMode = val;
-    // Enlever active de tous les boutons
-    document.getElementById("btnRectClassic").className = "";
-    document.getElementById("btnRectDotted").className = "";
-    document.getElementById("btnRectRounded").className = "";
-    document.getElementById("btnRectWavy").className = "";
-    document.getElementById("btnRectFancy").className = "";
-    // Mettre active sur le bouton sélectionné
-    if (val === "classic") {
-        document.getElementById("btnRectClassic").className = "active";
-    }
-    if (val === "dotted") {
-        document.getElementById("btnRectDotted").className = "active";
-    }
-    if (val === "rounded") {
-        document.getElementById("btnRectRounded").className = "active";
-    }
-    if (val === "wavy") {
-        document.getElementById("btnRectWavy").className = "active";
-    }
-    if (val === "fancy") {
-        document.getElementById("btnRectFancy").className = "active";
-    }
-    // Texte du bouton qui ouvre le menu
-    var labels = {
-        classic: "+-|",
-        dotted: ".:",
-        rounded: ".-|:+",
-        wavy: "¤~¦",
-        fancy: "/=\\|"
+var radios = document.querySelectorAll('input[name="rectModeRadio"]');
+for (var i = 0; i < radios.length; i++) {
+    radios[i].onchange = function() {
+        if (isDown) {
+            refreshPreview(lastMoveX, lastMoveY);
+        }
     };
-    document.getElementById("rectModeLabel").textContent = labels[val];
-    closePopup();
-    if (isDown) {
-        refreshPreview(lastMoveX, lastMoveY);
-    }
 }
-function openRectModePopup() {
-    var container = document.getElementById("popupRectModeContent");
-    openPopupMenu(container);
-}
-function setRectModeClassic(){setRectMode("classic");}
-function setRectModeDotted(){setRectMode("dotted");}
-function setRectModeRounded(){setRectMode("rounded");}
-function setRectModeWavy(){setRectMode("wavy");}
-function setRectModeFancy(){setRectMode("fancy");}
 /* --- ELLIPSE --- */
 function drawEllipse(x1, y1, x2, y2) {
     var cx = Math.floor((x1 + x2) / 2);
@@ -924,14 +906,7 @@ function refreshPreview(x, y) {
     else if (tool === "rect") drawRectangle(startX, startY, x, y);
     else if (tool === "ellipse") drawEllipse(startX, startY, x, y);
     else if (tool === "move" || tool === "copy" || tool === "clipboard" || tool === "fliph" || tool === "flipv") {
-        // Sauvegarder l'ancien mode et caractère
-        var oldMode = rectMode;
-        var oldChar = rectChar.value;
-        rectMode = "dotted";
-        rectChar.value = "";
-        drawRectangle(startX, startY, x, y);
-        rectMode = oldMode;
-        rectChar.value = oldChar;
+        drawRectangle(startX, startY, x, y, RECT_STYLES.dotted);
     }
     render();
     if (touchActive) {
@@ -979,14 +954,7 @@ view.onmousemove = function(e) {
     // Rectangle temporaire pour sélection MOVE / COPY / CLIPBOARD
     if (tool === "move" || tool === "copy" || tool === "clipboard" || tool === "fliph" || tool === "flipv") {
         grid = copyGrid(tempGrid);
-        // Sauvegarder l'ancien caractère
-        var oldChar = rectChar.value;
-        var oldMode = rectMode;
-        rectMode = "dotted";
-        rectChar.value = "";
-        drawRectangle(startX, startY, pos.x, pos.y);
-        rectMode = oldMode;
-        rectChar.value = oldChar;
+        drawRectangle(startX, startY, pos.x, pos.y, RECT_STYLES.dotted);
         render();
         return;
     }
@@ -1151,7 +1119,7 @@ function toggleTextColor() {
     loupeText.style.color = colors[colorIndex];
 }
 /* --- AJOUTER IMAGE EN CALQUE --- */
-addMultiTouch(".multitouchbtn,input,#popupOptionsContent button,#popupRectModeContent button,#popupSelectionContent button");
+addMultiTouch(".multitouchbtn,input,#popupOptionsContent button,#popupFormeContent button,#popupSelectionContent button");
 function openOptionsPopup() {
   var container = document.getElementById("popupOptionsContent");
   openPopupMenu(container);
@@ -1159,6 +1127,10 @@ function openOptionsPopup() {
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
+}
+function openFormePopup() {
+  var container = document.getElementById("popupFormeContent");
+  openPopupMenu(container);
 }
 function openSelectionPopup() {
   var container = document.getElementById("popupSelectionContent");
@@ -1280,7 +1252,6 @@ function hideAsciiLoupe() {
 /* --- STARTUP --- */
 window.onload = function() {
     setTool("edit");
-    setRectMode("classic");
     autoWidth();
     grid = [[]];
     render();
