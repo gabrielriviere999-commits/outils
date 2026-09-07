@@ -56,9 +56,9 @@ body.block-touch{touch-action:none;}
     <b class="holoheaderb">Options</b><hr class="holoheaderhr">
     <b>Zone de dessin</b><br>
     <label>Taille du texte</label><br>
-    <button class="multitouchbtn rangebtn" data-action="zoomRangeMinus">−</button>
+    <button rangebtn" data-action="zoomRangeMinus">−</button>
     <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
-    <button class="multitouchbtn rangebtn" data-action="zoomRangePlus">+</button>
+    <button rangebtn" data-action="zoomRangePlus">+</button>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
@@ -104,9 +104,9 @@ body.block-touch{touch-action:none;}
       </div>
     </div>
     <label>Taille</label><br>
-    <button class="multitouchbtn rangebtn" data-action="imgScaleMinus">−</button>
+    <button rangebtn" data-action="imgScaleMinus">−</button>
     <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
-    <button class="multitouchbtn rangebtn" data-action="imgScalePlus">+</button>
+    <button rangebtn" data-action="imgScalePlus">+</button>
     <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button><hr>
     <button data-action="closePopup">Fermer</button>
   </div>
