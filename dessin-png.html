@@ -2259,33 +2259,42 @@ function drawRotatedSelectionAt(angle){
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
-    // Restaurer le fond propre. Cela évite d'accumuler les rotations pendant que l'utilisateur déplace la souris.
+    // Restaurer le fond propre
     if(selectionBaseImage){
         ctx.putImageData(selectionBaseImage, 0, 0);
     }
-    // Image temporaire contenant uniquement le résultat de la rotation.
-    var img = ctx.createImageData(w,h);
-    var dst = img.data;
-    var cx = (w - 1) / 2;
-    var cy = (h - 1) / 2;
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
-    var dx,dy;
-    var rx,ry;
-    var sx,sy;
-    var si,di;
-    // ROTATION INVERSE Pour chaque pixel destination, on cherche son pixel correspondant dans l'image source. Cela évite les trous créés par une rotation "source -> destination".
-    for(dy = 0; dy < h; dy++){
-        for(dx = 0; dx < w; dx++){
-            // Coordonnées par rapport au centre.
-            rx = dx - cx;
-            ry = dy - cy;
-            // Rotation inverse.
-            sx = rx * cos + ry * sin + cx;
-            sy = -rx * sin + ry * cos + cy;
-            // Pixel source le plus proche.
+    // le rectangle contenant l'image pivotée doit être plus grand que la sélection originale Sinon les coins sont coupés.
+    var newW = Math.ceil(Math.abs(w * cos) + Math.abs(h * sin));
+    var newH = Math.ceil(Math.abs(w * sin) + Math.abs(h * cos));
+    newW = Math.max(1, newW);
+    newH = Math.max(1, newH);
+    // Image destination suffisamment grande
+    var img = ctx.createImageData(newW, newH);
+    var dst = img.data;
+    // Centres source / destination
+    var srcCX = (w - 1) / 2;
+    var srcCY = (h - 1) / 2;
+    var dstCX = (newW - 1) / 2;
+    var dstCY = (newH - 1) / 2;
+    var dx, dy;
+    var rx, ry;
+    var sx, sy;
+    var si, di;
+    // ROTATION INVERSE Chaque pixel de destination cherche son pixel correspondant dans la sélection originale. Cela évite les trous.
+    for(dy = 0; dy < newH; dy++){
+        for(dx = 0; dx < newW; dx++){
+            // Position par rapport au centre destination
+            rx = dx - dstCX;
+            ry = dy - dstCY;
+            // Rotation inverse vers l'image source
+            sx = rx * cos + ry * sin + srcCX;
+            sy = -rx * sin + ry * cos + srcCY;
+            // Pixel le plus proche
             sx = Math.round(sx);
             sy = Math.round(sy);
+            // Hors sélection
             if(
                 sx < 0 ||
                 sy < 0 ||
@@ -2294,28 +2303,31 @@ function drawRotatedSelectionAt(angle){
             ){
                 continue;
             }
-            // Pour une sélection libre : le pixel source doit appartenir à la forme.
-            if(!freeSelectionContainsPixel(
-                selection.x + sx, selection.y + sy
-            )){
+            // Sélection libre : vérifier que le pixel faisait réellement partie de la forme sélectionnée.
+            if(
+                !freeSelectionContainsPixel(selection.x + sx, selection.y + sy)
+            ){
                 continue;
             }
             si = (sy * w + sx) * 4;
-            // Pixel transparent = rien.
+            // Pixel totalement transparent
             if(src[si + 3] === 0){
                 continue;
             }
-            di = (dy * w + dx) * 4;
-            dst[di] = src[si];
+            di = (dy * newW + dx) * 4;
+            dst[di]     = src[si];
             dst[di + 1] = src[si + 1];
             dst[di + 2] = src[si + 2];
             dst[di + 3] = src[si + 3];
         }
     }
-    // On dessine seulement les pixels visibles. Les pixels transparents ne détruisent donc jamais le dessin autour.
-    putImageDataVisible(
-        img, selection.x, selection.y
-    );
+    // Garder le même CENTRE que la sélection originale. La nouvelle image étant plus grande, sa position doit être décalée vers le haut/gauche.
+    var oldCenterX = selection.x + w / 2;
+    var oldCenterY = selection.y + h / 2;
+    var drawX = Math.round(oldCenterX - newW / 2);
+    var drawY = Math.round(oldCenterY - newH / 2);
+    // On dessine seulement les pixels visibles : les zones transparentes ne détruisent pas ce qui se trouve derrière.
+    putImageDataVisible(img, drawX, drawY);
 }
 function flipRectangleHorizontal(){
     if(!selection){
