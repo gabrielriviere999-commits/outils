@@ -1234,10 +1234,12 @@ function showAsciiLoupe(clientX, clientY) {
     asciiLoupeText.textContent = s;
     /* --- IMAGE --- */
     if (img.width && img.height) {
+        var rectView = view.getBoundingClientRect();
+        var cellX = rectView.left + (pos.x + 0.5) * charW - view.scrollLeft;
+        var cellY = rectView.top + (pos.y + 0.5) * charH - view.scrollTop;
         var rect = img.getBoundingClientRect();
-        // Position du doigt dans le canvas affiché, convertie en coordonnées réelles du canvas.
-        var ix = (clientX - rect.left) * img.width / rect.width;
-        var iy = (clientY - rect.top) * img.height / rect.height;
+        var ix = (cellX - rect.left) * img.width / rect.width;
+        var iy = (cellY - rect.top) * img.height / rect.height;
         // Petite zone de l'image copiée dans la loupe.
         var sourceW = 120 * img.width / rect.width;
         var sourceH = 120 * img.height / rect.height;
