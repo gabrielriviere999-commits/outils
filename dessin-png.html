@@ -418,7 +418,7 @@ function applyZoom(){
     canvas.style.width = Math.round(canvas.width * zoom) + "px";
     canvas.style.height = Math.round(canvas.height * zoom) + "px";
     if (gridEnabled) {
-        var gridSize = Math.round(10 * zoom);
+        var gridSize = Math.round(gridStep * zoom);
         if (gridSize < 1) gridSize = 1;
         canvas.style.backgroundSize = gridSize + "px " + gridSize + "px";
     }
@@ -3585,8 +3585,8 @@ function showLoupe(e){
     loupeCtx.drawImage(canvas, cx - sourceSize / 2, cy - sourceSize / 2, sourceSize, sourceSize, 0, 0, loupeSize, loupeSize);
     // Grille
     if (gridEnabled) {
-        var step = 10; // taille de la grille du dessin (en pixels du canvas)
-        var scaledStep = step * loupeZoom; // taille dans la loupe
+        var step = gridStep;
+        var scaledStep = step * loupeZoom;
         loupeCtx.strokeStyle = "#ccc";
         loupeCtx.lineWidth = 1;
         // Décalage de la grille selon la position du doigt
@@ -3641,6 +3641,7 @@ function refreshLoupe(){
 function hideLoupe(){
     canvasLoupe.style.display = "none";
 }
+var gridStep = 10;
 var gridEnabled = false;
 function applyGridState() {
     var canvas = document.getElementById("canvas");
@@ -3649,7 +3650,7 @@ function applyGridState() {
         canvas.className += " canvas-grid";
         loupeCanvas.className += " canvas-grid";
         var zoom = parseInt(document.getElementById("zoomInput").value, 10) / 100;
-        var gridSize = Math.round(10 * zoom);
+        var gridSize = Math.round(gridStep * zoom);
         if (gridSize < 1) gridSize = 1;
         canvas.style.backgroundSize = gridSize + "px " + gridSize + "px";
     } else {
