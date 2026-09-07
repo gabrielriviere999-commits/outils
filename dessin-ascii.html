@@ -894,9 +894,6 @@ view.addEventListener("mousedown", function(e){
         e.preventDefault();      // empêche le début de la sélection
     }
 });
-function autoWidthDynamic() {
-    autoWidth(); // recalcul charW et charH
-}
 // Mettre à jour forme en cliquant
 function refreshPreview(x, y) {
     if (!isDown || !tempGrid) return;
@@ -935,7 +932,6 @@ view.onmousemove = function(e) {
         return;
     }
     if (tool === "edit") return;
-    autoWidthDynamic();
     // free / erase
     if (tool === "free") {
         drawFree(pos.x, pos.y);
