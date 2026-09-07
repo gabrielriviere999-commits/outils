@@ -19,6 +19,7 @@ canvas {
   image-rendering:pixelated;
   image-rendering:crisp-edges;
 }
+.canvas-grid{background-image:linear-gradient(#ccc 1px, transparent 1px), linear-gradient(90deg, #ccc 1px, transparent 1px);}
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #fontInput{width:60px;}
 #canvasLoupe {
@@ -34,7 +35,7 @@ canvas {
   border-radius:50%;
   overflow:hidden;
 }
-#loupeCanvas{
+#loupeCanvas {
   width:120px;
   height:120px;
   display:block;
@@ -81,8 +82,7 @@ body.block-touch{touch-action:none;}
 	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
 	<button class="rangebtn" data-action="sizeInputPlus">+</button><hr>
-
-<div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnEraser" data-action="setToolEraser">Gomme</button>
@@ -190,6 +190,7 @@ body.block-touch{touch-action:none;}
       <label>l : <input type="number" id="canvasWidth" value="640" min="1" max="10000"></label>
       <label>h : <input type="number" id="canvasHeight" value="480" min="1" max="10000"></label><br>
       <button id="applyResolutionBtn" data-action="changeCanvasResolution">Valider résolution</button><hr>
+      <label><input type="checkbox" id="gridCheckbox">Grille</label>
       <button data-action="closePopup">Fermer</button>
     </div>
   </div>
@@ -416,6 +417,11 @@ function applyZoom(){
     var zoom = parseInt(zoomInput.value,10) / 100;
     canvas.style.width = Math.round(canvas.width * zoom) + "px";
     canvas.style.height = Math.round(canvas.height * zoom) + "px";
+    if (gridEnabled) {
+        var gridSize = Math.round(10 * zoom);
+        if (gridSize < 1) gridSize = 1;
+        canvas.style.backgroundSize = gridSize + "px " + gridSize + "px";
+    }
     zoomLabel.textContent = zoomInput.value + "%";
 }
 zoomInput.oninput = function(){ applyZoom(); };
@@ -3577,6 +3583,31 @@ function showLoupe(e){
     // Agrandir la zone autour du doigt.
     loupeCtx.imageSmoothingEnabled = false;
     loupeCtx.drawImage(canvas, cx - sourceSize / 2, cy - sourceSize / 2, sourceSize, sourceSize, 0, 0, loupeSize, loupeSize);
+    // Grille
+    if (gridEnabled) {
+        var step = 10; // taille de la grille du dessin (en pixels du canvas)
+        var scaledStep = step * loupeZoom; // taille dans la loupe
+        loupeCtx.strokeStyle = "#ccc";
+        loupeCtx.lineWidth = 1;
+        // Décalage de la grille selon la position du doigt
+        var offsetX = (cx % step) * loupeZoom;
+        var offsetY = (cy % step) * loupeZoom;
+        var x, y;
+        // Lignes verticales
+        for (x = -offsetX; x < loupeSize; x += scaledStep) {
+            loupeCtx.beginPath();
+            loupeCtx.moveTo(x, 0);
+            loupeCtx.lineTo(x, loupeSize);
+            loupeCtx.stroke();
+        }
+        // Lignes horizontales
+        for (y = -offsetY; y < loupeSize; y += scaledStep) {
+            loupeCtx.beginPath();
+            loupeCtx.moveTo(0, y);
+            loupeCtx.lineTo(loupeSize, y);
+            loupeCtx.stroke();
+        }
+    }
     // Croix centrale.
     loupeCtx.save();
     loupeCtx.strokeStyle = "#000";
@@ -3610,6 +3641,28 @@ function refreshLoupe(){
 function hideLoupe(){
     canvasLoupe.style.display = "none";
 }
+var gridEnabled = false;
+function applyGridState() {
+    var canvas = document.getElementById("canvas");
+    var loupeCanvas = document.getElementById("loupeCanvas");
+    if (gridEnabled) {
+        canvas.className += " canvas-grid";
+        loupeCanvas.className += " canvas-grid";
+        var zoom = parseInt(document.getElementById("zoomInput").value, 10) / 100;
+        var gridSize = Math.round(10 * zoom);
+        if (gridSize < 1) gridSize = 1;
+        canvas.style.backgroundSize = gridSize + "px " + gridSize + "px";
+    } else {
+        canvas.className = canvas.className.replace("canvas-grid", "");
+        loupeCanvas.className = loupeCanvas.className.replace("canvas-grid", "");
+        canvas.style.backgroundSize = "";
+    }
+}
+document.getElementById("gridCheckbox").onchange = function() {
+    gridEnabled = this.checked;
+    applyGridState();
+    refreshLoupe();
+};
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
     if(!base64) return;
