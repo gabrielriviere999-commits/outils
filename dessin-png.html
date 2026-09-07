@@ -183,14 +183,14 @@ body.block-touch{touch-action:none;}
 	  <button class="rangebtn" data-action="zoomInputMinus">−</button>
 	  <input type="range" id="zoomInput" min="25" max="1000" value="100">
 	  <button class="rangebtn" data-action="zoomInputPlus">+</button><br>
-	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
+	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
+	  <label><input type="checkbox" id="gridCheckbox">Grille</label><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
 	  <b>Résolution</b><br>
       <label>l : <input type="number" id="canvasWidth" value="640" min="1" max="10000"></label>
       <label>h : <input type="number" id="canvasHeight" value="480" min="1" max="10000"></label><br>
       <button id="applyResolutionBtn" data-action="changeCanvasResolution">Valider résolution</button><hr>
-      <label><input type="checkbox" id="gridCheckbox">Grille</label>
       <button data-action="closePopup">Fermer</button>
     </div>
   </div>
