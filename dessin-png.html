@@ -1850,16 +1850,7 @@ confirmTextBtn.onclick = function(e){
 };
 /* DEPLACER / DUPLIQUER EN PIXELS*/
 var selection = null;
-/*
- * selection :
- * {
- *   x: 0,
- *   y: 0,
- *   w: 0,
- *   h: 0,
- *   data: ImageData
- * }
- */
+// selection : { x: 0, y: 0, w: 0, h: 0, data: ImageData }
 var selectionBaseImage = null;
 var selectionMoving = false;
 var freeSelectionPoints = [];
@@ -1875,22 +1866,10 @@ function createPixelSelection(x1,y1,x2,y2,removeOriginal){
     if(w < 1 || h < 1){
         return false;
     }
-    /*
-     * ImageData conserve EXACTEMENT :
-     * R
-     * G
-     * B
-     * A
-     * Aucun changement de transparence.
-     */
+    // ImageData conserve EXACTEMENT : R G B A Aucun changement de transparence.
     var data = ctx.getImageData(sx, sy, w, h);
     selection = { x: sx, y: sy, w: w, h: h, data: data };
-    /*
-     * Pour MOVE :
-     * on retire les pixels de l'endroit original.
-     * Pour COPY :
-     * on ne retire rien.
-     */
+    // Pour MOVE : on retire les pixels de l'endroit original. Pour COPY : on ne retire rien.
     if(removeOriginal){
         ctx.clearRect(sx, sy, w, h);
     }
