@@ -196,7 +196,7 @@ body.block-touch{touch-action:none;}
 	  <input type="range" id="zoomInput" min="20" max="1000" value="100" step="20">
 	  <button class="rangebtn" data-action="zoomInputPlus">+</button><br>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
-	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
+	  <label><input type="checkbox" id="gridCheckbox" checked>Grille</label>
 	  <input type="number" id="gridStepInput" value="10" min="1" max="100"><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
@@ -3270,6 +3270,15 @@ document.getElementById("gridCheckbox").onchange = function(){
     applyZoom(); // pour recalculer la taille
     refreshLoupe();
 };
+window.addEventListener("load", function(){
+    // Case grille
+    gridEnabled = document.getElementById("gridCheckbox").checked;
+    grid.style.display = gridEnabled ? "block" : "none";
+    // Taille de grille
+    gridStep = parseInt(document.getElementById("gridStepInput").value, 10);
+    if (isNaN(gridStep) || gridStep < 1) gridStep = 1;
+    applyZoom();
+});
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
     if(!base64) return;
