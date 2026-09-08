@@ -88,7 +88,7 @@ document.addEventListener("keydown", function(e){
     if (e.keyCode === 27) {
         // 1. Le color picker est au-dessus du popup
         var colorPicker = document.querySelector('.overlayColorPicker');
-        if (colorPicker && colorPicker.offsetParent !== null) {
+        if (colorPicker && colorPicker.style.display !== "none") {
             e.preventDefault();
             e.stopPropagation();
             if (typeof closePicker === "function") {
