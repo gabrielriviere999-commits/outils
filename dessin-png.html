@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Dessin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
@@ -97,7 +98,7 @@ body.block-touch{touch-action:none;}
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
-          <button id="btnEraser" data-action="setToolEraser">Gomme</button>
+          <button id="btnEraser" data-action="toggleEraser">Gomme</button>
         </div>
         <div style="display:table-cell;">
           <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
@@ -284,7 +285,6 @@ function setToolRotate(){ setTool("rotate"); }
 function setToolFlipH(){ setTool("fliph"); }
 function setToolFlipV(){ setTool("flipv"); }
 function setToolFill(){ setTool("fill"); }
-function setToolEraser(){ setTool("eraser"); }
 function openPinceauPopup() {
   var container = document.getElementById("popupPinceauContent");
   openPopupMenu(container);
@@ -321,6 +321,18 @@ function applyColor(){
     ctx.fillStyle = col;
 }
 colorInput.oninput = applyColor;
+function toggleEraser(){
+    eraserMode = !eraserMode;
+    if(eraserMode){
+        ctx.globalCompositeOperation = "destination-out";
+        btnEraser.className = "active";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+        btnEraser.className = "";
+    }
+    refreshShapePreview();
+    refreshLoupe();
+}
 function toggleRainbow(){
     rainbowMode = !rainbowMode;
     var btn = document.getElementById("btnRainbow");
@@ -835,20 +847,6 @@ function setTool(t){
         tempImage && currentTool === "image" && t !== "image"
     ){
         commitTempImage();
-    }
-    // La gomme est un MODE indépendant.
-    if(t === "eraser"){
-        eraserMode = !eraserMode;
-        if(eraserMode){
-            ctx.globalCompositeOperation = "destination-out";
-            btnEraser.className = "active";
-        } else {
-            ctx.globalCompositeOperation = "source-over";
-            btnEraser.className = "";
-        }
-        refreshShapePreview();
-        refreshLoupe();
-        return;
     }
     // Changement d'outil.
     currentTool = t;
