@@ -47,13 +47,11 @@ canvas {
   position:absolute;
   top:0;
   left:0;
-  pointer-events:none; /* ← indispensable */
-  z-index:10;          /* ← au-dessus du canvas */
-  background-image:
-    linear-gradient(#444 1px, transparent 1px),
-    linear-gradient(90deg, #444 1px, transparent 1px);
+  pointer-events:none;
+  z-index:10;
+  background-image:linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px);
   background-size:10px 10px;
-  display:none;        /* ← cachée par défaut */
+  display:none;
 }
 body.block-touch{touch-action:none;}
 </style>
