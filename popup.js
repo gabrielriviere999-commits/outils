@@ -85,8 +85,8 @@ function closePopup() {
 }
 document.addEventListener("keydown", function(e){
     e = e || window.event;
-    if (e.key === "Enter" || e.keyCode === 13 ||
-        e.key === "Escape" || e.keyCode === 27) {
+    if ( e.keyCode === 13 ||
+         e.keyCode === 27) {
         // 1. Le color picker est au-dessus du popup
         var colorPicker = document.querySelector('.overlayColorPicker');
         if (colorPicker && colorPicker.style.display !== "none") {
