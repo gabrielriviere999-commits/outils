@@ -53,7 +53,7 @@ input[type=file]{width:115px;}
     border-right:2px solid #111;
   }
 }
-button,#file-input,.file-input {
+button,.a,.a-color,#file-input,.file-input {
   background:#202020;
   color:#ccc;
   border:2px solid;
@@ -62,17 +62,17 @@ button,#file-input,.file-input {
   font-size:12px;
   cursor:pointer;
 }
-button:hover,#file-input:hover,.file-input:hover{background:#404040;}
-button:active,button.active,#file-input:active,.file-input:active {
+button:hover,.a:hover,#file-input:hover,.file-input:hover{background:#404040;}
+button:active,.a:active,button.active,#file-input:active,.file-input:active {
   border-color:#111 #888 #888 #111;
   background:#101010;
 }
-.btn-color {
+.btn-color,.a-color {
   color:#000;
   border-color:#ccc #404040 #404040 #ccc;
 }
-.btn-color:hover{filter:brightness(1.2)}
-.btn-color:active {
+.btn-color:hover,.a-color:hover{filter:brightness(1.2)}
+.btn-color:active,.a-color:active {
   filter:brightness(0.8);
   border-color:#404040 #ccc #ccc #404040;
 }
@@ -197,3 +197,9 @@ select:hover{background:#404040;}
   border:2px solid;
   border-color:#888 #111 #111 #888;
 }
+/* Thème rouge */
+*{accent-color:#f44;}
+a,.headerb{color:#f44;}
+.headerhr{border:1px inset #f44;}
+::-moz-selection{background:rgba(255,0,0,0.7)!important;color:#ccc;}
+::selection{background:rgba(255,0,0,0.7)!important;color:#ccc;}

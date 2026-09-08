@@ -5,33 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Outils</title>
 <meta name="description" content="Outils utiles pour le développement web">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="outils.css">
 <style>
 *{box-sizing:border-box;}
-body {
-  background:#000;
-  color:#ccc;
-  font-family:sans-serif;
-}
-a {
-  color:#4af;
-  text-decoration:none;
-}
-a:hover{text-decoration:underline;}
-.a,button {
-  color:#ccc;
-  border:2px solid;
-  border-color:#ccc #404040 #404040 #ccc;
-  padding:4px 8px;
-  font-size:22px;
-  cursor:pointer;
-  text-decoration:none;
-  display:inline-block;
-}
-.a:hover{filter:brightness(1.2);text-decoration:underline;}
-.a:active {
-  border-color:#404040 #ccc #ccc #404040;
-  filter:brightness(0.8);
-}
 /* --- BARRE DE RECHERCHE --- */
 .search-box {
   width:100%;
@@ -90,7 +67,7 @@ img{display:block;margin:auto;}
 
 <body>
 <main>
-<a href="https://paypal.me/gabrielriviere999" target="_blank" rel="noopener" aria-label="Faire un don via PayPal" class="a" style="color:black;background:#ffd700;">💙 Faire un don via PayPal</a>
+<a href="https://paypal.me/gabrielriviere999" target="_blank" rel="noopener" aria-label="Faire un don via PayPal" class="a-color" style="color:black;background:#ffd700;font-size:22px;">💙 Faire un don via PayPal</a>
 <p></p><a href="../portfolio/astuces.html">Remonter vers astuces.html</a>
 <h1>Outils</h1>
 
@@ -356,7 +333,7 @@ code
 
 <a href="make-search-index.html" class="tool-card">
   <div class="tool-title">Générateur d'index de recherche</div>
-  <div class="tool-visual"><button style="background:#202020;width:50px;height:50px;">Q</button></div>
+  <div class="tool-visual"><button style="background:#202020;width:50px;height:50px;font-size:22px;">Q</button></div>
   <div class="tool-desc">
     <p>• Générer un index de recherche (docs.js) à partir d'un fichier ZIP contenant tous les dossiers et fichiers.</p>
   </div>
@@ -472,12 +449,10 @@ function sansAccents(str) {
         .replace(/[ùúûü]/g, "u")
         .replace(/[ýÿ]/g, "y");
 }
-
 function getByClass(cls) {
     var all = document.getElementsByTagName("*");
     var res = [];
     var needle = " " + cls + " ";
-
     for (var i = 0; i < all.length; i++) {
         var hay = " " + all[i].className + " ";
         if (hay.indexOf(needle) !== -1) {
@@ -486,21 +461,17 @@ function getByClass(cls) {
     }
     return res;
 }
-
 document.getElementById("filter").onkeyup = function () {
     var filter = sansAccents(this.value.toLowerCase());
     var cards = getByClass("tool-card");
     var i, title, txt;
-
     for (i = 0; i < cards.length; i++) {
         title = cards[i].getElementsByTagName("div")[0];
         txt = sansAccents(title.innerHTML.toLowerCase());
-
         cards[i].style.display = (txt.indexOf(filter) !== -1) ? "" : "none";
     }
 };
 </script>
-
 </main>
 </body>
 </html>
