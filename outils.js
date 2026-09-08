@@ -115,10 +115,24 @@ function changeSlider(id, amount) {
         window[sliders[id][0]](value);
     }
 }
+// Activation souris / tactile
 var sliderEvent = ("PointerEvent" in window) ? "pointerup" : "click";
 document.addEventListener(sliderEvent, function(e) {
     var action = e.target.getAttribute("data-action");
     if (!action) return;
+    handleSliderAction(action);
+});
+// Activation clavier (Entrée / Espace)
+document.addEventListener("keydown", function(e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var el = document.activeElement;
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+    if (!action) return;
+    handleSliderAction(action);
+});
+// Fonction commune
+function handleSliderAction(action) {
     var parts = action.match(/^(.*)(Minus|Plus)$/);
     if (!parts) return;
     var id = parts[1];
@@ -127,4 +141,4 @@ document.addEventListener(sliderEvent, function(e) {
         ? -sliders[id][1]
         : sliders[id][1];
     changeSlider(id, amount);
-});
+}
