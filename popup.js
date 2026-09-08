@@ -85,8 +85,26 @@ function closePopup() {
 }
 document.addEventListener("keydown", function(e){
     e = e || window.event;
-    if (e.key === "Escape" || e.keyCode === 27) {
-        var d = document.querySelector('.popup-overlay');
-        if (d) closePopup();
+    if (e.key === "Enter" || e.keyCode === 13 ||
+        e.key === "Escape" || e.keyCode === 27) {
+        // 1. Le color picker est au-dessus du popup
+        var colorPicker = document.querySelector('.overlayColorPicker');
+        if (colorPicker && colorPicker.style.display !== "none") {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof closePicker === "function") {
+                closePicker();
+            } else {
+                colorPicker.style.display = "none";
+            }
+            return;
+        }
+        // 2. Sinon, fermer le popup
+        var popup = document.querySelector('.popup-overlay');
+        if (popup) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePopup();
+        }
     }
-});
+}, true);
