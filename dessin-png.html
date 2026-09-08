@@ -441,20 +441,12 @@ function changeCanvasResolution(){
     oldCanvas.width = canvas.width;
     oldCanvas.height = canvas.height;
     var oldCtx = oldCanvas.getContext("2d");
-    oldCtx.drawImage(
-        canvas,
-        0,
-        0
-    );
+    oldCtx.drawImage(canvas, 0, 0);
     // Changer la résolution réelle
     canvas.width = newWidth;
     canvas.height = newHeight;
     // Restaurer l'ancien dessin
-    ctx.drawImage(
-        oldCanvas,
-        0,
-        0
-    );
+    ctx.drawImage(oldCanvas, 0, 0);
     // Restaurer les paramètres du contexte
     ctx.lineWidth = parseInt(sizeInput.value, 10);
     ctx.lineCap = "round";
@@ -519,13 +511,11 @@ imageFile.onchange = function(){
             var maxW = 300;
             var maxH = 300;
             if(tempImageW > maxW){
-                tempImageH =
-                    tempImageH * maxW / tempImageW;
+                tempImageH = tempImageH * maxW / tempImageW;
                 tempImageW = maxW;
             }
             if(tempImageH > maxH){
-                tempImageW =
-                    tempImageW * maxH / tempImageH;
+                tempImageW = tempImageW * maxH / tempImageH;
                 tempImageH = maxH;
             }
             // Centrer l'image.
@@ -572,16 +562,9 @@ function pointInTempImage(x,y){
     // Annuler la rotation.
     var cos = Math.cos(-tempImageAngle);
     var sin = Math.sin(-tempImageAngle);
-    var rx =
-        dx*cos - dy*sin;
-    var ry =
-        dx*sin + dy*cos;
-    return (
-        rx >= -tempImageW/2 &&
-        rx <=  tempImageW/2 &&
-        ry >= -tempImageH/2 &&
-        ry <=  tempImageH/2
-    );
+    var rx = dx*cos - dy*sin;
+    var ry = dx*sin + dy*cos;
+    return (rx >= -tempImageW/2 && rx <=  tempImageW/2 && ry >= -tempImageH/2 && ry <=  tempImageH/2);
 }
 /* POIGNEES */
 function getImageHandle(x,y){
@@ -608,50 +591,42 @@ function getImageHandle(x,y){
     }
     // Poignées de redimensionnement.
     if(
-        Math.abs(lx + tempImageW/2) < hs &&
-        Math.abs(ly + tempImageH/2) < hs
+        Math.abs(lx + tempImageW/2) < hs && Math.abs(ly + tempImageH/2) < hs
     ){
         return "nw";
     }
     if(
-        Math.abs(lx) < hs &&
-        Math.abs(ly + tempImageH/2) < hs
+        Math.abs(lx) < hs && Math.abs(ly + tempImageH/2) < hs
     ){
         return "n";
     }
     if(
-        Math.abs(lx - tempImageW/2) < hs &&
-        Math.abs(ly + tempImageH/2) < hs
+        Math.abs(lx - tempImageW/2) < hs && Math.abs(ly + tempImageH/2) < hs
     ){
         return "ne";
     }
     if(
-        Math.abs(lx - tempImageW/2) < hs &&
-        Math.abs(ly) < hs
+        Math.abs(lx - tempImageW/2) < hs && Math.abs(ly) < hs
     ){
         return "e";
     }
     if(
-        Math.abs(lx - tempImageW/2) < hs &&
-        Math.abs(ly - tempImageH/2) < hs
+        Math.abs(lx - tempImageW/2) < hs && Math.abs(ly - tempImageH/2) < hs
     ){
         return "se";
     }
     if(
-        Math.abs(lx) < hs &&
-        Math.abs(ly - tempImageH/2) < hs
+        Math.abs(lx) < hs && Math.abs(ly - tempImageH/2) < hs
     ){
         return "s";
     }
     if(
-        Math.abs(lx + tempImageW/2) < hs &&
-        Math.abs(ly - tempImageH/2) < hs
+        Math.abs(lx + tempImageW/2) < hs && Math.abs(ly - tempImageH/2) < hs
     ){
         return "sw";
     }
     if(
-        Math.abs(lx + tempImageW/2) < hs &&
-        Math.abs(ly) < hs
+        Math.abs(lx + tempImageW/2) < hs && Math.abs(ly) < hs
     ){
         return "w";
     }
@@ -842,9 +817,7 @@ function setTool(t){
     document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
     // Si une image est en cours de manipulation, on la valide avant de changer d'outil.
     if(
-        tempImage &&
-        currentTool === "image" &&
-        t !== "image"
+        tempImage && currentTool === "image" && t !== "image"
     ){
         commitTempImage();
     }
@@ -1731,10 +1704,7 @@ function rotatePixelSelection(angle){
             dx = Math.round(cx + rx);
             dy = Math.round(cy + ry);
             if(
-                dx < 0 ||
-                dy < 0 ||
-                dx >= w ||
-                dy >= h
+                dx < 0 || dy < 0 || dx >= w || dy >= h
             ){
                 continue;
             }
@@ -2023,11 +1993,7 @@ function drawRotatedSelectionAt(angle){
             sy = Math.round(sy);
             // Hors sélection
             if(
-                sx < 0 ||
-                sy < 0 ||
-                sx >= w ||
-                sy >= h
-            ){
+                sx < 0 || sy < 0 || sx >= w || sy >= h){
                 continue;
             }
             // Sélection libre : vérifier que le pixel faisait réellement partie de la forme sélectionnée.
@@ -2331,8 +2297,7 @@ function createFreePixelSelection(points,removeOriginal){
     return true;
 }
 function drawFreeSelectionPreview(){
-    if(!freeSelectionPoints ||
-       freeSelectionPoints.length < 2){
+    if(!freeSelectionPoints || freeSelectionPoints.length < 2){
         return;
     }
     var i;
@@ -2389,8 +2354,7 @@ canvas.onpointerdown = function(e){
             drawing = true;
             document.body.classList.add('block-touch');
             if(
-                canvas.setPointerCapture &&
-                e.pointerId !== undefined
+                canvas.setPointerCapture && e.pointerId !== undefined
             ){
                 canvas.setPointerCapture(
                     e.pointerId
@@ -2410,12 +2374,9 @@ canvas.onpointerdown = function(e){
             drawing = true;
             document.body.classList.add('block-touch');
             if(
-                canvas.setPointerCapture &&
-                e.pointerId !== undefined
+                canvas.setPointerCapture && e.pointerId !== undefined
             ){
-                canvas.setPointerCapture(
-                    e.pointerId
-                );
+                canvas.setPointerCapture(e.pointerId);
             }
             return;
         }
@@ -2428,12 +2389,9 @@ canvas.onpointerdown = function(e){
             drawing = true;
             document.body.classList.add('block-touch');
             if(
-                canvas.setPointerCapture &&
-                e.pointerId !== undefined
+                canvas.setPointerCapture && e.pointerId !== undefined
             ){
-                canvas.setPointerCapture(
-                    e.pointerId
-                );
+                canvas.setPointerCapture(e.pointerId);
             }
             return;
         }
@@ -2463,22 +2421,14 @@ canvas.onpointerdown = function(e){
     }
 	// MOVE / COPY / ROTATE / FLIP
 	if(
-		currentTool === "move" ||
-		currentTool === "copy" ||
-		currentTool === "rotate" ||
-		currentTool === "fliph" ||
-		currentTool === "flipv"
+		currentTool === "move" || currentTool === "copy" || currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv"
 	){
     saveState();
     // NOUVELLE SÉLECTION LIBRE
     if(getPixelSelectionType() === "free"){
         // Première étape : commencer le contour.
         if(
-            (currentTool === "move" && moveMode === 0) ||
-            (currentTool === "copy" && copyMode === 0) ||
-            (currentTool === "rotate" && rotateMode === 0) ||
-            currentTool === "fliph" ||
-            currentTool === "flipv"
+            (currentTool === "move" && moveMode === 0) || (currentTool === "copy" && copyMode === 0) || (currentTool === "rotate" && rotateMode === 0) || currentTool === "fliph" || currentTool === "flipv"
         ){
             freeSelectionPoints = [];
             freeSelectionPoints.push({ x: Math.round(p.x), y: Math.round(p.y) });
@@ -2495,9 +2445,7 @@ canvas.onpointerdown = function(e){
         }
         // Deuxième étape : la sélection existe déjà, on peut la déplacer / pivoter.
         if(
-            (currentTool === "move" && moveMode === 1) ||
-            (currentTool === "copy" && copyMode === 1) ||
-            (currentTool === "rotate" && rotateMode === 1)
+            (currentTool === "move" && moveMode === 1) || (currentTool === "copy" && copyMode === 1) || (currentTool === "rotate" && rotateMode === 1)
         ){
             selectionMoving = true;
             return;
@@ -2505,13 +2453,10 @@ canvas.onpointerdown = function(e){
     }
     // MODE RECTANGLE ACTUEL
     if(
-        (currentTool === "move" && moveMode === 0) ||
-        (currentTool === "copy" && copyMode === 0) ||
-        (currentTool === "rotate" && rotateMode === 0)
+        (currentTool === "move" && moveMode === 0) || (currentTool === "copy" && copyMode === 0) || (currentTool === "rotate" && rotateMode === 0)
     ){
         if(currentTool === "rotate"){
-            rotateBaseImage =
-                ctx.getImageData(0, 0, canvas.width, canvas.height);
+            rotateBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         } else {
             moveBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         }
@@ -2520,8 +2465,7 @@ canvas.onpointerdown = function(e){
         return;
     }
     if(
-        currentTool === "fliph" ||
-        currentTool === "flipv"
+        currentTool === "fliph" || currentTool === "flipv"
     ){
         moveBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         selection = null;
@@ -2530,9 +2474,7 @@ canvas.onpointerdown = function(e){
     }
     // ETAPE 2
     if(
-        (currentTool === "move" && moveMode === 1) ||
-        (currentTool === "copy" && copyMode === 1) ||
-        (currentTool === "rotate" && rotateMode === 1)
+        (currentTool === "move" && moveMode === 1) || (currentTool === "copy" && copyMode === 1) || (currentTool === "rotate" && rotateMode === 1)
     ){
         if(currentTool === "rotate"){
             rotateAngle = 0;
@@ -2687,17 +2629,13 @@ canvas.onpointermove = function(e){
 		var ratio =
 			imageStartW / imageStartH;
 		if(
-			imageHandle === "e" ||
-			imageHandle === "ne" ||
-			imageHandle === "se"
+			imageHandle === "e" || imageHandle === "ne" ||	imageHandle === "se"
 		){
 			newW = Math.max(20, lx + tempImageW/2);
 			newH = newW / ratio;
 		}
 		else if(
-			imageHandle === "w" ||
-			imageHandle === "nw" ||
-			imageHandle === "sw"
+			imageHandle === "w" || imageHandle === "nw" ||	imageHandle === "sw"
 		){
 			newW = Math.max(20, tempImageW/2 - lx);
 			newH = newW / ratio;
@@ -2739,21 +2677,7 @@ canvas.onpointermove = function(e){
 		return;
 	}
     if(
-        currentTool==="line" ||
-        currentTool==="arrow" ||
-        currentTool==="doublearrow" ||
-        currentTool==="square" ||
-        currentTool==="rect" ||
-        currentTool==="polygon" ||
-        currentTool==="triangle" ||
-        currentTool==="star" ||
-        currentTool==="circle" ||
-        currentTool==="ellipse" ||
-        currentTool==="move" ||
-        currentTool==="copy" ||
-        currentTool==="rotate" ||
-        currentTool==="fliph" ||
-        currentTool==="flipv"
+        currentTool==="line" || currentTool==="arrow" || currentTool==="doublearrow" || currentTool==="square" || currentTool==="rect" || currentTool==="polygon" || currentTool==="triangle" || currentTool==="star" || currentTool==="circle" || currentTool==="ellipse" || currentTool==="move" || currentTool==="copy" || currentTool==="rotate" || currentTool==="fliph" || currentTool==="flipv"
     ){
         updateDimensions(x,y);
     }
@@ -2774,11 +2698,7 @@ canvas.onpointermove = function(e){
 	// SÉLECTION LIBRE
 	if(
 		(
-			currentTool === "move" ||
-			currentTool === "copy" ||
-			currentTool === "rotate" ||
-			currentTool === "fliph" ||
-			currentTool === "flipv"
+			currentTool === "move" || currentTool === "copy" || currentTool === "rotate" ||	currentTool === "fliph" || currentTool === "flipv"
 		) &&
 		getPixelSelectionType() === "free"
 	){
@@ -2790,32 +2710,19 @@ canvas.onpointermove = function(e){
     }
     }
 	if(
-		currentTool === "move" ||
-		currentTool === "copy" ||
-		currentTool === "rotate" ||
-		currentTool === "fliph" ||
-		currentTool === "flipv"
+		currentTool === "move" || currentTool === "copy" || currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv"
 	){
 	// ETAPE 1 : rectangle de sélection.
 	if(
     getPixelSelectionType() === "rectangle" &&
     (
-        (currentTool === "move" && moveMode === 0) ||
-        (currentTool === "copy" && copyMode === 0) ||
-        (currentTool === "rotate" && rotateMode === 0) ||
-        currentTool === "fliph" ||
-        currentTool === "flipv"
+        (currentTool === "move" && moveMode === 0) || (currentTool === "copy" && copyMode === 0) || (currentTool === "rotate" && rotateMode === 0) || currentTool === "fliph" || currentTool === "flipv"
     )
     ){
     if(
-        currentTool === "rotate" &&
-        rotateBaseImage
+        currentTool === "rotate" && rotateBaseImage
     ){
-        ctx.putImageData(
-            rotateBaseImage,
-            0,
-            0
-        );
+        ctx.putImageData(rotateBaseImage, 0, 0);
     }
     drawSelectionPreview(x,y);
     return;
@@ -2823,17 +2730,13 @@ canvas.onpointermove = function(e){
     // ETAPE 2 : déplacement pixel par pixel.
     if(
         (
-            (currentTool === "move" && moveMode === 1) ||
-            (currentTool === "copy" && copyMode === 1) ||
-            (currentTool === "rotate" && rotateMode === 1 && selectionMoving)
+            (currentTool === "move" && moveMode === 1) || (currentTool === "copy" && copyMode === 1) || (currentTool === "rotate" && rotateMode === 1 && selectionMoving)
         )
     ) { if(currentTool === "rotate"){
              var cx = selection.x + selection.w/2;
              var cy = selection.y + selection.h/2;
              rotateAngle = Math.atan2(y - cy, x - cx);
-             drawRotatedSelectionAt(
-                 rotateAngle
-             );
+             drawRotatedSelectionAt(rotateAngle);
             } else {
                 drawPixelSelectionAt(x,y);
             }
@@ -2861,8 +2764,7 @@ canvas.onpointerup = function(e){
     stopAutoScroll();
     isDown = false;
 	if(
-		canvas.hasPointerCapture &&
-		canvas.hasPointerCapture(e.pointerId)
+		canvas.hasPointerCapture &&	canvas.hasPointerCapture(e.pointerId)
 	){
 		canvas.releasePointerCapture(e.pointerId);
 	}
@@ -2879,12 +2781,9 @@ canvas.onpointerup = function(e){
             imageHandle = "";
             drawTempImage();
             if(
-                canvas.hasPointerCapture &&
-                canvas.hasPointerCapture(e.pointerId)
+                canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)
             ){
-                canvas.releasePointerCapture(
-                    e.pointerId
-                );
+                canvas.releasePointerCapture(e.pointerId);
             }
             return;
         }
@@ -2893,14 +2792,8 @@ canvas.onpointerup = function(e){
     // SÉLECTION LIBRE
     if(
         (
-            currentTool === "move" ||
-            currentTool === "copy" ||
-            currentTool === "rotate" ||
-            currentTool === "fliph" ||
-            currentTool === "flipv"
-        ) &&
-        getPixelSelectionType() === "free" &&
-        freeSelectionDrawing
+            currentTool === "move" || currentTool === "copy" || currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv"
+        ) && getPixelSelectionType() === "free" && freeSelectionDrawing
     ){
     freeSelectionDrawing = false;
     // Il faut suffisamment de points pour former un contour.
@@ -2928,21 +2821,13 @@ canvas.onpointerup = function(e){
         }
     }
     // MOVE retire l'original. COPY / ROTATE / FLIP le conservent.
-	var removeOriginal =
-		currentTool === "move" ||
-		(
-			currentTool === "rotate" &&
-			!document.getElementById("rotateCopy").checked
-		) ||
-		currentTool === "fliph" ||
-		currentTool === "flipv";
+	var removeOriginal = currentTool === "move" || (currentTool === "rotate" &&	!document.getElementById("rotateCopy").checked) || currentTool === "fliph" || currentTool === "flipv";
 	// Fermer automatiquement le contour.
 	if(freeSelectionPoints.length >= 3){
 		var firstPoint = freeSelectionPoints[0];
 		var lastPoint =	freeSelectionPoints[freeSelectionPoints.length - 1];
 		if(
-			firstPoint.x !== lastPoint.x ||
-			firstPoint.y !== lastPoint.y
+			firstPoint.x !== lastPoint.x ||	firstPoint.y !== lastPoint.y
 		){
 			freeSelectionPoints.push({x: firstPoint.x, y: firstPoint.y});
 		}
@@ -2987,8 +2872,7 @@ canvas.onpointerup = function(e){
     }
     // MOVE : première étape = sélection
 	if(
-		currentTool === "move" &&
-		moveMode === 0
+		currentTool === "move" && moveMode === 0
 	){
 		// Restaurer le canvas avant de capturer les pixels.
 		if(moveBaseImage){
@@ -3003,8 +2887,7 @@ canvas.onpointerup = function(e){
 	}
     // COPY : première étape = sélection
 	if(
-		currentTool === "copy" &&
-		copyMode === 0
+		currentTool === "copy" && copyMode === 0
 	){
 		// Restaurer le canvas avant la capture.
 		if(moveBaseImage){
@@ -3094,8 +2977,7 @@ canvas.onpointerup = function(e){
 	}
     // MOVE : deuxième étape = dépôt
 	if(
-		currentTool === "move" &&
-		moveMode === 1
+		currentTool === "move" && moveMode === 1
 	){
 		commitPixelSelection(x,	y);
 		moveMode = 0;
@@ -3106,8 +2988,7 @@ canvas.onpointerup = function(e){
 	}
     // COPY : deuxième étape = dépôt
 	if(
-		currentTool === "copy" &&
-		copyMode === 1
+		currentTool === "copy" && copyMode === 1
 	){
 		commitPixelSelection(x,	y);
 		copyMode = 0;
