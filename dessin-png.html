@@ -533,18 +533,10 @@ imageFile.onchange = function(){
             tempImageY = (canvas.height - tempImageH) / 2;
             tempImageAngle = 0;
             // Sauvegarder le dessin avant l'image.
-            imageBaseImage = ctx.getImageData(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+            imageBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
             currentTool = "image";
             drawTempImage();
-            updateDimensions(
-                tempImageW,
-                tempImageH
-            );
+            updateDimensions(tempImageW, tempImageH);
             imageFile.value = "";
         };
         img.onerror = function(){
@@ -557,10 +549,7 @@ imageFile.onchange = function(){
 };
 /* CALCUL DES COORDONNEES */
 function getImageCenter(){
-    return {
-        x: tempImageX + tempImageW / 2,
-        y: tempImageY + tempImageH / 2
-    };
+    return { x: tempImageX + tempImageW / 2, y: tempImageY + tempImageH / 2 };
 }
 /* Distance entre deux points. */
 function imageDistance(x1,y1,x2,y2){
@@ -570,10 +559,7 @@ function imageDistance(x1,y1,x2,y2){
 }
 /* Angle entre deux points. */
 function imagePointerAngle(x1,y1,x2,y2){
-    return Math.atan2(
-        y2-y1,
-        x2-x1
-    );
+    return Math.atan2(y2-y1, x2-x1);
 }
 /* POINT DANS L'IMAGE */
 function pointInTempImage(x,y){
@@ -677,11 +663,7 @@ function drawTempImage(){
         return;
     }
     if(imageBaseImage){
-        ctx.putImageData(
-            imageBaseImage,
-            0,
-            0
-        );
+        ctx.putImageData(imageBaseImage, 0, 0);
     }
     var c = getImageCenter();
     ctx.save();
@@ -689,47 +671,22 @@ function drawTempImage(){
     ctx.rotate(tempImageAngle);
     /* Image */
     ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(
-        tempImage,
-        -tempImageW/2,
-        -tempImageH/2,
-        tempImageW,
-        tempImageH
-    );
+    ctx.drawImage(tempImage, -tempImageW/2, -tempImageH/2, tempImageW, tempImageH);
     /* Cadre */
     ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#000000";
     ctx.fillStyle = "#ffffff";
-    ctx.strokeRect(
-        -tempImageW/2,
-        -tempImageH/2,
-        tempImageW,
-        tempImageH
-    );
+    ctx.strokeRect(-tempImageW/2, -tempImageH/2, tempImageW, tempImageH);
     /* Poignées */
-    var handles = [
-        [-tempImageW/2,-tempImageH/2],
-        [0,-tempImageH/2],
-        [tempImageW/2,-tempImageH/2],
-        [tempImageW/2,0],
-        [tempImageW/2,tempImageH/2],
-        [0,tempImageH/2],
-        [-tempImageW/2,tempImageH/2],
-        [-tempImageW/2,0]
-    ];
+    var handles = [[-tempImageW/2,-tempImageH/2], [0,-tempImageH/2], [tempImageW/2,-tempImageH/2], [tempImageW/2,0], [tempImageW/2,tempImageH/2], [0,tempImageH/2], [-tempImageW/2,tempImageH/2], [-tempImageW/2,0]];
     var i;
     for(i=0;i<handles.length;i++){
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.rect(
-            handles[i][0]-5,
-            handles[i][1]-5,
-            10,
-            10
-        );
+        ctx.rect(handles[i][0]-5, handles[i][1]-5, 10, 10);
         ctx.fill();
         ctx.stroke();
     }
@@ -737,28 +694,15 @@ function drawTempImage(){
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(
-        0,
-        -tempImageH/2
-    );
-    ctx.lineTo(
-        0,
-        -tempImageH/2-35
-    );
+    ctx.moveTo(0, -tempImageH/2);
+    ctx.lineTo(0, -tempImageH/2-35);
     ctx.stroke();
     /* Poignée de rotation */
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(
-        0,
-        -tempImageH/2-35,
-        7,
-        0,
-        Math.PI*2,
-        false
-    );
+    ctx.arc(0, -tempImageH/2-35, 7, 0, Math.PI*2, false);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -770,11 +714,7 @@ function commitTempImage(){
     }
     // Restaurer le fond.
     if(imageBaseImage){
-        ctx.putImageData(
-            imageBaseImage,
-            0,
-            0
-        );
+        ctx.putImageData(imageBaseImage, 0, 0);
     }
     // L'image devient définitivement une partie du dessin.
     var c = getImageCenter();
@@ -783,24 +723,11 @@ function commitTempImage(){
     ctx.rotate(tempImageAngle);
     var oldComposite = ctx.globalCompositeOperation;
     ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(
-        tempImage,
-        -tempImageW/2,
-        -tempImageH/2,
-        tempImageW,
-        tempImageH
-    );
+    ctx.drawImage(tempImage, -tempImageW/2, -tempImageH/2, tempImageW, tempImageH);
     ctx.globalCompositeOperation = oldComposite;
     ctx.restore();
     // Sauvegarder le résultat dans Undo.
-    undoStack.push(
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        )
-    );
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     redoStack = [];
     tempImage = null;
     imageBaseImage = null;
@@ -832,12 +759,7 @@ drawingFile.onchange = function(){
             //  l'import doit toujours utiliser le mode de dessin normal. Sinon, si la gomme était active, destination-out effacerait l'image.
             ctx.globalCompositeOperation = "source-over";
             // Effacer le dessin actuel.
-            ctx.clearRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             // Adapter l'image au canvas sans déformer ses proportions.
             var scaleX = canvas.width / img.width;
             var scaleY = canvas.height / img.height;
@@ -846,13 +768,7 @@ drawingFile.onchange = function(){
             var h = img.height * scale;
             var x = (canvas.width - w) / 2;
             var y = (canvas.height - h) / 2;
-            ctx.drawImage(
-                img,
-                x,
-                y,
-                w,
-                h
-            );
+            ctx.drawImage(img, x, y, w, h);
             // Si la gomme était l'outil actif, on remet destination-out après l'import pour qu'elle continue à fonctionner normalement.
             if(eraserMode){
                 ctx.globalCompositeOperation = "destination-out";
@@ -1037,16 +953,8 @@ function getPos(e){
 function drawPixel(x,y){
     x = Math.round(x);
     y = Math.round(y);
-    var size = Math.max(
-        1,
-        Math.round(parseInt(sizeInput.value,10))
-    );
-    ctx.fillRect(
-        x - Math.floor(size / 2),
-        y - Math.floor(size / 2),
-        size,
-        size
-    );
+    var size = Math.max(1, Math.round(parseInt(sizeInput.value,10)));
+    ctx.fillRect(x - Math.floor(size / 2), y - Math.floor(size / 2), size, size);
 }
 /* LIGNE PIXEL NORMALE */
 function drawPixelLine(x1,y1,x2,y2){
@@ -1086,17 +994,12 @@ dottedGapInput.oninput = function(){
 function drawPixelDottedLine(x1,y1,x2,y2){
     var dx = x2-x1;
     var dy = y2-y1;
-    var distance = Math.sqrt(
-        dx*dx + dy*dy
-    );
+    var distance = Math.sqrt(dx*dx + dy*dy);
     if(distance < 0.1){
         drawPixel(x1,y1);
         return;
     }
-    var size = Math.max(
-        1,
-        parseInt(sizeInput.value,10)
-    );
+    var size = Math.max(1, parseInt(sizeInput.value,10));
     /*
      * Taille des tirets et des espaces.
      * Taille 1 :
@@ -1104,45 +1007,25 @@ function drawPixelDottedLine(x1,y1,x2,y2){
      * Taille 5 :
      * ---------------     ---------------
      */
-    var dashLength = Math.max(
-        2,
-        size * 3
-    );
-    var gapLength = Math.max(
-        2,
-        size * parseInt(dottedGapInput.value,10)
-    );
-    var period =
-        dashLength +
-        gapLength;
-    var steps = Math.max(
-        1,
-        Math.floor(distance)
-    );
+    var dashLength = Math.max(2, size * 3);
+    var gapLength = Math.max(2, size * parseInt(dottedGapInput.value,10));
+    var period = dashLength + gapLength;
+    var steps = Math.max(1, Math.floor(distance));
     var i;
     for(i=0;i<=steps;i++){
         var t = i / steps;
-        var pos =
-            t * distance;
+        var pos = t * distance;
         // Dans un tiret ?
         if(
             (Math.floor(pos) % period)
             < dashLength
         ){
             if(rainbowMode){
-                ctx.fillStyle =
-                    rainbowColor(
-                        rainbowHue +
-                        t * 300
-                    );
+                ctx.fillStyle = rainbowColor(rainbowHue + t * 300);
             } else {
-                ctx.fillStyle =
-                    ctx.strokeStyle;
+                ctx.fillStyle = ctx.strokeStyle;
             }
-            drawPixel(
-                x1 + dx*t,
-                y1 + dy*t
-            );
+            drawPixel(x1 + dx*t, y1 + dy*t);
         }
     }
 }
@@ -1150,22 +1033,14 @@ function drawPixelDottedLine(x1,y1,x2,y2){
 function drawPixelRainbowLine(x1,y1,x2,y2){
     var dx = x2-x1;
     var dy = y2-y1;
-    var distance = Math.sqrt(
-        dx*dx + dy*dy
-    );
-    var steps = Math.max(
-        1,
-        Math.floor(distance)
-    );
+    var distance = Math.sqrt(dx*dx + dy*dy);
+    var steps = Math.max(1, Math.floor(distance));
     var i;
     for(i=0;i<=steps;i++){
         var t = i/steps;
-        var px =
-            x1 + dx*t;
-        var py =
-            y1 + dy*t;
-        ctx.fillStyle =
-            rainbowColor(rainbowHue);
+        var px = x1 + dx*t;
+        var py = y1 + dy*t;
+        ctx.fillStyle = rainbowColor(rainbowHue);
         drawPixel(px,py);
         rainbowHue += 1.5;
         if(rainbowHue >= 360){
@@ -1177,49 +1052,30 @@ function drawPixelRainbowLine(x1,y1,x2,y2){
 function drawPixelRainbowSegment(x1,y1,x2,y2){
     var dx = x2-x1;
     var dy = y2-y1;
-    var distance = Math.sqrt(
-        dx*dx + dy*dy
-    );
-    var steps = Math.max(
-        1,
-        Math.floor(distance)
-    );
+    var distance = Math.sqrt(dx*dx + dy*dy);
+    var steps = Math.max(1, Math.floor(distance));
     var i;
     for(i=0;i<=steps;i++){
         var t = i / steps;
-        var hue =
-            t * 300;
-        ctx.fillStyle =
-            rainbowColor(hue);
-        var px =
-            x1 + dx*t;
-        var py =
-            y1 + dy*t;
+        var hue = t * 300;
+        ctx.fillStyle = rainbowColor(hue);
+        var px = x1 + dx*t;
+        var py = y1 + dy*t;
         drawPixel(px,py);
     }
 }
 /* LIGNE AVEC TOUS LES MODES n-ciel peuvent être combinés. */
 function drawStyledPixelLine(x1,y1,x2,y2){
     if(dottedMode){
-        drawPixelDottedLine(
-            x1,y1,
-            x2,y2
-        );
+        drawPixelDottedLine(x1,y1, x2,y2);
         return;
     }
     if(rainbowMode){
-        drawPixelRainbowSegment(
-            x1,y1,
-            x2,y2
-        );
+        drawPixelRainbowSegment(x1,y1, x2,y2);
         return;
     }
-    ctx.fillStyle =
-        ctx.strokeStyle;
-    drawPixelLine(
-        x1,y1,
-        x2,y2
-    );
+    ctx.fillStyle = ctx.strokeStyle;
+    drawPixelLine(x1,y1, x2,y2);
 }
 /* ELLIPSE */
 function drawPixelEllipse(cx,cy,rx,ry){
@@ -1227,80 +1083,32 @@ function drawPixelEllipse(cx,cy,rx,ry){
     ry = Math.abs(ry);
     // Cas où l'ellipse devient une ligne verticale.
     if(rx < 0.5){
-        drawStyledPixelLine(
-            cx,
-            cy-ry,
-            cx,
-            cy+ry
-        );
+        drawStyledPixelLine(cx, cy-ry, cx, cy+ry);
         return;
     }
     // Cas où l'ellipse devient une ligne horizontale.
     if(ry < 0.5){
-        drawStyledPixelLine(
-            cx-rx,
-            cy,
-            cx+rx,
-            cy
-        );
+        drawStyledPixelLine(cx-rx, cy, cx+rx, cy);
         return;
     }
     // Nombre de points autour de l'ellipse.
-    var steps = Math.max(
-        8,
-        Math.round(
-            2*Math.PI*
-            Math.max(rx,ry)
-        )
-    );
+    var steps = Math.max(8, Math.round(2*Math.PI* Math.max(rx,ry)));
     // Approximation du périmètre.
-    var perimeter =
-        2*Math.PI*
-        Math.sqrt(
-            (rx*rx + ry*ry)/2
-        );
-    var size = Math.max(
-        1,
-        parseInt(sizeInput.value,10)
-    );
-    var dashLength =
-        Math.max(
-            2,
-            size*3
-        );
-    var gapLength =
-        Math.max(
-            2,
-            size * parseInt(dottedGapInput.value,10)
-        );
-    var period =
-        dashLength +
-        gapLength;
-    var oldX = Math.round(
-        cx + rx
-    );
-    var oldY = Math.round(
-        cy
-    );
+    var perimeter =2*Math.PI* Math.sqrt((rx*rx + ry*ry)/2);
+    var size = Math.max(1, parseInt(sizeInput.value,10));
+    var dashLength = Math.max(2, size*3);
+    var gapLength = Math.max(2, size * parseInt(dottedGapInput.value,10));
+    var period = dashLength + gapLength;
+    var oldX = Math.round(cx + rx);
+    var oldY = Math.round(cy);
     var i;
     for(i=1;i<=steps;i++){
-        var t =
-            i / steps;
-        var a =
-            t *
-            Math.PI *
-            2;
-        var x = Math.round(
-            cx +
-            Math.cos(a)*rx
-        );
-        var y = Math.round(
-            cy +
-            Math.sin(a)*ry
-        );
+        var t = i / steps;
+        var a = t * Math.PI * 2;
+        var x = Math.round(cx + Math.cos(a)*rx);
+        var y = Math.round(cy + Math.sin(a)*ry);
         // Position sur le périmètre.
-        var distance =
-            t * perimeter;
+        var distance = t * perimeter;
         // POINTILLÉS
         if(dottedMode){
             if(
@@ -1308,47 +1116,23 @@ function drawPixelEllipse(cx,cy,rx,ry){
                 < dashLength
             ){
                 if(rainbowMode){
-                    ctx.fillStyle =
-                        rainbowColor(
-                            rainbowHue +
-                            t*300
-                        );
+                    ctx.fillStyle = rainbowColor(rainbowHue + t*300);
                 } else {
-                    ctx.fillStyle =
-                        ctx.strokeStyle;
+                    ctx.fillStyle = ctx.strokeStyle;
                 }
                 // On relie les petits morceaux pour éviter les trous entre pixels.
-                drawPixelLine(
-                    oldX,
-                    oldY,
-                    x,
-                    y
-                );
+                drawPixelLine(oldX, oldY, x, y);
             }
         }
         // ARC-EN-CIEL CONTINU
         else if(rainbowMode){
-            ctx.fillStyle =
-                rainbowColor(
-                    t*359
-                );
-            drawPixelLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
+            ctx.fillStyle = rainbowColor(t*359);
+            drawPixelLine(oldX, oldY, x, y);
         }
         // NORMAL
         else{
-            ctx.fillStyle =
-                ctx.strokeStyle;
-            drawPixelLine(
-                oldX,
-                oldY,
-                x,
-                y
-            );
+            ctx.fillStyle = ctx.strokeStyle;
+            drawPixelLine(oldX, oldY, x, y);
         }
         oldX = x;
         oldY = y;
@@ -1356,54 +1140,25 @@ function drawPixelEllipse(cx,cy,rx,ry){
 }
 /* TRACÉ LIBRE */
 function drawFree(x,y){
-    var dx =
-        x-lastX;
-    var dy =
-        y-lastY;
-    var distance =
-        Math.sqrt(
-            dx*dx +
-            dy*dy
-        );
+    var dx = x-lastX;
+    var dy = y-lastY;
+    var distance = Math.sqrt(dx*dx + dy*dy);
     if(distance < 0.1){
         return;
     }
     // GOMME
     if(eraserMode){
-        ctx.globalCompositeOperation =
-            "destination-out";
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        ctx.globalCompositeOperation =
-            "source-over";
+        ctx.globalCompositeOperation = "source-over";
     }
     // POINTILLÉS
     if(dottedMode){
-        var size =
-            Math.max(
-                1,
-                parseInt(
-                    sizeInput.value,
-                    10
-                )
-            );
-        var dashLength =
-            Math.max(
-                2,
-                size*3
-            );
-        var gapLength =
-            Math.max(
-                2,
-                size * parseInt(dottedGapInput.value,10)
-            );
-        var period =
-            dashLength +
-            gapLength;
-        var steps =
-            Math.max(
-                1,
-                Math.ceil(distance)
-            );
+        var size = Math.max(1, parseInt(sizeInput.value, 10));
+        var dashLength = Math.max(2, size*3);
+        var gapLength = Math.max(2, size * parseInt(dottedGapInput.value,10));
+        var period = dashLength + gapLength;
+        var steps = Math.max(1, Math.ceil(distance));
         var i;
         // La position du motif est conservée d'un drawFree() au suivant.
         if(typeof drawFree.dottedDistance !== "number"){
@@ -1425,10 +1180,7 @@ function drawFree(x,y){
                 } else {
                     ctx.fillStyle = ctx.strokeStyle;
                 }
-                drawPixel(
-                    lastX + dx*t,
-                    lastY + dy*t
-                );
+                drawPixel(lastX + dx*t, lastY + dy*t);
             }
         }
         drawFree.dottedDistance += distance;
@@ -1439,8 +1191,7 @@ function drawFree(x,y){
     }
     // TRAIT NORMAL
     else{
-        ctx.fillStyle =
-            ctx.strokeStyle;
+        ctx.fillStyle = ctx.strokeStyle;
         drawPixelLine(lastX, lastY, x, y);
     }
     lastX = x;
@@ -1450,23 +1201,16 @@ function drawFree(x,y){
 function redrawFromUndoTop(){
     if(undoStack.length){
         ctx.putImageData(
-            undoStack[
-                undoStack.length-1
-            ],
-            0,
-            0
-        );
+            undoStack[undoStack.length-1], 0, 0);
     }
 }
 /* LIGNE */
 function drawLinePreview(x,y){
     redrawFromUndoTop();
     if(eraserMode){
-        ctx.globalCompositeOperation =
-            "destination-out";
+        ctx.globalCompositeOperation = "destination-out";
     } else {
-        ctx.globalCompositeOperation =
-            "source-over";
+        ctx.globalCompositeOperation = "source-over";
     }
     drawStyledPixelLine(startX, startY, x, y);
 }
@@ -1498,22 +1242,10 @@ function drawArrowPreviewBase(x,y,doubleArrow){
         var aY = by+py*headWidth;
         var bX = bx-px*headWidth;
         var bY = by-py*headWidth;
-        drawStyledPixelLine(
-            px0,py0,
-            aX,aY
-        );
-        drawStyledPixelLine(
-            aX,aY,
-            bX,bY
-        );
-        drawStyledPixelLine(
-            bX,bY,
-            px0,py0
-        );
-        return {
-            x:bx,
-            y:by
-        };
+        drawStyledPixelLine(px0,py0, aX,aY);
+        drawStyledPixelLine(aX,aY, bX,bY);
+        drawStyledPixelLine(bX,bY, px0,py0);
+        return { x:bx, y:by };
     }
     // Pointe droite.
     var rightBase = drawHead(x, y, 1);
@@ -1524,7 +1256,7 @@ function drawArrowPreviewBase(x,y,doubleArrow){
         drawStyledPixelLine(leftBase.x, leftBase.y, rightBase.x, rightBase.y);
     } else {
         // Bâton jusqu'à la base de la pointe droite.
-        drawStyledPixelLine( startX, startY, rightBase.x, rightBase.y);
+        drawStyledPixelLine(startX, startY, rightBase.x, rightBase.y);
     }
 }
 function drawArrowPreview(x,y){
@@ -1915,7 +1647,7 @@ function drawPixelLine1px(x1,y1,x2,y2){
     }
 }
 function drawSelectionPreview(x,y){
-    /* Restaurer le dessin avant le rectangle temporaire. */
+    // Restaurer le dessin avant le rectangle temporaire.
     if(moveBaseImage){
         ctx.putImageData(moveBaseImage,0,0);
     }
@@ -1929,29 +1661,25 @@ function drawSelectionPreview(x,y){
         return;
     }
     ctx.save();
-    /*
-     * Sélection fantôme :
-     * toujours 1 pixel, quelle que soit
-     * la taille du pinceau sélectionnée.
-     */
+    // Sélection fantôme : toujours 1 pixel, quelle que soit la taille du pinceau sélectionnée.
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = ctx.strokeStyle;
     var dash = 6;
     var gap = 4;
     var i;
-    /* Haut */
+    // Haut
     for(i = sx; i < ex; i += dash + gap){
         drawPixelLine1px(i, sy, Math.min(i + dash - 1, ex), sy);
     }
-    /* Bas */
+    // Bas
     for(i = sx; i < ex; i += dash + gap){
         drawPixelLine1px(i, ey, Math.min(i + dash - 1, ex), ey);
     }
-    /* Gauche */
+    // Gauche
     for(i = sy; i < ey; i += dash + gap){
         drawPixelLine1px(sx, i, sx, Math.min(i + dash - 1, ey));
     }
-    /* Droite */
+    // Droite
     for(i = sy; i < ey; i += dash + gap){
         drawPixelLine1px(ex, i, ex, Math.min(i + dash - 1, ey));
     }
@@ -2190,7 +1918,6 @@ function createPixelSelection(x1,y1,x2,y2,removeOriginal){
     /*
      * Pour MOVE :
      * on retire les pixels de l'endroit original.
-     *
      * Pour COPY :
      * on ne retire rien.
      */
@@ -2818,15 +2545,12 @@ canvas.onpointerdown = function(e){
     saveState();
 	if(currentTool==="free"){
 		if(eraserMode){
-			ctx.globalCompositeOperation =
-				"destination-out";
+			ctx.globalCompositeOperation = "destination-out";
 		} else {
-			ctx.globalCompositeOperation =
-				"source-over";
+			ctx.globalCompositeOperation = "source-over";
 		}
 		if(rainbowMode){
-			ctx.fillStyle =
-				rainbowColor(rainbowHue);
+			ctx.fillStyle =	rainbowColor(rainbowHue);
 			rainbowHue += 1.5;
 			if(rainbowHue >= 360){
 				rainbowHue %= 360;
@@ -2994,10 +2718,7 @@ canvas.onpointermove = function(e){
 		tempImageH = newH;
 		moved = true;
 		drawTempImage();
-		updateDimensions(
-			tempImageW,
-			tempImageH
-		);
+		updateDimensions(tempImageW, tempImageH);
 		return;
 	}
 	// ROTATION
