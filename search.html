@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recherche</title>
-<link rel="icon" href="favicon.png" type="image/png">
 <meta name="description" content="Recherche">
+<link rel="icon" href="favicon.png" type="image/png">
 <style>
 body {
   background:#000;
@@ -28,13 +28,15 @@ a {
   word-break:break-all;
 }
 a:hover{text-decoration:underline;}
-ul{padding-left:15px;margin:0}
+ul{padding-left:15px;margin:0;}
 li{line-height:1.5;}
+b{color:#33b5e5;}
+hr{border:1px inset #33b5e5;margin-left:-100%;margin-right:-100%;}
 </style>
 </head>
 <body>
 <main>
-<b>Recherche : dépôt outils</b>
+<b>Recherche : dépôt outils</b><hr>
 <p style="font-size:14px;">Vous pouvez rechercher les noms ou les contenus des fichiers texte et .html mais uniquement les noms pour les autres fichiers.</p>
 <input id="search" onkeyup="doSearch()" placeholder="Rechercher..." aria-label="Champ de recherche">
 <div id="count" style="margin:4px 0;"></div>
