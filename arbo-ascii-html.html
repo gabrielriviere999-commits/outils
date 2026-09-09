@@ -695,16 +695,11 @@ function saveColors() {
     }
 }
 function updateColors() {
-    var colorBackground = document.getElementById("colorBackground");
-    var colorFolder = document.getElementById("colorFolder");
-    var colorFile = document.getElementById("colorFile");
-    var colorAscii = document.getElementById("colorAscii");
-    var colorComment = document.getElementById("colorComment");
-    COLORS.background = colorBackground.value;
-    COLORS.folder = colorFolder.value;
-    COLORS.file = colorFile.value;
-    COLORS.ascii = colorAscii.value;
-    COLORS.comment = colorComment.value;
+    COLORS.background = document.getElementById("colorBackground").value;
+    COLORS.folder = document.getElementById("colorFolder").value;
+    COLORS.file = document.getElementById("colorFile").value;
+    COLORS.ascii = document.getElementById("colorAscii").value;
+    COLORS.comment = document.getElementById("colorComment").value;
     document.documentElement.style.setProperty("--color-background", COLORS.background);
     document.documentElement.style.setProperty("--color-folder", COLORS.folder);
     document.documentElement.style.setProperty("--color-file", COLORS.file);
