@@ -22,6 +22,8 @@
   cursor:pointer;
   text-decoration:underline;
 }
+.file{color:var(--color-file);}
+.ascii{color:var(--color-ascii);}
 .comment{color:var(--color-comment);}
 .action {
   color:#fa4;
@@ -210,22 +212,7 @@ function buildHtml() {
     html = html.replace(/<span class="action"[^>]*>.*?<\/span>/g, "");
     // 2. Supprimer les onclick=""
     html = html.replace(/ onclick="[^"]*"/g, "");
-    // 3. Colorer les fichiers
-    html = html.replace(
-        /(<span class="ascii">(?:├──|└──)<\/span>)(\s*)([^<\n][^<\n]*)/g,
-        function(_, ascii, spaces, name) {
-            if (name.indexOf('<span class="folder">') === 0) return ascii + spaces + name;
-            if (name.indexOf('<span class="comment">') === 0) return ascii + spaces + name;
-            if (name.replace(/\s+/g, "") === "") return ascii + spaces + name;
-            return ascii + spaces + '<span class="file">' + name + '</span>';
-        }
-    );
-    // 4. Restaurer les commentaires
-    var i = 0;
-    html = html.replace(/§COMMENT§/g, function(){
-        return comments[i++];
-    });
-    // 5. Générer le bloc HTML complet
+    // 3. Générer le bloc HTML complet
     var finalHtml =
         '<style>\n' +
         'pre.tree{background:' + COLORS.background + ';font-family:monospace;padding:5px;overflow-x:auto;}\n' +
