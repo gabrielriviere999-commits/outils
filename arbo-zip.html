@@ -6,14 +6,16 @@
 <title>Arborescence ZIP</title>
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 pre.tree{padding:5px;font-family:monospace;}
 .folder{color:#4af;}
 .file{color:#0f0;text-decoration:none;}
 .file:hover{text-decoration:underline;}
 .ascii{color:#0f0;}
-#stats{color:#0f0;font-family:monospace;}
+#stats{font-family:monospace;}
 .tree{overflow:auto;max-height:500px;max-height:70vh;}
+input{width:60px;}
 </style>
 </head>
 <body>
@@ -21,7 +23,50 @@ pre.tree{padding:5px;font-family:monospace;}
 <div class="container">
 <div class="card">
 <h3>Importer un ZIP</h3>
-<input type="file" id="zipInput">
+<input type="file" id="zipInput"><br>
+<fieldset><legend>Couleurs</legend>
+<label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
+<label>Texte : <input id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
+<label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label>
+<br>
+<button type="button" onclick="exportColors()">Exporter</button>
+<button type="button" onclick="showImportBox()">Importer</button>
+<button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
+<div id="importBox" style="display:none;">
+  <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
+  <button type="button" onclick="applyImport()">Valider l'import</button>
+  <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+</div>
+</fieldset>
+<div class="overlayColorPicker">
+  <div class="overlayColorPicker-cell">
+    <div class="mini-picker" id="miniPicker">
+      <div class="sv-box" id="svBox">
+        <div class="sv-cursor" id="svCursor"></div>
+      </div>
+      <div class="hue-slider" id="hueSlider">
+        <div class="hue-cursor" id="hueCursor"></div>
+      </div>
+      <div class="alpha-slider" id="alphaSlider">
+        <div class="alpha-cursor" id="alphaCursor"></div>
+      </div>
+        <div class="quick-colors">
+        <button class="qc" data-col="#000000" style="background:#000000"></button>
+        <button class="qc" data-col="#ffffff" style="background:#ffffff"></button>
+        <button class="qc" data-col="#ff0000" style="background:#ff0000"></button>
+        <button class="qc" data-col="#ff9900" style="background:#ff9900"></button>
+        <button class="qc" data-col="#ffff00" style="background:#ffff00"></button>
+        <button class="qc" data-col="#00ff00" style="background:#00ff00"></button>
+        <button class="qc" data-col="#00ffff" style="background:#00ffff"></button>
+        <button class="qc" data-col="#0000ff" style="background:#0000ff"></button>
+        <button class="qc" data-col="#ff00ff" style="background:#ff00ff"></button>
+      </div>
+      <button id="closePickerBtn" onclick="closePicker()">Fermer</button>
+    </div>
+  </div>
+</div>
 <textarea wrap="off" id="asciiTextArea"></textarea><br>
 <button id="copyasciiTextArea" class="btn-color" style="background:#4caf50;">Copier</button>
 <p id="stats"></p>
@@ -38,13 +83,87 @@ pre.tree{padding:5px;font-family:monospace;}
 </div>
 <script src="outils.js"></script>
 <script src="libs/jszip.min.js"></script>
+<script src="color-palette.js"></script>
 <script>
 /* --- VARIABLES GLOBALES ES3 --- */
-var rootName = "";   // nom du dossier racine affiché
-var zipName = "";    // nom du ZIP sans .zip
+var rootName = ""; // nom du dossier racine affiché
+var zipName = ""; // nom du ZIP sans .zip
+var tree = { name: "", folders: [], files: [] };
 // Dossiers et fichiers à exclure pour GitHub Pages
 var EXCLUDE_DIRS = {".git":1, ".github":1};
 var EXCLUDE_FILES = {".gitignore":1, ".gitattributes":1, "arbo.html":1};
+var COLORS_STORAGE_KEY = "arborescenceZipColors";
+var DEFAULT_COLORS = {
+    background: "#000000",
+    body: "#00ff00",
+    folder: "#44aaff",
+    file: "#00ff00",
+    ascii: "#00ff00"
+};
+var COLORS = {
+    background: DEFAULT_COLORS.background,
+    body: DEFAULT_COLORS.body,
+    folder: DEFAULT_COLORS.folder,
+    file: DEFAULT_COLORS.file,
+    ascii: DEFAULT_COLORS.ascii
+};
+var colorBackground = document.getElementById("colorBackground");
+var colorBody = document.getElementById("colorBody");
+var colorFolder = document.getElementById("colorFolder");
+var colorFile = document.getElementById("colorFile");
+var colorAscii = document.getElementById("colorAscii");
+function updateColors() {
+    COLORS.background = document.getElementById("colorBackground").value;
+    COLORS.body = document.getElementById("colorBody").value;
+    COLORS.folder = document.getElementById("colorFolder").value;
+    COLORS.file = document.getElementById("colorFile").value;
+    COLORS.ascii = document.getElementById("colorAscii").value;
+    // Zone d'arborescence uniquement
+    var output = document.getElementById("output");
+    // Texte des statistiques
+    var stats = document.getElementById("stats");
+    stats.style.color = COLORS.body;
+    output.style.backgroundColor = COLORS.background;
+    output.style.color = COLORS.body;
+    // Dossiers uniquement dans l'arborescence
+    var folders = output.getElementsByClassName("folder");
+    var files = output.getElementsByClassName("file");
+    var ascii = output.getElementsByClassName("ascii");
+    var i;
+    for (i = 0; i < folders.length; i++) {
+        folders[i].style.color = COLORS.folder;
+    }
+    for (i = 0; i < files.length; i++) {
+        files[i].style.color = COLORS.file;
+    }
+    for (i = 0; i < ascii.length; i++) {
+        ascii[i].style.color = COLORS.ascii;
+    }
+    // Met à jour le code HTML exporté
+    if (tree && tree.folders) {
+        generateHtml();
+    }
+}
+document.getElementById("colorBackground").oninput = function () {
+    updateColors();
+    saveColors();
+};
+document.getElementById("colorBody").oninput = function () {
+    updateColors();
+    saveColors();
+};
+document.getElementById("colorFolder").oninput = function () {
+    updateColors();
+    saveColors();
+};
+document.getElementById("colorFile").oninput = function () {
+    updateColors();
+    saveColors();
+};
+document.getElementById("colorAscii").oninput = function () {
+    updateColors();
+    saveColors();
+};
 /* --- IMPORT ZIP --- */
 document.getElementById("zipInput").onchange = function (e) {
     var file = e.target.files[0];
@@ -55,7 +174,7 @@ document.getElementById("zipInput").onchange = function (e) {
         JSZip.loadAsync(evt.target.result).then(function (zip) {
             rootName = zipName;
             // Construction de l'arbre
-            var tree = { name: "", folders: [], files: [] };
+            tree = { name: "", folders: [], files: [] };
             for (var path in zip.files) {
                 var entry = zip.files[path];
                 var parts = path.split("/");
@@ -71,32 +190,51 @@ document.getElementById("zipInput").onchange = function (e) {
             // Affichage ASCII dans textarea
             var asciiText = buildAsciiText(tree, "", true);
             document.getElementById("asciiTextArea").value = asciiText;
-            // Génération du fichier HTML complet
-            var asciiText = buildAsciiText(tree, "", true);
-            var fullPage =
-                '<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n' +
-                '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
-                '<title>Arborescence</title>\n' +
-                '<link rel="icon" href="favicon.png" type="image/png">\n' +
-                '<style>\n' +
-                'body{background:black;color:#0f0;font-family:monospace;}\n' +
-                'pre.tree{padding:5px;}\n' +
-                '.folder{color:#4af;}\n' +
-                '.file{color:#0f0;text-decoration:none;}\n' +
-                '.file:hover{text-decoration:underline;}\n' +
-                '.ascii{color:#0f0;}\n' +
-                '</style>\n</head>\n<body>\n' +
-                '<p>Dossiers : ' + counts.folders + ', Fichiers : ' + counts.files + '</p>\n' +
-                '<pre class="tree">\n' + html + '</pre>\n' +
-                '<button id="copyarbo" style="background:#000;color:#ccc;border:none;cursor:pointer;">[Copier]</button>\n' +
-                '<br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #808080;font-family:monospace;">\n' + asciiText + '</textarea>\n' +
-                '<script>function copyFrom(id,btn){var code=document.getElementById(id);var temp=document.createElement("textarea");temp.value=code.value;document.body.appendChild(temp);temp.select();try{document.execCommand("copy");}catch(err){}document.body.removeChild(temp);btn.focus();}document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};<\/script>\n' +
-                '</body>\n</html>';
-            document.getElementById("htmlCode").value = fullPage;
+            // Réapplique les couleurs aux nouveaux éléments de l'arborescence
+            updateColors();
         });
     };
     reader.readAsArrayBuffer(file);
 };
+function generateHtml() {
+    var counts = countItems(tree);
+    var html = buildAscii(tree);
+    var asciiText = buildAsciiText(tree, "", true);
+    var fullPage =
+        '<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+        '<title>Arborescence</title>\n' +
+        '<link rel="icon" href="favicon.png" type="image/png">\n' +
+        '<style>\n' +
+        'body{background:' + COLORS.background + ';color:' + COLORS.body + ';font-family:monospace;}\n' +
+        'pre.tree{padding:5px;}\n' +
+        '.folder{color:' + COLORS.folder + ';}\n' +
+        '.file{color:' + COLORS.file + ';text-decoration:none;}\n' +
+        '.file:hover{text-decoration:underline;}\n' +
+        '.ascii{color:' + COLORS.ascii + ';}\n' +
+        '</style>\n</head>\n<body>\n' +
+        '<p>Dossiers : ' + counts.folders + ', Fichiers : ' + counts.files + '</p>\n' +
+        '<pre class="tree">\n' + html + '</pre>\n' +
+        '<button id="copyarbo" style="background:#000;color:#ccc;border:none;cursor:pointer;">[Copier]</button>\n' +
+        '<br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #808080;font-family:monospace;">\n' +
+        asciiText +
+        '</textarea>\n' +
+        '<script>' +
+        'function copyFrom(id,btn){' +
+        'var code=document.getElementById(id);' +
+        'var temp=document.createElement("textarea");' +
+        'temp.value=code.value;' +
+        'document.body.appendChild(temp);' +
+        'temp.select();' +
+        'try{document.execCommand("copy");}catch(err){}' +
+        'document.body.removeChild(temp);' +
+        'btn.focus();' +
+        '}' +
+        'document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};' +
+        '<\/script>\n' +
+        '</body>\n</html>';
+    document.getElementById("htmlCode").value = fullPage;
+}
 /* --- Construction de l'arbre --- */
 function buildTree(node, parts, isDir, fullPath) {
     if (parts.length === 0 || parts[0] === "") return;
@@ -220,6 +358,170 @@ function buildAsciiText(node, prefix, isRoot) {
         }
     }
     return out;
+}
+/* --- CHARGER LES COULEURS AU DEMARRAGE --- */
+function loadColors() {
+    var saved = localStorage.getItem(COLORS_STORAGE_KEY);
+    if (!saved) {
+        return;
+    }
+    try {
+        var colors = JSON.parse(saved);
+        if (colors.background) {
+            colorBackground.value = colors.background;
+        }
+        if (colors.body) {
+            colorBody.value = colors.body;
+        }
+        if (colors.folder) {
+            colorFolder.value = colors.folder;
+        }
+        if (colors.file) {
+            colorFile.value = colors.file;
+        }
+        if (colors.ascii) {
+            colorAscii.value = colors.ascii;
+        }
+    } catch (e) {
+        console.log("Erreur lors du chargement des couleurs.");
+    }
+}
+/* --- SAUVEGARDER LES COULEURS --- */
+function saveColors() {
+    var colors = {
+        background: colorBackground.value,
+        body: colorBody.value,
+        folder: colorFolder.value,
+        file: colorFile.value,
+        ascii: colorAscii.value
+    };
+    try {
+        localStorage.setItem(COLORS_STORAGE_KEY, JSON.stringify(colors));
+    } catch (e) {
+        console.log("Impossible de sauvegarder les couleurs.");
+    }
+}
+/* --- APPLIQUER LES COULEURS --- */
+function updateColors() {
+    COLORS.background = colorBackground.value;
+    COLORS.body = colorBody.value;
+    COLORS.folder = colorFolder.value;
+    COLORS.file = colorFile.value;
+    COLORS.ascii = colorAscii.value;
+    // Sauvegarde automatique
+    saveColors();
+    // Zone d'arborescence
+    var output = document.getElementById("output");
+    output.style.backgroundColor = COLORS.background;
+    output.style.color = COLORS.body;
+    // Statistiques
+    var stats = document.getElementById("stats");
+    stats.style.color = COLORS.body;
+    // Dossiers
+    var folders = output.getElementsByClassName("folder");
+    // Fichiers
+    var files = output.getElementsByClassName("file");
+    // ASCII
+    var ascii = output.getElementsByClassName("ascii");
+    var i;
+    for (i = 0; i < folders.length; i++) {
+        folders[i].style.color = COLORS.folder;
+    }
+    for (i = 0; i < files.length; i++) {
+        files[i].style.color = COLORS.file;
+    }
+    for (i = 0; i < ascii.length; i++) {
+        ascii[i].style.color = COLORS.ascii;
+    }
+    // Mise à jour du HTML exporté
+    if (tree && tree.folders) {
+        generateHtml();
+    }
+}
+/* --- INITIALISATION --- */
+// Charger d'abord les couleurs sauvegardées
+loadColors();
+// Initialiser les mini color pickers
+attachColorPickerTo(colorBackground);
+attachColorPickerTo(colorBody);
+attachColorPickerTo(colorFolder);
+attachColorPickerTo(colorFile);
+attachColorPickerTo(colorAscii);
+// Synchroniser les mini pickers avec les valeurs chargées
+updatePickerFromInput(colorBackground, colorBackground.nextElementSibling);
+updatePickerFromInput(colorBody, colorBody.nextElementSibling);
+updatePickerFromInput(colorFolder, colorFolder.nextElementSibling);
+updatePickerFromInput(colorFile, colorFile.nextElementSibling);
+updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
+// Appliquer les couleurs
+updateColors();
+/* --- CHANGEMENT MANUEL DES INPUTS --- */
+colorBackground.oninput = updateColors;
+colorBody.oninput = updateColors;
+colorFolder.oninput = updateColors;
+colorFile.oninput = updateColors;
+colorAscii.oninput = updateColors;
+function exportColors() {
+    var colors = {
+        background: document.getElementById("colorBackground").value,
+        body: document.getElementById("colorBody").value,
+        folder: document.getElementById("colorFolder").value,
+        file: document.getElementById("colorFile").value,
+        ascii: document.getElementById("colorAscii").value
+    };
+    document.getElementById("json").value = JSON.stringify(colors, null, 4);
+    document.getElementById("importBox").style.display = "block";
+}
+function resetColors() {
+    colorBackground.value = DEFAULT_COLORS.background;
+    colorBody.value = DEFAULT_COLORS.body;
+    colorFolder.value = DEFAULT_COLORS.folder;
+    colorFile.value = DEFAULT_COLORS.file;
+    colorAscii.value = DEFAULT_COLORS.ascii;
+    updatePickerFromInput(colorBackground, colorBackground.nextElementSibling);
+    updatePickerFromInput(colorBody, colorBody.nextElementSibling);
+    updatePickerFromInput(colorFolder, colorFolder.nextElementSibling);
+    updatePickerFromInput(colorFile, colorFile.nextElementSibling);
+    updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
+    updateColors();
+}
+function showImportBox() {
+    document.getElementById("importBox").style.display = "block";
+    document.getElementById("json").focus();
+}
+function applyImport() {
+    var text = document.getElementById("json").value;
+    if (!text) {
+        return;
+    }
+    try {
+        var colors = JSON.parse(text);
+        if (colors.background) {
+            document.getElementById("colorBackground").value = colors.background;
+        }
+        if (colors.body) {
+            document.getElementById("colorBody").value = colors.body;
+        }
+        if (colors.folder) {
+            document.getElementById("colorFolder").value = colors.folder;
+        }
+        if (colors.file) {
+            document.getElementById("colorFile").value = colors.file;
+        }
+        if (colors.ascii) {
+            document.getElementById("colorAscii").value = colors.ascii;
+        }
+        // Mise à jour des mini color pickers
+        updatePickerFromInput(colorBackground, colorBackground.nextElementSibling);
+        updatePickerFromInput(colorBody, colorBody.nextElementSibling);
+        updatePickerFromInput(colorFolder, colorFolder.nextElementSibling);
+        updatePickerFromInput(colorFile, colorFile.nextElementSibling);
+        updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
+        // Sauvegarde + application
+        updateColors();
+    } catch (e) {
+        alert("Format de couleurs invalide.");
+    }
 }
 </script>
 </body>
