@@ -24,22 +24,6 @@ input{width:60px;}
 <div class="card">
 <h3>Importer un ZIP</h3>
 <input type="file" id="zipInput"><br>
-<fieldset><legend>Couleurs</legend>
-<label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
-<label>Texte : <input id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
-<label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
-<label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
-<label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label>
-<br>
-<button type="button" onclick="exportColors()">Exporter</button>
-<button type="button" onclick="showImportBox()">Importer</button>
-<button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
-<div id="importBox" style="display:none;">
-  <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
-  <button type="button" onclick="applyImport()">Valider l'import</button>
-  <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
-</div>
-</fieldset>
 <div class="overlayColorPicker">
   <div class="overlayColorPicker-cell">
     <div class="mini-picker" id="miniPicker">
@@ -69,6 +53,21 @@ input{width:60px;}
 </div>
 <textarea wrap="off" id="asciiTextArea"></textarea><br>
 <button id="copyasciiTextArea" class="btn-color" style="background:#4caf50;">Copier</button>
+<fieldset><legend>Couleurs</legend>
+<label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
+<label>Texte : <input id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
+<label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label><hr>
+<button type="button" onclick="exportColors()">Exporter</button>
+<button type="button" onclick="showImportBox()">Importer</button>
+<button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
+<div id="importBox" style="display:none;">
+  <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
+  <button type="button" onclick="applyImport()">Valider l'import</button>
+  <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+</div>
+</fieldset>
 <p id="stats"></p>
 <pre class="tree" id="output"></pre>
 <details><summary>Bibliothèque ZIP</summary>
