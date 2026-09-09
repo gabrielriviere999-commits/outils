@@ -57,7 +57,7 @@ setupDragDrop("textA");
 setupDragDrop("textB");
 setupDragDrop("view");
 setupDragDrop("textInput");
-setupDragDrop("importBox");
+setupDragDrop("json");
 /* --- Sélecteur de fichiers importer textarea ---*/
 function importTextareaFile(fileInputId, textareaId) {
     var file = document.getElementById(fileInputId);
