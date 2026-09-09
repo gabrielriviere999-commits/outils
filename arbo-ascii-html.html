@@ -6,10 +6,11 @@
 <title>Arborescence ASCII & HTML</title>
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
 <style>
 #ascii {
-  background:black;
-  color:#0f0;
+  background:var(--color-background);
+  color:var(--color-file);
   font-family:monospace;
   padding:15px;
   max-height:500px;
@@ -17,16 +18,17 @@
   overflow:auto;
 }
 .folder {
-  color:#4af;
+  color:var(--color-folder);
   cursor:pointer;
   text-decoration:underline;
 }
-.comment{color:#888;}
+.comment{color:var(--color-comment);}
 .action {
   color:#fa4;
   cursor:pointer;
   margin-left:5px;
 }
+input{width:60px;}
 </style>
 </head>
 <body>
@@ -68,9 +70,53 @@
   <button onclick="showTreeText()" class="btn-color" style="background:#4caf50;">Afficher texte</button>
   <button onclick="showTreeHtml()" class="btn-color" style="background:#4caf50;">Afficher HTML couleur</button>
   <br><textarea wrap="off" id="previewBox" style="display:none;"></textarea>
+  <div class="overlayColorPicker">
+    <div class="overlayColorPicker-cell">
+      <div class="mini-picker" id="miniPicker">
+        <div class="sv-box" id="svBox">
+          <div class="sv-cursor" id="svCursor"></div>
+        </div>
+        <div class="hue-slider" id="hueSlider">
+          <div class="hue-cursor" id="hueCursor"></div>
+        </div>
+        <div class="alpha-slider" id="alphaSlider">
+          <div class="alpha-cursor" id="alphaCursor"></div>
+        </div>
+          <div class="quick-colors">
+          <button class="qc" data-col="#000000" style="background:#000000"></button>
+          <button class="qc" data-col="#ffffff" style="background:#ffffff"></button>
+          <button class="qc" data-col="#ff0000" style="background:#ff0000"></button>
+          <button class="qc" data-col="#ff9900" style="background:#ff9900"></button>
+          <button class="qc" data-col="#ffff00" style="background:#ffff00"></button>
+          <button class="qc" data-col="#00ff00" style="background:#00ff00"></button>
+          <button class="qc" data-col="#00ffff" style="background:#00ffff"></button>
+          <button class="qc" data-col="#0000ff" style="background:#0000ff"></button>
+          <button class="qc" data-col="#ff00ff" style="background:#ff00ff"></button>
+        </div>
+        <button id="closePickerBtn" onclick="closePicker()">Fermer</button>
+      </div>
+    </div>
+  </div>
+<fieldset><legend>Couleurs</legend>
+  <label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
+  <label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
+  <label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
+  <label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label>
+  <label>Commentaires : <input id="colorComment" value="#888888"><button class="previewColorPicker"></button></label>
+  <div>
+    <button type="button" onclick="exportColors()">Exporter</button>
+    <button type="button" onclick="showImportColors()">Importer</button>
+    <button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
+  </div>
+  <div id="importBox" style="display:none;">
+    <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
+    <button type="button" onclick="applyImport()">Valider l'import</button>
+    <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+  </div>
+</fieldset>
 </div>
 <div class="card">
-  <textarea wrap="off" id="importBox"></textarea><br>
+  <textarea wrap="off" id="treeImportBox"></textarea><br>
   <button onclick="restoreTree()" class="btn-color" style="background:#ff8800;">Mettre à jour à partir du texte</button>
   <button onclick="importTreeFromText()" class="btn-color" style="background:#ff8800;">Importer (commande tree)</button>
   <input type="file" id="textareaFileimportBox">
@@ -78,13 +124,14 @@
 </div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
+<script src="color-palette.js"></script>
 <script>
-// --- Données ---
+// Données
 var root = { name: "racine/", folders: [], files: [] };
 // chemin courant sous forme d'indices de dossiers : [] = racine, [0] = premier dossier, etc.
 var currentPath = [];
 var lastAsciiText = "";
-// --- Utilitaires ---
+// Utilitaires
 function cloneArray(a) {
     var r = [];
     var i;
@@ -112,7 +159,7 @@ function stringToPath(str) {
     }
     return parts;
 }
-// --- Actions globales ---
+// Actions globales
 function renameRoot() {
     var name = prompt("Nom de la racine :", root.name);
     if (!name) return;
@@ -144,7 +191,6 @@ function goUp() {
     }
 }
 function copyTree(btn) {
-	var btn = event.target;
     var textarea = document.createElement("textarea");
     textarea.value = lastAsciiText;
     document.body.appendChild(textarea);
@@ -164,17 +210,7 @@ function buildHtml() {
     html = html.replace(/<span class="action"[^>]*>.*?<\/span>/g, "");
     // 2. Supprimer les onclick=""
     html = html.replace(/ onclick="[^"]*"/g, "");
-    // 3. Sauvegarder les commentaires
-    var comments = [];
-    html = html.replace(/<span class="comment">[\s\S]*?<\/span>/g, function(m){
-        comments.push(m);
-        return "§COMMENT§";
-    });
-    // 4. Colorer les symboles ASCII
-    html = html.replace(/├──/g, '<span class="ascii">├──</span>');
-    html = html.replace(/└──/g, '<span class="ascii">└──</span>');
-    html = html.replace(/│/g,   '<span class="ascii">│</span>');
-    // 5. Colorer les fichiers
+    // 3. Colorer les fichiers
     html = html.replace(
         /(<span class="ascii">(?:├──|└──)<\/span>)(\s*)([^<\n][^<\n]*)/g,
         function(_, ascii, spaces, name) {
@@ -184,19 +220,19 @@ function buildHtml() {
             return ascii + spaces + '<span class="file">' + name + '</span>';
         }
     );
-    // 6. Restaurer les commentaires
+    // 4. Restaurer les commentaires
     var i = 0;
     html = html.replace(/§COMMENT§/g, function(){
         return comments[i++];
     });
-    // 7. Générer le bloc HTML complet
+    // 5. Générer le bloc HTML complet
     var finalHtml =
         '<style>\n' +
-        'pre.tree{background:black;font-family:monospace;padding:5px;overflow-x:auto;}\n' +
-        'pre.tree .folder{color:#4af;}\n' +
-        'pre.tree .file{color:#0f0;}\n' +
-        'pre.tree .ascii{color:#0f0;}\n' +
-        'pre.tree .comment{color:#888;}\n' +
+        'pre.tree{background:' + COLORS.background + ';font-family:monospace;padding:5px;overflow-x:auto;}\n' +
+        'pre.tree .folder{color:' + COLORS.folder + ';}\n' +
+        'pre.tree .file{color:' + COLORS.file + ';}\n' +
+        'pre.tree .ascii{color:' + COLORS.ascii + ';}\n' +
+        'pre.tree .comment{color:' + COLORS.comment + ';}\n' +
         '</style>\n' +
         '<pre class="tree">\n' +
         html +
@@ -220,7 +256,7 @@ function showTreeHtml() {
     box.value = finalHtml;
 }
 function restoreTree() {
-    var text = document.getElementById("importBox").value;
+    var text = document.getElementById("treeImportBox").value;
     if (!text) {
         alert("Le champ de texte est vide.");
         return;
@@ -232,7 +268,7 @@ function restoreTree() {
     for (i = 0; i < lines.length; i++) {
         var line = lines[i].replace(/\r/g, "");
         if (line === "") continue;
-        // --- 1. Indentation (groupes de 4 espaces ou │   )
+        // 1. Indentation (groupes de 4 espaces ou │   )
         var indent = 0;
         var pos = 0;
         while (true) {
@@ -244,11 +280,11 @@ function restoreTree() {
                 break;
             }
         }
-        // --- 2. Nettoyer ├── et └──
+        // 2. Nettoyer ├── et └──
         var clean = line.substr(pos);
         clean = clean.replace(/^├──\s*/, "");
         clean = clean.replace(/^└──\s*/, "");
-        // --- 3. Séparer nom et commentaire
+        // 3. Séparer nom et commentaire
         var comment = "";
         var arrowPos = clean.indexOf("←");
         if (arrowPos !== -1) {
@@ -257,19 +293,19 @@ function restoreTree() {
             clean = clean.substring(0, arrowPos);
             clean = clean.replace(/\s+$/, ""); // trim right
         }
-        // --- 4. Racine
+        // 4. Racine
         if (newRoot === null) {
             if (clean.charAt(clean.length - 1) !== "/") clean += "/";
             newRoot = { name: clean, comment: comment, folders: [], files: [] };
             stack.push({ node: newRoot, indent: -1 });
             continue;
         }
-        // --- 5. Trouver parent
+        // 5. Trouver parent
         while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
             stack.pop();
         }
         var parent = stack[stack.length - 1].node;
-        // --- 6. Dossier ou fichier ?
+        // 6. Dossier ou fichier ?
         if (clean.charAt(clean.length - 1) === "/") {
             var folderName = clean.substring(0, clean.length - 1);
             var folder = { name: folderName, comment: comment, folders: [], files: [] };
@@ -279,17 +315,17 @@ function restoreTree() {
             parent.files.push({ name: clean, comment: comment });
         }
     }
-    // --- 7. Remplacer l'arbre actuel
+    // 7. Remplacer l'arbre actuel
     root = newRoot;
     currentPath = [];
     render();
 }
-// --- Navigation par clic ---
+// Navigation par clic
 function enterFolder(pathStr) {
     currentPath = stringToPath(pathStr);
     render();
 }
-// --- Renommer / supprimer dossiers ---
+// Renommer / supprimer dossiers
 function renameFolder(pathStr) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
@@ -325,7 +361,7 @@ function deleteFolder(pathStr) {
     }
     render();
 }
-// --- Renommer / supprimer fichiers ---
+// Renommer / supprimer fichiers
 function renameFile(pathStr, fileIndex) {
     var pathArr = stringToPath(pathStr);
     var node = getNodeByPath(pathArr);
@@ -359,12 +395,12 @@ function editCommentFile(pathStr, fileIndex) {
     node.files[fileIndex].comment = c;
     render();
 }
-// --- Rendu ---
+// Rendu
 function render() {
     var node = root;
     var i;
     var parts = [];
-    // --- Construire le chemin courant ---
+    // Construire le chemin courant
     var rootName = root.name;
     if (rootName.charAt(rootName.length - 1) !== "/") {
         rootName = rootName + "/";
@@ -379,10 +415,11 @@ function render() {
         parts.push(name);
     }
     document.getElementById("currentPath").innerHTML = parts.join("");
-    // --- ASCII HTML (avec clics) ---
+    // ASCII HTML (avec clics)
     var html = buildAscii(root, "", []);
     document.getElementById("ascii").innerHTML = html;
-    // --- ASCII TEXTE PUR (sans [R][X], sans <span>) ---
+    updateColors();
+    // ASCII TEXTE PUR (sans [R][X], sans <span>)
     lastAsciiText = buildAsciiText(root, "", []);
 }
 function buildAscii(node, prefix, pathArr) {
@@ -404,12 +441,13 @@ function buildAscii(node, prefix, pathArr) {
         var entry = entries[i];
         var last = (i === entries.length - 1);
         var branch = last ? "└── " : "├── ";
+        var branchHtml = '<span class="ascii">' + branch + '</span>';
         if (entry.type === "folder") {
             var childPath = cloneArray(pathArr);
             childPath.push(entry.index);
             var pathStr = pathToString(childPath);
             var child = node.folders[entry.index];
-            out += prefix + branch +
+            out += prefix + branchHtml +
                 '<span class="folder" onclick="enterFolder(\'' + pathStr + '\')">' +
                 child.name + '/</span>' +
                 (child.comment ? ' <span class="comment">← ' + child.comment + '</span>' : '') +
@@ -417,12 +455,19 @@ function buildAscii(node, prefix, pathArr) {
                 '<span class="action" onclick="renameFolder(\'' + pathStr + '\')">[R]</span>' +
                 '<span class="action" onclick="deleteFolder(\'' + pathStr + '\')">[X]</span>' +
                 "\n";
-            out += buildAscii(child, prefix + (last ? "    " : "│   "), childPath);
+            var nextPrefix = prefix;
+            if (last) {
+                nextPrefix += "    ";
+            } else {
+                nextPrefix += '<span class="ascii">│</span>   ';
+            }
+            out += buildAscii(child, nextPrefix, childPath);
         }
         else {
             var filePathStr = pathToString(pathArr);
             var file = node.files[entry.index];
-            out += prefix + branch + file.name +
+            out += prefix + branchHtml +
+                '<span class="file">' + file.name + '</span>' +
                 (file.comment ? ' <span class="comment">← ' + file.comment + '</span>' : '') +
                 '<span class="action" onclick="editCommentFile(\'' + filePathStr + '\',' + entry.index + ')">[C]</span>' +
                 '<span class="action" onclick="renameFile(\'' + filePathStr + '\',' + entry.index + ')">[R]</span>' +
@@ -465,7 +510,6 @@ function buildAsciiText(node, prefix, pathArr) {
     }
     return out;
 }
-render();
 // Parseur universel pour sortie "tree"
 // Entrée : texte brut de "tree" (avec ou sans -F)
 // Sortie : { name, folders, files, comment }
@@ -535,7 +579,7 @@ function importTreeUniversal(text) {
     }
     return root;
 }
-// --------- Helpers ES3 compatibles ---------
+// Helpers ES3 compatibles
 function trim(str) {
     return str.replace(/^\s+|\s+$/g, "");
 }
@@ -550,7 +594,7 @@ function getTreeIndentLevel(line) {
     // On parcourt les blocs "│   " ou "    "
     while (i < len) {
         var ch = line.charAt(i);
-        if (ch === " " || ch === "│" || ch === "│") {
+        if (ch === " " || ch === "│") {
             // On regarde par blocs de 4 colonnes
             var block = line.substr(i, 4);
             if (block.indexOf("├") !== -1 || block.indexOf("└") !== -1) {
@@ -593,7 +637,7 @@ function hasFileLikeExtension(name) {
     return true;
 }
 function importTreeFromText() {
-    var txt = document.getElementById("importBox").value;
+    var txt = document.getElementById("treeImportBox").value;
     if (!txt) {
         alert("Le champ de texte est vide.");
         return;
@@ -607,6 +651,163 @@ function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
 }
+var COLORS_STORAGE_KEY = "arborescenceAsciiColors";
+var DEFAULT_COLORS = {
+    background: "#000000",
+    folder: "#44aaff",
+    file: "#00ff00",
+    ascii: "#00ff00",
+    comment: "#888888"
+};
+var COLORS = {
+    background: DEFAULT_COLORS.background,
+    folder: DEFAULT_COLORS.folder,
+    file: DEFAULT_COLORS.file,
+    ascii: DEFAULT_COLORS.ascii,
+    comment: DEFAULT_COLORS.comment
+};
+function loadColors() {
+    var saved = localStorage.getItem(COLORS_STORAGE_KEY);
+    if (!saved) return;
+    try {
+        var colors = JSON.parse(saved);
+        if (colors.background) {
+            document.getElementById("colorBackground").value = colors.background;
+        }
+        if (colors.folder) {
+            document.getElementById("colorFolder").value = colors.folder;
+        }
+        if (colors.file) {
+            document.getElementById("colorFile").value = colors.file;
+        }
+        if (colors.ascii) {
+            document.getElementById("colorAscii").value = colors.ascii;
+        }
+        if (colors.comment) {
+            document.getElementById("colorComment").value = colors.comment;
+        }
+    } catch (e) {
+        console.log("Erreur lors du chargement des couleurs.");
+    }
+}
+function saveColors() {
+    var colors = {
+        background: document.getElementById("colorBackground").value,
+        folder: document.getElementById("colorFolder").value,
+        file: document.getElementById("colorFile").value,
+        ascii: document.getElementById("colorAscii").value,
+        comment: document.getElementById("colorComment").value
+    };
+    try {
+        localStorage.setItem(
+            COLORS_STORAGE_KEY,
+            JSON.stringify(colors)
+        );
+    } catch (e) {
+        console.log("Impossible de sauvegarder les couleurs.");
+    }
+}
+function updateColors() {
+    var colorBackground = document.getElementById("colorBackground");
+    var colorFolder = document.getElementById("colorFolder");
+    var colorFile = document.getElementById("colorFile");
+    var colorAscii = document.getElementById("colorAscii");
+    var colorComment = document.getElementById("colorComment");
+    COLORS.background = colorBackground.value;
+    COLORS.folder = colorFolder.value;
+    COLORS.file = colorFile.value;
+    COLORS.ascii = colorAscii.value;
+    COLORS.comment = colorComment.value;
+    document.documentElement.style.setProperty("--color-background", COLORS.background);
+    document.documentElement.style.setProperty("--color-folder", COLORS.folder);
+    document.documentElement.style.setProperty("--color-file", COLORS.file);
+    document.documentElement.style.setProperty("--color-ascii", COLORS.ascii);
+    document.documentElement.style.setProperty("--color-comment", COLORS.comment);
+    saveColors();
+}
+function resetColors() {
+    document.getElementById("colorBackground").value = DEFAULT_COLORS.background;
+    document.getElementById("colorFolder").value = DEFAULT_COLORS.folder;
+    document.getElementById("colorFile").value = DEFAULT_COLORS.file;
+    document.getElementById("colorAscii").value = DEFAULT_COLORS.ascii;
+    document.getElementById("colorComment").value = DEFAULT_COLORS.comment;
+    updatePickerFromInput(document.getElementById("colorBackground"), document.getElementById("colorBackground").nextElementSibling);
+    updatePickerFromInput(document.getElementById("colorFolder"), document.getElementById("colorFolder").nextElementSibling);
+    updatePickerFromInput(document.getElementById("colorFile"), document.getElementById("colorFile").nextElementSibling);
+    updatePickerFromInput(document.getElementById("colorAscii"), document.getElementById("colorAscii").nextElementSibling);
+    updatePickerFromInput(document.getElementById("colorComment"), document.getElementById("colorComment").nextElementSibling);
+    updateColors();
+}
+function exportColors() {
+    var colors = {
+        background: document.getElementById("colorBackground").value,
+        folder: document.getElementById("colorFolder").value,
+        file: document.getElementById("colorFile").value,
+        ascii: document.getElementById("colorAscii").value,
+        comment: document.getElementById("colorComment").value
+    };
+    document.getElementById("json").value =
+        JSON.stringify(colors, null, 4);
+    document.getElementById("importBox").style.display = "block";
+}
+function showImportColors() {
+    document.getElementById("importBox").style.display = "block";
+    document.getElementById("json").focus();
+}
+function applyImport() {
+    var text = document.getElementById("json").value;
+    if (!text) {
+        return;
+    }
+    try {
+        var colors = JSON.parse(text);
+        if (colors.background) {
+            document.getElementById("colorBackground").value = colors.background;
+        }
+        if (colors.folder) {
+            document.getElementById("colorFolder").value = colors.folder;
+        }
+        if (colors.file) {
+            document.getElementById("colorFile").value = colors.file;
+        }
+        if (colors.ascii) {
+            document.getElementById("colorAscii").value = colors.ascii;
+        }
+        if (colors.comment) {
+            document.getElementById("colorComment").value = colors.comment;
+        }
+        updatePickerFromInput(document.getElementById("colorBackground"), document.getElementById("colorBackground").nextElementSibling);
+        updatePickerFromInput(document.getElementById("colorFolder"), document.getElementById("colorFolder").nextElementSibling);
+        updatePickerFromInput(document.getElementById("colorFile"), document.getElementById("colorFile").nextElementSibling);
+        updatePickerFromInput(document.getElementById("colorAscii"), document.getElementById("colorAscii").nextElementSibling);
+        updatePickerFromInput(document.getElementById("colorComment"), document.getElementById("colorComment").nextElementSibling);
+        updateColors();
+    } catch (e) {
+        alert("Format JSON invalide.");
+    }
+}
+loadColors();
+var colorBackground = document.getElementById("colorBackground");
+var colorFolder = document.getElementById("colorFolder");
+var colorFile = document.getElementById("colorFile");
+var colorAscii = document.getElementById("colorAscii");
+var colorComment = document.getElementById("colorComment");
+attachColorPickerTo(colorBackground);
+attachColorPickerTo(colorFolder);
+attachColorPickerTo(colorFile);
+attachColorPickerTo(colorAscii);
+attachColorPickerTo(colorComment);
+updatePickerFromInput(colorBackground, colorBackground.nextElementSibling);
+updatePickerFromInput(colorFolder, colorFolder.nextElementSibling);
+updatePickerFromInput(colorFile, colorFile.nextElementSibling);
+updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
+updatePickerFromInput(colorComment, colorComment.nextElementSibling);
+render();
+colorBackground.oninput = updateColors;
+colorFolder.oninput = updateColors;
+colorFile.oninput = updateColors;
+colorAscii.oninput = updateColors;
+colorComment.oninput = updateColors;
 </script>
 </body>
 </html>
