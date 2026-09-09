@@ -403,7 +403,6 @@ function render() {
     // ASCII HTML (avec clics)
     var html = buildAscii(root, "", []);
     document.getElementById("ascii").innerHTML = html;
-    updateColors();
     // ASCII TEXTE PUR (sans [R][X], sans <span>)
     lastAsciiText = buildAsciiText(root, "", []);
 }
@@ -782,6 +781,7 @@ updatePickerFromInput(colorFolder, colorFolder.nextElementSibling);
 updatePickerFromInput(colorFile, colorFile.nextElementSibling);
 updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
 updatePickerFromInput(colorComment, colorComment.nextElementSibling);
+updateColors();
 render();
 colorBackground.oninput = updateColors;
 colorFolder.oninput = updateColors;
