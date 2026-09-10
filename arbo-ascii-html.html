@@ -12,7 +12,7 @@
   background:var(--color-background);
   color:var(--color-file);
   font-family:monospace;
-  padding:15px;
+  padding:5px;
   max-height:500px;
   max-height:70vh;
   overflow:auto;
@@ -66,7 +66,7 @@ input{width:60px;}
     Note : En important l'arborescence de tree, les fichiers sans extensions (sans .txt, .jpg etc...) sont reconnus comme des dossiers.
   </div>
   <p>Dossier courant : <span id="currentPath"></span></p>
-  <pre id="ascii" class="border-interne"></pre>
+  <pre id="ascii"></pre>
   <button onclick="copyTree(this)" class="btn-color" style="background:#4caf50;">Copier texte</button>
   <button onclick="copyTreeHtml(this)" class="btn-color" style="background:#4caf50;">Copier HTML couleur</button><br><hr>
   <button onclick="showTreeText()" class="btn-color" style="background:#4caf50;">Afficher texte</button>
