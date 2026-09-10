@@ -256,6 +256,14 @@ function updatePickerFromInput(input, previewColorPicker){
     svCursor.style.left = (svX - 5) + "px";
     svCursor.style.top  = (svY - 5) + "px";
 }
+function normalizeColor(value) {
+    value = value.replace(/^\s+|\s+$/g, "");
+    value = value.toLowerCase();
+    if (/^[0-9a-f]{6}$/.test(value)) {
+        value = "#" + value;
+    }
+    return value;
+}
 /* Hue slider */
 hueSlider.onmousedown = function(e){
   draggingHue = true;
@@ -492,13 +500,6 @@ setInterval(function(){
         }
     }
 }, 20); // 50 FPS
-function normalizeColor(value) {
-    value = value.replace(/^\s+|\s+$/g, "");
-    if (/^[0-9a-fA-F]{6}$/.test(value)) {
-        value = "#" + value;
-    }
-    return value;
-}
 // empêcher le scroll quand on utilise les flèches dans le carré SV
 document.onkeydown = function(e){
     e = e || window.event;
