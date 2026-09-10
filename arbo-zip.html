@@ -139,36 +139,17 @@ function updateColors() {
     colorFolder.value = normalizeColor(colorFolder.value);
     colorFile.value = normalizeColor(colorFile.value);
     colorAscii.value = normalizeColor(colorAscii.value);
-
     COLORS.background = colorBackground.value;
     COLORS.body = colorBody.value;
     COLORS.folder = colorFolder.value;
     COLORS.file = colorFile.value;
     COLORS.ascii = colorAscii.value;
-
-    document.documentElement.style.setProperty(
-        "--color-background",
-        COLORS.background
-    );
-    document.documentElement.style.setProperty(
-        "--color-body",
-        COLORS.body
-    );
-    document.documentElement.style.setProperty(
-        "--color-folder",
-        COLORS.folder
-    );
-    document.documentElement.style.setProperty(
-        "--color-file",
-        COLORS.file
-    );
-    document.documentElement.style.setProperty(
-        "--color-ascii",
-        COLORS.ascii
-    );
-
+    document.documentElement.style.setProperty("--color-background", COLORS.background);
+    document.documentElement.style.setProperty("--color-body", COLORS.body);
+    document.documentElement.style.setProperty("--color-folder", COLORS.folder);
+    document.documentElement.style.setProperty("--color-file", COLORS.file);
+    document.documentElement.style.setProperty("--color-ascii", COLORS.ascii);
     saveColors();
-
     generateHtml();
 }
 colorBackground.oninput = updateColors;
