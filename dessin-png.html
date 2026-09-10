@@ -432,7 +432,6 @@ sizeInput.oninput = function(){
 var canvas = document.getElementById("canvas");
 canvasBg.oninput = function() {
 	canvasBg.value = normalizeColor(canvasBg.value);
-
     canvas.style.backgroundColor = this.value;    
     if(lastLoupeEvent){
         showLoupe(lastLoupeEvent);
