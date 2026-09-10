@@ -127,11 +127,6 @@ var colorFolder = document.getElementById("colorFolder");
 var colorFile = document.getElementById("colorFile");
 var colorAscii = document.getElementById("colorAscii");
 function updateColors() {
-    colorBackground.value = normalizeColor(colorBackground.value);
-    colorBody.value = normalizeColor(colorBody.value);
-    colorFolder.value = normalizeColor(colorFolder.value);
-    colorFile.value = normalizeColor(colorFile.value);
-    colorAscii.value = normalizeColor(colorAscii.value);
     COLORS.background = colorBackground.value;
     COLORS.body = colorBody.value;
     COLORS.folder = colorFolder.value;
