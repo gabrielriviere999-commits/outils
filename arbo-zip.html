@@ -140,11 +140,31 @@ function updateColors() {
     saveColors();
     generateHtml();
 }
+function validateColorInput(input) {
+    var preview = input.nextElementSibling;
+    updatePickerFromInput(input, preview);
+    updateColors();
+}
 colorBackground.oninput = updateColors;
 colorBody.oninput = updateColors;
 colorFolder.oninput = updateColors;
 colorFile.oninput = updateColors;
 colorAscii.oninput = updateColors;
+colorBackground.onchange = function() {
+    validateColorInput(colorBackground);
+};
+colorBody.onchange = function() {
+    validateColorInput(colorBody);
+};
+colorFolder.onchange = function() {
+    validateColorInput(colorFolder);
+};
+colorFile.onchange = function() {
+    validateColorInput(colorFile);
+};
+colorAscii.onchange = function() {
+    validateColorInput(colorAscii);
+};
 /* --- IMPORT ZIP --- */
 document.getElementById("zipInput").onchange = function (e) {
     var file = e.target.files[0];

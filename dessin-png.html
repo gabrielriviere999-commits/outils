@@ -321,6 +321,11 @@ function applyColor(){
     ctx.fillStyle = col;
 }
 colorInput.oninput = applyColor;
+colorInput.onchange = validateColorInput;
+function validateColorInput(){
+    updatePickerFromInput(colorInput, colorInput.nextElementSibling);
+    applyColor();
+}
 function toggleEraser(){
     eraserMode = !eraserMode;
     if(eraserMode){
@@ -432,6 +437,13 @@ var canvas = document.getElementById("canvas");
 canvasBg.oninput = function() {
     canvas.style.backgroundColor = this.value;    
     if(lastLoupeEvent){
+        showLoupe(lastLoupeEvent);
+    }
+};
+canvasBg.onchange = function() {
+    updatePickerFromInput(canvasBg, canvasBg.nextElementSibling);
+    canvas.style.backgroundColor = canvasBg.value;
+    if (lastLoupeEvent) {
         showLoupe(lastLoupeEvent);
     }
 };

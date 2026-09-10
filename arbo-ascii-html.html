@@ -789,11 +789,31 @@ updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
 updatePickerFromInput(colorComment, colorComment.nextElementSibling);
 updateColors();
 render();
+function validateColorInput(input) {
+    var preview = input.nextElementSibling;
+    updatePickerFromInput(input, preview);
+    updateColors();
+}
 colorBackground.oninput = updateColors;
 colorFolder.oninput = updateColors;
 colorFile.oninput = updateColors;
 colorAscii.oninput = updateColors;
 colorComment.oninput = updateColors;
+colorBackground.onchange = function() {
+    validateColorInput(colorBackground);
+};
+colorFolder.onchange = function() {
+    validateColorInput(colorFolder);
+};
+colorFile.onchange = function() {
+    validateColorInput(colorFile);
+};
+colorAscii.onchange = function() {
+    validateColorInput(colorAscii);
+};
+colorComment.onchange = function() {
+    validateColorInput(colorComment);
+};
 </script>
 </body>
 </html>
