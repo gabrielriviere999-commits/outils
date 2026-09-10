@@ -211,6 +211,13 @@ function updatePickerFromInput(input, previewColorPicker){
             parseInt(hex.substring(2,4),16) + "," +
             parseInt(hex.substring(4,6),16) + "," +
             a + ")";
+    } else if (hex.length === 8) {
+        // rrggbbaa → convertir en rgba
+        var r8 = parseInt(hex.substring(0,2),16);
+        var g8 = parseInt(hex.substring(2,4),16);
+        var b8 = parseInt(hex.substring(4,6),16);
+        var a8 = Math.round((alpha255 / 255) * 100) / 100;
+        input.value = "rgba(" + r8 + "," + g8 + "," + b8 + "," + a8 + ")";
     } else {
         input.value = normalizedHex;
     }
