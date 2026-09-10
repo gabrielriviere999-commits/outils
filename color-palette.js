@@ -134,7 +134,7 @@ function applyQuickColor(hex){
         var r = parseInt(hex.substring(1,3),16);
         var g = parseInt(hex.substring(3,5),16);
         var b = parseInt(hex.substring(5,7),16);
-        var a = +(alpha255/255).toFixed(3);
+        var a = Math.round((alpha255 / 255) * 100) / 100;
         hex = "rgba(" + r + "," + g + "," + b + "," + a + ")";
     }
     if (activeInput) {
