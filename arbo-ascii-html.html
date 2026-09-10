@@ -116,7 +116,7 @@ input{width:60px;}
 </fieldset>
 </div>
 <div class="card">
-  <textarea wrap="off" id="treeImportBox"></textarea><br>
+  <textarea wrap="off" id="input"></textarea><br>
   <button onclick="restoreTree()" class="btn-color" style="background:#ff8800;">Mettre à jour à partir du texte</button>
   <button onclick="importTreeFromText()" class="btn-color" style="background:#ff8800;">Importer (commande tree)</button>
   <input type="file" id="textareaFileimportBox">
@@ -241,7 +241,7 @@ function showTreeHtml() {
     box.value = finalHtml;
 }
 function restoreTree() {
-    var text = document.getElementById("treeImportBox").value;
+    var text = document.getElementById("input").value;
     if (!text) {
         alert("Le champ de texte est vide.");
         return;
@@ -621,7 +621,7 @@ function hasFileLikeExtension(name) {
     return true;
 }
 function importTreeFromText() {
-    var txt = document.getElementById("treeImportBox").value;
+    var txt = document.getElementById("input").value;
     if (!txt) {
         alert("Le champ de texte est vide.");
         return;
