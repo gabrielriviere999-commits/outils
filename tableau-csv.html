@@ -48,7 +48,7 @@ input[type=text],input[type=number]{width:50px;}
   <div id="importCustomPlusBox" style="display:none;">
     <textarea wrap="off" id="importCustomPlusText" style="height:100px;"></textarea><br>
     <button type="button" onclick="applyImportCustomPlus()">Valider l'import</button>
-    <button id="copyCustomPlus" class="btn-color" style="background:#4caf50;">Copier</button>
+    <button id="copyCustomPlus">Copier</button>
   </div>
   </fieldset>
 </div>
@@ -80,7 +80,7 @@ input[type=text],input[type=number]{width:50px;}
   <div id="importFancyCustomPlusBox" style="display:none;">
     <textarea wrap="off" id="importFancyCustomPlusText" style="height:100px;"></textarea><br>
     <button type="button" onclick="applyImportFancyCustomPlus()">Valider l'import</button>
-    <button id="copyFancyCustomPlus" class="btn-color" style="background:#4caf50;">Copier</button>
+    <button id="copyFancyCustomPlus">Copier</button>
   </div>
   </fieldset>
 </div>
@@ -116,7 +116,7 @@ input[type=text],input[type=number]{width:50px;}
   <input type="text" id="tableau_ascii_custom_char" style="display:none;" maxlength="1" value="#">
   Séparateur : <input type="text" id="tableau_ascii_sep" value=";">
   <span id="maxWidthContainer">Largeur max : <input type="number" id="tableau_ascii_maxwidth" value="120" min="4"></span>
-  <button onclick="resetParams()" class="btn-color" style="background:#ff4444;">Valeurs par défaut</button>
+  <button onclick="resetParams()">Valeurs par défaut</button>
   <button onclick="openHelpPopup()">?</button>
   <div id="popupHelpContent" style="display:none">
 	<b class="headerb">Aide</b><hr class="headerhr">
@@ -128,18 +128,18 @@ input[type=text],input[type=number]{width:50px;}
   </div>
 </div>
 <textarea wrap="off" id="input"></textarea><br>
-<button onclick="convertir()" class="btn-color" style="background:#ff8800;">Convertir en tableau</button>
-<button id="copyinput" class="btn-color" style="background:#4caf50;">Copier</button>
+<button onclick="convertir()">Convertir en tableau</button>
+<button id="copyinput">Copier</button>
 <button id="transposeBtn">Inverser lignes et colonnes</button>
-<button onclick="effacerTout()" class="btn-color" style="background:#ff4444;">Effacer tout</button>
+<button onclick="effacerTout()">Effacer tout</button>
 <input id="zoomRangeInput" type="range" min="6" max="40" value="12" oninput="applyZoom('zoomRangeInput', 'input')">
 <button onclick="resetZoom('zoomRangeInput', 'input')">12px</button>
 <input type="file" id="csvFileInput">
 <p></p><div id="downloadLinkContainer"></div>
 <p></p><h3>Tableau</h3>
 <textarea wrap="off" id="output"></textarea><br>
-<button type="button" onclick="importFromOutput()" class="btn-color" style="background:#ff8800;">Convertir en CSV</button>
-<button id="copyoutput" class="btn-color" style="background:#4caf50;">Copier</button>
+<button type="button" onclick="importFromOutput()">Convertir en CSV</button>
+<button id="copyoutput">Copier</button>
 <input id="zoomRangeOutput" type="range" min="6" max="40" value="12" oninput="applyZoom('zoomRangeOutput', 'output')">
 <button onclick="resetZoom('zoomRangeOutput', 'output')">12px</button>
 <input type="file" id="tableFileInput">

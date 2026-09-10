@@ -19,8 +19,8 @@ input[type="number"],input[type="text"]{width:50px;}
 B;7
 C;5
 D;10</textarea><br>
-  <button onclick="updateChart()" class="btn-color" style="background:#ff8800;">Mettre à jour texte</button>
-  <button id="copyinput" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button onclick="updateChart()">Mettre à jour texte</button>
+  <button id="copyinput">Copier</button>
   <input type="file" id="textareaFileinput">
   <fieldset>
   <legend>Options</legend>
@@ -38,21 +38,21 @@ D;10</textarea><br>
   </label><br>
   <label><input type="checkbox" id="bars_normalize" checked="checked">Normaliser</label>
   <hr>
-  <button onclick="resetOptions()" class="btn-color" style="background:#ff4444;">Valeurs par défaut</button>
+  <button onclick="resetOptions()">Valeurs par défaut</button>
   <button type="button" onclick="exportOptions()">Exporter</button>
   <button type="button" onclick="showImportBox()">Importer</button>
   <div id="importBox" style="display:none;">
     <textarea wrap="off" id="json"></textarea><br>
     <button type="button" onclick="applyImport()">Valider l'import</button>
-    <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+    <button id="copyjson">Copier</button>
   </div>
   </fieldset>
 </div>
 <div class="card">
   <h3>Aperçu / texte</h3>
   <textarea wrap="off" id="output"></textarea><br>
-  <button onclick="importFromOutput()" class="btn-color" style="background:#ff8800;">Mettre à jour données</button>
-  <button id="copyoutput" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button onclick="importFromOutput()">Mettre à jour données</button>
+  <button id="copyoutput">Copier</button>
   <input type="file" id="textareaFileoutput">
 </div>
 </div>

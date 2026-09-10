@@ -63,7 +63,7 @@
 <label><input type="checkbox" id="chk_quo">Guillemets → "</label>
 <label><input type="checkbox" id="chk_squo">Demi-guillemets → '</label>
 <br>
-<button onclick="decocherTout()" class="btn-color" style="background:#ff4444;">Décocher tout</button>
+<button onclick="decocherTout()">Décocher tout</button>
 <br>
 <hr>
 <label>Ajouter en début de ligne :</label>
@@ -82,14 +82,14 @@
 <button onclick="ajouterRemplacement()">Ajouter un remplacement</button>
 <label><input type="checkbox" id="repl_ignore_case">Ignorer casse</label>
 <br>
-<button onclick="effacerRemplacements()" class="btn-color" style="background:#ff4444;margin-top:10px;">Effacer préfixes/suffixes et remplacements</button>
+<button onclick="effacerRemplacements()" style="margin-top:10px;">Effacer préfixes/suffixes et remplacements</button>
 <hr>
 <button type="button" onclick="exportOptions()">Exporter</button>
 <button type="button" onclick="showImportBox()">Importer</button>
 <div id="importBox" style="display:none;">
   <textarea wrap="off" id="json"></textarea><br>
   <button type="button" onclick="applyImport()">Valider l'import</button>
-  <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button id="copyjson">Copier</button>
 </div>
 </fieldset>
 </div>
@@ -110,13 +110,13 @@
 <div class="card3 border-externe">
 <h3>Source</h3>
 <textarea wrap="off" id="input" class="texte"></textarea><br>
-<button onclick="appliquerTransformations()" class="btn-color" style="background:#ff8800;">Appliquer</button>
-<button onclick="effacerTout()" class="btn-color" style="background:#ff4444;">Effacer tout</button>
+<button onclick="appliquerTransformations()">Appliquer</button>
+<button onclick="effacerTout()">Effacer tout</button>
 <input type="file" id="textareaFileinput">
 </div>
 <div class="card4 border-externe">
 <h3>Résultat</h3>
-<button id="copyoutput" class="btn-color" style="background:#4caf50;">Copier</button>
+<button id="copyoutput">Copier</button>
 <br><textarea wrap="off" id="output" class="texte"></textarea>
 <div id="stats" style="font-family:monospace;">Caractères : 0, Mots : 0, Lignes : 0</div>
 </div>
@@ -514,8 +514,7 @@ function ajouterRemplacement(from, to) {
   // Bouton supprimer
   var del = document.createElement("button");
   del.textContent = "x";
-  del.className = "btn-color";
-  del.style = "background:#ff4444;width:28px;height:28px;vertical-align:middle;";
+  del.style = "width:28px;height:28px;vertical-align:middle;";
   del.onclick = function () {
     cont.removeChild(div);
     saveReplacements();

@@ -32,11 +32,11 @@ td.selected {
 <div class="toolbar">
   <button id="addRowAbove">↑ Ligne au dessus</button>
   <button id="addRowBelow">↓ Ligne en dessous</button>
-  <button id="delRow" class="btn-color" style="background:#ff4444;">X Supprimer ligne</button>
+  <button id="delRow">X Supprimer ligne</button>
   |
   <button id="addColLeft">← Colonne à gauche</button>
   <button id="addColRight">→ Colonne à droite</button>
-  <button id="delCol" class="btn-color" style="background:#ff4444;">X Supprimer colonne</button>
+  <button id="delCol">X Supprimer colonne</button>
   |
   <label><input type="checkbox" id="multiSelectMode">Sélection multiple</label>
   <button id="clearSelectionBtn">Eff sél</button>
@@ -82,7 +82,7 @@ td.selected {
     <button data-mode="bg">Fond</button>
     <button data-mode="border">Bordure</button>
   </div>
-  <button id="clearTdStyle" class="btn-color" style="background:#ff4444;">Effacer style</button>
+  <button id="clearTdStyle">Effacer style</button>
   |
   <label>Épaisseur :
   <select id="borderWidth">
@@ -139,12 +139,12 @@ td.selected {
 </div>
 <!-- CODE HTML -->
 <br><h3>Code du tableau</h3>
-<button id="generateCode" class="btn-color" style="background:#ff8800;">Générer le code</button>
-<button id="copyoutput" class="btn-color" style="background:#4caf50;">Copier le code</button>
+<button id="generateCode">Générer le code</button>
+<button id="copyoutput">Copier le code</button>
 <label for="importTableId">ID tableau :</label> <input id="importTableId" type="text" value="tableau1">
 <br><textarea wrap="off" id="output"></textarea><br>
-<button id="updateFromCode" class="btn-color" style="background:#ff8800;">Mettre à jour le tableau</button>
-<button id="cleanLibreOfficeBtn" class="btn-color" style="background:#ff8800;">Nettoyer LibreOffice</button>
+<button id="updateFromCode">Mettre à jour le tableau</button>
+<button id="cleanLibreOfficeBtn">Nettoyer LibreOffice</button>
 <input type="file" id="textareaFileoutput">
 <script src="outils.js"></script>
 <script src="popup.js"></script>

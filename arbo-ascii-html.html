@@ -67,10 +67,10 @@ input{width:60px;}
   </div>
   <p>Dossier courant : <span id="currentPath"></span></p>
   <pre id="ascii"></pre>
-  <button onclick="copyTree(this)" class="btn-color" style="background:#4caf50;">Copier texte</button>
-  <button onclick="copyTreeHtml(this)" class="btn-color" style="background:#4caf50;">Copier HTML couleur</button><br><hr>
-  <button onclick="showTreeText()" class="btn-color" style="background:#4caf50;">Afficher texte</button>
-  <button onclick="showTreeHtml()" class="btn-color" style="background:#4caf50;">Afficher HTML couleur</button>
+  <button onclick="copyTree(this)">Copier texte</button>
+  <button onclick="copyTreeHtml(this)">Copier HTML couleur</button><br><hr>
+  <button onclick="showTreeText()">Afficher texte</button>
+  <button onclick="showTreeHtml()">Afficher HTML couleur</button>
   <br><textarea wrap="off" id="previewBox" style="display:none;"></textarea>
   <div class="overlayColorPicker">
     <div class="overlayColorPicker-cell">
@@ -107,18 +107,18 @@ input{width:60px;}
   <label>Commentaires : <input id="colorComment" value="#888888"><button class="previewColorPicker"></button></label><hr>
   <button type="button" onclick="exportColors()">Exporter</button>
   <button type="button" onclick="showImportColors()">Importer</button>
-  <button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
+  <button type="button" onclick="resetColors()">Reset</button>
   <div id="importBox" style="display:none;">
     <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
     <button type="button" onclick="applyImport()">Valider l'import</button>
-    <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+    <button id="copyjson">Copier</button>
   </div>
 </fieldset>
 </div>
 <div class="card">
   <textarea wrap="off" id="input"></textarea><br>
-  <button onclick="restoreTree()" class="btn-color" style="background:#ff8800;">Mettre à jour à partir du texte</button>
-  <button onclick="importTreeFromText()" class="btn-color" style="background:#ff8800;">Importer (commande tree)</button>
+  <button onclick="restoreTree()">Mettre à jour à partir du texte</button>
+  <button onclick="importTreeFromText()">Importer (commande tree)</button>
   <input type="file" id="textareaFileinput">
 </div>
 </div>

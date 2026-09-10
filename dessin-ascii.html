@@ -65,7 +65,7 @@ body.block-touch{touch-action:none;}
 </div>
 <div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div class="toolbar">
-  <button id="copyview" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button id="copyview">Copier</button>
   <input type="file" id="textareaFileview">
   <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
   <div id="popupOptionsContent" style="display:none">
@@ -78,7 +78,7 @@ body.block-touch{touch-action:none;}
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
-          <button class="btn-color" style="background:#ff4444;" data-action="resetZoom">Reset</button>
+          <button data-action="resetZoom">Reset</button>
         </div>
         <div style="display:table-cell;">
           <button data-action="toggleTextColor">Couleur</button>
@@ -95,7 +95,7 @@ body.block-touch{touch-action:none;}
           <input type="file" id="imgLoader" onchange="loadImageFile(this)">
         </div>
         <div style="display:table-cell;">
-          <button class="btn-color" style="background:#ff4444;" data-action="clearImage">Retirer</button>
+          <button data-action="clearImage">Retirer</button>
         </div>
       </div>
     </div>
@@ -115,7 +115,7 @@ body.block-touch{touch-action:none;}
           <button data-action="moveImgDown">↓</button>
         </div>
         <div style="display:table-cell;">
-          <button class="btn-color" style="background:#ff4444;" data-action="resetImgPosition">Reset</button>
+          <button data-action="resetImgPosition">Reset</button>
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@ body.block-touch{touch-action:none;}
     <button class="rangebtn" data-action="imgScaleMinus">−</button>
     <input id="imgScale" type="range" min="10" max="300" value="100" oninput="zoomImage(this.value)">
     <button class="rangebtn" data-action="imgScalePlus">+</button>
-    <button class="btn-color" style="background:#ff4444;" data-action="resetImgScale">Reset</button><hr>
+    <button data-action="resetImgScale">Reset</button><hr>
     <button data-action="closePopup">Fermer</button>
   </div>
   <button data-action="openHelpPopup" class="multitouchbtn">?</button>

@@ -67,7 +67,7 @@ input{width:60px;}
   </div>
 </div>
 <textarea wrap="off" id="asciiTextArea"></textarea><br>
-<button id="copyasciiTextArea" class="btn-color" style="background:#4caf50;">Copier</button>
+<button id="copyasciiTextArea">Copier</button>
 <fieldset><legend>Couleurs</legend>
 <label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
 <label>Texte : <input id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
@@ -76,11 +76,11 @@ input{width:60px;}
 <label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label><hr>
 <button type="button" onclick="exportColors()">Exporter</button>
 <button type="button" onclick="showImportBox()">Importer</button>
-<button type="button" onclick="resetColors()" class="btn-color" style="background:#ff4444">Reset</button>
+<button type="button" onclick="resetColors()">Reset</button>
 <div id="importBox" style="display:none;">
   <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
   <button type="button" onclick="applyImport()">Valider l'import</button>
-  <button id="copyjson" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button id="copyjson">Copier</button>
 </div>
 </fieldset>
 <p id="stats"></p>
@@ -92,7 +92,7 @@ input{width:60px;}
 <div class="card">
 <h3>Code HTML</h3>
 <textarea wrap="off" id="htmlCode"></textarea><br>
-<button id="copyhtmlCode" class="btn-color" style="background:#4caf50;">Copier</button>
+<button id="copyhtmlCode">Copier</button>
 </div>
 </div>
 <script src="outils.js"></script>

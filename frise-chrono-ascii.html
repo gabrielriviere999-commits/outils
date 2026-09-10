@@ -19,8 +19,8 @@
 <div class="card">
   <h3>Aperçu / texte</h3>
   <textarea wrap="off" id="output" style="width:100%;height:200px;box-sizing:border-box;"></textarea><br>
-  <button onclick="importAscii()" class="btn-color" style="background:#ff8800;">Mettre à jour</button>
-  <button id="copyoutput" class="btn-color" style="background:#4caf50;">Copier</button>
+  <button onclick="importAscii()">Mettre à jour</button>
+  <button id="copyoutput">Copier</button>
   <input type="file" id="textareaFileoutput">
 </div>
 </div>
@@ -96,7 +96,7 @@ function refreshEditor() {
       '<button onclick="moveEventUp(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">↑</button>' +
       '<button onclick="moveEventDown(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">↓</button>' +
       '<button onclick="addEventAfter(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">+</button>' +
-      '<button onclick="removeEvent(' + i + ')" class="btn-color" style="background:#ff4444;width:28px;height:28px;vertical-align:middle;">x</button>' +
+      '<button onclick="removeEvent(' + i + ')" style="width:28px;height:28px;vertical-align:middle;">x</button>' +
       '</div>';
   }
   document.getElementById("eventList").innerHTML = html;
