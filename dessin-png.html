@@ -462,6 +462,39 @@ function applyZoom(){
         grid.style.height = h;
         grid.style.backgroundSize = (gridStep * zoom) + "px " + (gridStep * zoom) + "px";
     }
+    // ZOOM AUTOMATIQUE DE LA LOUPE : Plus le dessin est petit à l'écran, plus la loupe grossit.
+    var minDimension = Math.min(canvas.width, canvas.height);
+    if(minDimension <= 16){
+        loupeZoom = 12;
+    }
+    else if(minDimension <= 32){
+        loupeZoom = 10;
+    }
+    else if(minDimension <= 64){
+        loupeZoom = 8;
+    }
+    else if(minDimension <= 128){
+        loupeZoom = 6;
+    }
+    else if(zoom < 0.5){
+        loupeZoom = 8;
+    }
+    else if(zoom < 1){
+        loupeZoom = 6;
+    }
+    else if(zoom < 2){
+        loupeZoom = 4;
+    }
+    else if(zoom < 5){
+        loupeZoom = 3;
+    }
+    else{
+        loupeZoom = 2;
+    }
+    // Actualiser la loupe immédiatement si elle est affichée.
+    if(typeof refreshLoupe === "function"){
+        refreshLoupe();
+    }
 }
 zoomInput.oninput = function(){ applyZoom(); };
 applyZoom();
