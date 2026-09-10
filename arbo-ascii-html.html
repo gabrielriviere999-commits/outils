@@ -794,11 +794,11 @@ function validateColorInput(input) {
     updatePickerFromInput(input, preview);
     updateColors();
 }
-colorBackground.oninput = updateColors;
-colorFolder.oninput = updateColors;
-colorFile.oninput = updateColors;
-colorAscii.oninput = updateColors;
-colorComment.oninput = updateColors;
+// colorBackground.oninput = updateColors;
+// colorFolder.oninput = updateColors;
+// colorFile.oninput = updateColors;
+// colorAscii.oninput = updateColors;
+// colorComment.oninput = updateColors;
 colorBackground.onchange = function() {
     validateColorInput(colorBackground);
 };
@@ -814,6 +814,16 @@ colorAscii.onchange = function() {
 colorComment.onchange = function() {
     validateColorInput(colorComment);
 };
+function finishColorPicker() {
+    draggingHue = false;
+    draggingSV = false;
+    draggingAlpha = false;
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+}
+document.addEventListener("mouseup", finishColorPicker);
+document.addEventListener("touchend", finishColorPicker);
 </script>
 </body>
 </html>
