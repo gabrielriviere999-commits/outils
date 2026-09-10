@@ -126,13 +126,6 @@ var colorBody = document.getElementById("colorBody");
 var colorFolder = document.getElementById("colorFolder");
 var colorFile = document.getElementById("colorFile");
 var colorAscii = document.getElementById("colorAscii");
-function normalizeColor(value) {
-    value = value.replace(/^\s+|\s+$/g, "");
-    if (/^[0-9a-fA-F]{6}$/.test(value)) {
-        value = "#" + value;
-    }
-    return value;
-}
 function updateColors() {
     colorBackground.value = normalizeColor(colorBackground.value);
     colorBody.value = normalizeColor(colorBody.value);

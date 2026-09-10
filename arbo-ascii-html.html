@@ -691,13 +691,6 @@ function saveColors() {
         console.log("Impossible de sauvegarder les couleurs.");
     }
 }
-function normalizeColor(value) {
-    value = value.replace(/^\s+|\s+$/g, "");
-    if (/^[0-9a-fA-F]{6}$/.test(value)) {
-        value = "#" + value;
-    }
-    return value;
-}
 function updateColors() {
     var input;
     input = document.getElementById("colorBackground");

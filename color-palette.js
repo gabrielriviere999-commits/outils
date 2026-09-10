@@ -492,6 +492,13 @@ setInterval(function(){
         }
     }
 }, 20); // 50 FPS
+function normalizeColor(value) {
+    value = value.replace(/^\s+|\s+$/g, "");
+    if (/^[0-9a-fA-F]{6}$/.test(value)) {
+        value = "#" + value;
+    }
+    return value;
+}
 // empêcher le scroll quand on utilise les flèches dans le carré SV
 document.onkeydown = function(e){
     e = e || window.event;

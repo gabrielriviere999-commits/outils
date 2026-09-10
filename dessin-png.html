@@ -316,6 +316,7 @@ var rainbowMode = false;
 var rainbowHue = 0;
 var dottedMode = false;
 function applyColor(){
+	colorInput.value = normalizeColor(colorInput.value);
     var col = colorInput.value;
     ctx.strokeStyle = col;
     ctx.fillStyle = col;
