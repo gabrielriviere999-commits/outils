@@ -239,7 +239,6 @@ document.onmouseup = function () {
     draggingSV  = false;
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
-        activeInput = null;
     }
 };
 document.ontouchend = function () {
@@ -247,7 +246,6 @@ document.ontouchend = function () {
     draggingSV  = false;
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
-        activeInput = null;
     }
 };
 document.getElementById("addBtn").onclick = function() {
