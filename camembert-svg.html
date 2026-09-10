@@ -117,6 +117,12 @@ var preview = document.getElementById("preview");
 var outputArea = document.getElementById("output");
 var pieSize = 200;
 /* --- Construction du tableau --- */
+function closeActivePicker() {
+    if (typeof closePicker === "function") {
+        closePicker();
+    }
+    activeInput = null;
+}
 function rebuildTable() {
   tblBody.innerHTML = "";
   // Calcul du total pour afficher les pourcentages
@@ -190,6 +196,7 @@ function rebuildTable() {
     upBtn.style = "width:28px;height:28px;vertical-align:middle;";
     upBtn.onclick = function(index){ return function(){
       if (index > 0) {
+        closeActivePicker();
         var tmp = slices[index - 1];
         slices[index - 1] = slices[index];
         slices[index] = tmp;
@@ -204,6 +211,7 @@ function rebuildTable() {
     downBtn.style = "width:28px;height:28px;vertical-align:middle;";
     downBtn.onclick = function(index){ return function(){
       if (index < slices.length - 1) {
+        closeActivePicker();
         var tmp = slices[index + 1];
         slices[index + 1] = slices[index];
         slices[index] = tmp;
@@ -231,6 +239,7 @@ document.onmouseup = function () {
     draggingSV  = false;
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
+        activeInput = null;
     }
 };
 document.ontouchend = function () {
@@ -238,6 +247,7 @@ document.ontouchend = function () {
     draggingSV  = false;
     if (activeInput) {
         activeInput.dispatchEvent(new Event("change"));
+        activeInput = null;
     }
 };
 document.getElementById("addBtn").onclick = function() {
