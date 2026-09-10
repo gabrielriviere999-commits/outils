@@ -8,13 +8,28 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-pre.tree{padding:5px;font-family:monospace;}
-.folder{color:#4af;}
-.file{color:#0f0;text-decoration:none;}
+pre.tree{
+  padding:5px;
+  font-family:monospace;
+  background:var(--color-background);
+  color:var(--color-body);
+}
+.folder{color:var(--color-folder);}
+.file{
+  color:var(--color-file);
+  text-decoration:none;
+}
 .file:hover{text-decoration:underline;}
-.ascii{color:#0f0;}
-#stats{font-family:monospace;}
-.tree{overflow:auto;max-height:500px;max-height:70vh;}
+.ascii{color:var(--color-ascii);}
+#stats{
+  font-family:monospace;
+  color:var(--color-body);
+}
+.tree{
+  overflow:auto;
+  max-height:500px;
+  max-height:70vh;
+}
 input{width:60px;}
 </style>
 </head>
@@ -111,58 +126,56 @@ var colorBody = document.getElementById("colorBody");
 var colorFolder = document.getElementById("colorFolder");
 var colorFile = document.getElementById("colorFile");
 var colorAscii = document.getElementById("colorAscii");
-function updateColors() {
-    COLORS.background = document.getElementById("colorBackground").value;
-    COLORS.body = document.getElementById("colorBody").value;
-    COLORS.folder = document.getElementById("colorFolder").value;
-    COLORS.file = document.getElementById("colorFile").value;
-    COLORS.ascii = document.getElementById("colorAscii").value;
-    // Zone d'arborescence uniquement
-    var output = document.getElementById("output");
-    // Texte des statistiques
-    var stats = document.getElementById("stats");
-    stats.style.color = COLORS.body;
-    output.style.backgroundColor = COLORS.background;
-    output.style.color = COLORS.body;
-    // Dossiers uniquement dans l'arborescence
-    var folders = output.getElementsByClassName("folder");
-    var files = output.getElementsByClassName("file");
-    var ascii = output.getElementsByClassName("ascii");
-    var i;
-    for (i = 0; i < folders.length; i++) {
-        folders[i].style.color = COLORS.folder;
+function normalizeColor(value) {
+    value = value.replace(/^\s+|\s+$/g, "");
+    if (/^[0-9a-fA-F]{6}$/.test(value)) {
+        value = "#" + value;
     }
-    for (i = 0; i < files.length; i++) {
-        files[i].style.color = COLORS.file;
-    }
-    for (i = 0; i < ascii.length; i++) {
-        ascii[i].style.color = COLORS.ascii;
-    }
-    // Met à jour le code HTML exporté
-    if (tree && tree.folders) {
-        generateHtml();
-    }
+    return value;
 }
-document.getElementById("colorBackground").oninput = function () {
-    updateColors();
+function updateColors() {
+    colorBackground.value = normalizeColor(colorBackground.value);
+    colorBody.value = normalizeColor(colorBody.value);
+    colorFolder.value = normalizeColor(colorFolder.value);
+    colorFile.value = normalizeColor(colorFile.value);
+    colorAscii.value = normalizeColor(colorAscii.value);
+
+    COLORS.background = colorBackground.value;
+    COLORS.body = colorBody.value;
+    COLORS.folder = colorFolder.value;
+    COLORS.file = colorFile.value;
+    COLORS.ascii = colorAscii.value;
+
+    document.documentElement.style.setProperty(
+        "--color-background",
+        COLORS.background
+    );
+    document.documentElement.style.setProperty(
+        "--color-body",
+        COLORS.body
+    );
+    document.documentElement.style.setProperty(
+        "--color-folder",
+        COLORS.folder
+    );
+    document.documentElement.style.setProperty(
+        "--color-file",
+        COLORS.file
+    );
+    document.documentElement.style.setProperty(
+        "--color-ascii",
+        COLORS.ascii
+    );
+
     saveColors();
-};
-document.getElementById("colorBody").oninput = function () {
-    updateColors();
-    saveColors();
-};
-document.getElementById("colorFolder").oninput = function () {
-    updateColors();
-    saveColors();
-};
-document.getElementById("colorFile").oninput = function () {
-    updateColors();
-    saveColors();
-};
-document.getElementById("colorAscii").oninput = function () {
-    updateColors();
-    saveColors();
-};
+
+    generateHtml();
+}
+colorBackground.oninput = updateColors;
+colorBody.oninput = updateColors;
+colorFolder.oninput = updateColors;
+colorFile.oninput = updateColors;
+colorAscii.oninput = updateColors;
 /* --- IMPORT ZIP --- */
 document.getElementById("zipInput").onchange = function (e) {
     var file = e.target.files[0];
@@ -398,43 +411,6 @@ function saveColors() {
         localStorage.setItem(COLORS_STORAGE_KEY, JSON.stringify(colors));
     } catch (e) {
         console.log("Impossible de sauvegarder les couleurs.");
-    }
-}
-/* --- APPLIQUER LES COULEURS --- */
-function updateColors() {
-    COLORS.background = colorBackground.value;
-    COLORS.body = colorBody.value;
-    COLORS.folder = colorFolder.value;
-    COLORS.file = colorFile.value;
-    COLORS.ascii = colorAscii.value;
-    // Sauvegarde automatique
-    saveColors();
-    // Zone d'arborescence
-    var output = document.getElementById("output");
-    output.style.backgroundColor = COLORS.background;
-    output.style.color = COLORS.body;
-    // Statistiques
-    var stats = document.getElementById("stats");
-    stats.style.color = COLORS.body;
-    // Dossiers
-    var folders = output.getElementsByClassName("folder");
-    // Fichiers
-    var files = output.getElementsByClassName("file");
-    // ASCII
-    var ascii = output.getElementsByClassName("ascii");
-    var i;
-    for (i = 0; i < folders.length; i++) {
-        folders[i].style.color = COLORS.folder;
-    }
-    for (i = 0; i < files.length; i++) {
-        files[i].style.color = COLORS.file;
-    }
-    for (i = 0; i < ascii.length; i++) {
-        ascii[i].style.color = COLORS.ascii;
-    }
-    // Mise à jour du HTML exporté
-    if (tree && tree.folders) {
-        generateHtml();
     }
 }
 /* --- INITIALISATION --- */

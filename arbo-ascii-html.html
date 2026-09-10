@@ -691,12 +691,30 @@ function saveColors() {
         console.log("Impossible de sauvegarder les couleurs.");
     }
 }
+function normalizeColor(value) {
+    value = value.replace(/^\s+|\s+$/g, "");
+    if (/^[0-9a-fA-F]{6}$/.test(value)) {
+        value = "#" + value;
+    }
+    return value;
+}
 function updateColors() {
-    COLORS.background = document.getElementById("colorBackground").value;
-    COLORS.folder = document.getElementById("colorFolder").value;
-    COLORS.file = document.getElementById("colorFile").value;
-    COLORS.ascii = document.getElementById("colorAscii").value;
-    COLORS.comment = document.getElementById("colorComment").value;
+    var input;
+    input = document.getElementById("colorBackground");
+    input.value = normalizeColor(input.value);
+    COLORS.background = input.value;
+    input = document.getElementById("colorFolder");
+    input.value = normalizeColor(input.value);
+    COLORS.folder = input.value;
+    input = document.getElementById("colorFile");
+    input.value = normalizeColor(input.value);
+    COLORS.file = input.value;
+    input = document.getElementById("colorAscii");
+    input.value = normalizeColor(input.value);
+    COLORS.ascii = input.value;
+    input = document.getElementById("colorComment");
+    input.value = normalizeColor(input.value);
+    COLORS.comment = input.value;
     document.documentElement.style.setProperty("--color-background", COLORS.background);
     document.documentElement.style.setProperty("--color-folder", COLORS.folder);
     document.documentElement.style.setProperty("--color-file", COLORS.file);
