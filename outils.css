@@ -68,19 +68,19 @@ button,.a,.a-color,#file-input,.file-input {
   cursor:pointer;
   -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
 }
-button:hover,.a:hover,#file-input:hover,.file-input:hover{background:#404040;}
+button:hover,.a:hover,#file-input:hover,.file-input:hover{background:#444;}
 button:active,.a:active,button.active,#file-input:active,.file-input:active {
   border-color:#111 #888 #888 #111;
   background:#101010;
 }
 .btn-color,.a-color {
   color:#000;
-  border-color:#ccc #404040 #404040 #ccc;
+  border-color:#ccc #444 #444 #ccc;
 }
 .btn-color:hover,.a-color:hover{filter:brightness(1.2)}
 .btn-color:active,.a-color:active {
   filter:brightness(0.8);
-  border-color:#404040 #ccc #ccc #404040;
+  border-color:#444 #ccc #ccc #444;
 }
 a {
   color:#f44;
@@ -93,7 +93,7 @@ select {
   border:2px solid;
   border-color:#111 #888 #888 #111;
 }
-select:hover{background:#404040;}
+select:hover{background:#444;}
 .container {
   display:table;
   width:100%;
