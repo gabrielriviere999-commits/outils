@@ -142,7 +142,7 @@ function handleSliderAction(action) {
         : sliders[id][1];
     changeSlider(id, amount);
 }
-/* BOUTONS DE SCROLL UNIVERSELS */
+/* BOUTONS DE SCROLL */
 var scrollButtons = document.querySelectorAll(".scroll-btn");
 for (var i = 0; i < scrollButtons.length; i++) {
     (function (btn) {
@@ -177,7 +177,7 @@ for (var i = 0; i < scrollButtons.length; i++) {
         btn.addEventListener("keydown", function (e) {
             var key = e.key || e.keyCode;
             if (
-                key === " " || key === "Enter" || key === 32 || key === 13
+                key === " " || key === "Enter"
             ) {
                 if (e.preventDefault) {
                     e.preventDefault();
@@ -188,7 +188,7 @@ for (var i = 0; i < scrollButtons.length; i++) {
         btn.addEventListener("keyup", function (e) {
             var key = e.key || e.keyCode;
             if (
-                key === " " || key === "Enter" || key === 32 || key === 13
+                key === " " || key === "Enter"
             ) {
                 if (e.preventDefault) {
                     e.preventDefault();
