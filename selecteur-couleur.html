@@ -525,6 +525,7 @@ function stopHold(btnId){
 }
 function bindHoldButton(btn, dx, dy){
     var id = btn.id;
+    // Souris
     btn.addEventListener("mousedown", function(){
         startHold(id, dx, dy);
     });
@@ -534,12 +535,26 @@ function bindHoldButton(btn, dx, dy){
     btn.addEventListener("mouseleave", function(){
         stopHold(id);
     });
+    // Tactile
     btn.addEventListener("touchstart", function(e){
         e.preventDefault();
         startHold(id, dx, dy);
     });
     btn.addEventListener("touchend", function(){
         stopHold(id);
+    });
+    // CLAVIER
+    btn.addEventListener("keydown", function(e){
+        if(e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            startHold(id, dx, dy);
+        }
+    });
+    btn.addEventListener("keyup", function(e){
+        if(e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            stopHold(id);
+        }
     });
 }
 // --- liaison des 4 boutons ---
