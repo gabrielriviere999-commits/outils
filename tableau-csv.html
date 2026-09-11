@@ -149,7 +149,7 @@ input[type=text],input[type=number]{width:50px;}
 <script src="outils.js"></script>
 <script src="popup.js"></script>
 <script>
-/* --- Compatibilité maximale (ES3) --- */
+/* Compatibilité maximale (ES3) */
 function setText(el, txt) {
     if (el.value !== undefined) el.value = txt;
     else if (el.textContent !== undefined) el.textContent = txt;
@@ -170,7 +170,7 @@ function wrapText(str, max) {
   var current = "";
   for (var i = 0; i < words.length; i++) {
     var w = words[i];
-    // --- Mot trop long ---
+    // Mot trop long
     if (w.length > max) {
       // Si la ligne actuelle contient quelque chose, on la pousse
       if (current.length > 0) {
@@ -191,7 +191,7 @@ function wrapText(str, max) {
       }
       continue;
     }
-    // --- Mot normal ---
+    // Mot normal
     if (current.length === 0) {
       current = w;
     } else if (current.length + 1 + w.length <= max) {
@@ -359,23 +359,52 @@ var customPlusConfig = [
   { key:"H",  id:"cp_H"  },
   { key:"hBorderHeader", id:"cp_H2" }
 ];
-var default_custom = JSON.parse(JSON.stringify(style_custom));
-document.getElementById("tableau_ascii_custom_char").oninput = function () {
-  var c = this.value;
-  localStorage.setItem("tableau_ascii_custom_char", c);
-  if (!c || c.length === 0) {
-    style_custom = JSON.parse(JSON.stringify(default_custom));
-    return;
+/* STOCKAGE CENTRALISÉ */
+var STORAGE_KEY = "tableau_ascii_storage";
+var STORAGE_DEFAULTS = {
+  sep: ";",
+  maxwidth: "120",
+  model: "classic",
+  customChar: "#"
+};
+function loadStorage() {
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return {};
+  try {
+    var data = JSON.parse(raw);
+    return (data && typeof data === "object") ? data : {};
+  } catch (e) {
+    return {};
   }
-  for (var i = 0; i < customPlusConfig.length; i++) {
-    var key = customPlusConfig[i].key;
-    // hBorderHeader n'existe pas dans style_custom → on ignore
-    if (key !== "hBorderHeader") {
-      style_custom[key] = c;
+}
+function saveState() {
+  var data = {
+    sep: document.getElementById("tableau_ascii_sep").value,
+    maxwidth: document.getElementById("tableau_ascii_maxwidth").value,
+    model: document.getElementById("ascii_model").value,
+    customChar: document.getElementById("tableau_ascii_custom_char").value,
+    custom_plus: style_custom_plus,
+    fancy_custom_plus: style_fancy_custom_plus
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+var default_custom = JSON.parse(JSON.stringify(style_custom));
+function applyCustomChar(c) {
+  if (!c) {
+    style_custom = JSON.parse(JSON.stringify(default_custom));
+  } else {
+    for (var i = 0; i < customPlusConfig.length; i++) {
+      var key = customPlusConfig[i].key;
+      if (key !== "hBorderHeader") {
+        style_custom[key] = c;
+      }
     }
   }
+}
+document.getElementById("tableau_ascii_custom_char").oninput = function () {
+  applyCustomChar(this.value);
+  saveState();
 };
-var default_custom_plus = JSON.parse(JSON.stringify(style_custom_plus));
 function exportCustomPlus() {
     exportStyle(styleSystems[0]);
 }
@@ -501,7 +530,6 @@ var style_fancy_bubble = {
   SEP_LEFT: "(88",
   SEP_RIGHT: "88)"
 };
-
 var style_fancy_custom_plus = {
   TL: "//",
   TR: "\\\\",
@@ -526,7 +554,6 @@ var fancycustomPlusConfig = [
   { key:"SEP_LEFT", id:"fcp_SEP_LEFT" },
   { key:"SEP_RIGHT", id:"fcp_SEP_RIGHT" }
 ];
-var default_fancy_custom_plus = JSON.parse(JSON.stringify(style_fancy_custom_plus));
 function exportFancyCustomPlus() {
     exportStyle(styleSystems[1]);
 }
@@ -542,7 +569,6 @@ var styleSystems = [
     style: style_custom_plus,
     default: JSON.parse(JSON.stringify(style_custom_plus)),
     config: customPlusConfig,
-    lsPrefix: "custom_plus_",
     importBoxId: "importCustomPlusBox",
     importTextId: "importCustomPlusText"
   },
@@ -551,7 +577,6 @@ var styleSystems = [
     style: style_fancy_custom_plus,
     default: JSON.parse(JSON.stringify(style_fancy_custom_plus)),
     config: fancycustomPlusConfig,
-    lsPrefix: "fancy_custom_plus_",
     importBoxId: "importFancyCustomPlusBox",
     importTextId: "importFancyCustomPlusText"
   }
@@ -564,18 +589,18 @@ function bindStyleInput(system) {
     el.oninput = (function(el, key, system) {
       return function () {
         var v = el.value;
-        if (!v || v.length === 0) {
-          system.style[key] = system.default[key];
-          localStorage.removeItem(system.lsPrefix + key);
-        } else {
-          system.style[key] = v;
-          localStorage.setItem(system.lsPrefix + key, v);
-        }
+        system.style[key] = (v && v.length > 0) ? v : system.default[key];
+        saveState();
       };
     })(el, cfg.key, system);
-    var saved = localStorage.getItem(system.lsPrefix + cfg.key);
-    system.style[cfg.key] = saved !== null ? saved : system.default[cfg.key];
-    el.value = system.style[cfg.key];
+  }
+  for (var j = 0; j < system.config.length; j++) {
+    var cfg2 = system.config[j];
+    var el2 = document.getElementById(cfg2.id);
+    if (!el2) continue;
+    if (el2.value === "" && system.style[cfg2.key] !== undefined) {
+      el2.value = system.style[cfg2.key];
+    }
   }
 }
 for (var i = 0; i < styleSystems.length; i++) {
@@ -600,16 +625,17 @@ function importStyle(system) {
       var cfg = system.config[i];
       if (opts[cfg.key] !== undefined) {
         system.style[cfg.key] = opts[cfg.key];
-        document.getElementById(cfg.id).value = opts[cfg.key];
-        localStorage.setItem(system.lsPrefix + cfg.key, opts[cfg.key]);
+        var el = document.getElementById(cfg.id);
+        if (el) el.value = opts[cfg.key];
       }
     }
+    saveState();
     document.getElementById(system.importBoxId).style.display = "none";
   } catch(e) {
     alert("JSON invalide.");
   }
 }
-/* --- Conversion CSV → ASCII --- */
+/* Conversion CSV → ASCII */
 function convertCore(rows) {
     var sep = document.getElementById("tableau_ascii_sep").value || ";";
     var maxwidth = parseInt(document.getElementById("tableau_ascii_maxwidth").value, 10);
@@ -698,7 +724,7 @@ function downloadText(text, filename) {
     container.appendChild(a);
     a.click(); // téléchargement automatique
 }
-/* --- Inverser lignes et colonnes du CSV --- */
+/* Inverser lignes et colonnes du CSV */
 function transpose(rows) {
     if (!rows || !rows.length) return [];
     var R = rows.length;
@@ -737,7 +763,7 @@ document.getElementById("transposeBtn").onclick = function () {
     // Réécrire dans input
     document.getElementById("input").value = out;
 };
-/* --- Conversion CSV → Markdown --- */
+/* Conversion CSV → Markdown */
 function generateMarkdownTable(rows) {
   var out = "";
   // Header
@@ -752,7 +778,7 @@ function generateMarkdownTable(rows) {
     out += "|" + rows[r].join("|") + "|\n";
   return out;
 }
-/* --- Conversion CSV → HTML --- */
+/* Conversion CSV → HTML */
 function tableToHTML(rows) {
   var out = "<table>\n";
   for (var r = 0; r < rows.length; r++) {
@@ -771,7 +797,7 @@ function escapeHTML(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-/* --- Conversion CSV → BBCode --- */
+/* Conversion CSV → BBCode */
 function generateBBCodeTable(rows) {
   var out = "[table]\n";
   for (var r = 0; r < rows.length; r++) {
@@ -785,7 +811,7 @@ function generateBBCodeTable(rows) {
   out += "[/table]";
   return out;
 }
-/* --- Conversion CSV → WikiTable --- */
+/* Conversion CSV → WikiTable */
 function generateWikiTable(rows) {
   var out = "{| class=\"wikitable\"\n";
   // Caption optionnelle
@@ -803,7 +829,7 @@ function generateWikiTable(rows) {
   out += "|}";
   return out;
 }
-/* --- Conversion CSV → AsciiDoc --- */
+/* Conversion CSV → AsciiDoc */
 function generateAsciiDoc(rows) {
   var out = "|===\n";
   for (var r = 0; r < rows.length; r++) {
@@ -812,7 +838,7 @@ function generateAsciiDoc(rows) {
   out += "|===";
   return out;
 }
-/* --- Conversion CSV → Org‑mode --- */
+/* Conversion CSV → Org‑mode */
 function generateOrgMode(rows) {
   var out = "";
   // ligne de header
@@ -825,7 +851,7 @@ function generateOrgMode(rows) {
   }
   return out;
 }
-/* --- Conversion CSV → LaTeX tabular --- */
+/* Conversion CSV → LaTeX tabular */
 function generateLatexTabular(rows) {
   var cols = rows[0].length;
   var spec = new Array(cols + 1).join("c"); // "ccc" etc.
@@ -836,7 +862,7 @@ function generateLatexTabular(rows) {
   out += "\\end{tabular}";
   return out;
 }
-/* --- Conversion CSV → JSON et YAML --- */
+/* Conversion CSV → JSON et YAML */
 function generateJSONTable(rows) {
   var out = "[\n";
   for (var r = 0; r < rows.length; r++) {
@@ -858,7 +884,7 @@ function generateYAMLTable(rows) {
   }
   return out.trim();
 }
-/* --- Output → input --- */
+/* Output → input */
 function cleanRows(rows) {
     var out = [];
     for (var r = 0; r < rows.length; r++) {
@@ -1284,12 +1310,12 @@ function parseYAMLTable(text) {
   }
   return rows;
 }
-/* --- Popup --- */
+/* Popup */
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
 }
-/* --- Changer taille du texte --- */
+/* Changer taille du texte */
 function applyZoom(idSlider, idTextarea) {
   var size = document.getElementById(idSlider).value;
   document.getElementById(idTextarea).style.fontSize = size + "px";
@@ -1305,46 +1331,39 @@ function effacerTout() {
   document.getElementById("input").value = "";
   setText(document.getElementById("output"), "");
 }
-// Bouton Valeurs par défaut
-function resetStyle(system) {
-  for (var i = 0; i < system.config.length; i++) {
-    var cfg = system.config[i];
-    var el = document.getElementById(cfg.id);
-    if (!el) continue;
-    el.value = system.default[cfg.key];
-    el.oninput();
-  }
-}
 function resetParams() {
-  document.getElementById("tableau_ascii_sep").value = ";";
-  document.getElementById("tableau_ascii_maxwidth").value = "120";
-  document.getElementById("ascii_model").value = "classic";
-  
-  for (var i = 0; i < styleSystems.length; i++) {
-    resetStyle(styleSystems[i]);
-  }
-  // Reset du caractère custom
-  var custom = document.getElementById("tableau_ascii_custom_char");
-  var defaultChar = default_custom.TL;
-  custom.value = defaultChar;
+  // Supprimer la sauvegarde
+  localStorage.removeItem(STORAGE_KEY);
+  // Paramètres généraux
+  document.getElementById("tableau_ascii_sep").value = STORAGE_DEFAULTS.sep;
+  document.getElementById("tableau_ascii_maxwidth").value = STORAGE_DEFAULTS.maxwidth;
+  document.getElementById("ascii_model").value = STORAGE_DEFAULTS.model;
+  // Custom
+  document.getElementById("tableau_ascii_custom_char").value = STORAGE_DEFAULTS.customChar;
   style_custom = JSON.parse(JSON.stringify(default_custom));
-  localStorage.setItem("tableau_ascii_custom_char", defaultChar);
-  custom.oninput();
-  // Met à jour la sauvegarde
-  localStorage.setItem("tableau_ascii_sep", ";");
-  localStorage.setItem("tableau_ascii_maxwidth", "120");
-  localStorage.setItem("tableau_ascii_model", "classic");
+  // Custom Plus + Fancy Custom Plus
+  for (var i = 0; i < styleSystems.length; i++) {
+    var system = styleSystems[i];
+    for (var j = 0; j < system.config.length; j++) {
+      var cfg = system.config[j];
+      // Restaurer l'objet JS
+      system.style[cfg.key] = system.default[cfg.key];
+      // Restaurer l'input
+      var el = document.getElementById(cfg.id);
+      if (el) {
+        el.value = system.default[cfg.key];
+      }
+    }
+  }
+  // Mettre à jour l'affichage
   updateOptionsVisibility();
 }
 function updateOptionsVisibility() {
   var model = document.getElementById("ascii_model").value;
   // Caractère personnalisé
-  document.getElementById("tableau_ascii_custom_char").style.display =
-    (model === "custom") ? "" : "none";
-  document.getElementById("custompluscontainer").style.display =
-    (model === "custom_plus") ? "" : "none";
-  document.getElementById("fancycustompluscontainer").style.display =
-    (model === "fancy_custom_plus") ? "" : "none";
+  document.getElementById("tableau_ascii_custom_char").style.display = (model === "custom") ? "" : "none";
+  document.getElementById("custompluscontainer").style.display = (model === "custom_plus") ? "" : "none";
+  document.getElementById("fancycustompluscontainer").style.display = (model === "fancy_custom_plus") ? "" : "none";
   var showUnicodeBox = ["unicode", "box"];
   document.getElementById("unicodeboxdecalages").style.display = (showUnicodeBox.indexOf(model) !== -1) ? "" : "none";
   var showFancy = ["fancy", "fancy_header", "fancy_bubble", "fancy_custom_plus"];
@@ -1353,33 +1372,40 @@ function updateOptionsVisibility() {
   var noWidth = ["markdown", "html", "bbcode", "wikitable", "asciidoc", "orgmode", "latex", "json", "yaml"];
   document.getElementById("maxWidthContainer").style.display = (noWidth.indexOf(model) !== -1) ? "none" : "";
 }
-/* --- Sauvegarde/Restauration --- */
-function saveState() {
-  localStorage.setItem("tableau_ascii_sep", document.getElementById("tableau_ascii_sep").value);
-  localStorage.setItem("tableau_ascii_maxwidth", document.getElementById("tableau_ascii_maxwidth").value);
-}
+/* Sauvegarde/Restauration */
 document.getElementById("tableau_ascii_sep").oninput = saveState;
 document.getElementById("tableau_ascii_maxwidth").oninput = saveState;
 document.getElementById("ascii_model").onchange = function () {
-  localStorage.setItem("tableau_ascii_model", this.value);
+  saveState();
   updateOptionsVisibility();
 };
 window.onload = function() {
-  var savedtableau_ascii_sep = localStorage.getItem("tableau_ascii_sep");
-  var savedMax = localStorage.getItem("tableau_ascii_maxwidth");
-  var savedModel = localStorage.getItem("tableau_ascii_model");
-  var savedChar = localStorage.getItem("tableau_ascii_custom_char");
-  if (savedtableau_ascii_sep !== null) document.getElementById("tableau_ascii_sep").value = savedtableau_ascii_sep;
-  if (savedMax !== null) document.getElementById("tableau_ascii_maxwidth").value = savedMax;
-  if (savedModel !== null) {
-    document.getElementById("ascii_model").value = savedModel;
+  var data = loadStorage();
+  document.getElementById("tableau_ascii_sep").value = data.sep !== undefined ? data.sep : STORAGE_DEFAULTS.sep;
+  document.getElementById("tableau_ascii_maxwidth").value = data.maxwidth !== undefined ? data.maxwidth : STORAGE_DEFAULTS.maxwidth;
+  document.getElementById("ascii_model").value = data.model !== undefined ? data.model : STORAGE_DEFAULTS.model;
+  var custom = document.getElementById("tableau_ascii_custom_char");
+  custom.value = data.customChar !== undefined
+    ? data.customChar
+    : STORAGE_DEFAULTS.customChar;
+  applyCustomChar(custom.value);
+  // Restaurer Custom Plus et Fancy Custom Plus
+  for (var i = 0; i < styleSystems.length; i++) {
+    var system = styleSystems[i];
+    var saved = data[system.name];
+    if (!saved) continue;
+    for (var j = 0; j < system.config.length; j++) {
+      var cfg = system.config[j];
+      if (saved[cfg.key] !== undefined) {
+        system.style[cfg.key] = saved[cfg.key];
+        var el = document.getElementById(cfg.id);
+        if (el) {
+          el.value = saved[cfg.key];
+        }
+      }
+    }
   }
   updateOptionsVisibility();
-  if (savedChar !== null) {
-    var custom = document.getElementById("tableau_ascii_custom_char");
-    custom.value = savedChar;
-    custom.oninput();
-  }
 };
 </script>
 </body>
