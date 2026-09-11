@@ -25,18 +25,21 @@ D;10</textarea><br>
   <fieldset>
   <legend>Options</legend>
   <label>Largeur max des barres :
-    <input type="number" id="bars_maxWidth" value="25" min="1">
+    <input type="number" id="maxWidth" value="25" min="1">
   </label><br>
   <label>Caractère de remplissage :
-    <input type="text" id="bars_barChar" value="." maxlength="1">
+    <input type="text" id="barChar" value="." maxlength="1">
   </label><br>
   <label>Caractère de fond :
-    <input type="text" id="bars_bgChar" value=" " maxlength="1">
+    <input type="text" id="bgChar" value=" " maxlength="1">
   </label><br>
   <label>Séparateur libellé :
-    <input type="text" id="bars_sep" value=" ">
+    <input type="text" id="sep" value=" ">
   </label><br>
-  <label><input type="checkbox" id="bars_normalize" checked="checked">Normaliser</label>
+  <label>
+    <input type="checkbox" id="normalize" checked="checked">
+    Normaliser
+  </label>
   <hr>
   <button onclick="resetOptions()">Valeurs par défaut</button>
   <button type="button" onclick="exportOptions()">Exporter</button>
@@ -58,116 +61,353 @@ D;10</textarea><br>
 </div>
 <script src="outils.js"></script>
 <script>
-function trimStr(s){ return s.replace(/^\s+/, '').replace(/\s+$/, ''); }
-function repeatChar(ch,n){ var o='',i; for(i=0;i<n;i++) o+=ch; return o; }
-function parseIntSafe(v,d){ var n=parseInt(v,10); return isNaN(n)?d:n; }
-function updateChart(){
-    var inputEl=document.getElementById('input');
-    var outEl=document.getElementById('output');
-    var bars_maxWidth=parseIntSafe(document.getElementById('bars_maxWidth').value,25);
-    if(bars_maxWidth<1) bars_maxWidth=1;
-    var bars_barChar=document.getElementById('bars_barChar').value.charAt(0)||'.';
-    var bars_bgChar=document.getElementById('bars_bgChar').value.charAt(0)||' ';
-    var bars_sep=document.getElementById('bars_sep').value;
-    var showValues = true;
-    var bars_normalize=document.getElementById('bars_normalize').checked;
-    var lines=inputEl.value.split(/\r?\n/);
-    var items=[],maxVal=0,i;
-    for(i=0;i<lines.length;i++){
-        var line=trimStr(lines[i]);
-        if(!line) continue;
-        var p=line.split(';');
-        var label=trimStr(p[0]);
-        var v=parseFloat(trimStr(p[1]||'0'));
-        if(isNaN(v)) v=0;
-        if(v>maxVal) maxVal=v;
-        items.push({label:label,value:v});
+/* OPTIONS */
+var barsConfig = {
+    maxWidth: {
+        id: "maxWidth",
+        defaultValue: "25",
+        type: "value"
+    },
+    barChar: {
+        id: "barChar",
+        defaultValue: ".",
+        type: "value"
+    },
+    bgChar: {
+        id: "bgChar",
+        defaultValue: " ",
+        type: "value"
+    },
+    sep: {
+        id: "sep",
+        defaultValue: " ",
+        type: "value"
+    },
+    normalize: {
+        id: "normalize",
+        defaultValue: true,
+        type: "checked"
     }
-    if(!items.length){ outEl.value=''; return; }
-    if(!bars_normalize && maxVal===0) maxVal=1;
-    // Déterminer automatiquement la largeur max des labels
-    var autoWidth = 0;
-    for(i=0;i<items.length;i++){
-        if(items[i].label.length > autoWidth)
-            autoWidth = items[i].label.length;
+};
+/* OUTILS */
+function trimStr(s) {
+    return s.replace(/^\s+/, '').replace(/\s+$/, '');
+}
+function repeatChar(ch, n) {
+    var o = '', i;
+    for (i = 0; i < n; i++) {
+        o += ch;
     }
-    labelWidth = autoWidth;
-    var out=[],width,labelText,bar;
-    for(i=0;i<items.length;i++){
-        var it=items[i];
-        var v=it.value;
-        if(bars_normalize){
-            width=maxVal>0?Math.round((v/maxVal)*bars_maxWidth):0;
-        } else {
-            width=Math.round(v);
-            if(width>bars_maxWidth) width=bars_maxWidth;
+    return o;
+}
+function parseIntSafe(v, d) {
+    var n = parseInt(v, 10);
+    return isNaN(n) ? d : n;
+}
+function getOption(key) {
+    var cfg = barsConfig[key];
+    var el = document.getElementById(cfg.id);
+    if (cfg.type === "checked") {
+        return el.checked;
+    }
+    return el.value;
+}
+/* DIAGRAMME */
+function updateChart() {
+    var inputEl = document.getElementById("input");
+    var outEl = document.getElementById("output");
+    var maxWidth = parseIntSafe(getOption("maxWidth"), 25);
+    if (maxWidth < 1) {
+        maxWidth = 1;
+    }
+    var barChar = getOption("barChar").charAt(0) || ".";
+    var bgChar = getOption("bgChar").charAt(0) || " ";
+    var sep = getOption("sep");
+    var normalize = getOption("normalize");
+    var lines = inputEl.value.split(/\r?\n/);
+    var items = [];
+    var maxVal = 0;
+    var i;
+    for (i = 0; i < lines.length; i++) {
+        var line = trimStr(lines[i]);
+        if (!line) {
+            continue;
         }
-        if(width<0) width=0;
-        labelText=it.label;
-        labelText = labelText + repeatChar(' ', labelWidth - labelText.length);
-        bar=repeatChar(bars_barChar,width)+repeatChar(bars_bgChar,bars_maxWidth-width);
-        var lineOut=(labelWidth>0?labelText+bars_sep:'')+bar+(showValues?' '+v:'');
+        var p = line.split(';');
+        var label = trimStr(p[0]);
+        var v = parseFloat(trimStr(p[1] || '0'));
+        if (isNaN(v)) {
+            v = 0;
+        }
+        if (v > maxVal) {
+            maxVal = v;
+        }
+        items.push({
+            label: label,
+            value: v
+        });
+    }
+    if (!items.length) {
+        outEl.value = '';
+        return;
+    }
+    if (!normalize && maxVal === 0) {
+        maxVal = 1;
+    }
+    // Largeur automatique des labels
+    var labelWidth = 0;
+    for (i = 0; i < items.length; i++) {
+        if (items[i].label.length > labelWidth) {
+            labelWidth = items[i].label.length;
+        }
+    }
+    var out = [];
+    var width;
+    var labelText;
+    var bar;
+    for (i = 0; i < items.length; i++) {
+        var it = items[i];
+        var v = it.value;
+        if (normalize) {
+            width = maxVal > 0
+                ? Math.round((v / maxVal) * maxWidth)
+                : 0;
+        } else {
+            width = Math.round(v);
+            if (width > maxWidth) {
+                width = maxWidth;
+            }
+        }
+        if (width < 0) {
+            width = 0;
+        }
+        labelText = it.label;
+        labelText += repeatChar(' ', labelWidth - labelText.length);
+        bar =
+            repeatChar(barChar, width) +
+            repeatChar(bgChar, maxWidth - width);
+        var lineOut =
+            (labelWidth > 0 ? labelText + sep : '') +
+            bar +
+            ' ' + v;
         out.push(lineOut);
     }
-    outEl.value=out.join('\n');
+    outEl.value = out.join('\n');
 }
-function init(){
-    updateChart();
-}
+/* MISE À JOUR DEPUIS LA SORTIE */
 function importFromOutput() {
     var outText = document.getElementById('output').value;
-    var bars_sep = document.getElementById('bars_sep').value;
+    var sep = getOption("sep");
     var lines = outText.split(/\r?\n/);
     var inputLines = [];
     var i;
     for (i = 0; i < lines.length; i++) {
         var line = trimStr(lines[i]);
-        if (!line) continue;
+        if (!line) {
+            continue;
+        }
         var label = "";
         var value = "0";
-        // --- Trouver le label propre ---
-        var idx = bars_sep ? line.indexOf(bars_sep) : -1;
+        /* Trouver le label */
+        var idx = sep ? line.indexOf(sep) : -1;
         if (idx >= 0) {
-            // On prend AVANT le séparateur
             label = trimStr(line.substring(0, idx));
         } else {
-            // fallback : avant les barres
+            /* Fallback : avant les barres */
             var guess = line.split(/[#\-\+\=\*]/)[0];
             label = trimStr(guess);
         }
-        // --- Nettoyage supplémentaire : retirer un éventuel ":" final ---
-        // Exemple : "A :" → "A"
+        /* Retirer un éventuel : ou | final */
         if (label.charAt(label.length - 1) === ':' ||
-            label.charAt(label.length - 1) === '|' ) {
-            label = trimStr(label.substring(0, label.length - 1));
+            label.charAt(label.length - 1) === '|') {
+            label = trimStr(
+                label.substring(0, label.length - 1)
+            );
         }
-        // --- Trouver la valeur à la fin ---
+        /* Trouver la valeur à la fin */
         var j = line.length - 1;
-        while (j >= 0 && line.charAt(j) === ' ') j--;
+        while (j >= 0 && line.charAt(j) === ' ') {
+            j--;
+        }
         var end = j + 1;
         while (j >= 0) {
             var c = line.charAt(j);
-            if ((c >= '0' && c <= '9') || c === '.' || c === '-') {
+            if ((c >= '0' && c <= '9') ||
+                c === '.' ||
+                c === '-') {
                 j--;
-            } else break;
+            } else {
+                break;
+            }
         }
         var start = j + 1;
-        var valStr = trimStr(line.substring(start, end));
-        if (valStr !== "") value = valStr;
+        var valStr = trimStr(
+            line.substring(start, end)
+        );
+        if (valStr !== "") {
+            value = valStr;
+        }
         inputLines.push(label + ";" + value);
     }
-    document.getElementById('input').value = inputLines.join("\n");
+    document.getElementById('input').value =
+        inputLines.join("\n");
     updateChart();
 }
-if(window.attachEvent) window.attachEvent('onload',init);
-else if(window.addEventListener) window.addEventListener('load',init,false);
-else window.onload=init;
-/* --- Mise à jour au blur --- */
+/* SAUVEGARDE AUTOMATIQUE */
+function saveState() {
+    var data = {};
+    var key;
+    var cfg;
+    var el;
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (cfg.type === "checked") {
+            data[key] = el.checked;
+        } else {
+            data[key] = el.value;
+        }
+    }
+    localStorage.setItem("options", JSON.stringify(data));
+}
+/* RESTAURATION AUTOMATIQUE */
+function loadState() {
+    var raw = localStorage.getItem("options");
+    var data;
+    var key;
+    var cfg;
+    var el;
+    if (!raw) {
+        return;
+    }
+    try {
+        data = JSON.parse(raw);
+    } catch (e) {
+        return;
+    }
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (data[key] === undefined) {
+            continue;
+        }
+        if (cfg.type === "checked") {
+            el.checked = data[key];
+        } else {
+            el.value = data[key];
+        }
+    }
+}
+/* VALEURS PAR DÉFAUT */
+function resetOptions() {
+    var key;
+    var cfg;
+    var el;
+    localStorage.removeItem("options");
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (cfg.type === "checked") {
+            el.checked = cfg.defaultValue;
+        } else {
+            el.value = cfg.defaultValue;
+        }
+    }
+    updateChart();
+}
+/* LIAISON DES OPTIONS */
+function bindOptions() {
+    var key;
+    var cfg;
+    var el;
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (cfg.type === "checked") {
+            el.onchange = saveState;
+        } else {
+            el.oninput = saveState;
+        }
+    }
+}
+/* EXPORT MANUEL */
+function exportOptions() {
+    var data = {};
+    var key;
+    var cfg;
+    var el;
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (cfg.type === "checked") {
+            data[key] = el.checked ? 1 : 0;
+        } else {
+            data[key] = el.value;
+        }
+    }
+    document.getElementById("json").value =
+        JSON.stringify(data, null, 2);
+    document.getElementById("importBox").style.display =
+        "block";
+}
+/* IMPORT MANUEL */
+function showImportBox() {
+    document.getElementById("importBox").style.display =
+        "block";
+}
+function applyImport() {
+    var txt = document.getElementById("json").value;
+    if (!txt) {
+        return;
+    }
+    var data;
+    try {
+        data = JSON.parse(txt);
+    } catch (e) {
+        alert("JSON invalide.");
+        return;
+    }
+    var key;
+    var cfg;
+    var el;
+    for (key in barsConfig) {
+        cfg = barsConfig[key];
+        el = document.getElementById(cfg.id);
+        if (data[key] === undefined) {
+            continue;
+        }
+        if (cfg.type === "checked") {
+            el.checked =
+                data[key] == 1 ||
+                data[key] === true;
+        } else {
+            el.value = data[key];
+        }
+    }
+    saveState();
+    updateChart();
+    document.getElementById("importBox").style.display =
+        "none";
+}
+/* INITIALISATION */
+function init() {
+    loadState();
+    bindOptions();
+    updateChart();
+}
+if (window.attachEvent) {
+    window.attachEvent('onload', init);
+} else if (window.addEventListener) {
+    window.addEventListener('load', init, false);
+} else {
+    window.onload = init;
+}
+/* MISE À JOUR AU BLUR */
 function setupBlurinput(id) {
     var el = document.getElementById(id);
     if (el.addEventListener) {
         el.addEventListener('blur', updateChart, false);
-        el.addEventListener('change', updateChart, false); // utile pour checkbox/select
+        el.addEventListener('change', updateChart, false);
     } else if (el.attachEvent) {
         el.attachEvent('onblur', updateChart);
         el.attachEvent('onchange', updateChart);
@@ -183,92 +423,13 @@ function setupBluroutput(id) {
         el.attachEvent('onchange', importFromOutput);
     }
 }
-// Champs texte
-setupBlurinput('bars_maxWidth');
-setupBlurinput('bars_barChar');
-setupBlurinput('bars_bgChar');
-setupBlurinput('bars_sep');
-// Checkbox
-setupBlurinput('bars_normalize');
-// Textarea
+setupBlurinput('maxWidth');
+setupBlurinput('barChar');
+setupBlurinput('bgChar');
+setupBlurinput('sep');
+setupBlurinput('normalize');
 setupBlurinput('input');
 setupBluroutput('output');
-// Bouton Valeurs par défaut
-function resetOptions() {
-  document.getElementById("bars_maxWidth").value = "25";
-  localStorage.setItem("bars_maxWidth", "25");
-  document.getElementById("bars_barChar").value = ".";
-  localStorage.setItem("bars_barChar", ".");
-  document.getElementById("bars_bgChar").value = " ";
-  localStorage.setItem("bars_bgChar", " ");
-  document.getElementById("bars_sep").value = " ";
-  localStorage.setItem("bars_sep", " ");
-  document.getElementById("bars_normalize").checked = true;
-  localStorage.removeItem("bars_normalize");
-  updateChart();
-}
-// Sauvegarde/Restauration
-function saveState() {
-  localStorage.setItem("bars_maxWidth", document.getElementById("bars_maxWidth").value);
-  localStorage.setItem("bars_barChar", document.getElementById("bars_barChar").value);
-  localStorage.setItem("bars_bgChar", document.getElementById("bars_bgChar").value);
-  localStorage.setItem("bars_sep", document.getElementById("bars_sep").value);
-  localStorage.setItem("bars_normalize", document.getElementById("bars_normalize").checked ? "1" : "0");
-}
-document.getElementById("bars_maxWidth").oninput = saveState;
-document.getElementById("bars_barChar").oninput = saveState;
-document.getElementById("bars_bgChar").oninput = saveState;
-document.getElementById("bars_sep").oninput = saveState;
-document.getElementById("bars_normalize").onchange = saveState;
-window.onload = function() {
-  var savedbars_maxWidth = localStorage.getItem("bars_maxWidth");
-  var savedbars_barChar = localStorage.getItem("bars_barChar");
-  var savedbars_bgChar = localStorage.getItem("bars_bgChar");
-  var savedbars_sep = localStorage.getItem("bars_sep");
-  var savedbars_normalize = localStorage.getItem("bars_normalize");
-  if (savedbars_maxWidth !== null) document.getElementById("bars_maxWidth").value = savedbars_maxWidth;
-  if (savedbars_barChar !== null) document.getElementById("bars_barChar").value = savedbars_barChar;
-  if (savedbars_bgChar !== null) document.getElementById("bars_bgChar").value = savedbars_bgChar;
-  if (savedbars_sep !== null) document.getElementById("bars_sep").value = savedbars_sep;
-  if (savedbars_normalize !== null) document.getElementById("bars_normalize").checked = (savedbars_normalize === "1");
-  updateChart();
-};
-// Exporter options
-function exportOptions() {
-    var opts = {
-        bars_maxWidth: document.getElementById("bars_maxWidth").value,
-        bars_barChar: document.getElementById("bars_barChar").value,
-        bars_bgChar: document.getElementById("bars_bgChar").value,
-        bars_sep: document.getElementById("bars_sep").value,
-        bars_normalize: document.getElementById("bars_normalize").checked ? 1 : 0
-    };
-    var json = JSON.stringify(opts, null, 2);
-    // envoyer dans le textarea d'import
-    var ta = document.getElementById("json");
-    ta.value = json;
-    // afficher la boîte d'import
-    document.getElementById("importBox").style.display = "block";
-}
-function showImportBox() {
-    document.getElementById("importBox").style.display = "block";
-}
-function applyImport() {
-    var txt = document.getElementById("json").value;
-    if (!txt) return;
-    try {
-        var opts = JSON.parse(txt);
-        if (opts.bars_maxWidth !== undefined) document.getElementById("bars_maxWidth").value = opts.bars_maxWidth;
-        if (opts.bars_barChar !== undefined) document.getElementById("bars_barChar").value = opts.bars_barChar;
-        if (opts.bars_bgChar !== undefined) document.getElementById("bars_bgChar").value = opts.bars_bgChar;
-        if (opts.bars_sep !== undefined) document.getElementById("bars_sep").value = opts.bars_sep;
-        if (opts.bars_normalize !== undefined) document.getElementById("bars_normalize").checked = (opts.bars_normalize == 1);
-        saveState();
-        updateChart();
-        document.getElementById("importBox").style.display = "none";
-    } catch(e) {
-        alert("JSON invalide.");
-    }
-}
 </script>
 </body>
 </html>

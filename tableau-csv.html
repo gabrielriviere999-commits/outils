@@ -85,7 +85,7 @@ input[type=text],input[type=number]{width:50px;}
   </fieldset>
 </div>
 <div class="toolbar">
-  <select id="ascii_model">
+  <select id="model">
     <optgroup label="Texte brut lisible">
       <option value="classic">Classique +-|</option>
       <option value="classic_header">Classique (en-tête)</option>
@@ -113,9 +113,9 @@ input[type=text],input[type=number]{width:50px;}
       <option value="yaml">YAML list</option>
     </optgroup>
   </select>
-  <input type="text" id="tableau_ascii_custom_char" style="display:none;" maxlength="1" value="#">
-  Séparateur : <input type="text" id="tableau_ascii_sep" value=";">
-  <span id="maxWidthContainer">Largeur max : <input type="number" id="tableau_ascii_maxwidth" value="120" min="4"></span>
+  <input type="text" id="custom_char" style="display:none;" maxlength="1" value="#">
+  Séparateur : <input type="text" id="sep" value=";">
+  <span id="maxWidthContainer">Largeur max : <input type="number" id="maxwidth" value="120" min="4"></span>
   <button onclick="resetParams()">Valeurs par défaut</button>
   <button onclick="openHelpPopup()">?</button>
   <div id="popupHelpContent" style="display:none">
@@ -379,10 +379,10 @@ function loadStorage() {
 }
 function saveState() {
   var data = {
-    sep: document.getElementById("tableau_ascii_sep").value,
-    maxwidth: document.getElementById("tableau_ascii_maxwidth").value,
-    model: document.getElementById("ascii_model").value,
-    customChar: document.getElementById("tableau_ascii_custom_char").value,
+    sep: document.getElementById("sep").value,
+    maxwidth: document.getElementById("maxwidth").value,
+    model: document.getElementById("model").value,
+    customChar: document.getElementById("custom_char").value,
     custom_plus: style_custom_plus,
     fancy_custom_plus: style_fancy_custom_plus
   };
@@ -401,7 +401,7 @@ function applyCustomChar(c) {
     }
   }
 }
-document.getElementById("tableau_ascii_custom_char").oninput = function () {
+document.getElementById("custom_char").oninput = function () {
   applyCustomChar(this.value);
   saveState();
 };
@@ -637,10 +637,10 @@ function importStyle(system) {
 }
 /* Conversion CSV → ASCII */
 function convertCore(rows) {
-    var sep = document.getElementById("tableau_ascii_sep").value || ";";
-    var maxwidth = parseInt(document.getElementById("tableau_ascii_maxwidth").value, 10);
+    var sep = document.getElementById("sep").value || ";";
+    var maxwidth = parseInt(document.getElementById("maxwidth").value, 10);
     if (isNaN(maxwidth)) maxwidth = Infinity;
-    var model = document.getElementById("ascii_model").value;
+    var model = document.getElementById("model").value;
     if (model === "classic") return asciiTable(rows, maxwidth, style_classic);
     if (model === "classic_header") return asciiTable(rows, maxwidth, style_classic_header);
     if (model === "dotted") return asciiTable(rows, maxwidth, style_dotted);
@@ -687,7 +687,7 @@ function csvToRows(lignes, sep) {
 function convertir() {
     var texte = document.getElementById("input").value;
     if (!texte) return;
-    var sep = document.getElementById("tableau_ascii_sep").value || ";";
+    var sep = document.getElementById("sep").value || ";";
     var rows = csvToRows(texte.split("\n"), sep);
     var table = convertCore(rows);
     setText(document.getElementById("output"), table);
@@ -703,7 +703,7 @@ document.getElementById("csvFileInput").onchange = function () {
     var reader = new FileReader();
     reader.onload = function (e) {
         var texte = e.target.result;
-        var sep = document.getElementById("tableau_ascii_sep").value || ";";
+        var sep = document.getElementById("sep").value || ";";
         var rows = csvToRows(texte.split("\n"), sep);
         lastGeneratedTable = convertirSansTextarea(rows);
         downloadText(lastGeneratedTable, "table.txt");
@@ -750,7 +750,7 @@ document.getElementById("transposeBtn").onclick = function () {
     // Lire le CSV du champ input
     var txt = document.getElementById("input").value;
     // Convertir CSV → tableau
-    var sep = document.getElementById("tableau_ascii_sep").value || ";";
+    var sep = document.getElementById("sep").value || ";";
     var rows = csvToRows(txt.split("\n"), sep);
     // Transposer
     var newRows = transpose(rows);
@@ -907,7 +907,7 @@ function cleanRows(rows) {
 }
 function tableToCSV(rows) {
     rows = cleanRows(rows);
-    var sep = document.getElementById("tableau_ascii_sep").value || ";";
+    var sep = document.getElementById("sep").value || ";";
     var csv = "";
     for (var r = 0; r < rows.length; r++) {
         if (r > 0) csv += "\n";
@@ -937,7 +937,7 @@ document.getElementById("tableFileInput").onchange = function () {
 };
 function parseAnyTable(text) {
   text = String(text);
-  var model = document.getElementById("ascii_model").value;
+  var model = document.getElementById("model").value;
   // Mode fancy strict
   if (model === "fancy" || model === "fancy_header" || model === "fancy_bubble" || model === "fancy_custom_plus") {
       return parseFancyTable(text);
@@ -1335,11 +1335,11 @@ function resetParams() {
   // Supprimer la sauvegarde
   localStorage.removeItem(STORAGE_KEY);
   // Paramètres généraux
-  document.getElementById("tableau_ascii_sep").value = STORAGE_DEFAULTS.sep;
-  document.getElementById("tableau_ascii_maxwidth").value = STORAGE_DEFAULTS.maxwidth;
-  document.getElementById("ascii_model").value = STORAGE_DEFAULTS.model;
+  document.getElementById("sep").value = STORAGE_DEFAULTS.sep;
+  document.getElementById("maxwidth").value = STORAGE_DEFAULTS.maxwidth;
+  document.getElementById("model").value = STORAGE_DEFAULTS.model;
   // Custom
-  document.getElementById("tableau_ascii_custom_char").value = STORAGE_DEFAULTS.customChar;
+  document.getElementById("custom_char").value = STORAGE_DEFAULTS.customChar;
   style_custom = JSON.parse(JSON.stringify(default_custom));
   // Custom Plus + Fancy Custom Plus
   for (var i = 0; i < styleSystems.length; i++) {
@@ -1359,9 +1359,9 @@ function resetParams() {
   updateOptionsVisibility();
 }
 function updateOptionsVisibility() {
-  var model = document.getElementById("ascii_model").value;
+  var model = document.getElementById("model").value;
   // Caractère personnalisé
-  document.getElementById("tableau_ascii_custom_char").style.display = (model === "custom") ? "" : "none";
+  document.getElementById("custom_char").style.display = (model === "custom") ? "" : "none";
   document.getElementById("custompluscontainer").style.display = (model === "custom_plus") ? "" : "none";
   document.getElementById("fancycustompluscontainer").style.display = (model === "fancy_custom_plus") ? "" : "none";
   var showUnicodeBox = ["unicode", "box"];
@@ -1373,18 +1373,18 @@ function updateOptionsVisibility() {
   document.getElementById("maxWidthContainer").style.display = (noWidth.indexOf(model) !== -1) ? "none" : "";
 }
 /* Sauvegarde/Restauration */
-document.getElementById("tableau_ascii_sep").oninput = saveState;
-document.getElementById("tableau_ascii_maxwidth").oninput = saveState;
-document.getElementById("ascii_model").onchange = function () {
+document.getElementById("sep").oninput = saveState;
+document.getElementById("maxwidth").oninput = saveState;
+document.getElementById("model").onchange = function () {
   saveState();
   updateOptionsVisibility();
 };
 window.onload = function() {
   var data = loadStorage();
-  document.getElementById("tableau_ascii_sep").value = data.sep !== undefined ? data.sep : STORAGE_DEFAULTS.sep;
-  document.getElementById("tableau_ascii_maxwidth").value = data.maxwidth !== undefined ? data.maxwidth : STORAGE_DEFAULTS.maxwidth;
-  document.getElementById("ascii_model").value = data.model !== undefined ? data.model : STORAGE_DEFAULTS.model;
-  var custom = document.getElementById("tableau_ascii_custom_char");
+  document.getElementById("sep").value = data.sep !== undefined ? data.sep : STORAGE_DEFAULTS.sep;
+  document.getElementById("maxwidth").value = data.maxwidth !== undefined ? data.maxwidth : STORAGE_DEFAULTS.maxwidth;
+  document.getElementById("model").value = data.model !== undefined ? data.model : STORAGE_DEFAULTS.model;
+  var custom = document.getElementById("custom_char");
   custom.value = data.customChar !== undefined
     ? data.customChar
     : STORAGE_DEFAULTS.customChar;
