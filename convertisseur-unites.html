@@ -24,14 +24,14 @@
 }
 .dropdown-list div {
   padding:4px;
-  border-bottom:1px solid #202020;
+  border-bottom:1px solid #222;
 }
 .dropdown-list div:hover {
   background:#000080;
   color:#ccc;
 }
 .dropdown-selected{font-weight:bold;}
-.dropdown-selected:hover{background:#202020;}
+.dropdown-selected:hover{background:#222;}
 .block-cat{background:#e35f5f;}
 .block-value{background:#ffd700;}
 .block-from{background:#8ec582;}
@@ -589,7 +589,7 @@ function createDropdown(selectedId, listId, onSelect) {
 function highlight() {
   var i;
   for (i = 0; i < options.length; i++) {
-    options[i].style.background = (i === activeIndex) ? "#202020" : "";
+    options[i].style.background = (i === activeIndex) ? "#222" : "";
   }
   if (activeIndex >= 0 && activeIndex < options.length) {
     options[activeIndex].scrollIntoView();
@@ -768,7 +768,7 @@ document.getElementById("searchFrom").oninput = function () {
 function highlight() {
   var i;
   for (i = 0; i < searchOptions.length; i++) {
-    searchOptions[i].style.background = (i === activeIndex) ? "#202020" : "";
+    searchOptions[i].style.background = (i === activeIndex) ? "#222" : "";
   }
   if (activeIndex >= 0 && activeIndex < searchOptions.length) {
     var item = searchOptions[activeIndex];
@@ -865,7 +865,7 @@ document.getElementById("searchTo").oninput = function () {
 function highlight() {
   var i;
   for (i = 0; i < searchOptions.length; i++) {
-    searchOptions[i].style.background = (i === activeIndex) ? "#202020" : "";
+    searchOptions[i].style.background = (i === activeIndex) ? "#222" : "";
   }
   if (activeIndex >= 0 && activeIndex < searchOptions.length) {
     var item = searchOptions[activeIndex];
