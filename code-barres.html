@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-<h1>Générateur & Lecteur de Code-barres</h1>
+<h2>Générateur & Lecteur de Code-barres</h2>
 <div class="overlayColorPicker">
   <div class="overlayColorPicker-cell">
     <div class="mini-picker" id="miniPicker">
@@ -57,7 +57,7 @@
   </div>
 </div>
 <div class="section">
-  <h2>Générer un Code-barres</h2>
+  <h3>Générer un Code-barres</h3>
   <select id="barcodeFormat">
     <option value="CODE128">Code 128</option>
     <option value="EAN13">EAN-13</option>
@@ -87,7 +87,7 @@
 </div>
 <br>
 <div class="section">
-  <h2>Décoder un Code-barres (fichier)</h2>
+  <h3>Décoder un Code-barres (fichier)</h3>
   <input type="file" id="file-input" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
   <canvas id="canvas-file" style="display:none;"></canvas>
   <input id="pasteInput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V">
@@ -96,7 +96,7 @@
 </div>
 <br>
 <div class="section">
-  <h2>Décoder un Code-barres (caméra)</h2>
+  <h3>Décoder un Code-barres (caméra)</h3>
   <video id="barVideo" autoplay playsinline style="width:300px;"></video>
   <pre id="barResult"></pre>
   <button id="copyBar">Copier</button>
