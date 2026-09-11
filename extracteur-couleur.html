@@ -26,7 +26,7 @@
   width:80px;
   height:80px;
   border:2px solid #000;
-  background:#c0c0c0;
+  background:#222;
   display:none;
   pointer-events:none;
   image-rendering:pixelated;
@@ -108,10 +108,10 @@
 <div id="cross" class="cross" style="display:none;"></div>
 <div class="section">
   <div id="preview" class="border-interne"></div>
-  <button class="scroll-btn" data-dir="left">←</button>
-  <button class="scroll-btn" data-dir="right" style="margin-right:40px;">→</button>
-  <button class="scroll-btn" data-dir="up">↑</button>
-  <button class="scroll-btn" data-dir="down">↓</button>
+<button class="scroll-btn" data-dir="left" data-target="canvasWrapper">←</button>
+<button class="scroll-btn" data-dir="right" data-target="canvasWrapper">→</button>
+<button class="scroll-btn" data-dir="up" data-target="canvasWrapper">↑</button>
+<button class="scroll-btn" data-dir="down" data-target="canvasWrapper">↓</button>
   <div class="line">HEX :
     <span id="hexValue" class="value">-</span>
     <button onclick="copyText('hexValue', this)">Copier</button>
@@ -129,8 +129,9 @@
     <button onclick="copyText('hsvValue', this)">Copier</button>
   </div>
 </div>
+<script src="outils.js"></script>
 <script>
-/* --- Variables --- */
+/* Variables */
 var fileInput = document.getElementById("file-input");
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
@@ -144,13 +145,13 @@ var rgbSpan = document.getElementById("rgbValue");
 var hslSpan = document.getElementById("hslValue");
 var hsvSpan = document.getElementById("hsvValue");
 var currentImage = null;
-/* --- Utils --- */
+/* Utils */
 function prevent(e) {
     if (e.preventDefault) e.preventDefault();
     e.returnValue = false;
     return false;
 }
-/* --- Chargement image --- */
+/* Chargement image */
 fileInput.onchange = function(){
     if (fileInput.files && fileInput.files.length > 0) {
         loadFile(fileInput.files[0]);
@@ -182,7 +183,7 @@ function drawImageToCanvas(img){
     canvas.height = displayHeight;
     ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 }
-/* --- Coller l'image --- */
+/* Coller l'image */
 var pastezone = document.getElementById("pastezone");
 pastezone.onclick = function(){
     pastezone.focus();
@@ -202,7 +203,7 @@ pastezone.onpaste = function(e){
         alert("Aucune image trouvée dans le presse‑papier.");
     }
 };
-/* --- Copier --- */
+/* Copier */
 function copyText(id, btn){
 	var btn = event.target;
     var text = document.getElementById(id).innerHTML;
@@ -214,7 +215,7 @@ function copyText(id, btn){
     document.body.removeChild(t);
     btn.focus();
 }
-/* --- Conversions couleurs --- */
+/* Conversions couleurs */
 function toHex(c){ var h = c.toString(16); return h.length == 1 ? "0" + h : h; }
 function rgbToHex(r,g,b){ return "#" + toHex(r) + toHex(g) + toHex(b); }
 function rgbToHsl(r,g,b){
@@ -260,7 +261,7 @@ function rgbToHsv(r,g,b){
     }
     return { h: Math.round(h), s: Math.round(s * 100), v: Math.round(v * 100) };
 }
-/* --- Lecture pixel + loupe --- */
+/* Lecture pixel + loupe */
 function readPixel(x,y){
     if (!ctx) return;
     if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return;
@@ -287,7 +288,7 @@ function showLoupe(x, y){
     // Position horizontale basée sur la position interne
     lx = rect.left + scrollX + x - 40;
     // Position verticale basée sur la position interne
-    ly = rect.top + scrollY + y + 40;
+    ly = rect.top + scrollY + y - 120;
     loupe.style.left = lx + "px";
     loupe.style.top  = ly + "px";
     loupe.style.display = "block";
@@ -306,7 +307,7 @@ function showCross(x, y){
 function hideCross(){
     cross.style.display = "none";
 }
-/* --- Coordonnées souris / touch --- */
+/* Coordonnées souris / touch */
 function getPos(e){
     var rect = canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
@@ -316,7 +317,7 @@ function getPos(e){
         y: Math.floor(y)
     };
 }
-/* --- Events canvas --- */
+/* Events canvas */
 var draggingCross = false;
 /* Pointer Events si disponibles */
 if ("onpointerdown" in canvas) {
@@ -368,7 +369,7 @@ if ("onpointerdown" in canvas) {
         if (e.preventDefault) e.preventDefault();
     };
 } else {
-    /* --- Ancien navigateur / Nintendo 3DS --- */
+    /* Ancien navigateur / Nintendo 3DS */
     canvas.ontouchstart = function(e){
         if (!e.touches || !e.touches.length) return;
         var t = e.touches[0];
@@ -400,58 +401,6 @@ if ("onpointerdown" in canvas) {
         if (e.preventDefault) e.preventDefault();
     };
 }
-/* --- Boutons de scroll --- */
-var wrapper = document.getElementById("canvasWrapper");
-/* état des boutons */
-var active = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
-};
-function addScrollButton(selector) {
-    var buttons = document.querySelectorAll(selector);
-    for (var i = 0; i < buttons.length; i++) {
-        (function(btn) {
-            var dir = btn.getAttribute("data-dir");
-            btn.onpointerdown = function(e) {
-                active[dir] = true;
-                e.preventDefault();
-            };
-            btn.onpointerup = function(e) {
-                active[dir] = false;
-                e.preventDefault();
-            };
-            btn.onpointercancel = function(e) {
-                active[dir] = false;
-                e.preventDefault();
-            };
-            btn.onpointerleave = function(e) {
-                if (e.pointerType === "mouse") {
-                    active[dir] = false;
-                }
-            };
-        })(buttons[i]);
-    }
-}
-addScrollButton(".scroll-btn");
-/* vitesse */
-var speed = 15;
-/* boucle unique */
-setInterval(function () {
-    if (active.up) {
-        wrapper.scrollTop -= speed;
-    }
-    if (active.down) {
-        wrapper.scrollTop += speed;
-    }
-    if (active.left) {
-        wrapper.scrollLeft -= speed;
-    }
-    if (active.right) {
-        wrapper.scrollLeft += speed;
-    }
-}, 30);
 </script>
 </body>
 </html>

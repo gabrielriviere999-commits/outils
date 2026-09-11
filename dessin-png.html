@@ -250,10 +250,10 @@ body.block-touch{touch-action:none;}
   <canvas id="canvas" width="640" height="480"></canvas>
   <div id="canvasGrid"></div>
 </div>
-<button class="scroll-btn" data-dir="left">←</button>
-<button class="scroll-btn" data-dir="right">→</button>
-<button class="scroll-btn" data-dir="up">↑</button>
-<button class="scroll-btn" data-dir="down">↓</button>
+<button class="scroll-btn" data-dir="left" data-target="canvasScroll">←</button>
+<button class="scroll-btn" data-dir="right" data-target="canvasScroll">→</button>
+<button class="scroll-btn" data-dir="up" data-target="canvasScroll">↑</button>
+<button class="scroll-btn" data-dir="down" data-target="canvasScroll">↓</button>
 <div id="dimensions" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div id="canvasLoupe">
   <canvas id="loupeCanvas" width="120" height="120"></canvas>
@@ -3418,42 +3418,6 @@ function downloadJPG(){
     link.click();
     document.body.removeChild(link);
 }
-/* --- Boutons de scroll --- */
-var canvasscroll = document.getElementById("canvasScroll");
-var active = { up: false, down: false, left: false, right: false };
-function addScrollButton(selector) {
-    var buttons = document.querySelectorAll(selector);
-    for (var i = 0; i < buttons.length; i++) {
-        (function(btn) {
-            var dir = btn.getAttribute("data-dir");
-            btn.onpointerdown = function(e) {
-                active[dir] = true;
-                e.preventDefault();
-            };
-            btn.onpointerup = function(e) {
-                active[dir] = false;
-                e.preventDefault();
-            };
-            btn.onpointercancel = function(e) {
-                active[dir] = false;
-                e.preventDefault();
-            };
-            btn.onpointerleave = function(e) {
-                if (e.pointerType === "mouse") {
-                    active[dir] = false;
-                }
-            };
-        })(buttons[i]);
-    }
-}
-addScrollButton(".scroll-btn");
-var speed = 15;
-setInterval(function () {
-    if (active.up) { canvasscroll.scrollTop -= speed; }
-    if (active.down) { canvasscroll.scrollTop += speed; }
-    if (active.left) { canvasscroll.scrollLeft -= speed; }
-    if (active.right) { canvasscroll.scrollLeft += speed; }
-}, 30);
 /* Au chargement */
 window.onload = function() {
     setTool("free");

@@ -1,4 +1,4 @@
-/* --- Copier textarea ---*/
+/* Copier textarea */
 function copyTextarea(id, btn) {
     var code = document.getElementById(id);
     var temp = document.createElement("textarea");
@@ -26,7 +26,7 @@ Object.keys(mapTextarea).forEach(function(btnId) {
         copyTextarea(mapTextarea[btnId], e.target);
     };
 });
-/* --- Glisser-déposer textarea ---*/
+/* Glisser-déposer textarea */
 function setupDragDrop(textareaId) {
     var area = document.getElementById(textareaId);
     if (!area) return; // ignore proprement si absent
@@ -57,8 +57,8 @@ setupDragDrop("textA");
 setupDragDrop("textB");
 setupDragDrop("view");
 setupDragDrop("textInput");
-setupDragDrop("json");
-/* --- Sélecteur de fichiers importer textarea ---*/
+setupDragDrop("importBox");
+/* Sélecteur de fichiers importer textarea */
 function importTextareaFile(fileInputId, textareaId) {
     var file = document.getElementById(fileInputId);
     var area = document.getElementById(textareaId);
@@ -82,7 +82,7 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
-/* --- Boutons - et + sliders ---*/
+/* Boutons - et + sliders */
 var sliders = {
     zoomRange: ["applyZoomRange", 1],
     imgScale: ["zoomImage", 5],
@@ -141,4 +141,81 @@ function handleSliderAction(action) {
         ? -sliders[id][1]
         : sliders[id][1];
     changeSlider(id, amount);
+}
+/* BOUTONS DE SCROLL UNIVERSELS */
+var scrollButtons = document.querySelectorAll(".scroll-btn");
+for (var i = 0; i < scrollButtons.length; i++) {
+    (function(btn) {
+        var dir = btn.getAttribute("data-dir");
+        var targetId = btn.getAttribute("data-target");
+        // Récupération de la zone à scroller
+        var target = document.getElementById(targetId);
+        if (!target) {
+            console.warn(
+                "Bouton de scroll : élément introuvable : " + targetId
+            );
+            return;
+        }
+        // État du bouton
+        var scrolling = false;
+        // SOURIS / TACTILE
+        btn.addEventListener("pointerdown", function(e) {
+            e.preventDefault();
+            scrolling = true;
+            if (btn.setPointerCapture) {
+                try {
+                    btn.setPointerCapture(e.pointerId);
+                } catch (err) {}
+            }
+        });
+        btn.addEventListener("pointerup", function(e) {
+            e.preventDefault();
+            scrolling = false;
+        });
+        btn.addEventListener("pointercancel", function() {
+            scrolling = false;
+        });
+        btn.addEventListener("lostpointercapture", function() {
+            scrolling = false;
+        });
+        btn.addEventListener("pointerleave", function(e) {
+            if (e.pointerType === "mouse") {
+                scrolling = false;
+            }
+        });
+        // CLAVIER
+        btn.addEventListener("keydown", function(e) {
+            // Espace ou Entrée
+            if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                // Évite les répétitions indésirables
+                if (!e.repeat) {
+                    scrolling = true;
+                }
+            }
+        });
+        btn.addEventListener("keyup", function(e) {
+            if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                scrolling = false;
+            }
+        });
+        // SCROLL CONTINU
+        setInterval(function() {
+            if (!scrolling) return;
+            var speed = 15;
+            if (dir === "up") {
+                target.scrollTop -= speed;
+            }
+            if (dir === "down") {
+                target.scrollTop += speed;
+            }
+            if (dir === "left") {
+                target.scrollLeft -= speed;
+            }
+            if (dir === "right") {
+                target.scrollLeft += speed;
+            }
+        }, 30);
+    })(scrollButtons[i]);
 }
