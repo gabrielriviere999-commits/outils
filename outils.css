@@ -9,9 +9,9 @@ body {
 a{word-break:break:all;}
 h2,h3{margin-top:0;margin-bottom:10px}
 h2{color:#f44;padding-bottom:5px;border-bottom:2px solid #f44;}
-h3{padding-bottom:5px;border-bottom:1px solid #ccc;}
-fieldset{border:2px groove #808080;}
-hr{border:1px inset #808080;}
+h3{padding-bottom:5px;border-bottom:1px solid #888;}
+fieldset{border:2px groove #888;}
+hr{border:1px inset #888;}
 label{display:inline-block;font-size:14px;}
 textarea {
   width:100%;
@@ -24,7 +24,7 @@ textarea {
 input,textarea {
   background:#000;
   color:#ccc;
-  border:2px groove #808080;
+  border:2px groove #888;
 }
 input[type=range]{touch-action:none;vertical-align:middle;}
 input[type=checkbox]{vertical-align:middle;}
@@ -144,7 +144,7 @@ select:hover{background:#404040;}
   background:rgba(0,0,0,0.6);
   color:#ccc;
   padding:10px;
-  border:1px solid #808080;
+  border:1px solid #888;
   box-sizing:border-box;
 }
 .popup-content {
@@ -172,7 +172,7 @@ select:hover{background:#404040;}
   background:rgba(0,0,0,0.6);
   color:#ccc;
   padding:10px;
-  border:1px solid #808080;
+  border:1px solid #888;
   box-sizing:border-box;
   overflow:auto;
 }
