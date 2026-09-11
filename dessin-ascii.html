@@ -937,10 +937,10 @@ view.onmousemove = function(e) {
     var margin = 25;
     // scroll auto
     if(autoScrollCheckbox.checked){
-        if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 2;
-        else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 2;
-        if (e.clientX > rect.right - margin) view.scrollLeft += charW * 2;
-        else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 2;
+        if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 1;
+        else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 1;
+        if (e.clientX > rect.right - margin) view.scrollLeft += charW * 1;
+        else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 1;
     };
     // move / copy
     if (tool === "move" && moveMode === 1) {
