@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="color-palette.css">
 <style>
 td {
-  border:var(--cell-border-width, 1px) solid var(--cell-border-color, #808080);
+  border:var(--cell-border-width, 1px) solid var(--cell-border-color, #888);
   padding:6px;
   color:var(--global-text-color, inherit);
   background:var(--global-bg-color, inherit);
@@ -100,7 +100,7 @@ td.selected {
   <div id="popupHelpContent" style="display:none">
 	<b class="titleb">Aide</b><hr class="titlehr">
     <b>Barre d'outils</b>
-    <style>#help td{border:1px solid #808080;color:#ccc;background:transparent;text-align:left;}</style>
+    <style>#help td{border:1px solid #888;color:#ccc;background:transparent;text-align:left;}</style>
     <table style="border-collapse: collapse;" id="help">
       <tbody>
         <tr><td>Bouton</td><td>Utilité</td>
@@ -189,7 +189,7 @@ function forEachNode(list, fn) {
 var table = document.getElementById('editorTable');
 var selectedCells = [];
 // var colorMode = "text";
-var globalBorderColor = "#808080";
+var globalBorderColor = "#888";
 var globalBorderWidth = "1px";
 var globalStyles = {
   textColor: "",
@@ -776,7 +776,7 @@ function updateoutput() {
   var styleBlock = "<style>";
   // Bordure
   var bw = globalStyles.borderWidth || "1px";
-  var bc = globalStyles.borderColor || "#808080";
+  var bc = globalStyles.borderColor || "#888";
   // Construire une seule ligne CSS
   var cssLine = "#"+newId+" td{";
   cssLine += "border:"+bw+" solid "+bc+";";
@@ -968,11 +968,11 @@ document.getElementById("cleanLibreOfficeBtn").onclick = function () {
     document.documentElement.style.removeProperty("--global-text-align");
     // VALEURS PAR DÉFAUT APRÈS RESET
     globalStyles.borderWidth = "1px";
-    globalStyles.borderColor = "#808080";
+    globalStyles.borderColor = "#888";
     document.documentElement.style.setProperty("--cell-border-width", "1px");
     document.documentElement.style.setProperty("--table-border-width", "1px");
-    document.documentElement.style.setProperty("--cell-border-color", "#808080");
-    document.documentElement.style.setProperty("--table-border-color", "#808080");
+    document.documentElement.style.setProperty("--cell-border-color", "#888");
+    document.documentElement.style.setProperty("--table-border-color", "#888");
     // Importer le tableau nettoyé
     importTableFromHTML(cleaned);
     // Regénérer le code propre final
