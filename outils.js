@@ -151,9 +151,7 @@ for (var i = 0; i < scrollButtons.length; i++) {
         // Récupération de la zone à scroller
         var target = document.getElementById(targetId);
         if (!target) {
-            console.warn(
-                "Bouton de scroll : élément introuvable : " + targetId
-            );
+            console.warn("Bouton de scroll : élément introuvable : " + targetId);
             return;
         }
         // État du bouton
