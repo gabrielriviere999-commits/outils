@@ -162,7 +162,6 @@ for (var i = 0; i < scrollButtons.length; i++) {
         btn.addEventListener("pointerdown", function(e) {
             e.preventDefault();
             scrolling = true;
-            btn.classList.add("active");
             if (btn.setPointerCapture) {
                 try {
                     btn.setPointerCapture(e.pointerId);
@@ -175,11 +174,9 @@ for (var i = 0; i < scrollButtons.length; i++) {
         });
         btn.addEventListener("pointercancel", function() {
             scrolling = false;
-            btn.classList.remove("active");
         });
         btn.addEventListener("lostpointercapture", function() {
             scrolling = false;
-            btn.classList.remove("active");
         });
         btn.addEventListener("pointerleave", function(e) {
             if (e.pointerType === "mouse") {
