@@ -863,6 +863,7 @@ var rotateSelection = null;
 var rotateBaseImage = null;
 var rotateAngle = 0;
 /* TOOL FUNCTIONS */
+var previousTool = "free";
 function setTool(t){
     if(t === "pipette" && currentTool === "pipette"){
         t = previousTool;
@@ -957,13 +958,7 @@ function setTool(t){
 /* UNDO / REDO */
 var MAX_UNDO = 10;
 function saveState(){
-    undoStack.push(
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        )
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height)
     );
     if(undoStack.length > MAX_UNDO){
         undoStack.shift();
@@ -1244,8 +1239,7 @@ function drawFree(x,y){
 /* RESTAURATION DE L'APERÇU */
 function redrawFromUndoTop(){
     if(undoStack.length){
-        ctx.putImageData(
-            undoStack[undoStack.length-1], 0, 0);
+        ctx.putImageData(undoStack[undoStack.length-1], 0, 0);
     }
 }
 /* LIGNE */
@@ -1890,13 +1884,8 @@ function confirmText(){
     tempImageW = tempCanvas.width;
     tempImageH = tempCanvas.height;
     tempImageAngle = 0;
-    // FIGER LE FOND AVANT MANIPULATION (CORRECTION CRITIQUE)
-    imageBaseImage = ctx.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    // FIGER LE FOND AVANT MANIPULATION
+    imageBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
     // Activer l'outil image
     currentTool = "image";
     // Afficher l'image temporaire
@@ -2380,7 +2369,6 @@ function drawFreeSelectionPreview(){
     ctx.restore();
 }
 /* MOUSE EVENTS */
-var previousTool = "free";
 canvas.onpointerdown = function(e){
     var p = getPos(e);
     if(e.pointerType === "touch"){
