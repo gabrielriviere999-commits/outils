@@ -90,7 +90,7 @@ body.block-touch{touch-action:none;}
   <div id="popupPinceauContent" style="display:none">
     <b class="headerb">Pinceau</b><hr class="headerhr">
 	<b>Couleur</b><br>
-	<input type="text" id="colorInput" value="#000000" size="8"><button class="previewColorPicker"></button><br>
+	<input type="text" id="colorInput" value="#000000" size="8"><button class="previewColorPicker"></button><button id="btnPipette" data-action="setToolPipette" style="width:60px;">Pipette</button><br>
 	<b>Taille</b> <span id="sizeLabel">3</span><br>
 	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
@@ -285,6 +285,7 @@ function setToolRotate(){ setTool("rotate"); }
 function setToolFlipH(){ setTool("fliph"); }
 function setToolFlipV(){ setTool("flipv"); }
 function setToolFill(){ setTool("fill"); }
+function setToolPipette(){ setTool("pipette"); }
 function openPinceauPopup() {
   var container = document.getElementById("popupPinceauContent");
   openPopupMenu(container);
@@ -863,6 +864,12 @@ var rotateBaseImage = null;
 var rotateAngle = 0;
 /* TOOL FUNCTIONS */
 function setTool(t){
+    if(t === "pipette" && currentTool === "pipette"){
+        t = previousTool;
+    }
+    if(t === "pipette" && currentTool !== "pipette"){
+        previousTool = currentTool;
+    }
     var toolNames = {
         free: "Tracer",
         line: "Forme/Ligne",
@@ -884,7 +891,11 @@ function setTool(t){
         flipv: "Sélection/Inverser verticalement",
         edit: "Édition"
     };
-    document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
+    if(t === "pipette"){
+        document.getElementById("activeTool").textContent = "Pipette";
+    } else {
+        document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
+    }
     // Si une image est en cours de manipulation, on la valide avant de changer d'outil.
     if(
         tempImage && currentTool === "image" && t !== "image"
@@ -898,24 +909,27 @@ function setTool(t){
     selection = null;
     moveSelection = null;
     // Réinitialiser uniquement les boutons d'OUTILS. La gomme est indépendante.
-    btnFree.className = "";
-    btnLine.className = "";
-    btnArrow.className = "";
-    btnDoubleArrow.className = "";
-    btnSquare.className = "";
-    btnRect.className = "";
-    btnPolygon.className = "";
-    btnTriangle.className = "";
-    btnStar.className = "";
-    btnCircle.className = "";
-    btnEllipse.className = "";
-    btnText.className = "";
-    btnFill.className = "";
-    btnMove.className = "";
-    btnCopy.className = "";
-    btnRotate.className = "";
-    btnFlipH.className = "";
-    btnFlipV.className = "";
+    if(t !== "pipette"){
+        btnFree.className = "";
+        btnLine.className = "";
+        btnArrow.className = "";
+        btnDoubleArrow.className = "";
+        btnSquare.className = "";
+        btnRect.className = "";
+        btnPolygon.className = "";
+        btnTriangle.className = "";
+        btnStar.className = "";
+        btnCircle.className = "";
+        btnEllipse.className = "";
+        btnText.className = "";
+        btnFill.className = "";
+        btnMove.className = "";
+        btnCopy.className = "";
+        btnRotate.className = "";
+        btnFlipH.className = "";
+        btnFlipV.className = "";
+    }
+    btnPipette.className = "";
     // Activer l'outil choisi.
     if(t==="free") btnFree.className = "active";
     if(t==="line") btnLine.className = "active";
@@ -930,6 +944,7 @@ function setTool(t){
     if(t==="ellipse") btnEllipse.className = "active";
     if(t==="text") btnText.className = "active";
     if(t==="fill") btnFill.className = "active";
+    if(t==="pipette") btnPipette.className = "active";
     if(t==="move") btnMove.className = "active";
     if(t==="copy") btnCopy.className = "active";
     if(t==="rotate") btnRotate.className = "active";
@@ -2365,6 +2380,7 @@ function drawFreeSelectionPreview(){
     ctx.restore();
 }
 /* MOUSE EVENTS */
+var previousTool = "free";
 canvas.onpointerdown = function(e){
     var p = getPos(e);
     if(e.pointerType === "touch"){
@@ -2448,6 +2464,20 @@ canvas.onpointerdown = function(e){
         }, 50);
         return;
     }
+    // PIPETTE
+    if(currentTool === "pipette"){
+        var pixel = ctx.getImageData(Math.floor(p.x), Math.floor(p.y), 1, 1).data;
+        var hex = "#" + ("0" + pixel[0].toString(16)).slice(-2) + ("0" + pixel[1].toString(16)).slice(-2) + ("0" + pixel[2].toString(16)).slice(-2);
+        colorInput.value = hex;
+        colorInput.dispatchEvent(new Event("input"));
+        colorInput.dispatchEvent(new Event("change"));
+        drawing = true;
+        document.body.classList.add('block-touch');
+        if(canvas.setPointerCapture && e.pointerId !== undefined){
+            canvas.setPointerCapture(e.pointerId);
+        }
+        return;
+    }
     drawing = true;
     document.body.classList.add('block-touch');
     moved = false;
@@ -2518,6 +2548,7 @@ canvas.onpointerdown = function(e){
         return;
      }
     }
+
     // Pour les autres outils, sauvegarde normale.
     saveState();
 	if(currentTool==="free"){
@@ -2647,6 +2678,15 @@ canvas.onpointermove = function(e){
     updateAutoScroll(e);
     var p = getPos(e);
     var x = p.x, y = p.y;
+    // PIPETTE : suivre le doigt / la souris
+    if(currentTool === "pipette" && drawing){
+        var pixel = ctx.getImageData(Math.floor(p.x), Math.floor(p.y), 1, 1).data;
+        var hex = "#" + ("0" + pixel[0].toString(16)).slice(-2) + ("0" + pixel[1].toString(16)).slice(-2) + ("0" + pixel[2].toString(16)).slice(-2);
+        colorInput.value = hex;
+        colorInput.dispatchEvent(new Event("input"));
+        colorInput.dispatchEvent(new Event("change"));
+        return;
+    }
     // IMAGE
 	//REDIMENSIONNEMENT
 	if(imageAction === 2){
@@ -2809,6 +2849,18 @@ canvas.onpointerup = function(e){
     var p = getPos(e);
     var x = p.x;
     var y = p.y;
+    // PIPETTE : validation au relâchement
+    if(currentTool === "pipette"){
+        drawing = false;
+        document.body.classList.remove('block-touch');
+        if(canvas.releasePointerCapture && e.pointerId !== undefined){
+            try {
+                canvas.releasePointerCapture(e.pointerId);
+            } catch(err){}
+        }
+        setTool(previousTool);
+        return;
+    }
     // IMAGE
     if(currentTool === "image" && tempImage){
         if(imageAction !== 0){
