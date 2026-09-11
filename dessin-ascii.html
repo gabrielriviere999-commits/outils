@@ -65,6 +65,11 @@ body.block-touch{touch-action:none;}
 </div>
 <div id="shapeInfo" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div class="toolbar">
+  <button class="scroll-btn" data-dir="left">←</button>
+  <button class="scroll-btn" data-dir="right">→</button>
+  <button class="scroll-btn" data-dir="up">↑</button>
+  <button class="scroll-btn" data-dir="down">↓</button>
+  |
   <button id="copyview">Copier</button>
   <input type="file" id="textareaFileview">
   <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
@@ -87,7 +92,8 @@ body.block-touch{touch-action:none;}
           <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
         </div>
       </div>
-    </div><hr>
+    </div>
+    <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><hr>
     <b>Calque</b><br>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
@@ -905,7 +911,7 @@ view.onmousedown = function(e) {
 // désactiver sélection de texte
 view.addEventListener("mousedown", function(e){
     if (tool !== "edit") {
-        e.preventDefault();      // empêche le début de la sélection
+        e.preventDefault(); // empêche le début de la sélection
     }
 });
 // Mettre à jour forme en cliquant
@@ -921,18 +927,21 @@ function refreshPreview(x, y) {
     }
     render();
 }
+var autoScrollCheckbox = document.getElementById("autoScrollCheckbox");
 view.onmousemove = function(e) {
     var pos = getPos(e);
     lastMoveX = pos.x;
     lastMoveY = pos.y;
     if (!isDown) return;
     var rect = view.getBoundingClientRect();
-    var margin = 50;
+    var margin = 25;
     // scroll auto
-    if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 2;
-    else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 2;
-    if (e.clientX > rect.right - margin) view.scrollLeft += charW * 2;
-    else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 2;
+    if(autoScrollCheckbox.checked){
+        if (e.clientY > rect.bottom - margin) view.scrollTop += charH * 2;
+        else if (e.clientY < rect.top + margin) view.scrollTop -= charH * 2;
+        if (e.clientX > rect.right - margin) view.scrollLeft += charW * 2;
+        else if (e.clientX < rect.left + margin) view.scrollLeft -= charW * 2;
+    };
     // move / copy
     if (tool === "move" && moveMode === 1) {
         previewMove(pos.x, pos.y);
@@ -1286,6 +1295,42 @@ document.getElementById("loupeEnabled").onchange = function() {
 function hideAsciiLoupe() {
     asciiLoupe.style.display = "none";
 }
+/* --- Boutons de scroll --- */
+var View = document.getElementById("view");
+var active = { up: false, down: false, left: false, right: false };
+function addScrollButton(selector) {
+    var buttons = document.querySelectorAll(selector);
+    for (var i = 0; i < buttons.length; i++) {
+        (function(btn) {
+            var dir = btn.getAttribute("data-dir");
+            btn.onpointerdown = function(e) {
+                active[dir] = true;
+                e.preventDefault();
+            };
+            btn.onpointerup = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointercancel = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointerleave = function(e) {
+                if (e.pointerType === "mouse") {
+                    active[dir] = false;
+                }
+            };
+        })(buttons[i]);
+    }
+}
+addScrollButton(".scroll-btn");
+var speed = 15;
+setInterval(function () {
+    if (active.up) { view.scrollTop -= speed; }
+    if (active.down) { view.scrollTop += speed; }
+    if (active.left) { view.scrollLeft -= speed; }
+    if (active.right) { view.scrollLeft += speed; }
+}, 30);
 /* --- STARTUP --- */
 window.onload = function() {
     setTool("edit");

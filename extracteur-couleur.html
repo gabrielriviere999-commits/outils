@@ -107,13 +107,11 @@
 </div>
 <div id="cross" class="cross" style="display:none;"></div>
 <div class="section">
-  <div style="-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;">
-    <div id="preview" class="border-interne"></div>
-    <button class="scroll-btn" data-dir="left">←</button>
-    <button class="scroll-btn" data-dir="right">→</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button class="scroll-btn" data-dir="up">↑</button>
-    <button class="scroll-btn" data-dir="down">↓</button>
-  </div>
+  <div id="preview" class="border-interne"></div>
+  <button class="scroll-btn" data-dir="left">←</button>
+  <button class="scroll-btn" data-dir="right" style="margin-right:40px;">→</button>
+  <button class="scroll-btn" data-dir="up">↑</button>
+  <button class="scroll-btn" data-dir="down">↓</button>
   <div class="line">HEX :
     <span id="hexValue" class="value">-</span>
     <button onclick="copyText('hexValue', this)">Copier</button>

@@ -10,10 +10,6 @@
 .box {
   padding:10px;
   width:340px;
-  -webkit-user-select:none;
-  -moz-user-select:none;
-  -ms-user-select:none;
-  user-select:none;
 }
 .input {
   padding:2px;
@@ -63,12 +59,12 @@ canvas{margin-left:8px;}
         <div id="sv-black"></div>
         <div id="sv-cursor"></div>
     </div>
-<div id="sv-controls">
-    <button id="sv-left" class="sv-button" >←</button>
-    <button id="sv-right" class="sv-button">→</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button id="sv-up" class="sv-button">↑</button>
-    <button id="sv-down" class="sv-button">↓</button>
-</div>
+    <div id="sv-controls">
+      <button id="sv-left" class="sv-button" >←</button>
+      <button id="sv-right" class="sv-button" style="margin-right:40px;">→</button>
+      <button id="sv-up" class="sv-button">↑</button>
+      <button id="sv-down" class="sv-button">↓</button>
+    </div>
     <label>Teinte (H)</label>
     <input id="h-range" type="range" min="0" max="360" value="0">
     <canvas id="h-bar" width="324" height="12"></canvas><br><br>

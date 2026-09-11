@@ -64,6 +64,7 @@ button,.a,.a-color,#file-input,.file-input {
   padding:4px 8px;
   font-size:12px;
   cursor:pointer;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
 }
 button:hover,.a:hover,#file-input:hover,.file-input:hover{background:#404040;}
 button:active,.a:active,button.active,#file-input:active,.file-input:active {

@@ -199,6 +199,7 @@ body.block-touch{touch-action:none;}
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
 	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
 	  <input type="number" id="gridStepInput" value="10" min="1" max="100"><br>
+	  <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><br>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
 	  <b>Résolution</b><br>
@@ -249,6 +250,10 @@ body.block-touch{touch-action:none;}
   <canvas id="canvas" width="640" height="480"></canvas>
   <div id="canvasGrid"></div>
 </div>
+<button class="scroll-btn" data-dir="left">←</button>
+<button class="scroll-btn" data-dir="right" style="margin-right:40px;">→</button>
+<button class="scroll-btn" data-dir="up">↑</button>
+<button class="scroll-btn" data-dir="down">↓</button>
 <div id="dimensions" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div id="canvasLoupe">
   <canvas id="loupeCanvas" width="120" height="120"></canvas>
@@ -2622,6 +2627,7 @@ function stopAutoScroll(){
     autoScrollX = 0;
     autoScrollY = 0;
 }
+var autoScrollCheckbox = document.getElementById("autoScrollCheckbox");
 canvas.onpointermove = function(e){
     if(e.pointerType === "touch"){
         lastLoupeEvent = e;
@@ -2665,7 +2671,9 @@ canvas.onpointermove = function(e){
     else if(currentTool === "ellipse"){
         drawEllipsePreview(x,y);
     }
-    updateAutoScroll(e);
+    if(autoScrollCheckbox.checked){
+        updateAutoScroll(e);
+    }
     var p = getPos(e);
     var x = p.x, y = p.y;
     // PIPETTE : suivre le doigt / la souris
@@ -3410,6 +3418,43 @@ function downloadJPG(){
     link.click();
     document.body.removeChild(link);
 }
+/* --- Boutons de scroll --- */
+var canvasscroll = document.getElementById("canvasScroll");
+var active = { up: false, down: false, left: false, right: false };
+function addScrollButton(selector) {
+    var buttons = document.querySelectorAll(selector);
+    for (var i = 0; i < buttons.length; i++) {
+        (function(btn) {
+            var dir = btn.getAttribute("data-dir");
+            btn.onpointerdown = function(e) {
+                active[dir] = true;
+                e.preventDefault();
+            };
+            btn.onpointerup = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointercancel = function(e) {
+                active[dir] = false;
+                e.preventDefault();
+            };
+            btn.onpointerleave = function(e) {
+                if (e.pointerType === "mouse") {
+                    active[dir] = false;
+                }
+            };
+        })(buttons[i]);
+    }
+}
+addScrollButton(".scroll-btn");
+var speed = 15;
+setInterval(function () {
+    if (active.up) { canvasscroll.scrollTop -= speed; }
+    if (active.down) { canvasscroll.scrollTop += speed; }
+    if (active.left) { canvasscroll.scrollLeft -= speed; }
+    if (active.right) { canvasscroll.scrollLeft += speed; }
+}, 30);
+/* Au chargement */
 window.onload = function() {
     setTool("free");
 };
