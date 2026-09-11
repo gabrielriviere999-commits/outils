@@ -153,6 +153,21 @@ for (var i = 0; i < scrollButtons.length; i++) {
             return;
         }
         var scrolling = false;
+        function scroll() {
+            var speed = 15;
+            if (dir === "up") {
+                target.scrollTop -= speed;
+            }
+            else if (dir === "down") {
+                target.scrollTop += speed;
+            }
+            else if (dir === "left") {
+                target.scrollLeft -= speed;
+            }
+            else if (dir === "right") {
+                target.scrollLeft += speed;
+            }
+        }
         function startScroll(e) {
             if (e && e.preventDefault) {
                 e.preventDefault();
@@ -176,43 +191,27 @@ for (var i = 0; i < scrollButtons.length; i++) {
         // CLAVIER
         btn.addEventListener("keydown", function (e) {
             var key = e.key || e.keyCode;
-            if (
-                key === " " || key === "Enter"
-            ) {
-                if (e.preventDefault) {
-                    e.preventDefault();
-                }
+            if (key === " " || key === "Enter") {
+                e.preventDefault();
                 scrolling = true;
             }
         }, false);
         btn.addEventListener("keyup", function (e) {
             var key = e.key || e.keyCode;
-            if (
-                key === " " || key === "Enter"
-            ) {
-                if (e.preventDefault) {
-                    e.preventDefault();
-                }
+            if (key === " " || key === "Enter") {
+                e.preventDefault();
                 scrolling = false;
             }
         }, false);
+        // CLIC / BOUTON A 3DS
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            scroll();
+        }, false);
         // SCROLL CONTINU
         setInterval(function () {
-            if (!scrolling) {
-                return;
-            }
-            var speed = 15;
-            if (dir === "up") {
-                target.scrollTop = target.scrollTop - speed;
-            }
-            else if (dir === "down") {
-                target.scrollTop = target.scrollTop + speed;
-            }
-            else if (dir === "left") {
-                target.scrollLeft = target.scrollLeft - speed;
-            }
-            else if (dir === "right") {
-                target.scrollLeft = target.scrollLeft + speed;
+            if (scrolling) {
+                scroll();
             }
         }, 50);
     })(scrollButtons[i]);
