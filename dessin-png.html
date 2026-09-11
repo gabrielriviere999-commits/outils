@@ -595,6 +595,7 @@ imageFile.onchange = function(){
             tempImageAngle = 0;
             // Sauvegarder le dessin avant l'image.
             imageBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            previousTool = currentTool;
             currentTool = "image";
             drawTempImage();
             updateDimensions(tempImageW, tempImageH);
@@ -780,8 +781,8 @@ function commitTempImage(){
     imageAction = 0;
     imageHandle = "";
     hideDimensions();
-    // Repasser en mode texte
-    currentTool = "text";
+    // Revenir à l'outil utilisé avant l'ajout de l'image.
+    currentTool = previousTool;
     drawing = false;
     moved = false;
 }
@@ -1884,9 +1885,10 @@ function confirmText(){
     tempImageW = tempCanvas.width;
     tempImageH = tempCanvas.height;
     tempImageAngle = 0;
-    // FIGER LE FOND AVANT MANIPULATION
+    // Sauvegarder l'outil actif avant de passer en mode image.
+    previousTool = currentTool;
+    // Sauvegarder le dessin avant l'image.
     imageBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    // Activer l'outil image
     currentTool = "image";
     // Afficher l'image temporaire
     drawTempImage();
