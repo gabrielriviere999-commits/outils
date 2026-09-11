@@ -145,75 +145,75 @@ function handleSliderAction(action) {
 /* BOUTONS DE SCROLL UNIVERSELS */
 var scrollButtons = document.querySelectorAll(".scroll-btn");
 for (var i = 0; i < scrollButtons.length; i++) {
-    (function(btn) {
+    (function (btn) {
         var dir = btn.getAttribute("data-dir");
         var targetId = btn.getAttribute("data-target");
-        // Récupération de la zone à scroller
         var target = document.getElementById(targetId);
         if (!target) {
-            console.warn("Bouton de scroll : élément introuvable : " + targetId);
             return;
         }
-        // État du bouton
         var scrolling = false;
-        // SOURIS / TACTILE
-        btn.addEventListener("pointerdown", function(e) {
-            e.preventDefault();
+        function startScroll(e) {
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
             scrolling = true;
-            if (btn.setPointerCapture) {
-                try {
-                    btn.setPointerCapture(e.pointerId);
-                } catch (err) {}
+        }
+        function stopScroll(e) {
+            if (e && e.preventDefault) {
+                e.preventDefault();
             }
-        });
-        btn.addEventListener("pointerup", function(e) {
-            e.preventDefault();
             scrolling = false;
-        });
-        btn.addEventListener("pointercancel", function() {
-            scrolling = false;
-        });
-        btn.addEventListener("lostpointercapture", function() {
-            scrolling = false;
-        });
-        btn.addEventListener("pointerleave", function(e) {
-            if (e.pointerType === "mouse") {
-                scrolling = false;
-            }
-        });
+        }
+        // SOURIS
+        btn.addEventListener("mousedown", startScroll, false);
+        btn.addEventListener("mouseup", stopScroll, false);
+        btn.addEventListener("mouseleave", stopScroll, false);
+        // TACTILE
+        btn.addEventListener("touchstart", startScroll, false);
+        btn.addEventListener("touchend", stopScroll, false);
+        btn.addEventListener("touchcancel", stopScroll, false);
         // CLAVIER
-        btn.addEventListener("keydown", function(e) {
-            // Espace ou Entrée
-            if (e.key === " " || e.key === "Enter") {
-                e.preventDefault();
-                // Évite les répétitions indésirables
-                if (!e.repeat) {
-                    scrolling = true;
+        btn.addEventListener("keydown", function (e) {
+            var key = e.key || e.keyCode;
+            if (
+                key === " " || key === "Enter" || key === 32 || key === 13
+            ) {
+                if (e.preventDefault) {
+                    e.preventDefault();
                 }
+                scrolling = true;
             }
-        });
-        btn.addEventListener("keyup", function(e) {
-            if (e.key === " " || e.key === "Enter") {
-                e.preventDefault();
+        }, false);
+        btn.addEventListener("keyup", function (e) {
+            var key = e.key || e.keyCode;
+            if (
+                key === " " || key === "Enter" || key === 32 || key === 13
+            ) {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
                 scrolling = false;
             }
-        });
+        }, false);
         // SCROLL CONTINU
-        setInterval(function() {
-            if (!scrolling) return;
+        setInterval(function () {
+            if (!scrolling) {
+                return;
+            }
             var speed = 15;
             if (dir === "up") {
-                target.scrollTop -= speed;
+                target.scrollTop = target.scrollTop - speed;
             }
-            if (dir === "down") {
-                target.scrollTop += speed;
+            else if (dir === "down") {
+                target.scrollTop = target.scrollTop + speed;
             }
-            if (dir === "left") {
-                target.scrollLeft -= speed;
+            else if (dir === "left") {
+                target.scrollLeft = target.scrollLeft - speed;
             }
-            if (dir === "right") {
-                target.scrollLeft += speed;
+            else if (dir === "right") {
+                target.scrollLeft = target.scrollLeft + speed;
             }
-        }, 30);
+        }, 50);
     })(scrollButtons[i]);
 }
