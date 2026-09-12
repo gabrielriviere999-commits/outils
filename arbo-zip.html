@@ -74,12 +74,12 @@ input{width:60px;}
 <label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
 <label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
 <label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label><hr>
-<button type="button" onclick="exportColors()">Exporter</button>
-<button type="button" onclick="showImportBox()">Importer</button>
-<button type="button" onclick="resetColors()">Reset</button>
+<button onclick="exportColors()">Exporter</button>
+<button onclick="showImportBox()">Importer</button>
+<button onclick="resetColors()">Valeurs par défaut</button>
 <div id="importBox" style="display:none;">
   <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
-  <button type="button" onclick="applyImport()">Valider l'import</button>
+  <button onclick="applyImport()">Valider l'import</button>
   <button id="copyjson">Copier</button>
 </div>
 </fieldset>

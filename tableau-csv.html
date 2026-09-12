@@ -43,11 +43,11 @@ input[type=text],input[type=number]{width:50px;}
       hBorderHeader : <input id="cp_H2" maxlength="1">
     </div>
   </div>
-  <button type="button" onclick="exportCustomPlus()">Exporter style</button>
-  <button type="button" onclick="showImportCustomPlus()">Importer style</button>
+  <button onclick="exportCustomPlus()">Exporter style</button>
+  <button onclick="showImportCustomPlus()">Importer style</button>
   <div id="importCustomPlusBox" style="display:none;">
     <textarea wrap="off" id="importCustomPlusText" style="height:100px;"></textarea><br>
-    <button type="button" onclick="applyImportCustomPlus()">Valider l'import</button>
+    <button onclick="applyImportCustomPlus()">Valider l'import</button>
     <button id="copyCustomPlus">Copier</button>
   </div>
   </fieldset>
@@ -75,11 +75,11 @@ input[type=text],input[type=number]{width:50px;}
       SEP_RIGHT : <input id="fcp_SEP_RIGHT">
     </div>
   </div>
-  <button type="button" onclick="exportFancyCustomPlus()">Exporter style</button>
-  <button type="button" onclick="showImportFancyCustomPlus()">Importer style</button>
+  <button onclick="exportFancyCustomPlus()">Exporter style</button>
+  <button onclick="showImportFancyCustomPlus()">Importer style</button>
   <div id="importFancyCustomPlusBox" style="display:none;">
     <textarea wrap="off" id="importFancyCustomPlusText" style="height:100px;"></textarea><br>
-    <button type="button" onclick="applyImportFancyCustomPlus()">Valider l'import</button>
+    <button onclick="applyImportFancyCustomPlus()">Valider l'import</button>
     <button id="copyFancyCustomPlus">Copier</button>
   </div>
   </fieldset>
@@ -138,7 +138,7 @@ input[type=text],input[type=number]{width:50px;}
 <p></p><div id="downloadLinkContainer"></div>
 <p></p><h3>Tableau</h3>
 <textarea wrap="off" id="output"></textarea><br>
-<button type="button" onclick="importFromOutput()">Convertir en CSV</button>
+<button onclick="importFromOutput()">Convertir en CSV</button>
 <button id="copyoutput">Copier</button>
 <input id="zoomRangeOutput" type="range" min="6" max="40" value="12" oninput="applyZoom('zoomRangeOutput', 'output')">
 <button onclick="resetZoom('zoomRangeOutput', 'output')">12px</button>
