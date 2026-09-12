@@ -82,6 +82,57 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
+/* Ctrl + V image presse papiers */
+var pastezone = document.getElementById("pastezone");
+// Les inputs à cibler
+var pasteZones = [
+    {
+        pastezone: "pastedrawingFile",
+        fileinput: "drawingFile"
+    },
+    {
+        pastezone: "pastefileinput",
+        fileinput: "fileinput"
+    },
+    {
+        pastezone: "pastezone3",
+        fileinput: "fileinput3"
+    }
+];
+pasteZones.forEach(function (item) {
+    var pastezone = document.getElementById(item.pastezone);
+    var fileinput = document.getElementById(item.fileinput);
+    if (!pastezone || !fileinput) {
+        return;
+    }
+    pastezone.onclick = function () {
+        pastezone.focus();
+    };
+    pastezone.onpaste = function (e) {
+        var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        var file = null;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                file = items[i].getAsFile();
+                break;
+            }
+        }
+        if (file) {
+            // Met l'image dans l'input file correspondant
+            var dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileinput.files = dataTransfer.files;
+            // Déclenche l'événement change
+            fileinput.dispatchEvent(new Event("change", {
+                bubbles: true
+            }));
+            // traitement
+            loadFile(file);
+        } else {
+            alert("Aucune image trouvée dans le presse-papier.");
+        }
+    };
+});
 /* Boutons - et + sliders */
 var sliders = {
     zoomRange: ["applyZoomRange", 1],

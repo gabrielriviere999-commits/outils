@@ -88,9 +88,9 @@
 <br>
 <div class="section">
   <h3>Décoder un Code-barres (fichier)</h3>
-  <input type="file" id="file-input" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
+  <input type="file" id="fileinput" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
   <canvas id="canvas-file" style="display:none;"></canvas>
-  <input id="pasteInput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V">
+  <input id="pastefileinput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V" style="width:100%;box-sizing:border-box;">
   <pre id="decode-file"></pre>
   <button id="copy-btn">Copier</button>
 </div>
@@ -314,7 +314,7 @@ document.getElementById("export-svg").onclick = function () {
   URL.revokeObjectURL(url);
 };
 /* --- DÉCODAGE FICHIER (Code-barres) --- */
-var fileInput  = document.getElementById("file-input");
+var fileInput  = document.getElementById("fileinput");
 var canvasFile = document.getElementById("canvas-file");
 var ctxFile    = canvasFile.getContext("2d");
 var decodeFile = document.getElementById("decode-file");
@@ -351,22 +351,6 @@ fileInput.onchange = function (e) {
     img.src = URL.createObjectURL(file);
 };
 /* --- Coller une image depuis le presse‑papier --- */
-var pasteInput = document.getElementById("pasteInput");
-pasteInput.onpaste = function(e) {
-    var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-    var file = null;
-    for (var i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-            file = items[i].getAsFile();
-            break;
-        }
-    }
-    if (file) {
-        loadFile(file);
-    } else {
-        alert("Aucune image trouvée dans le presse‑papier.");
-    }
-};
 function loadFile(file) {
     var img = new Image();
     img.onload = function () {
