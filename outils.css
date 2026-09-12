@@ -22,7 +22,7 @@ textarea {
   resize:vertical;
 }
 input,textarea {
-  background:#000;
+  background:rgba(0,0,0,0.7);
   color:#ccc;
   border:2px groove #888;
 }
