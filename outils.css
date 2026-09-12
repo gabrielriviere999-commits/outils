@@ -58,7 +58,7 @@ input[type=file]{width:115px;}
     border-right:2px solid #111;
   }
 }
-button,.a,.a-color,#fileinput,.file-input {
+button,.a,.a-color,#fileinput {
   background:#222;
   color:#ccc;
   border:2px solid;
@@ -68,8 +68,8 @@ button,.a,.a-color,#fileinput,.file-input {
   cursor:pointer;
   -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
 }
-button:hover,.a:hover,#fileinput:hover,.file-input:hover{background:#444;}
-button:active,.a:active,button.active,#fileinput:active,.file-input:active {
+button:hover,.a:hover,#fileinput:hover{background:#444;}
+button:active,.a:active,button.active,#fileinput:active {
   border-color:#111 #888 #888 #111;
   background:#111;
 }
