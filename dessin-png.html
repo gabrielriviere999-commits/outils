@@ -2858,18 +2858,17 @@ canvas.onpointermove = function(e){
     lastX = x;
     lastY = y;
 };
-// Souris : empecher color palette de se fermer au relachement de clic
+// Souris : empecher popup et color palette de se fermer et boutons de s'activer au relachement de clic
 canvas.addEventListener("mousedown",function(){overlay.dataset.canvasDrag="1";});
 canvas.addEventListener("mouseup",function(){setTimeout(function(){delete overlay.dataset.canvasDrag;},0);});
 overlay.addEventListener("click",function(e){if(overlay.dataset.canvasDrag){e.preventDefault();e.stopPropagation();}},true);
-// Souris : empecher boutons de s'activer au relachement de clic
 var canvasPointerDown = false;
 var canvasPointerMoved = false;
 var suppressCanvasClick = false;
 canvas.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse"&&e.button!==0)return;canvasPointerDown=true;canvasPointerMoved=false;});
 canvas.addEventListener("pointermove",function(e){if(canvasPointerDown){canvasPointerMoved=true;}});
 canvas.addEventListener("pointerup",function(e){if(!canvasPointerDown)return;suppressCanvasClick=canvasPointerMoved;canvasPointerDown=false;canvasPointerMoved=false;});
-document.addEventListener("click",function(e){if(!suppressCanvasClick)return;suppressCanvasClick=false;if(e.target.closest("button")){e.preventDefault();e.stopPropagation();}},true);
+document.addEventListener("click",function(e){if(!suppressCanvasClick)return;suppressCanvasClick = false;e.preventDefault();e.stopPropagation();},true);
 canvas.onpointerup = function(e){
     hideLoupe();
     lastLoupeEvent = null;
@@ -2884,9 +2883,6 @@ canvas.onpointerup = function(e){
 		canvas.hasPointerCapture &&	canvas.hasPointerCapture(e.pointerId)
 	){
 		canvas.releasePointerCapture(e.pointerId);
-	}
-	if(moved && window.PointerEvent){
-		window._blockNextClick = true;
 	}
     var p = getPos(e);
     var x = p.x;
