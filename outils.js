@@ -87,16 +87,12 @@ var pastezone = document.getElementById("pastezone");
 // Les inputs à cibler
 var pasteZones = [
     {
-        pastezone: "pastedrawingFile",
-        fileinput: "drawingFile"
-    },
-    {
         pastezone: "pastefileinput",
         fileinput: "fileinput"
     },
     {
-        pastezone: "pastezone3",
-        fileinput: "fileinput3"
+        pastezone: "pastedrawingFile",
+        fileinput: "drawingFile"
     }
 ];
 pasteZones.forEach(function (item) {
