@@ -93,6 +93,10 @@ var pasteZones = [
     {
         pastezone: "pastedrawingFile",
         fileinput: "drawingFile"
+    },
+    {
+        pastezone: "pasteimageFile",
+        fileinput: "imageFile"
     }
 ];
 pasteZones.forEach(function (item) {
