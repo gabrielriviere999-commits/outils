@@ -13,7 +13,7 @@
   font-size:24px;
   touch-action:none;
 }
-#canvasWrapper {
+#canvasScroll {
   background:#000;
   padding:2px;
   overflow:auto;
@@ -96,9 +96,9 @@
 <div class="section">
   <input type="file" id="file-input" style="width:100%;box-sizing:border-box;">
   <div id="pastezone" class="section" style="margin-top:10px;text-align:center;">
-    <input id="pasteInput" maxlength="0" style="width:100%;height:30px;box-sizing:border-box;" placeholder="Ou cliquer ici puis faire Ctrl+V">
+    <input maxlength="0" style="width:100%;height:30px;box-sizing:border-box;" placeholder="Ou cliquer ici puis faire Ctrl+V">
   </div>
-  <div id="canvasWrapper" class="border-interne">
+  <div id="canvasScroll" class="border-interne">
     <canvas id="canvas" width="1200" height="900"></canvas>
   </div>
 </div>
@@ -108,10 +108,10 @@
 <div id="cross" class="cross" style="display:none;"></div>
 <div class="section">
   <div id="preview" class="border-interne"></div>
-<button class="scroll-btn" data-dir="left" data-target="canvasWrapper">←</button>
-<button class="scroll-btn" data-dir="right" data-target="canvasWrapper">→</button>
-<button class="scroll-btn" data-dir="up" data-target="canvasWrapper">↑</button>
-<button class="scroll-btn" data-dir="down" data-target="canvasWrapper">↓</button>
+<button class="scroll-btn" data-dir="left" data-target="canvasScroll">←</button>
+<button class="scroll-btn" data-dir="right" data-target="canvasScroll">→</button>
+<button class="scroll-btn" data-dir="up" data-target="canvasScroll">↑</button>
+<button class="scroll-btn" data-dir="down" data-target="canvasScroll">↓</button>
   <div class="line">HEX :
     <span id="hexValue" class="value">-</span>
     <button onclick="copyText('hexValue', this)">Copier</button>
