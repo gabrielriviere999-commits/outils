@@ -23,6 +23,7 @@
 #canvas {
   display:block;
   touch-action:none;
+  cursor:crosshair;
   image-rendering:pixelated;
 }
 #loupe {
@@ -107,7 +108,7 @@
   </div>
 </div>
 <div id="loupe">
-  <canvas id="loupeCanvas" width="20" height="20"></canvas>
+  <canvas id="loupeCanvas" width="120" height="120"></canvas>
 </div>
 <div id="cross" class="cross" style="display:none;"></div>
 <div class="section">
@@ -280,9 +281,9 @@ function showLoupe(x, y, e) {
     var sx = realX - sourceSize / 2;
     var sy = realY - sourceSize / 2;
     /* Dessin */
-    lctx.clearRect(0, 0, 20, 20);
+    lctx.clearRect(0, 0, 120, 120);
     lctx.imageSmoothingEnabled = false;
-    lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 20, 20);
+    lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 120, 120);
     /* LA LOUPE SUIT TOUJOURS LA SOURIS */
     var lx = rect.left + window.scrollX + displayX - 40;
     var ly = rect.top + window.scrollY + displayY - 120;
