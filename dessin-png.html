@@ -606,11 +606,6 @@ imageFile.onchange = function(){
         return;
     }
     var file = imageFile.files[0];
-    if(!file.type || file.type.indexOf("image/") !== 0){
-        alert("Veuillez sélectionner une image.");
-        imageFile.value = "";
-        return;
-    }
     var reader = new FileReader();
     reader.onload = function(e){
         var img = new Image();
@@ -837,10 +832,6 @@ drawingFile.onchange = function(){
         return;
     }
     var file = drawingFile.files[0];
-    if(!file.type || file.type.indexOf("image/") !== 0){
-        alert("Veuillez sélectionner une image.");
-        return;
-    }
     var reader = new FileReader();
     reader.onload = function(e){
         var img = new Image();
