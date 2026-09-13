@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
 <style>
-#text,#pasteInput {
+#text,#pastefileinput {
   width:100%;
   box-sizing:border-box;
 }
@@ -81,7 +81,7 @@
   <h3>Décoder un QR Code (fichier)</h3>
   <input type="file" id="fileinput" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
   <canvas id="canvas-file" style="display:none;"></canvas>
-  <input id="pastefileinput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V" style="width:100%;box-sizing:border-box;">
+  <input id="pastefileinput" maxlength="0" placeholder="Ou cliquer ici puis faire Ctrl+V">
   <pre id="decode-file"></pre>
   <button id="copy-btn">Copier</button>
 </div>
@@ -249,23 +249,6 @@ fileInput.onchange = function (e) {
     tempImg.src = canvasFile.toDataURL("image/png");
   };
   img.src = URL.createObjectURL(file);
-};
-// Coller une image depuis le presse‑papier
-var pasteInput = document.getElementById("pasteInput");
-pasteInput.onpaste = function(e) {
-    var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-    var file = null;
-    for (var i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-            file = items[i].getAsFile();
-            break;
-        }
-    }
-    if (file) {
-        loadFile(file);
-    } else {
-        alert("Aucune image trouvée dans le presse‑papier.");
-    }
 };
 function loadFile(file) {
     var img = new Image();
