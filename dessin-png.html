@@ -1738,8 +1738,8 @@ function drawSelectionPreview(x,y){
     var sy = Math.floor(Math.min(startY,y));
     var ex = Math.floor(Math.max(startX,x));
     var ey = Math.floor(Math.max(startY,y));
-    var w = ex - sx;
-    var h = ey - sy;
+    var w = ex - sx + 1;
+    var h = ey - sy + 1;
     if(w < 1 || h < 1){
         return;
     }
@@ -1751,20 +1751,20 @@ function drawSelectionPreview(x,y){
     var gap = 4;
     var i;
     // Haut
-    for(i = sx; i < ex; i += dash + gap){
+    for(i = sx; i <= ex; i += dash + gap){
         drawPixelLine1px(i, sy, Math.min(i + dash - 1, ex), sy);
     }
     // Bas
-    for(i = sx; i < ex; i += dash + gap){
-        drawPixelLine1px(i, ey - 1, Math.min(i + dash - 1, ex - 1), ey - 1);
+    for(i = sx; i <= ex; i += dash + gap){
+        drawPixelLine1px(i, ey, Math.min(i + dash - 1, ex), ey);
     }
     // Gauche
-    for(i = sy; i < ey; i += dash + gap){
+    for(i = sy; i <= ey; i += dash + gap){
         drawPixelLine1px(sx, i, sx, Math.min(i + dash - 1, ey));
     }
     // Droite
-    for(i = sy; i < ey; i += dash + gap){
-        drawPixelLine1px(ex - 1, i, ex - 1, Math.min(i + dash - 1, ey - 1));
+    for(i = sy; i <= ey; i += dash + gap){
+        drawPixelLine1px(ex, i, ex, Math.min(i + dash - 1, ey));
     }
     ctx.restore();
 }
@@ -1967,8 +1967,8 @@ function createPixelSelection(x1,y1,x2,y2,removeOriginal){
     var sy = Math.floor(Math.min(y1,y2));
     var ex = Math.floor(Math.max(x1,x2));
     var ey = Math.floor(Math.max(y1,y2));
-    var w = ex - sx;
-    var h = ey - sy;
+    var w = ex - sx + 1;
+    var h = ey - sy + 1;
     if(w < 1 || h < 1){
         return false;
     }
