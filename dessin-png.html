@@ -1756,7 +1756,7 @@ function drawSelectionPreview(x,y){
     }
     // Bas
     for(i = sx; i < ex; i += dash + gap){
-        drawPixelLine1px(i, ey, Math.min(i + dash - 1, ex), ey);
+        drawPixelLine1px(i, ey - 1, Math.min(i + dash - 1, ex - 1), ey - 1);
     }
     // Gauche
     for(i = sy; i < ey; i += dash + gap){
@@ -1764,7 +1764,7 @@ function drawSelectionPreview(x,y){
     }
     // Droite
     for(i = sy; i < ey; i += dash + gap){
-        drawPixelLine1px(ex, i, ex, Math.min(i + dash - 1, ey));
+        drawPixelLine1px(ex - 1, i, ex - 1, Math.min(i + dash - 1, ey - 1));
     }
     ctx.restore();
 }
