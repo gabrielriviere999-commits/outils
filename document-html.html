@@ -21,20 +21,20 @@ iframe{background:#fff!important;}
 <div class="container">
   <div class="card">
     <h3>Prévisualisation</h3>
-    <button type="button" onclick="insertTemplate('page')">Page</button>
-    <button type="button" onclick="insertTemplate('h1')">h1</button>
-    <button type="button" onclick="insertTemplate('h2')">h2</button>
-    <button type="button" onclick="insertTemplate('h3')">h3</button>
-    <button type="button" onclick="insertTemplate('pagebreak')">Saut de page</button>
+    <button onclick="insertTemplate('page')">Page</button>
+    <button onclick="insertTemplate('h1')">h1</button>
+    <button onclick="insertTemplate('h2')">h2</button>
+    <button onclick="insertTemplate('h3')">h3</button>
+    <button onclick="insertTemplate('pagebreak')">Saut de page</button>
     |
-    <button type="button" onclick="insertTemplate('code')">Code block</button>
-    <button type="button" onclick="insertTemplate('blue-block')">Blue block</button>
-    <button type="button" onclick="insertTemplate('note')">Note</button>
+    <button onclick="insertTemplate('code')">Code block</button>
+    <button onclick="insertTemplate('blue-block')">Blue block</button>
+    <button onclick="insertTemplate('note')">Note</button>
     |
-    <button type="button" onclick="insertList('ul')">ul</button>
-    <button type="button" onclick="insertList('ol')">ol</button>
+    <button onclick="insertList('ul')">ul</button>
+    <button onclick="insertList('ol')">ol</button>
     |
-    <button type="button" onclick="insertTemplate('link')">Lien</button>
+    <button onclick="insertTemplate('link')">Lien</button>
     |
     <button class="btn-toggle" onclick="formatText(this, 'bold')"><b>Gras</b></button>
     <button class="btn-toggle" onclick="formatText(this, 'italic')"><i>Italique</i></button>
@@ -53,7 +53,7 @@ iframe{background:#fff!important;}
   <div class="card">
     <h3>Code HTML</h3>
     <textarea wrap="off" id="output"></textarea><br>
-    <button type="button" onclick="updatePreview()">Mettre à jour</button>
+    <button onclick="updatePreview()">Mettre à jour</button>
     <button id="copyoutput">Copier le code</button>
     <input type="file" id="textareaFileoutput">
     <div id="status">Prêt.</div>
