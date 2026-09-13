@@ -17,10 +17,14 @@
   background:#000;
   padding:2px;
   overflow:auto;
-  max-height:500px;
-  max-height:70vh;
+  height:70vh;
+  box-sizing:border-box;
 }
-#canvas{touch-action:none;}
+#canvas {
+  display:block;
+  touch-action:none;
+  image-rendering:pixelated;
+}
 #loupe {
   position:absolute;
   width:80px;
@@ -99,7 +103,7 @@
     <input maxlength="0" style="width:100%;height:30px;box-sizing:border-box;" placeholder="Ou cliquer ici puis faire Ctrl+V">
   </div>
   <div id="canvasScroll" class="border-interne">
-    <canvas id="canvas" width="1200" height="900"></canvas>
+    <canvas id="canvas"></canvas>
   </div>
 </div>
 <div id="loupe">
@@ -169,19 +173,23 @@ function loadFile(file){
     };
     reader.readAsDataURL(file);
 }
-function drawImageToCanvas(img){
-    // largeur affichée réelle du canvas (CSS)
-    var displayWidth = canvas.clientWidth;
-    if (!displayWidth || displayWidth === 0) {
-        // fallback : utiliser largeur fenêtre
-        displayWidth = document.documentElement.clientWidth || 400;
-    }
-    var ratio = img.height / img.width;
-    var displayHeight = Math.round(displayWidth * ratio);
-    // taille interne du canvas = taille affichée
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
-    ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+function drawImageToCanvas(img) {
+    var scroll = document.getElementById("canvasScroll");
+    // Résolution réelle = résolution originale de l'image
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    // Dessin sans perte de résolution interne
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    // Hauteur d'affichage souhaitée
+    var displayHeight = scroll.clientHeight - 4;
+    // Même ratio que l'image originale
+    var displayWidth = Math.round(
+        img.naturalWidth * displayHeight / img.naturalHeight
+    );
+    // Taille visuelle uniquement
+    canvas.style.width = displayWidth + "px";
+    canvas.style.height = displayHeight + "px";
 }
 /* Copier */
 function copyText(id, btn){
@@ -256,42 +264,55 @@ function readPixel(x,y){
     hslSpan.innerHTML = "hsl(" + hsl.h + "," + hsl.s + "%," + hsl.l + "%)";
     hsvSpan.innerHTML = "hsv(" + hsv.h + "," + hsv.s + "%," + hsv.v + "%)";
 }
-function showLoupe(x, y){
+function showLoupe(x, y, e) {
     var rect = canvas.getBoundingClientRect();
-    var scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    var scrollX = window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
-    // Dessin loupe
-    lctx.clearRect(0,0,20,20);
-    lctx.drawImage(canvas, x-10, y-10, 20, 20, 0, 0, 20, 20);
-    var lw = 200;
-    var lh = 200;
-    // Position horizontale basée sur la position interne
-    lx = rect.left + scrollX + x - 40;
-    // Position verticale basée sur la position interne
-    ly = rect.top + scrollY + y - 120;
+    var scaleX = rect.width / canvas.width;
+    var scaleY = rect.height / canvas.height;
+    /* Position exacte de la souris */
+    var displayX = e.clientX - rect.left;
+    var displayY = e.clientY - rect.top;
+    var realX = displayX / scaleX;
+    var realY = displayY / scaleY;
+    /* Taille de la zone observée */
+    var loupeSize = 80;
+    var sourceSize = Math.max(1, Math.round(loupeSize / Math.min(scaleX, scaleY)));
+    /* Position de la zone */
+    var sx = realX - sourceSize / 2;
+    var sy = realY - sourceSize / 2;
+    /* Dessin */
+    lctx.clearRect(0, 0, 20, 20);
+    lctx.imageSmoothingEnabled = false;
+    lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 20, 20);
+    /* LA LOUPE SUIT TOUJOURS LA SOURIS */
+    var lx = rect.left + window.scrollX + displayX - 40;
+    var ly = rect.top + window.scrollY + displayY - 120;
     loupe.style.left = lx + "px";
-    loupe.style.top  = ly + "px";
+    loupe.style.top = ly + "px";
     loupe.style.display = "block";
 }
 function hideLoupe(){
     loupe.style.display = "none";
 }
-function showCross(x, y){
+function showCrossAt(e) {
     var rect = canvas.getBoundingClientRect();
-    var scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    var scrollX = window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
-    cross.style.left = (rect.left + scrollX + x - 18) + "px";
-    cross.style.top  = (rect.top  + scrollY + y - 18) + "px";
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    cross.style.left = (rect.left + window.scrollX + x - 18) + "px";
+    cross.style.top = (rect.top + window.scrollY + y - 18) + "px";
     cross.style.display = "block";
 }
 function hideCross(){
     cross.style.display = "none";
 }
 /* Coordonnées souris / touch */
-function getPos(e){
+function getPos(e) {
     var rect = canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
+    // Coordonnées dans le canvas affiché à l'écran
+    var displayX = e.clientX - rect.left;
+    var displayY = e.clientY - rect.top;
+    // Conversion vers les coordonnées réelles de l'image
+    var x = displayX * canvas.width / rect.width;
+    var y = displayY * canvas.height / rect.height;
     return {
         x: Math.floor(x),
         y: Math.floor(y)
@@ -308,22 +329,22 @@ if ("onpointerdown" in canvas) {
             if (canvas.setPointerCapture) {
                 canvas.setPointerCapture(e.pointerId);
             }
-            showLoupe(p.x, p.y);
+            showLoupe(p.x, p.y, e);
         }
         readPixel(p.x, p.y);
-        showCross(p.x, p.y);
+        showCrossAt(e);
         if (e.preventDefault) e.preventDefault();
     };
     canvas.onpointermove = function(e){
         if (e.pointerType === "mouse" && !draggingCross) {
             var p = getPos(e);
-            showLoupe(p.x, p.y);
+            showLoupe(p.x, p.y, e);
             return;
         }
         var p = getPos(e);
         readPixel(p.x, p.y);
-        showCross(p.x, p.y);
-        showLoupe(p.x, p.y);
+        showCrossAt(e);
+        showLoupe(p.x, p.y, e);
         if (e.preventDefault) e.preventDefault();
     };
     canvas.onpointerup = function(e){
@@ -356,8 +377,8 @@ if ("onpointerdown" in canvas) {
         var p = getPos(t);
         draggingCross = true;
         readPixel(p.x, p.y);
-        showCross(p.x, p.y);
-        showLoupe(p.x, p.y);
+        showCrossAt(t);
+        showLoupe(p.x, p.y, t);
         if (e.preventDefault) e.preventDefault();
     };
     canvas.ontouchmove = function(e){
@@ -366,8 +387,8 @@ if ("onpointerdown" in canvas) {
         var p = getPos(t);
         if (!draggingCross) return;
         readPixel(p.x, p.y);
-        showCross(p.x, p.y);
-        showLoupe(p.x, p.y);
+        showCrossAt(t);
+        showLoupe(p.x, p.y, t);
         if (e.preventDefault) e.preventDefault();
     };
     canvas.ontouchend = function(e){
