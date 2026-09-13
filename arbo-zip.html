@@ -483,6 +483,7 @@ function applyImport() {
         updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
         // Sauvegarde + application
         updateColors();
+        document.getElementById("importBox").style.display = "none";
     } catch (e) {
         alert("JSON invalide.");
     }

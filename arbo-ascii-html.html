@@ -767,6 +767,7 @@ function applyImport() {
         updatePickerFromInput(document.getElementById("colorAscii"), document.getElementById("colorAscii").nextElementSibling);
         updatePickerFromInput(document.getElementById("colorComment"), document.getElementById("colorComment").nextElementSibling);
         updateColors();
+        document.getElementById("importBox").style.display = "none";
     } catch (e) {
         alert("JSON invalide.");
     }
