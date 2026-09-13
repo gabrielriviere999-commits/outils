@@ -150,7 +150,7 @@ td.selected {
 <script src="popup.js"></script>
 <script src="color-palette.js"></script>
 <script>
-/* --- POLYFILLS --- */
+/* POLYFILLS */
 // matches()
 if (!Element.prototype.matches) {
   Element.prototype.matches =
@@ -185,7 +185,7 @@ function removeClass(el, cls) {
 function forEachNode(list, fn) {
   for (var i = 0; i < list.length; i++) fn(list[i], i);
 }
-/* --- VARIABLES --- */
+/* VARIABLES */
 var table = document.getElementById('editorTable');
 var selectedCells = [];
 // var colorMode = "text";
@@ -198,7 +198,7 @@ var globalStyles = {
   borderColor: globalBorderColor,
   borderWidth: globalBorderWidth
 };
-/* --- SÉLECTION MULTIPLE --- */
+/* SÉLECTION MULTIPLE */
 table.addEventListener('click', function(e) {
   var t = e.target;
   if (t && t.nodeName === 'TD') {
@@ -249,7 +249,7 @@ function getRealCell(el) {
   }
   return (el && el.nodeName === 'TD') ? el : null;
 }
-/* --- MOTEUR MATRICIEL ACTIF --- */
+/* MOTEUR MATRICIEL ACTIF */
 var MatrixEngine = (function () {
     function build(table) {
         var matrix = [];
@@ -465,7 +465,7 @@ function unmergeSelectedCells() {
 }
 document.getElementById("mergeCellsBtn").onclick = mergeSelectedCells;
 document.getElementById("unmergeCellsBtn").onclick = unmergeSelectedCells;
-/* --- SÉLECTION : SAUVEGARDE / RESTAURATION / NETTOYAGE --- */
+/* SÉLECTION : SAUVEGARDE / RESTAURATION / NETTOYAGE */
 function getSelectedMatrixPositions(table, selectedCells) {
     var m = MatrixEngine.build(table).matrix;
     var positions = [];
@@ -495,7 +495,7 @@ function clearAllSelectedClasses(table) {
         tds[i].classList.remove("selected");
     }
 }
-/* --- AJUSTEMENT DES COORDONNÉES APRÈS INSERT / DELETE --- */
+/* AJUSTEMENT DES COORDONNÉES APRÈS INSERT / DELETE */
 function adjustPositionsForRowInsert(positions, rowIndex) {
     for (var i = 0; i < positions.length; i++) {
         if (positions[i].r >= rowIndex) {
@@ -524,7 +524,7 @@ function adjustPositionsForColDelete(positions, colIndex) {
         }
     }
 }
-/* --- LIGNES --- */
+/* LIGNES */
 document.getElementById('addRowAbove').onclick = function () {
     if (!selectedCells.length) return;
     var pos = getCellPosition(selectedCells[0]);
@@ -567,7 +567,7 @@ document.getElementById('delRow').onclick = function () {
     clearAllSelectedClasses(table);
     restoreSelectionFromMatrixPositions(table, saved);
 };
-/* --- COLONNES --- */
+/* COLONNES */
 document.getElementById('addColLeft').onclick = function () {
     if (!selectedCells.length) return;
     var pos = getCellPosition(selectedCells[0]);
@@ -610,7 +610,7 @@ document.getElementById('delCol').onclick = function () {
     clearAllSelectedClasses(table);
     restoreSelectionFromMatrixPositions(table, saved);
 };
-/* --- ALIGNEMENT --- */
+/* ALIGNEMENT */
 var alignButtons = document.querySelectorAll('button[data-align]');
 forEachNode(alignButtons, function(btn) {
   btn.onclick = function() {
@@ -625,7 +625,7 @@ forEachNode(alignButtons, function(btn) {
     }
   };
 });
-/* --- PALETTE + MODES --- */
+/* PALETTE + MODES */
 var modeButtons = document.querySelectorAll('#colorModes button');
 forEachNode(modeButtons, function(btn) {
   btn.onclick = function() {
@@ -706,7 +706,7 @@ document.getElementById('clearTdStyle').onclick = function () {
 var colorInput = document.getElementById("colorInput");
 attachColorPickerTo(document.getElementById("colorInput"));
 updatePickerFromInput(colorInput, colorInput.nextElementSibling);
-/* --- EPAISSEUR --- */
+/* EPAISSEUR */
 document.getElementById('borderWidth').onchange = function() {
   globalBorderWidth = this.value;
   globalStyles.borderWidth = globalBorderWidth;
@@ -714,7 +714,7 @@ document.getElementById('borderWidth').onchange = function() {
   document.documentElement.style.setProperty("--cell-border-width", globalBorderWidth);
   document.documentElement.style.setProperty("--table-border-width", globalBorderWidth);
 };
-/* --- EXPORT HTML --- */
+/* EXPORT HTML */
 function rgbToHex(rgb) {
   var m = rgb.match(/\d+/g);
   if (!m) return rgb;
@@ -854,7 +854,7 @@ function repeat(str, count) {
   return out;
 }
 document.getElementById('generateCode').onclick = updateoutput;
-/* --- IMPORT HTML --- */
+/* IMPORT HTML */
 document.getElementById('updateFromCode').onclick = function() {
     importTableFromHTML(document.getElementById('output').value);
 };
@@ -1050,7 +1050,7 @@ function rebindTableEvents() {
     }
   });
 }
-/* --- Popup ---*/
+/* Popup */
 function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);

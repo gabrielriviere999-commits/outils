@@ -99,7 +99,7 @@ input{width:60px;}
 <script src="color-palette.js"></script>
 <script src="libs/jszip.min.js"></script>
 <script>
-/* --- VARIABLES GLOBALES ES3 --- */
+/* VARIABLES GLOBALES ES3  */
 var rootName = ""; // nom du dossier racine affiché
 var zipName = ""; // nom du ZIP sans .zip
 var tree = { name: "", folders: [], files: [] };
@@ -170,7 +170,7 @@ function finishColorPicker() {
 }
 document.addEventListener("mouseup", finishColorPicker);
 document.addEventListener("touchend", finishColorPicker);
-/* --- IMPORT ZIP --- */
+/* IMPORT ZIP  */
 document.getElementById("zipInput").onchange = function (e) {
     var file = e.target.files[0];
     if (!file) return;
@@ -241,7 +241,7 @@ function generateHtml() {
         '</body>\n</html>';
     document.getElementById("htmlCode").value = fullPage;
 }
-/* --- Construction de l'arbre --- */
+/* Construction de l'arbre  */
 function buildTree(node, parts, isDir, fullPath) {
     if (parts.length === 0 || parts[0] === "") return;
     var name = parts[0];
@@ -270,7 +270,7 @@ function buildTree(node, parts, isDir, fullPath) {
     }
     buildTree(folder, rest, isDir, fullPath);
 }
-/* --- Compteur dossiers/fichiers --- */
+/* Compteur dossiers/fichiers  */
 function countItems(tree) {
     var folders = tree.folders.length;
     var files = tree.files.length;
@@ -282,7 +282,7 @@ function countItems(tree) {
     }
     return { folders: folders, files: files };
 }
-/* --- Génération ASCII HTML --- */
+/* Génération ASCII HTML  */
 // Tri alphabétique insensible à la casse (ES3)
 function sortNodes(node) {
     var i;
@@ -365,7 +365,7 @@ function buildAsciiText(node, prefix, isRoot) {
     }
     return out;
 }
-/* --- CHARGER LES COULEURS AU DEMARRAGE --- */
+/* CHARGER LES COULEURS AU DEMARRAGE  */
 function loadColors() {
     var saved = localStorage.getItem(COLORS_STORAGE_KEY);
     if (!saved) {
@@ -392,7 +392,7 @@ function loadColors() {
         console.log("Erreur lors du chargement des couleurs.");
     }
 }
-/* --- SAUVEGARDER LES COULEURS --- */
+/* SAUVEGARDER LES COULEURS  */
 function saveColors() {
     var colors = {
         background: colorBackground.value,
@@ -407,7 +407,7 @@ function saveColors() {
         console.log("Impossible de sauvegarder les couleurs.");
     }
 }
-/* --- INITIALISATION --- */
+/* INITIALISATION  */
 // Charger d'abord les couleurs sauvegardées
 loadColors();
 // Initialiser les mini color pickers
@@ -424,7 +424,7 @@ updatePickerFromInput(colorFile, colorFile.nextElementSibling);
 updatePickerFromInput(colorAscii, colorAscii.nextElementSibling);
 // Appliquer les couleurs
 updateColors();
-/* --- CHANGEMENT MANUEL DES INPUTS --- */
+/* CHANGEMENT MANUEL DES INPUTS  */
 function exportColors() {
     var colors = {
         background: document.getElementById("colorBackground").value,

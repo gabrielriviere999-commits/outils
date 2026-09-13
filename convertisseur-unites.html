@@ -105,7 +105,7 @@ label{color:#000;}
   <button id="copyBtn">Copier</button>
 </p>
 <script>
-/* --- 1. Catégories --- */
+/* 1. Catégories  */
 var categories = {
   // DISTANCE
   distance:{
@@ -392,7 +392,7 @@ var categories = {
     }
   },
 };
-/* --- 2. Dictionnaire --- */
+/* 2. Dictionnaire  */
 var unitNames = {
   // --- Distance ---
   "mm": "millimètre",
@@ -555,7 +555,7 @@ var unitNames = {
   "PiB":"pébioctet",
   "EiB":"exbioctet",
 };
-/* --- 3. Extraire les unités --- */
+/* 3. Extraire les unités  */
 function getUnitList(cat) {
   if (!cat) return [];
   if (cat.special === true) return cat.units;
@@ -563,7 +563,7 @@ function getUnitList(cat) {
   for (var k in cat.units) arr.push(k);
   return arr;
 }
-/* --- 4. Liste globale des unités + map unité → catégorie --- */
+/* 4. Liste globale des unités + map unité → catégorie  */
 var allUnits = [];
 var unitToCategory = {};
 function buildGlobalUnitList() {
@@ -578,7 +578,7 @@ function buildGlobalUnitList() {
     }
   }
 }
-/* --- 5. Dropdown --- */
+/* 5. Dropdown  */
 function createDropdown(selectedId, listId, onSelect) {
   var selected = document.getElementById(selectedId);
   var list = document.getElementById(listId);
@@ -666,7 +666,7 @@ function highlight() {
   }
   return fill;
 }
-/* --- 6. Variables global + création des 3 menus --- */
+/* 6. Variables global + création des 3 menus  */
 var selectedCategory = null;
 var selectedFrom = null;
 var selectedTo = null;
@@ -702,7 +702,7 @@ var fillTo = createDropdown("toSelected", "toList", function(opt){
   }
   convert();
 });
-/* --- 7. Mise à jour des unités --- */
+/* 7. Mise à jour des unités  */
 function updateUnits() {
   var cat = categories[selectedCategory];
   var units = getUnitList(cat);
@@ -714,7 +714,7 @@ function updateUnits() {
   document.getElementById("toSelected").innerHTML = "—";
   document.getElementById("result").innerHTML = "—";
 }
-/* --- 8. Recherche globale (De + Vers) --- */
+/* 8. Recherche globale (De + Vers)  */
 // Recherche "De" avec noms + clavier + scroll
 document.getElementById("searchFrom").oninput = function () {
   var q = this.value.toLowerCase();
@@ -910,7 +910,7 @@ function highlight() {
     }
   };
 })();
-/* --- 9. Conversion --- */
+/* 9. Conversion  */
 function cleanNumber(n) {
   return Number(n.toFixed(12));
 }
@@ -952,14 +952,14 @@ function convert() {
     val + " " + selectedFrom + " = " + res + " " + selectedTo;
 }
 document.getElementById("inputValue").oninput = convert;
-/* --- 10. Initialisation --- */
+/* 10. Initialisation  */
 (function init() {
   buildGlobalUnitList();
   var catNames = [];
   for (var k in categories) catNames.push(k);
   fillCategory(catNames);
 })();
-/* --- 11. COPIER --- */
+/* 11. COPIER  */
 document.getElementById("copyBtn").onclick = function () {
   var btn = event.target;
   var text = document.getElementById("result").innerHTML;
@@ -978,7 +978,7 @@ document.getElementById("copyBtn").onclick = function () {
 };
 document.getElementById("inputValue").value = "1";
 convert();
-/* --- 12. bouton Inverser De ↔ Vers --- */
+/* 12. bouton Inverser De ↔ Vers  */
 document.getElementById("swapBtn").onclick = function () {
   // On échange les unités sélectionnées
   var oldFrom = selectedFrom;

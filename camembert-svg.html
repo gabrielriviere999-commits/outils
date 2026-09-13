@@ -106,7 +106,7 @@ input[type=text],input[type=number]{width:100%;}
 <script src="outils.js"></script>
 <script src="color-palette.js"></script>
 <script>
-/* --- Données --- */
+/* Données  */
 var slices = [
   { label: "A", value: 40, color: "#e74c3c" },
   { label: "B", value: 30, color: "#3498db" },
@@ -116,7 +116,7 @@ var tblBody = document.getElementById("tbl").getElementsByTagName("tbody")[0];
 var preview = document.getElementById("preview");
 var outputArea = document.getElementById("output");
 var pieSize = 200;
-/* --- Construction du tableau --- */
+/* Construction du tableau  */
 function closeActivePicker() {
     if (typeof closePicker === "function") {
         closePicker();
@@ -267,7 +267,7 @@ document.getElementById("pieSize").oninput = function() {
   if (v > 800) v = 800;
   pieSize = v;
 };
-/* --- Génération du SVG + LÉGENDE --- */
+/* Génération du SVG + LÉGENDE  */
 function renderPie() {
   var total = 0;
   for (var i = 0; i < slices.length; i++) total += slices[i].value;
@@ -336,7 +336,7 @@ function renderPie() {
 function escapeHtml(t) {
   return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
-/* --- Import depuis le SVG + légende --- */
+/* Import depuis le SVG + légende  */
 document.getElementById("importBtn").onclick = function() {
   var txt = outputArea.value;
   if (!txt) return;

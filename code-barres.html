@@ -116,14 +116,14 @@
 <script src="libs/zxing-browser.min.js"></script>
 <script src="color-palette.js"></script>
 <script>
-/* --- RÉFÉRENCES DE BASE --- */
+/* RÉFÉRENCES DE BASE  */
 var text = document.getElementById("text");
 var barcode = document.getElementById("barcode");
 var btnGen = document.getElementById("btn-generate");
 btnGen.onclick = generateBarcode;
 var barcodeColorInput = document.getElementById("barcodeColor");
 var bgColorInput = document.getElementById("bgColor");
-/* --- COLOR PICKER --- */
+/* COLOR PICKER  */
 document.getElementById("barcodeHex").onchange = function () {
     document.getElementById("barcodeColor").value = this.value;
     generateBarcode();
@@ -152,7 +152,7 @@ updatePickerFromInput(barcodeHex, barcodeHex.nextElementSibling);
 var colorInput = document.getElementById("bgHex");
 attachColorPickerTo(document.getElementById("bgHex"));
 updatePickerFromInput(bgHex, bgHex.nextElementSibling);
-/* --- HELPERS CHECKSUM --- */
+/* HELPERS CHECKSUM  */
 // Calcule la clé mod10 type EAN/UPC/ITF à partir de n-1 chiffres
 function computeMod10Check(digits) {
   var len = digits.length;
@@ -201,7 +201,7 @@ function isValidITF14(value) {
   var check = parseInt(value.charAt(13), 10);
   return computeMod10Check(body) === check;
 }
-/* --- GÉNÉRATION CODE-BARRES (SVG) --- */
+/* GÉNÉRATION CODE-BARRES (SVG)  */
 function generateBarcode() {
   var value = text.value.trim();
   barcode.innerHTML = "";
@@ -280,7 +280,7 @@ function generateBarcode() {
   }
   barcode.appendChild(svg);
 }
-/* --- EXPORT PNG / JPG / SVG --- */
+/* EXPORT PNG / JPG / SVG  */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
   a.href = dataUrl;
@@ -313,7 +313,7 @@ document.getElementById("export-svg").onclick = function () {
   a.click();
   URL.revokeObjectURL(url);
 };
-/* --- DÉCODAGE FICHIER (Code-barres) --- */
+/* DÉCODAGE FICHIER (Code-barres)  */
 var fileInput  = document.getElementById("fileinput");
 var canvasFile = document.getElementById("canvas-file");
 var ctxFile    = canvasFile.getContext("2d");
@@ -350,7 +350,7 @@ fileInput.onchange = function (e) {
     };
     img.src = URL.createObjectURL(file);
 };
-/* --- Coller une image depuis le presse‑papier --- */
+/* Coller une image depuis le presse‑papier  */
 function loadFile(file) {
     var img = new Image();
     img.onload = function () {
@@ -483,7 +483,7 @@ function copyTextFrom(elementId, btn) {
 document.getElementById("copyBar").onclick = function (e) {
   copyTextFrom("barResult", e.target);
 };
-/* --- COPIER --- */
+/* COPIER  */
 document.getElementById("copy-btn").onclick = function () {
   var btn = event.target;
   var text = decodeFile.innerText;

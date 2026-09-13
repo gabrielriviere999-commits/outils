@@ -26,9 +26,9 @@
 </div>
 <script src="outils.js"></script>
 <script>
-/* --- Données internes --- */
+/* Données internes  */
 var events = [];
-/* --- Ajouter un évènement --- */
+/* Ajouter un évènement  */
 function addEventUnshift() {
   events.unshift({
     title: "Titre",
@@ -56,13 +56,13 @@ function addEventAfter(i) {
   refreshEditor();
   exportAscii();
 }
-/* --- Supprimer un évènement --- */
+/* Supprimer un évènement  */
 function removeEvent(i) {
   events.splice(i, 1);
   refreshEditor();
   exportAscii();
 }
-/* --- Déplacer un évènement --- */
+/* Déplacer un évènement  */
 function moveEventUp(i) {
   if (i <= 0) return;
   var tmp = events[i - 1];
@@ -79,7 +79,7 @@ function moveEventDown(i) {
   refreshEditor();
   exportAscii();
 }
-/* --- Rafraîchir l'éditeur --- */
+/* Rafraîchir l'éditeur  */
 function refreshEditor() {
   var html = "";
   for (var i = 0; i < events.length; i++) {
@@ -101,7 +101,7 @@ function refreshEditor() {
   }
   document.getElementById("eventList").innerHTML = html;
 }
-/* --- EXPORT TEXTE --- */
+/* EXPORT TEXTE  */
 function exportAscii() {
   if (events.length === 0) {
     document.getElementById("output").value = "";
@@ -164,7 +164,7 @@ function repeat(s, n) {
   while (n-- > 0) r += s;
   return r;
 }
-/* --- IMPORT TEXTE Format : date | titre | desc --- */
+/* IMPORT TEXTE Format : date | titre | desc  */
 function importAscii() {
   var raw = document.getElementById("output").value;
   var lines = raw.split("\n");

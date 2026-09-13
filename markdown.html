@@ -45,7 +45,7 @@
 <input type="file" id="textareaFileinput">
 <script src="outils.js"></script>
 <script>
-/* --- Insertion --- */
+/* Insertion  */
 function insertAtCursor(textarea, text) {
   try {
     var start = textarea.selectionStart;
@@ -59,7 +59,7 @@ function insertAtCursor(textarea, text) {
     textarea.value += text;
   }
 }
-/* --- Toolbar --- */
+/* Toolbar  */
 function wrapSelection(textarea, before, after) {
   try {
     var start = textarea.selectionStart;
@@ -112,7 +112,7 @@ function initToolbar() {
     })(buttons[i]);
   }
 }
-/* --- Init --- */
+/* Init  */
 window.onload = function() {
   initToolbar();
 };

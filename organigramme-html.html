@@ -98,12 +98,12 @@
 <script src="outils.js"></script>
 <script src="color-palette.js"></script>
 <script>
-/* --- VARIABLES GLOBALES --- */
+/* VARIABLES GLOBALES  */
 var globalBoxBg = "transparent";
 var selectedId = null;
 var clickOnToolbar = false;
 var nextId = 1;
-/* --- DONNÉES --- */
+/* DONNÉES  */
 var orgRoot = {
   hidden: true,
   children: [
@@ -127,7 +127,7 @@ var orgRoot = {
     }
   ]
 };
-/* --- ASSIGNATION DES IDS --- */
+/* ASSIGNATION DES IDS  */
 function assignIds(node) {
   if (!node.id) {
     node.id = nextId++;
@@ -140,7 +140,7 @@ function assignIds(node) {
   }
 }
 assignIds(orgRoot);
-/* --- RENDU HTML --- */
+/* RENDU HTML  */
 function renderOrgTree(root) {
   var container = document.getElementById("org-container");
   var rootEl = document.querySelector(".org-root");
@@ -156,7 +156,7 @@ function renderOrgTree(root) {
   html += '</div>';
   container.innerHTML = html;
 }
-/* --- SÉLECTION / ÉDITION --- */
+/* SÉLECTION / ÉDITION  */
 document.addEventListener('click', function(e) {
   if (e.target.id === "inlineEdit") return;
   var node = findNodeElement(e.target);
@@ -169,7 +169,7 @@ document.addEventListener('click', function(e) {
     updateSelectionHighlight();
   }
 });
-/* --- RENDU --- */
+/* RENDU  */
 function renderOrgNode(node, globalText, indent) {
   var pad = "";
   for (var i = 0; i < indent; i++) pad += " ";
@@ -195,7 +195,7 @@ function renderOrgNode(node, globalText, indent) {
 window.onload = function() {
   renderOrgTree(orgRoot);
 };
-/* --- ÉDITION INLINE --- */
+/* ÉDITION INLINE  */
 function startInlineRename(id, nodeEl) {
   var node = findNodeById(orgRoot, id);
   var labelEl = nodeEl.getElementsByClassName("org-label")[0];
@@ -219,7 +219,7 @@ function finishInlineRename(id, newText) {
   selectedId = id;
   updateSelectionHighlight();
 }
-/* --- ACTIONS - AJOUT / SUPPRESSION --- */
+/* ACTIONS - AJOUT / SUPPRESSION  */
 function addChild() {
   if (!selectedId) return;
   var node = findNodeById(orgRoot, selectedId);
@@ -353,7 +353,7 @@ function deleteNode() {
   selectedId = null;
   renderOrgTree(orgRoot);
 }
-/* --- ACTIONS - IMAGES --- */
+/* ACTIONS - IMAGES  */
 function loadNodeImage(input) {
   if (!selectedId) return;
   var file = input.files[0];
@@ -376,7 +376,7 @@ function removeImageFromNode() {
   renderOrgTree(orgRoot);
   updateSelectionHighlight();
 }
-/* --- SÉLECTION --- */
+/* SÉLECTION  */
 function findNodeElement(el) {
   while (el && el !== document) {
     if (el.className && el.className.indexOf('org-node') !== -1) return el;
@@ -391,7 +391,7 @@ function updateSelectionHighlight() {
     nodes[i].className = (id === selectedId) ? 'org-node selected' : 'org-node';
   }
 }
-/* --- RECHERCHE --- */
+/* RECHERCHE  */
 function findNodeById(node, id) {
   if (!node) return null;
   if (node.id === id) {
@@ -418,7 +418,7 @@ function findParent(node, id) {
   }
   return null;
 }
-/* --- UTILITAIRES --- */
+/* UTILITAIRES  */
 function nl2br(str) {
   return str.replace(/\n/g, "<br>");
 }
@@ -437,7 +437,7 @@ function generateCode(text) {
   var ta = document.getElementById("output");
   ta.value = text;
 }
-/* --- Styles --- */
+/* Styles  */
 function setActiveButton(btn) {
   // Retirer .active de tous les boutons de style
   var buttons = document.getElementsByClassName("style-btn");
@@ -475,7 +475,7 @@ function applyColor() {
 var colorInput = document.getElementById("colorInput");
 attachColorPickerTo(document.getElementById("colorInput"));
 updatePickerFromInput(colorInput, colorInput.nextElementSibling);
-/* --- Boutons de sélection d'action --- */
+/* Boutons de sélection d'action  */
 function changeGlobalTextColor(btn) {
   pendingColorAction = "globalText";
   setActiveButton(btn);
@@ -494,7 +494,7 @@ function changeSelectedBgColor(btn) {
   pendingColorAction = "selectedBg";
   setActiveButton(btn);
 }
-/* --- Reset --- */
+/* Reset  */
 function clearGlobalStyle() {
   globalBoxBg = "transparent";
   var root = document.querySelector(".org-root");
@@ -509,7 +509,7 @@ function clearSelectedStyle() {
   renderOrgTree(orgRoot);
   updateSelectionHighlight();
 }
-/* --- Export HTML --- */
+/* Export HTML  */
 function exportHtmlNode(node, indent) {
   var pad = "";
   for (var i = 0; i < indent; i++) pad += " ";
@@ -557,7 +557,7 @@ function buildHtml() {
     '</div>';
   return css + html;
 }
-/* --- IMPORT HTML --- */
+/* IMPORT HTML  */
 function importHtml(html) {
   var container = document.createElement("div");
   container.innerHTML = html;

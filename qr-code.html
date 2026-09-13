@@ -107,12 +107,12 @@
 <script src="libs/zxing-browser.min.js"></script>
 <script src="color-palette.js"></script>
 <script>
-/* --- RÉFÉRENCES DE BASE --- */
+/* RÉFÉRENCES DE BASE  */
 var text = document.getElementById("text");
 var qrDiv = document.getElementById("qrcode");
 var btnGen = document.getElementById("btn-generate");
 btnGen.onclick = generateCode;
-/* --- COLOR PICKER --- */
+/* COLOR PICKER  */
 document.getElementById("qrHex").onchange = function () {
     document.getElementById("qrColor").value = this.value;
     generateCode();
@@ -141,7 +141,7 @@ updatePickerFromInput(qrHex, qrHex.nextElementSibling);
 var colorInput = document.getElementById("bgHex");
 attachColorPickerTo(document.getElementById("bgHex"));
 updatePickerFromInput(bgHex, bgHex.nextElementSibling);
-/* --- GÉNÉRATION QR (SVG) --- */
+/* GÉNÉRATION QR (SVG)  */
 function generateSVG(qrObj) {
     var count = qrObj.getModuleCount();
     var cell = 10;
@@ -173,7 +173,7 @@ function generateCode() {
     if (!value) return;
     generateQR();
 }
-/* --- EXPORT PNG / JPG / SVG --- */
+/* EXPORT PNG / JPG / SVG  */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
   a.href = dataUrl;
@@ -223,7 +223,7 @@ document.getElementById("export-svg").onclick = function () {
     a.click();
     URL.revokeObjectURL(url);
 };
-/* --- DÉCODAGE FICHIER --- */
+/* DÉCODAGE FICHIER  */
 var fileInput = document.getElementById("fileinput");
 var canvasFile = document.getElementById("canvas-file");
 var ctxFile = canvasFile.getContext("2d");
@@ -372,7 +372,7 @@ function copyTextFrom(elementId, btn) {
 document.getElementById("copyQR").onclick = function (e) {
   copyTextFrom("qrResult", e.target);
 };
-/* --- COPIER --- */
+/* COPIER  */
 document.getElementById("copy-btn").onclick = function () {
   var btn = event.target;
   var text = document.getElementById("decode-file").innerText;
