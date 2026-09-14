@@ -197,10 +197,10 @@ body.block-touch{touch-action:none;}
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
-          <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
+          <label style="width:100%;text-align:center;"><input type="checkbox" id="rotateCopy">Copier/Mirroir</label>
         </div>
         <div style="display:table-cell;">
-          <label style="width:100%;text-align:center;"><input type="checkbox" id="rotateCopy">Copier/Mirroir</label>
+          <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
         </div>
       </div>
       <div style="display:table-row;">
@@ -278,8 +278,7 @@ body.block-touch{touch-action:none;}
     <b>Sélection</b><br>
     • Déplacer/Dupliquer : changer de place un morceau de dessin en sélectionnant puis en glissant.<br>
     • Pivoter : tourner un morceau de dessin en sélectionnant puis en glissant, cocher copier pour superposer le dessin pivoté.<br>
-    • Invers H : sélectionner un morceau de dessin inverse sa position de façon horizontale.<br>
-    • Invers V : sélectionner un morceau de dessin inverse sa position de façon verticale.<br><br>
+    • Invers H ou V : sélectionner un morceau de dessin inverse sa position de façon horizontale ou verticale, si la case symétrie est cochée, il se retrouve copié en mirroir de l'autre côté de l'axe.<br><br>
     • Sélecteur de fichiers : Ajouter une image sur le dessin, elle peut ensuite être déplacée, redimensionnée, pivotée, cliquer sur le bouton de l'outil pour y revenir sinon le mode texte est utilisé.<br>
     • Options : zone de dessin (zoom, loupe, couleur de l'affichage de la transparence, résolution du dessin.)<br><br>
     • Sélecteur de fichiers : Charger une image pour commencer un nouveau dessin.

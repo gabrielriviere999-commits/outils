@@ -146,8 +146,7 @@ body.block-touch{touch-action:none;}
     <b>Sélection</b><br>
     • Déplacer/Dupliquer : changer de place un rectangle de caractères en sélectionnant puis en glissant.<br>
     • Copier : sélectionner un rectangle de caractères le copie dans le presse-papiers.<br>
-    • Invers H : sélectionner un rectangle de caractères inverse leur position de façon horizontale.<br>
-    • Invers V : sélectionner un rectangle de caractères inverse leur position de façon verticale.<br><br>
+    • Invers H ou V : sélectionner un rectangle de caractères inverse leur position de façon horizontale ou verticale sur eux-mêmes, si la case symétrie est cochée, ils se retrouvent copiés en mirroir de l'autre côté de l'axe.<br><br>
     • Texte libre : ajouter du texte n'importe où sur la zone de dessin sans décaler les autres caractères.<br>
     • Édition texte : mode édition normale.<br>
     • Remplir : remplir d'un caractère l'intérieur d'une forme ou caractères identiques.<br>
@@ -201,11 +200,32 @@ body.block-touch{touch-action:none;}
   <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
 	<b class="titleb">Sélection</b><hr class="titlehr">
-    <button id="btnMove" data-action="setToolMove">Déplacer</button>
-    <button id="btnCopy" data-action="setToolCopy">Dupliquer</button><br>
-    <button id="btnClipboard" data-action="setToolClipboard">Copier</button><br>
-    <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
-    <button id="btnFlipV" data-action="setToolFlipV">Invers V</button><hr>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell">
+          <button id="btnMove" data-action="setToolMove">Déplacer</button>
+        </div>
+        <div style="display:table-cell">
+		  <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
+        </div>
+        <div style="display:table-cell">
+		  <button id="btnClipboard" data-action="setToolClipboard">Copier</button>
+        </div>
+      </div>
+    </div><hr>
+    <div style="display:table;table-layout:fixed;width:100%;">
+      <div style="display:table-row;">
+        <div style="display:table-cell">
+		  <label style="width:100%;text-align:center;"><input type="checkbox" id="flipSymmetry">Mirroir</label>
+        </div>
+        <div style="display:table-cell">
+          <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
+        </div>
+        <div style="display:table-cell">
+		  <button id="btnFlipV" data-action="setToolFlipV">Invers V</button>
+        </div>
+      </div>
+    </div><hr>
 	<button data-action="closePopup">Fermer</button>
   </div>
   |
@@ -359,11 +379,11 @@ function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
 function setToolRect(){ setTool("rect"); }
 function setToolEllipse(){ setTool("ellipse"); }
-function setToolMove(){ setTool("move"); closePopup(); }
-function setToolCopy(){ setTool("copy"); closePopup(); }
-function setToolClipboard(){ setTool("clipboard"); closePopup(); }
-function setToolFlipH(){ setTool("fliph"); closePopup(); }
-function setToolFlipV(){ setTool("flipv"); closePopup(); }
+function setToolMove(){ setTool("move"); }
+function setToolCopy(){ setTool("copy"); }
+function setToolClipboard(){ setTool("clipboard"); }
+function setToolFlipH(){ setTool("fliph"); }
+function setToolFlipV(){ setTool("flipv"); }
 /* EXPORT / IMPORT */
 function exportTextReturn() {
     return view.value;
@@ -674,6 +694,10 @@ function flipSelection(horizontal) {
     var h = moveSelection.h;
     var flipped = [];
     var x, y;
+    var symmetry = document.getElementById("flipSymmetry").checked;
+    var destX = moveSelection.x;
+    var destY = moveSelection.y;
+    // créer la forme inversée
     for (y = 0; y < h; y++) {
         flipped[y] = [];
         for (x = 0; x < w; x++) {
@@ -684,9 +708,21 @@ function flipSelection(horizontal) {
             }
         }
     }
+    if (symmetry) {
+        // garder l'original et placer le miroir à côté
+        if (horizontal) {
+            destX = moveSelection.x + w;
+        } else {
+            destY = moveSelection.y + h;
+        }
+    } else {
+        // comportement actuel : remplacer par l'inversion
+        destX = moveSelection.x;
+        destY = moveSelection.y;
+    }
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {
-            safeSet(moveSelection.x + x, moveSelection.y + y, flipped[y][x]);
+            safeSet(destX + x, destY + y, flipped[y][x]);
         }
     }
     moveSelection = null;
