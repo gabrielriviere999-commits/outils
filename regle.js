@@ -329,9 +329,8 @@ function drawRulerCircle(){
         ctx.globalCompositeOperation = "destination-out";
     else
         ctx.globalCompositeOperation = "source-over";
-    ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    drawPixelCircle(circle.x, circle.y, circle.radius);
 }
 /* ÉVÉNEMENTS */
 regleBody.addEventListener("pointerdown", rulerStartMove, false);
