@@ -29,7 +29,7 @@ function addMultiTouch(selector){
                         return;
                     }
                     // Autres input (text, number, etc.)
-                    if(document.activeElement===this){this.focus();}else{this.focus();}
+                    if(document.activeElement !== this){this.focus();}
                     return;
                 }
                 // Cas normal → action tactile
