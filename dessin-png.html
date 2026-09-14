@@ -194,15 +194,10 @@ body.block-touch{touch-action:none;}
         </div>
       </div>
     </div><hr>
+    <label><input type="checkbox" id="rotateCopy">Copier/Miroir</label>
+    <label><input type="checkbox" id="flipOtherSide">Gauche / haut</label>
+    <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
     <div style="display:table;table-layout:fixed;width:100%;">
-      <div style="display:table-row;">
-        <div style="display:table-cell;">
-          <label style="width:100%;text-align:center;"><input type="checkbox" id="rotateCopy">Copier/Miroir</label>
-        </div>
-        <div style="display:table-cell;">
-          <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
-        </div>
-      </div>
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
@@ -3071,8 +3066,14 @@ canvas.onpointerup = function(e){
 	        }
 	    }
 	    if(copyFlipH){
-	        // COPIER : L'original reste exactement à sa place. Le miroir est placé juste à droite.
-	        putImageDataVisible(mirrorFlipH, flipHX + flipHW, flipHY);
+	        var flipOtherSide = document.getElementById("flipOtherSide").checked;
+	        if(flipOtherSide){
+	            // COPIER + À gauche : L'original reste à sa place. La copie symétrique est placée à gauche.
+	            putImageDataVisible(mirrorFlipH, flipHX - flipHW, flipHY);
+	        }else{
+	            // COPIER : L'original reste à sa place. La copie symétrique est placée à droite.
+	            putImageDataVisible(mirrorFlipH, flipHX + flipHW, flipHY);
+	        }
 	    }else{
 	        // SANS COPIER : Remplacer uniquement les pixels visibles de la sélection par leur miroir.
 	        putImageDataVisible(mirrorFlipH, flipHX, flipHY);
@@ -3123,8 +3124,15 @@ canvas.onpointerup = function(e){
 	        }
 	    }
 	    if(copyFlipV){
-	        // COPIER : L'original reste exactement à sa place. Le miroir est placé juste en dessous.
-	        putImageDataVisible(mirrorFlipV, flipVX, flipVY + flipVH);
+	        var flipOtherSide = document.getElementById("flipOtherSide").checked;
+	        if(flipOtherSide){
+	            // COPIER + EN HAUT : L'original reste à sa place. La copie symétrique est placée au-dessus.
+	            putImageDataVisible(mirrorFlipV, flipVX, flipVY - flipVH);
+	        }else{
+	            // COPIER :  L'original reste à sa place. La copie symétrique est placée en dessous.
+	            putImageDataVisible(mirrorFlipV, flipVX, flipVY + flipVH);
+	        }
+
 	    }else{
 	        // SANS COPIER : Remplacer uniquement les pixels visibles de la sélection par leur miroir.
 	        putImageDataVisible(mirrorFlipV, flipVX, flipVY);

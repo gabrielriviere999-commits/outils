@@ -231,11 +231,10 @@ body.block-touch{touch-action:none;}
         </div>
       </div>
     </div><hr>
+    <label><input type="checkbox" id="flipSymmetry">Miroir</label>
+    <label><input type="checkbox" id="flipSide">Gauche / Haut</label>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
-        <div style="display:table-cell">
-		  <label style="width:100%;text-align:center;"><input type="checkbox" id="flipSymmetry">Miroir</label>
-        </div>
         <div style="display:table-cell">
           <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
         </div>
@@ -728,10 +727,19 @@ function flipSelection(horizontal) {
     }
     if (symmetry) {
         // garder l'original et placer le miroir à côté
+        var side = document.getElementById("flipSide").checked;
         if (horizontal) {
-            destX = moveSelection.x + w;
+            if (side) {
+                destX = moveSelection.x - w;
+            } else {
+                destX = moveSelection.x + w;
+            }
         } else {
-            destY = moveSelection.y + h;
+            if (side) {
+                destY = moveSelection.y - h;
+            } else {
+                destY = moveSelection.y + h;
+            }
         }
     } else {
         // comportement actuel : remplacer par l'inversion
