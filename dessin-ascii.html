@@ -30,6 +30,24 @@ select{width:55px;}
   display:none;
   box-sizing:border-box;
 }
+#asciiLoupe:after {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:45%;
+  bottom:45%;
+  width:1px;
+  background:red;
+}
+#asciiLoupe:before {
+  content:"";
+  position:absolute;
+  top:50%;
+  left:45%;
+  right:45%;
+  height:1px;
+  background:red;
+}
 #asciiLoupeText {
   position:absolute;
   white-space:pre;
