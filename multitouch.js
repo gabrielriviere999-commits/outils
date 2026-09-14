@@ -58,3 +58,19 @@ function addMultiTouch(selector){
         };
     }
 }
+document.addEventListener("pointerdown", function(e){
+    // Seulement tactile
+    if (e.pointerType !== "touch") return;
+    var tag = e.target.tagName.toLowerCase();
+    // Ne pas blur si on touche un input/textarea
+    if (tag === "input" || tag === "textarea") return;
+    // Ne pas blur si on touche un checkbox/radio
+    if (tag === "input") {
+        var type = (e.target.type || "").toLowerCase();
+        if (type === "checkbox" || type === "radio") return;
+    }
+    // Blur si un input/textarea est focus
+    if (document.activeElement && (document.activeElement.tagName.toLowerCase() === "input" || document.activeElement.tagName.toLowerCase() === "textarea")) {
+        document.activeElement.blur();
+    }
+}, true);
