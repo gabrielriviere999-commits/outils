@@ -83,7 +83,6 @@ importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
 /* Ctrl + V image presse papiers */
-var pastezone = document.getElementById("pastezone");
 // Les inputs à cibler
 var pasteZones = [
     {
