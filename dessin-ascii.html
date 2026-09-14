@@ -742,9 +742,15 @@ function flipSelection(horizontal) {
             }
         }
     } else {
-        // comportement actuel : remplacer par l'inversion
+        // remplacer l'original par l'inversion
         destX = moveSelection.x;
         destY = moveSelection.y;
+        // effacer l'ancienne sélection
+        for (y = 0; y < h; y++) {
+            for (x = 0; x < w; x++) {
+                safeSet(destX + x, destY + y, " ");
+            }
+        }
     }
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {

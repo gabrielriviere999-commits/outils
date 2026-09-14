@@ -2073,7 +2073,7 @@ function drawRotatedSelectionAt(angle){
                 continue;
             }
             di = (dy * newW + dx) * 4;
-            dst[di]     = src[si];
+            dst[di] = src[si];
             dst[di + 1] = src[si + 1];
             dst[di + 2] = src[si + 2];
             dst[di + 3] = src[si + 3];
@@ -2091,43 +2091,28 @@ function flipRectangleHorizontal(){
     if(!selection){
         return;
     }
-
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
-
-    var img = ctx.createImageData(w, h);
+    var img = ctx.createImageData(w,h);
     var dst = img.data;
-
     var sx, sy;
     var tx;
     var si, di;
-
-    // Construire le miroir horizontal.
     for(sy = 0; sy < h; sy++){
         for(sx = 0; sx < w; sx++){
             si = (sy * w + sx) * 4;
-
             tx = w - 1 - sx;
             di = (sy * w + tx) * 4;
-
             dst[di]     = src[si];
             dst[di + 1] = src[si + 1];
             dst[di + 2] = src[si + 2];
             dst[di + 3] = src[si + 3];
         }
     }
-
     selection.data = img;
-
-    // IMPORTANT :
-    // Ne jamais restaurer tout le canvas ici.
-    // On dessine uniquement les pixels visibles du miroir.
-    putImageDataVisible(
-        img,
-        selection.x,
-        selection.y
-    );
+    // NE PAS restaurer selectionBaseImage ici. Le mode sans "Copier" a déjà supprimé l'original.
+    putImageDataVisible(img, selection.x, selection.y);
 }
 function flipRectangleVertical(){
     if(!selection){
@@ -2136,12 +2121,11 @@ function flipRectangleVertical(){
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
-    var img = ctx.createImageData(w, h);
+    var img = ctx.createImageData(w,h);
     var dst = img.data;
     var sx, sy;
     var ty;
     var si, di;
-    // Construire le miroir vertical.
     for(sy = 0; sy < h; sy++){
         for(sx = 0; sx < w; sx++){
             si = (sy * w + sx) * 4;
@@ -2154,7 +2138,7 @@ function flipRectangleVertical(){
         }
     }
     selection.data = img;
-    // Ne jamais restaurer tout le canvas ici. On dessine uniquement les pixels visibles du miroir.
+    // NE PAS restaurer selectionBaseImage ici.
     putImageDataVisible(img, selection.x, selection.y);
 }
 function flipFreeHorizontal(){
@@ -3075,7 +3059,8 @@ canvas.onpointerup = function(e){
 	            putImageDataVisible(mirrorFlipH, flipHX + flipHW, flipHY);
 	        }
 	    }else{
-	        // SANS COPIER : Remplacer uniquement les pixels visibles de la sélection par leur miroir.
+	        // SANS COPIER : supprimer complètement l'ancien contenu de la sélection, puis placer l'image inversée à la même position.
+	        ctx.clearRect( flipHX, flipHY, flipHW, flipHH);
 	        putImageDataVisible(mirrorFlipH, flipHX, flipHY);
 	    }
 	    selection = null;
@@ -3132,9 +3117,9 @@ canvas.onpointerup = function(e){
 	            // COPIER :  L'original reste à sa place. La copie symétrique est placée en dessous.
 	            putImageDataVisible(mirrorFlipV, flipVX, flipVY + flipVH);
 	        }
-
 	    }else{
-	        // SANS COPIER : Remplacer uniquement les pixels visibles de la sélection par leur miroir.
+	        // SANS COPIER :  supprimer complètement l'ancien contenu de la sélection, puis placer l'image inversée à la même position.
+	        ctx.clearRect(flipVX, flipVY, flipVW, flipVH);
 	        putImageDataVisible(mirrorFlipV, flipVX, flipVY);
 	    }
 	    selection = null;
