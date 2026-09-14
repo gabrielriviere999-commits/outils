@@ -689,15 +689,13 @@ function getImageHandle(x,y){
     var dx = x-c.x;
     var dy = y-c.y;
     // Coordonnées locales.
-    var lx =
-        dx*cos - dy*sin;
-    var ly =
-        dx*sin + dy*cos;
-    var hs = 10;
+    var lx = dx*cos - dy*sin;
+    var ly = dx*sin + dy*cos;
+    var hs = 5;
     // Poignée rotation. Elle est située au-dessus de l'image.
     if(
         Math.abs(lx) < hs &&
-        Math.abs(ly + tempImageH/2 + 35) < hs
+        Math.abs(ly + tempImageH/2 + 20) < hs
     ){
         return "rotate";
     }
@@ -773,7 +771,7 @@ function drawTempImage(){
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.rect(handles[i][0]-5, handles[i][1]-5, 10, 10);
+        ctx.rect(handles[i][0], handles[i][1], 1, 1);
         ctx.fill();
         ctx.stroke();
     }
@@ -782,14 +780,14 @@ function drawTempImage(){
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, -tempImageH/2);
-    ctx.lineTo(0, -tempImageH/2-35);
+    ctx.lineTo(0, -tempImageH/2-20);
     ctx.stroke();
     /* Poignée de rotation */
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(0, -tempImageH/2-35, 7, 0, Math.PI*2, false);
+    ctx.arc(0, -tempImageH/2-20, 7, 0, Math.PI*2, false);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -2468,7 +2466,7 @@ canvas.onpointerdown = function(e){
             return;
         }
         // Clic ailleurs : on valide l'image.
-        commitTempImage();
+        // commitTempImage();
         drawing = false;
         return;
     }
@@ -2589,11 +2587,6 @@ canvas.onpointerdown = function(e){
 		}
 		drawPixel(startX, startY);
 	}
-    if(currentTool==="fill"){
-        floodFill(Math.floor(p.x), Math.floor(p.y));
-        drawing = false;
-        return;
-    }
     if(currentTool==="eraser"){
         ctx.globalCompositeOperation = "destination-out";
         ctx.lineWidth = parseInt(sizeInput.value,10);
@@ -2874,6 +2867,11 @@ canvas.onpointerup = function(e){
     var p = getPos(e);
     var x = p.x;
     var y = p.y;
+    // REMPLISSAGE
+    if(currentTool==="fill"){
+        floodFill(Math.floor(x), Math.floor(y));
+        return;
+    }
     // PIPETTE : validation au relâchement
     if(currentTool === "pipette"){
         drawing = false;
