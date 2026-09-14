@@ -740,7 +740,9 @@ function flipSelection(horizontal) {
     }
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {
-            safeSet(destX + x, destY + y, flipped[y][x]);
+            if (flipped[y][x] !== " ") {
+                safeSet(destX + x, destY + y, flipped[y][x]); // dans le if pour garder ce qu'il y a dessous
+            }
         }
     }
     moveSelection = null;
