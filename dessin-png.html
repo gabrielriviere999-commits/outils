@@ -2145,18 +2145,19 @@ function flipFreeHorizontal(){
     if(!selection){
         return;
     }
+    var copyFlipH = document.getElementById("rotateCopy").checked;
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
     var img = ctx.createImageData(w,h);
     var dst = img.data;
-    var sx,sy;
+    var sx, sy;
     var tx;
-    var si,di;
+    var si, di;
+    // Construire le miroir horizontal.
     for(sy = 0; sy < h; sy++){
         for(sx = 0; sx < w; sx++){
             si = (sy * w + sx) * 4;
-            // Miroir horizontal.
             tx = w - 1 - sx;
             di = (sy * w + tx) * 4;
             dst[di] = src[si];
@@ -2166,29 +2167,42 @@ function flipFreeHorizontal(){
         }
     }
     selection.data = img;
-    // remettre le fond SANS l'ancienne forme.
-    if(selectionBaseImage){
-        ctx.putImageData(selectionBaseImage, 0, 0);
+    if(copyFlipH){
+        // COPIER : conserver l'original et placer le miroir à côté.
+        var flipOtherSide = document.getElementById("flipOtherSide").checked;
+        if(flipOtherSide){
+            // Miroir à gauche.
+            putImageDataVisible(img, selection.x - w, selection.y);
+        }else{
+            // Miroir à droite.
+            putImageDataVisible(img, selection.x + w, selection.y);
+        }
+    }else{
+        // SANS COPIER : supprimer l'ancien contenu de la sélection puis remettre uniquement le miroir.
+        // On restaure le fond qui existait avant la sélection, puis on remet le miroir uniquement sur les pixels appartenant réellement à la sélection libre.
+        if(selectionBaseImage){
+            ctx.putImageData(selectionBaseImage, 0, 0);
+        }
+        putImageDataVisible(img, selection.x, selection.y);
     }
-    // Remettre uniquement les pixels visibles.
-    putImageDataVisible(img, selection.x, selection.y);
 }
 function flipFreeVertical(){
     if(!selection){
         return;
     }
+    var copyFlipV = document.getElementById("rotateCopy").checked;
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
     var img = ctx.createImageData(w,h);
     var dst = img.data;
-    var sx,sy;
+    var sx, sy;
     var ty;
-    var si,di;
+    var si, di;
+    // Construire le miroir vertical.
     for(sy = 0; sy < h; sy++){
         for(sx = 0; sx < w; sx++){
             si = (sy * w + sx) * 4;
-            // Miroir vertical.
             ty = h - 1 - sy;
             di = (ty * w + sx) * 4;
             dst[di] = src[si];
@@ -2198,11 +2212,23 @@ function flipFreeVertical(){
         }
     }
     selection.data = img;
-    if(selectionBaseImage){
-        ctx.putImageData(selectionBaseImage, 0, 0);
+    if(copyFlipV){
+        // COPIER : conserver l'original et placer le miroir à côté.
+        var flipOtherSide = document.getElementById("flipOtherSide").checked;
+        if(flipOtherSide){
+            // Miroir au-dessus.
+            putImageDataVisible(img, selection.x, selection.y - h);
+        }else{
+            // Miroir en dessous.
+            putImageDataVisible(img, selection.x, selection.y + h);
+        }
+    }else{
+        // SANS COPIER : supprimer l'ancien contenu de la sélection puis remettre uniquement le miroir à la même place.
+        if(selectionBaseImage){
+            ctx.putImageData(selectionBaseImage, 0, 0);
+        }
+        putImageDataVisible(img, selection.x, selection.y);
     }
-    // Surtout pas putImageData() ici : sinon les transparences recréent le rectangle.
-    putImageDataVisible(img, selection.x, selection.y);
 }
 // Dépose définitivement la sélection.
 function commitPixelSelection(x,y){
