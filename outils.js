@@ -82,53 +82,67 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
-/* Ctrl + V image presse papiers */
-// Les inputs à cibler
+/* Ctrl + V image / Base64 depuis le presse-papiers */
 var pasteZones = [
-    {
-        pastezone: "pastefileinput",
-        fileinput: "fileinput"
-    },
-    {
-        pastezone: "pastedrawingFile",
-        fileinput: "drawingFile"
-    },
-    {
-        pastezone: "pasteimageFile",
-        fileinput: "imageFile"
-    }
+    { pastezone: "pastefileinput", fileinput: "fileinput" },
+    { pastezone: "pastedrawingFile", fileinput: "drawingFile" },
+    { pastezone: "pasteimageFile", fileinput: "imageFile" },
+    { pastezone: "pasteimgLoader", fileinput: "imgLoader" }
 ];
 pasteZones.forEach(function (item) {
     var pastezone = document.getElementById(item.pastezone);
     var fileinput = document.getElementById(item.fileinput);
-    if (!pastezone || !fileinput) {
-        return;
-    }
-    pastezone.onclick = function () {
-        pastezone.focus();
-    };
+    if (!pastezone || !fileinput) return;
     pastezone.onpaste = function (e) {
-        var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        var clipboard = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+        var items = clipboard.items || [];
         var file = null;
         for (var i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf("image") !== -1) {
+            if (items[i].kind === "file" && items[i].type.indexOf("image/") === 0) {
                 file = items[i].getAsFile();
                 break;
             }
         }
-        if (file) {
-            // Met l'image dans l'input file correspondant
-            var dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            fileinput.files = dataTransfer.files;
-            // Déclenche l'événement change
-            fileinput.dispatchEvent(new Event("change", {
-                bubbles: true
-            }));
-            // traitement
+        if (!file) return;
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        fileinput.files = dt.files;
+        fileinput.dispatchEvent(new Event("change", { bubbles: true }));
+        if (typeof loadFile === "function") {
             loadFile(file);
-        } else {
-            alert("Aucune image trouvée dans le presse-papier.");
+        }
+    };
+    pastezone.onblur = function () {
+        var text = pastezone.value;
+        pastezone.value = "";
+        if (!text) return;
+        var match = text.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s);
+        if (!match) return;
+        try {
+            var mimeType = match[1];
+            var base64 = match[2];
+            var byteCharacters = atob(base64);
+            var byteArrays = [];
+            for (var offset = 0; offset < byteCharacters.length; offset += 1024) {
+                var slice = byteCharacters.slice(offset, offset + 1024);
+                var byteNumbers = new Array(slice.length);
+                for (var j = 0; j < slice.length; j++) {
+                    byteNumbers[j] = slice.charCodeAt(j);
+                }
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            var blob = new Blob(byteArrays, { type: mimeType });
+            var extension = mimeType.split("/")[1].split("+")[0];
+            var file = new File([blob], "clipboard-image." + extension, { type: mimeType });
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            fileinput.files = dt.files;
+            fileinput.dispatchEvent(new Event("change", { bubbles: true }));
+            if (typeof loadFile === "function") {
+                loadFile(file);
+            }
+        } catch (err) {
+            console.error("Erreur conversion Base64 :", err);
         }
     };
 });
