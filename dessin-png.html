@@ -193,12 +193,14 @@ body.block-touch{touch-action:none;}
           <button id="btnCopy" data-action="setToolCopy">Dupliquer</button>
         </div>
       </div>
+    </div><hr>
+    <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
         </div>
         <div style="display:table-cell;">
-          <label style="width:100%;text-align:center;"><input type="checkbox" id="rotateCopy">Copier</label>
+          <label style="width:100%;text-align:center;"><input type="checkbox" id="rotateCopy">Copier/Mirroir</label>
         </div>
       </div>
       <div style="display:table-row;">
@@ -2932,7 +2934,7 @@ canvas.onpointerup = function(e){
         }
     }
     // MOVE retire l'original. COPY / ROTATE / FLIP le conservent.
-	var removeOriginal = currentTool === "move" || (currentTool === "rotate" &&	!document.getElementById("rotateCopy").checked) || currentTool === "fliph" || currentTool === "flipv";
+	var removeOriginal = currentTool === "move" || ((currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv") && !document.getElementById("rotateCopy").checked);
 	// Fermer automatiquement le contour.
 	if(freeSelectionPoints.length >= 3){
 		var firstPoint = freeSelectionPoints[0];
@@ -3028,63 +3030,97 @@ canvas.onpointerup = function(e){
 	}
 	// FLIP HORIZONTAL
 	if(currentTool === "fliph"){
-		if(moveBaseImage){
-			ctx.putImageData(moveBaseImage, 0, 0);
-		}
-		if(!createPixelSelection(startX, startY, x, y, false)){
-			return;
-		}
-		if(currentTool === "fliph"){
-			if(moveBaseImage){
-				ctx.putImageData(moveBaseImage,	0, 0);
-			}
-			if(!createPixelSelection(startX, startY, x, y, true)){
-				return;
-			}
-			flipRectangleHorizontal();
-			selection = null;
-			selectionBaseImage = null;
-			return;
-		}
-		selection = null;
-		selectionMoving = false;
-		moveMode = 0;
-		copyMode = 0;
-		rotateMode = 0;
-		drawing = false;
-		document.body.classList.remove('block-touch');
-		// ❌ NE PAS remettre currentTool = ""
-		// currentTool reste "fliph"
-		return;
+	    var copyFlipH = document.getElementById("rotateCopy").checked;
+	    // Restaurer le dessin original avant de récupérer la sélection.
+	    if(moveBaseImage){
+	        ctx.putImageData(moveBaseImage, 0, 0);
+	    }
+	    if(!createPixelSelection(startX, startY, x, y, !copyFlipH)){
+	        return;
+	    }
+	    var flipW = selection.w;
+	    var flipH = selection.h;
+	    var flipX = selection.x;
+	    var flipY = selection.y;
+	    // Créer l'image inversée.
+	    var srcH = selection.data.data;
+	    var imgH = ctx.createImageData(flipW, flipH);
+	    var dstH = imgH.data;
+	    for(var fy = 0; fy < flipH; fy++){
+	        for(var fx = 0; fx < flipW; fx++){
+	            var fsi = (fy * flipW + fx) * 4;
+	            var ftx = flipW - 1 - fx;
+	            var fdi = (fy * flipW + ftx) * 4;
+	            dstH[fdi] = srcH[fsi];
+	            dstH[fdi + 1] = srcH[fsi + 1];
+	            dstH[fdi + 2] = srcH[fsi + 2];
+	            dstH[fdi + 3] = srcH[fsi + 3];
+	        }
+	    }
+	    if(copyFlipH){
+	        // Copier = garder l'original et placer la copie inversée à droite.
+	        ctx.putImageData(imgH, flipX + flipW, flipY);
+	    }else{
+	        // Sans Copier = remplacer l'original par sa version inversée.
+	        ctx.putImageData(imgH, flipX, flipY);
+	    }
+	    selection = null;
+	    selectionBaseImage = null;
+	    moveBaseImage = null;
+	    moveMode = 0;
+	    copyMode = 0;
+	    rotateMode = 0;
+	    drawing = false;
+	    document.body.classList.remove('block-touch');
+	    return;
 	}
 	// FLIP VERTICAL
 	if(currentTool === "flipv"){
-		if(moveBaseImage){
-			ctx.putImageData(moveBaseImage, 0, 0);
-		}
-		if(!createPixelSelection(startX, startY, x, y, false)){
-			return;
-		}
-		if(currentTool === "flipv"){
-			if(moveBaseImage){
-				ctx.putImageData(moveBaseImage, 0, 0);
-			}
-			if(!createPixelSelection(startX, startY, x,	y, true)){
-				return;
-			}
-			flipRectangleVertical();
-			selection = null;
-			selectionBaseImage = null;
-			return;
-		}
-		selection = null;
-		selectionMoving = false;
-		moveMode = 0;
-		copyMode = 0;
-		rotateMode = 0;
-		drawing = false;
-		document.body.classList.remove('block-touch');
-		return;
+	    var copyFlipV = document.getElementById("rotateCopy").checked;
+	    // Restaurer le dessin original avant de récupérer la sélection.
+	    if(moveBaseImage){
+	        ctx.putImageData(moveBaseImage, 0, 0);
+	    }
+	    if(!createPixelSelection(
+	        startX, startY, x, y, !copyFlipV
+	    )){
+	        return;
+	    }
+	    var flipVW = selection.w;
+	    var flipVH = selection.h;
+	    var flipVX = selection.x;
+	    var flipVY = selection.y;
+	    // Créer l'image inversée verticalement.
+	    var srcV = selection.data.data;
+	    var imgV = ctx.createImageData(flipVW, flipVH);
+	    var dstV = imgV.data;
+	    for(var vy = 0; vy < flipVH; vy++){
+	        for(var vx = 0; vx < flipVW; vx++){
+	            var vsi = (vy * flipVW + vx) * 4;
+	            var vty = flipVH - 1 - vy;
+	            var vdi = (vty * flipVW + vx) * 4;
+	            dstV[vdi] = srcV[vsi];
+	            dstV[vdi + 1] = srcV[vsi + 1];
+	            dstV[vdi + 2] = srcV[vsi + 2];
+	            dstV[vdi + 3] = srcV[vsi + 3];
+	        }
+	    }
+	    if(copyFlipV){
+	        // Copier = garder l'original et placer la copie inversée en dessous.
+	        ctx.putImageData(imgV, flipVX, flipVY + flipVH);
+	    }else{
+	        // Sans Copier = remplacer l'original par sa version inversée.
+	        ctx.putImageData(imgV, flipVX, flipVY);
+	    }
+	    selection = null;
+	    selectionBaseImage = null;
+	    moveBaseImage = null;
+	    moveMode = 0;
+	    copyMode = 0;
+	    rotateMode = 0;
+	    drawing = false;
+	    document.body.classList.remove('block-touch');
+	    return;
 	}
     // MOVE : deuxième étape = dépôt
 	if(
