@@ -7,6 +7,7 @@
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="color-palette.css">
+<link rel="stylesheet" href="regle.css">
 <style>
 body{background:#000;}
 canvas {
@@ -248,6 +249,7 @@ body.block-touch{touch-action:none;}
       <button data-action="closePopup">Fermer</button>
     </div>
   </div>
+  <label id="rulerToggleLabel"><input type="checkbox" id="rulerCheckbox"> Règle</label>
   <button data-action="openHelpPopup">?</button>
   <div id="popupHelpContent" style="display:none">
 	<b class="titleb">Aide</b><hr class="titlehr">
@@ -287,6 +289,21 @@ body.block-touch{touch-action:none;}
 <div id="canvasScroll">
   <canvas id="canvas" width="640" height="480"></canvas>
   <div id="canvasGrid"></div>
+  <div id="regle" aria-label="Règle virtuelle">
+    <button id="regleClose" type="button" title="Masquer la règle">×</button>
+    <div id="regleRotation" title="Faire pivoter la règle"></div>
+    <div id="reglePivot" title="Centre de rotation"></div>
+    <div id="regleBody">
+      <div id="regleGraduations"></div>
+      <!--div id="regleScale"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>30</span><span>35</span><span>40</span><span>45</span><span>50</span></div-->
+      <div id="regleLine"></div>
+    </div>
+    <div id="regleLengthHandle" title="Modifier la longueur de la règle"></div>
+    <div id="regleAngleBox" title="Angle de rotation">
+      <input id="regleAngleInput" type="number" min="-360" max="360" step="0.1" value="0" aria-label="Angle de rotation">°
+    </div>
+    <div id="regleInfo">0°</div>
+  </div>
 </div>
 <button class="scroll-btn" data-dir="left" data-target="canvasScroll">←</button>
 <button class="scroll-btn" data-dir="right" data-target="canvasScroll">→</button>
@@ -300,6 +317,7 @@ body.block-touch{touch-action:none;}
 <script src="popup.js"></script>
 <script src="multitouch.js"></script>
 <script src="color-palette.js"></script>
+<script src="regle.js"></script>
 <script>
 /* Multitouch, popup et color-palette */
 addMultiTouch("button,input,textarea");
@@ -3467,6 +3485,9 @@ window.addEventListener("load", function(){
     gridStep = parseInt(document.getElementById("gridStepInput").value, 10);
     if (isNaN(gridStep) || gridStep < 1) gridStep = 1;
     applyZoom();
+    // Case règle
+    var rulerCheckbox = document.getElementById("rulerCheckbox");
+    if(rulerCheckbox.checked){showRuler();}else{hideRuler();}
 });
 function importPNG(){
     var base64 = document.getElementById("ioArea").value;
