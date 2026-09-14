@@ -21,22 +21,11 @@ function addMultiTouch(selector){
                 // Cas spécial : input
                 if(tag === "input" || tag === "textarea"){
                     var type = (this.type || "").toLowerCase();
-                    // Checkbox
-                    if(type === "checkbox"){
-                        this.checked = !this.checked;
+                    // Checkbox / radio → OK
+                    if(type === "checkbox" || type === "radio"){
+                        this.checked = (type === "checkbox" ? !this.checked : true);
                         this.dispatchEvent(new Event("change", {bubbles:true}));
-                        if(this._action){
-                            this._action();
-                        }
-                        return;
-                    }
-                    // Radio
-                    if(type === "radio"){
-                        this.checked = true;
-                        this.dispatchEvent(new Event("change", {bubbles:true}));
-                        if(this._action){
-                            this._action();
-                        }
+                        if(this._action) this._action();
                         return;
                     }
                     // Autres input (text, number, etc.)
