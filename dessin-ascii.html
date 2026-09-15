@@ -15,6 +15,10 @@ select{width:55px;}
   padding:0;
   margin:0;
   touch-action:none;
+  position:relative;
+  z-index:1;
+  background:rgba(0,0,0,0);
+  cursor:crosshair;
 }
 #asciiLoupe {
   position:fixed;
@@ -75,7 +79,7 @@ body.block-touch{touch-action:none;}
 <body>
 <div id="drawContainer" style="position:relative;overflow:hidden;">
   <canvas id="bgImage"></canvas>
-  <textarea wrap="off" id="view" style="position:relative;z-index:1;background:rgba(0,0,0,0);cursor:crosshair;"></textarea>
+  <textarea wrap="off" id="view"></textarea>
 </div>
 <div id="asciiLoupe">
   <canvas id="asciiLoupeCanvas" width="120" height="120"></canvas>
