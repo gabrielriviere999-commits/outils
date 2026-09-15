@@ -108,10 +108,6 @@ var regleCenterY = 0;
 var regleStartAngle = 0;
 var regleStartPointerAngle = 0;
 var regleLength = 500;
-var regleStartLength = 500;
-var regleStartLengthPointer = 0;
-var regleLengthAnchorX = 0;
-var regleLengthAnchorY = 0;
 var regleLengthCenterX = 0;
 var regleLengthCenterY = 0;
 function normalizeRulerAngle(a){
@@ -221,8 +217,6 @@ function rulerStartLength(e){
     e.stopPropagation();
     regleAction = 3;
     reglePointerId = e.pointerId;
-    regleStartLength = regleLength;
-    regleStartLengthPointer = e.clientX;
     var c = getRulerScreenCenter();
     regleLengthCenterX = c.x;
     regleLengthCenterY = c.y;
