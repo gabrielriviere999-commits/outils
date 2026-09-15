@@ -112,6 +112,8 @@ var regleStartLength = 500;
 var regleStartLengthPointer = 0;
 var regleLengthAnchorX = 0;
 var regleLengthAnchorY = 0;
+var regleLengthCenterX = 0;
+var regleLengthCenterY = 0;
 function normalizeRulerAngle(a){
     while(a < 0) a += 360;
     while(a >= 360) a -= 360;
@@ -222,9 +224,8 @@ function rulerStartLength(e){
     regleStartLength = regleLength;
     regleStartLengthPointer = e.clientX;
     var c = getRulerScreenCenter();
-    var rad = regleAngle * Math.PI / 180;
-    regleLengthAnchorX = c.x - Math.cos(rad) * regleLength / 2;
-    regleLengthAnchorY = c.y - Math.sin(rad) * regleLength / 2;
+    regleLengthCenterX = c.x;
+    regleLengthCenterY = c.y;
     if(regleLengthHandle.setPointerCapture &&
        e.pointerId !== undefined){
         try{
@@ -251,15 +252,17 @@ function rulerMove(e){
         var rad = regleAngle * Math.PI / 180;
         var axisX = Math.cos(rad);
         var axisY = Math.sin(rad);
-        var dx = e.clientX - regleLengthAnchorX;
-        var dy = e.clientY - regleLengthAnchorY;
+        // Distance entre le centre de la règle et le doigt, projetée sur l'axe de la règle.
+        var dx = e.clientX - regleLengthCenterX;
+        var dy = e.clientY - regleLengthCenterY;
         var projection = dx * axisX + dy * axisY;
-        regleLength = Math.max(80, Math.min(1200, projection));
-        var targetCenterX = regleLengthAnchorX + axisX * regleLength / 2;
-        var targetCenterY = regleLengthAnchorY + axisY * regleLength / 2;
-        var currentCenter = getRulerScreenCenter();
-        regleX += targetCenterX - currentCenter.x;
-        regleY += targetCenterY - currentCenter.y;
+        regleLength = Math.max(80, Math.min(1200, Math.abs(projection) * 2));
+        // Le centre reste exactement au même endroit.
+        var rect = regle.getBoundingClientRect();
+        var currentCenterX = (rect.left + rect.right) / 2;
+        var currentCenterY = (rect.top + rect.bottom) / 2;
+        regleX += regleLengthCenterX - currentCenterX;
+        regleY += regleLengthCenterY - currentCenterY;
     }
     renderRuler();
 }
