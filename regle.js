@@ -108,8 +108,10 @@ var regleCenterY = 0;
 var regleStartAngle = 0;
 var regleStartPointerAngle = 0;
 var regleLength = 500;
-var regleLengthCenterX = 0;
-var regleLengthCenterY = 0;
+var regleStartLength = 500;
+var regleStartLengthPointer = 0;
+var regleLengthAnchorX = 0;
+var regleLengthAnchorY = 0;
 function normalizeRulerAngle(a){
     while(a < 0) a += 360;
     while(a >= 360) a -= 360;
@@ -217,9 +219,12 @@ function rulerStartLength(e){
     e.stopPropagation();
     regleAction = 3;
     reglePointerId = e.pointerId;
+    regleStartLength = regleLength;
+    regleStartLengthPointer = e.clientX;
     var c = getRulerScreenCenter();
-    regleLengthCenterX = c.x;
-    regleLengthCenterY = c.y;
+    var rad = regleAngle * Math.PI / 180;
+    regleLengthAnchorX = c.x - Math.cos(rad) * regleLength / 2;
+    regleLengthAnchorY = c.y - Math.sin(rad) * regleLength / 2;
     if(regleLengthHandle.setPointerCapture &&
        e.pointerId !== undefined){
         try{
@@ -246,15 +251,15 @@ function rulerMove(e){
         var rad = regleAngle * Math.PI / 180;
         var axisX = Math.cos(rad);
         var axisY = Math.sin(rad);
-        var dx = e.clientX - regleLengthCenterX;
-        var dy = e.clientY - regleLengthCenterY;
+        var dx = e.clientX - regleLengthAnchorX;
+        var dy = e.clientY - regleLengthAnchorY;
         var projection = dx * axisX + dy * axisY;
-        var newLength = Math.max(80, Math.min(1200, Math.abs(projection) * 2));
-        var lengthChange = newLength - regleLength;
-        // Comme la longueur augmente des deux côtés, le coin gauche doit se déplacer de la moitié de l'augmentation, dans le sens opposé à l'axe.
-        regleX -= axisX * lengthChange / 2;
-        regleY -= axisY * lengthChange / 2;
-        regleLength = newLength;
+        regleLength = Math.max(80, Math.min(1200, projection));
+        var targetCenterX = regleLengthAnchorX + axisX * regleLength / 2;
+        var targetCenterY = regleLengthAnchorY + axisY * regleLength / 2;
+        var currentCenter = getRulerScreenCenter();
+        regleX += targetCenterX - currentCenter.x;
+        regleY += targetCenterY - currentCenter.y;
     }
     renderRuler();
 }
