@@ -399,98 +399,54 @@ regleRotation.addEventListener("pointercancel", rulerEnd, false);
 regleLengthHandle.addEventListener("pointercancel", rulerEnd, false);
 /* Fonction générique boutons d'action */
 function setupRulerActionButton(button, action){
-    button.addEventListener(
-        "pointerdown",
-        function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            action();
-            if(
-                button.setPointerCapture &&
-                e.pointerId !== undefined
-            ){
-                try{
-                    button.setPointerCapture(e.pointerId);
-                }catch(err){}
-            }
-        },
-        false
-    );
-    button.addEventListener(
-        "click",
-        function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            action();
-            if(
-                button.setPointerCapture &&
-                e.pointerId !== undefined
-            ){
-                try{
-                    button.setPointerCapture(e.pointerId);
-                }catch(err){}
-            }
-        },
-        false
-    );
-    button.addEventListener(
-        "pointerup",
-        function(e){
-            e.preventDefault();
-            e.stopPropagation();
-
-            if(
-                button.releasePointerCapture &&
-                e.pointerId !== undefined
-            ){
-                try{
-                    button.releasePointerCapture(e.pointerId);
-                }catch(err){}
-            }
-        },
-        false
-    );
-    button.addEventListener(
-        "pointercancel",
-        function(e){
-            e.preventDefault();
-            e.stopPropagation();
-        },
-        false
-    );
+    var pointerActivated = false;
+    button.addEventListener("pointerdown", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        pointerActivated = true;
+        action();
+        if(button.setPointerCapture && e.pointerId !== undefined){
+            try{
+                button.setPointerCapture(e.pointerId);
+            }catch(err){}
+        }
+    }, false);
+    button.addEventListener("pointerup", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(button.releasePointerCapture && e.pointerId !== undefined){
+            try{
+                button.releasePointerCapture(e.pointerId);
+            }catch(err){}
+        }
+    }, false);
+    button.addEventListener("pointercancel", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+    }, false);
+    button.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(pointerActivated){
+            pointerActivated = false;
+            return;
+        }
+        action();
+    }, false);
 }
 /* BOUTON TRACER MULTITOUCH */
-setupRulerActionButton(
-    regleDrawButton,
-    drawRulerLine
-);
+setupRulerActionButton(regleDrawButton, drawRulerLine);
 /* BOUTON CARRE MULTITOUCH */
-setupRulerActionButton(
-    regleSquareButton,
-    drawRulerSquare
-);
+setupRulerActionButton(regleSquareButton, drawRulerSquare);
 /* BOUTON CERCLE MULTITOUCH */
-setupRulerActionButton(
-    regleCircleButton,
-    drawRulerCircle
-);
+setupRulerActionButton(regleCircleButton, drawRulerCircle);
 /* FERMETURE */
 function closeRulerButton(e){
-    e.preventDefault();
     e.stopPropagation();
     hideRuler();
     return false;
 }
-regleClose.addEventListener(
-    "pointerdown",
-    closeRulerButton,
-    false
-);
-regleClose.addEventListener(
-    "click",
-    closeRulerButton,
-    false
-);
+regleClose.addEventListener("click", closeRulerButton, false);
 /* COMPATIBILITÉ TACTILE */
 if(!window.PointerEvent){
     regleBody.ontouchstart =
