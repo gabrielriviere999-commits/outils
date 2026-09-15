@@ -286,6 +286,9 @@ body.block-touch{touch-action:none;}
   <button id="confirmTextBtn">OK</button>
   <button id="cancelTextBtn">Annuler</button>
 </div>
+<div id="canvasScroll">
+  <canvas id="canvas" width="640" height="480"></canvas>
+  <div id="canvasGrid"></div>
   <div id="regle" aria-label="Règle virtuelle">
     <button id="regleClose" title="Masquer la règle">×</button>
     <div id="regleRotation" title="Faire pivoter la règle"></div>
@@ -301,10 +304,6 @@ body.block-touch{touch-action:none;}
     </div>
     <div id="regleInfo">0°</div>
   </div>
-<div id="canvasScroll">
-  <canvas id="canvas" width="640" height="480"></canvas>
-  <div id="canvasGrid"></div>
-
 </div>
 <button class="scroll-btn" data-dir="left" data-target="canvasScroll">←</button>
 <button class="scroll-btn" data-dir="right" data-target="canvasScroll">→</button>
