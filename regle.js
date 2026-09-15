@@ -7,6 +7,10 @@ var regleClose = document.getElementById("regleClose");
 var regleDrawButton = document.getElementById("regleDrawButton");
 var regleSquareButton = document.getElementById("regleSquareButton");
 var regleCircleButton = document.getElementById("regleCircleButton");
+var regleLeftArrowButton = document.getElementById("regleLeftArrowButton");
+var regleRightArrowButton = document.getElementById("regleRightArrowButton");
+var regleDoubleArrowButton = document.getElementById("regleDoubleArrowButton");
+var regleCenterButton = document.getElementById("regleCenterButton");
 // Si les boutons n'existent pas encore dans le HTML, on les crée automatiquement.
 if(!regleDrawButton){
     regleDrawButton = document.createElement("button");
@@ -38,9 +42,6 @@ if(!regleCircleButton){
     regleCircleButton.setAttribute("aria-label", "Tracer un cercle avec le diamètre de la règle");
     regle.appendChild(regleCircleButton);
 }
-var regleLeftArrowButton = document.getElementById("regleLeftArrowButton");
-var regleRightArrowButton = document.getElementById("regleRightArrowButton");
-var regleDoubleArrowButton = document.getElementById("regleDoubleArrowButton");
 if(!regleLeftArrowButton){
     regleLeftArrowButton = document.createElement("button");
     regleLeftArrowButton.id = "regleLeftArrowButton";
@@ -76,6 +77,18 @@ if(!regleDoubleArrowButton){
         "Tracer une ligne avec des flèches aux deux extrémités"
     );
     regle.appendChild(regleDoubleArrowButton);
+}
+if(!regleCenterButton){
+    regleCenterButton = document.createElement("button");
+    regleCenterButton.id = "regleCenterButton";
+    regleCenterButton.type = "button";
+    regleCenterButton.title = "Marquer le centre de la règle";
+    regleCenterButton.textContent = "✚";
+    regleCenterButton.setAttribute(
+        "aria-label",
+        "Marquer le centre de la règle"
+    );
+    regle.appendChild(regleCenterButton);
 }
 var regleInfo = document.getElementById("regleInfo");
 var regleAngleInput = document.getElementById("regleAngleInput");
@@ -348,6 +361,70 @@ function drawRulerLine(){
         ctx.globalCompositeOperation = "source-over";
     drawStyledPixelLine(line.x1, line.y1, line.x2, line.y2);
 }
+/* CARRE */
+function drawRulerSquare(){
+    if(!regleVisible)
+        return;
+    var rect = canvas.getBoundingClientRect();
+    var center = getRulerScreenCenter();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var cx = (center.x - rect.left) * scaleX;
+    var cy = (center.y - rect.top) * scaleY;
+    // La longueur de la règle est en pixels écran. On la convertit en pixels canvas.
+    var sideX = regleLength * scaleX;
+    var sideY = regleLength * scaleY;
+    // Pour garder un vrai carré, on prend une échelle moyenne.
+    var side = (sideX + sideY) / 2;
+    var half = side / 2;
+    var rad = regleAngle * Math.PI / 180;
+    var cos = Math.cos(rad);
+    var sin = Math.sin(rad);
+    /* Les 4 coins du carré */
+    var x1 = cx + (-half * cos + half * sin);
+    var y1 = cy + (-half * sin - half * cos);
+    var x2 = cx + ( half * cos + half * sin);
+    var y2 = cy + ( half * sin - half * cos);
+    var x3 = cx + ( half * cos - half * sin);
+    var y3 = cy + ( half * sin + half * cos);
+    var x4 = cx + (-half * cos - half * sin);
+    var y4 = cy + (-half * sin + half * cos);
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = ctx.strokeStyle;
+    drawStyledPixelLine(x1, y1, x2, y2);
+    drawStyledPixelLine(x2, y2, x3, y3);
+    drawStyledPixelLine(x3, y3, x4, y4);
+    drawStyledPixelLine(x4, y4, x1, y1);
+}
+/* CERCLE */
+function getRulerCircleOnCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    var center = getRulerScreenCenter();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    return {
+        x:(center.x - rect.left) * scaleX,
+        y:(center.y - rect.top) * scaleY,
+        radius: (regleLength / 2) * ((scaleX + scaleY) / 2)
+    };
+}
+function drawRulerCircle(){
+    if(!regleVisible)
+        return;
+    var circle = getRulerCircleOnCanvas();
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = ctx.strokeStyle;
+    drawPixelCircle(circle.x, circle.y, circle.radius);
+}
+/* FLECHES */
 function drawRulerArrowBase(x1,y1,x2,y2,doubleArrow,leftArrow){
     var dx = x2-x1;
     var dy = y2-y1;
@@ -414,7 +491,6 @@ function drawRulerArrowRight(){
         ctx.globalCompositeOperation = "source-over";
     drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, false, false);
 }
-
 function drawRulerDoubleArrow(){
     if(!regleVisible)
         return;
@@ -428,8 +504,8 @@ function drawRulerDoubleArrow(){
         ctx.globalCompositeOperation = "source-over";
     drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, true, true);
 }
-/* CARRE */
-function drawRulerSquare(){
+/* MARQUER LE CENTRE */
+function drawRulerCenter(){
     if(!regleVisible)
         return;
     var rect = canvas.getBoundingClientRect();
@@ -438,58 +514,14 @@ function drawRulerSquare(){
     var scaleY = canvas.height / rect.height;
     var cx = (center.x - rect.left) * scaleX;
     var cy = (center.y - rect.top) * scaleY;
-    // La longueur de la règle est en pixels écran. On la convertit en pixels canvas.
-    var sideX = regleLength * scaleX;
-    var sideY = regleLength * scaleY;
-    // Pour garder un vrai carré, on prend une échelle moyenne.
-    var side = (sideX + sideY) / 2;
-    var half = side / 2;
-    var rad = regleAngle * Math.PI / 180;
-    var cos = Math.cos(rad);
-    var sin = Math.sin(rad);
-    /* Les 4 coins du carré */
-    var x1 = cx + (-half * cos + half * sin);
-    var y1 = cy + (-half * sin - half * cos);
-    var x2 = cx + ( half * cos + half * sin);
-    var y2 = cy + ( half * sin - half * cos);
-    var x3 = cx + ( half * cos - half * sin);
-    var y3 = cy + ( half * sin + half * cos);
-    var x4 = cx + (-half * cos - half * sin);
-    var y4 = cy + (-half * sin + half * cos);
     saveState();
     if(eraserMode)
         ctx.globalCompositeOperation = "destination-out";
     else
         ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = ctx.strokeStyle;
-    drawStyledPixelLine(x1, y1, x2, y2);
-    drawStyledPixelLine(x2, y2, x3, y3);
-    drawStyledPixelLine(x3, y3, x4, y4);
-    drawStyledPixelLine(x4, y4, x1, y1);
-}
-/* CERCLE */
-function getRulerCircleOnCanvas(){
-    var rect = canvas.getBoundingClientRect();
-    var center = getRulerScreenCenter();
-    var scaleX = canvas.width / rect.width;
-    var scaleY = canvas.height / rect.height;
-    return {
-        x:(center.x - rect.left) * scaleX,
-        y:(center.y - rect.top) * scaleY,
-        radius: (regleLength / 2) * ((scaleX + scaleY) / 2)
-    };
-}
-function drawRulerCircle(){
-    if(!regleVisible)
-        return;
-    var circle = getRulerCircleOnCanvas();
-    saveState();
-    if(eraserMode)
-        ctx.globalCompositeOperation = "destination-out";
-    else
-        ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = ctx.strokeStyle;
-    drawPixelCircle(circle.x, circle.y, circle.radius);
+    var size = Math.max(4, parseInt(sizeInput.value,10) * 2);
+    drawStyledPixelLine(cx - size, cy, cx + size, cy);
+    drawStyledPixelLine(cx, cy - size, cx, cy + size);
 }
 /* ÉVÉNEMENTS */
 regleBody.addEventListener("pointerdown", rulerStartMove, false);
@@ -548,6 +580,7 @@ setupRulerActionButton(regleCircleButton, drawRulerCircle);
 setupRulerActionButton(regleLeftArrowButton, drawRulerArrowLeft);
 setupRulerActionButton(regleRightArrowButton, drawRulerArrowRight);
 setupRulerActionButton(regleDoubleArrowButton, drawRulerDoubleArrow);
+setupRulerActionButton(regleCenterButton, drawRulerCenter);
 /* FERMETURE */
 function closeRulerButton(e){
     e.preventDefault();

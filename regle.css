@@ -186,12 +186,8 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleDrawButton:hover{
-  background:#eee;
-}
-#regleDrawButton:active{
-  background:#ddd;
-}
+#regleDrawButton:hover{background:#eee;}
+#regleDrawButton:active{background:#ddd;}
 #regleSquareButton{
   position:absolute;
   left:calc(50% + 64px);
@@ -211,12 +207,8 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleSquareButton:hover{
-  background:#eee;
-}
-#regleSquareButton:active{
-  background:#ddd;
-}
+#regleSquareButton:hover{background:#eee;}
+#regleSquareButton:active{background:#ddd;}
 #regleCircleButton{
   position:absolute;
   left:calc(50% + 96px);
@@ -236,12 +228,8 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleCircleButton:hover{
-  background:#eee;
-}
-#regleCircleButton:active{
-  background:#ddd;
-}
+#regleCircleButton:hover{background:#eee;}
+#regleCircleButton:active{background:#ddd;}
 #regleLeftArrowButton{
   position:absolute;
   left:calc(50% + 32px);
@@ -261,12 +249,8 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleLeftArrowButton:hover{
-  background:#eee;
-}
-#regleLeftArrowButton:active{
-  background:#ddd;
-}
+#regleLeftArrowButton:hover{background:#eee;}
+#regleLeftArrowButton:active{background:#ddd;}
 #regleRightArrowButton{
   position:absolute;
   left:calc(50% + 64px);
@@ -286,12 +270,8 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleRightArrowButton:hover{
-  background:#eee;
-}
-#regleRightArrowButton:active{
-  background:#ddd;
-}
+#regleRightArrowButton:hover{background:#eee;}
+#regleRightArrowButton:active{background:#ddd;}
 #regleDoubleArrowButton{
   position:absolute;
   left:calc(50% + 96px);
@@ -311,12 +291,29 @@
   touch-action:none;
   box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleDoubleArrowButton:hover{
-  background:#eee;
+#regleDoubleArrowButton:hover{background:#eee;}
+#regleDoubleArrowButton:active{background:#ddd;}
+#regleCenterButton {
+  position:absolute;
+  left:calc(50% - 32px);
+  top:30px;
+  width:28px;
+  height:28px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:24px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
 }
-#regleDoubleArrowButton:active{
-  background:#ddd;
-}
+#regleCenterButton:hover{background:#eee;}
+#regleCenterButton:active{background:#ddd;}
 #regleClose{
   position:absolute;
   right:-8px;
