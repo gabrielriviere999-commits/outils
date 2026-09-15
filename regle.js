@@ -442,10 +442,12 @@ setupRulerActionButton(regleSquareButton, drawRulerSquare);
 setupRulerActionButton(regleCircleButton, drawRulerCircle);
 /* FERMETURE */
 function closeRulerButton(e){
+    e.preventDefault();
     e.stopPropagation();
     hideRuler();
     return false;
 }
+regleClose.addEventListener("pointerdown", closeRulerButton, false);
 regleClose.addEventListener("click", closeRulerButton, false);
 /* COMPATIBILITÉ TACTILE */
 if(!window.PointerEvent){
