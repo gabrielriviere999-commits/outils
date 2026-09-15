@@ -146,7 +146,7 @@ pasteZones.forEach(function (item) {
         }
     };
 });
-/* Télécharger fichier nom daté */
+/* Date et heure téléchargement */
 function getTimestampName(prefix, ext){
     var d = new Date();
     var YYYY = d.getFullYear();
