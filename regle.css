@@ -35,51 +35,6 @@
   height:1px;
   background:#333;
 }
-/*
-#regleGraduations{
-  position:absolute;
-  left:0;
-  right:0;
-  top:0;
-  bottom:0;
-  pointer-events:none;
-  background-image:repeating-linear-gradient(to right,#333 0,#333 1px,transparent 1px,transparent 5px);
-  background-position:0 10px;
-  background-size:5px 12px;
-}
-#regleGraduations:after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  top:10px;
-  height:18px;
-  background-image:repeating-linear-gradient(to right,transparent 0,transparent 24px,#333 24px,#333 25px,transparent 25px,transparent 25px);
-  opacity:.9;
-}
-#regleScale{
-  position:absolute;
-  left:8px;
-  right:8px;
-  top:23px;
-  height:14px;
-  display:flex;
-  justify-content:space-between;
-  pointer-events:none;
-  font:11px Arial,sans-serif;
-  color:#222;
-}
-#regleLine{
-  position:absolute;
-  left:0;
-  right:0;
-  top:30px;
-  height:2px;
-  background:#d00;
-  opacity:.75;
-  pointer-events:none;
-}
-*/
 #regleRotation{
   position:absolute;
   left:calc(50% - 32px);
