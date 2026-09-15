@@ -109,9 +109,6 @@ var regleStartAngle = 0;
 var regleStartPointerAngle = 0;
 var regleLength = 500;
 var regleStartLength = 500;
-var regleStartLengthPointer = 0;
-var regleLengthAnchorX = 0;
-var regleLengthAnchorY = 0;
 function normalizeRulerAngle(a){
     while(a < 0) a += 360;
     while(a >= 360) a -= 360;
@@ -220,11 +217,7 @@ function rulerStartLength(e){
     regleAction = 3;
     reglePointerId = e.pointerId;
     regleStartLength = regleLength;
-    // Centre à conserver pendant tout le redimensionnement */
-    var c = getRulerScreenCenter();
-    regleLengthAnchorX = c.x;
-    regleLengthAnchorY = c.y;
-    // Position initiale de la poignée */
+    // Position initiale de la poignée
     regleStartPointerX = e.clientX;
     regleStartPointerY = e.clientY;
     if(regleLengthHandle.setPointerCapture &&
@@ -253,21 +246,17 @@ function rulerMove(e){
         var rad = regleAngle * Math.PI / 180;
         var axisX = Math.cos(rad);
         var axisY = Math.sin(rad);
-        // Déplacement de la poignée depuis sa position de départ */
+        // Déplacement de la poignée depuis sa position de départ
         var dx = e.clientX - regleStartPointerX;
         var dy = e.clientY - regleStartPointerY;
-        // Projection sur l'axe de la règle */
+        // Projection sur l'axe de la règle
         var projection = dx * axisX + dy * axisY;
-        // La longueur augmente des deux côtés */
+        // La longueur augmente des deux côtés
         var newLength = regleStartLength + projection * 2;
         newLength = Math.max(80, Math.min(1200, newLength));
+        var lengthChange = newLength - regleLength;
         regleLength = newLength;
-        // On applique d'abord la nouvelle largeur, puis on mesure le nouveau centre réel de la règle.
-        renderRuler();
-        var currentCenter = getRulerScreenCenter();
-        // Ramener le centre exactement à sa position de départ. Le déplacement est fait en coordonnées écran, donc cela fonctionne aussi lorsque la règle est tournée.
-        regleX += regleLengthAnchorX - currentCenter.x;
-        regleY += regleLengthAnchorY - currentCenter.y;
+        regleX -= lengthChange / 2;
     }
     renderRuler();
 }
