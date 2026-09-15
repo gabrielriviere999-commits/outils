@@ -146,6 +146,17 @@ pasteZones.forEach(function (item) {
         }
     };
 });
+/* Télécharger fichier noms datés */
+function getTimestampName(prefix, ext){
+    var d = new Date();
+    var YYYY = d.getFullYear();
+    var MM = String(d.getMonth()+1).padStart(2, "0");
+    var DD = String(d.getDate()).padStart(2, "0");
+    var hh = String(d.getHours()).padStart(2, "0");
+    var mm = String(d.getMinutes()).padStart(2, "0");
+    var ss = String(d.getSeconds()).padStart(2, "0");
+    return prefix + "_" + YYYY + MM + DD + "_" + hh + mm + ss + "." + ext;
+}
 /* Boutons - et + sliders */
 var sliders = {
     zoomRange: ["applyZoomRange", 1],
