@@ -253,9 +253,7 @@ function rulerMove(e){
 function rulerEnd(e){
     if(!regleAction) return;
     if(
-        reglePointerId !== null &&
-        e.pointerId !== undefined &&
-        e.pointerId !== reglePointerId
+        reglePointerId !== null && e.pointerId !== undefined && e.pointerId !== reglePointerId
     ) return;
     e.preventDefault();
     e.stopPropagation();
@@ -308,18 +306,8 @@ function clipRulerLineToCanvas(line){
     var dy = y2-y1;
     var t0 = 0;
     var t1 = 1;
-    var p = [
-        -dx,
-        dx,
-        -dy,
-        dy
-    ];
-    var q = [
-        x1,
-        canvas.width-x1,
-        y1,
-        canvas.height-y1
-    ];
+    var p = [-dx, dx, -dy, dy];
+    var q = [x1, canvas.width-x1, y1, canvas.height-y1];
     var i, r;
     for(i=0;i<4;i++){
         if(p[i] === 0){
