@@ -183,30 +183,33 @@ function download(filename, dataUrl) {
   document.body.removeChild(a);
 }
 function exportCanvas(type) {
-  if (!qr) return;
-  var count = qr.getModuleCount();
-  var cell  = 10;
-  var size  = count * cell;
-  var fg = document.getElementById("qrColor").value;
-  var bg = document.getElementById("bgColor").value;
-  var canvas = document.createElement("canvas");
-  canvas.width  = size;
-  canvas.height = size;
-  var ctx = canvas.getContext("2d");
-  // modules
-  ctx.fillStyle = fg || "#000000";
-  for (var y = 0; y < count; y++) {
-    for (var x = 0; x < count; x++) {
-      if (qr.isDark(y, x)) {
-        ctx.fillRect(x * cell, y * cell, cell, cell);
-      }
+    if (!qr) return;
+    var count = qr.getModuleCount();
+    var cell  = 10;
+    var size  = count * cell;
+    var fg = document.getElementById("qrColor").value;
+    var bg = document.getElementById("bgColor").value;
+    var canvas = document.createElement("canvas");
+    canvas.width  = size;
+    canvas.height = size;
+    var ctx = canvas.getContext("2d");
+    // Fond
+    ctx.fillStyle = bg || "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+    // QR
+    ctx.fillStyle = fg || "#000000";
+    for (var y = 0; y < count; y++) {
+        for (var x = 0; x < count; x++) {
+            if (qr.isDark(y, x)) {
+                ctx.fillRect(x * cell, y * cell, cell, cell);
+            }
+        }
     }
-  }
-  var mime = "image/" + type;
-  var data = canvas.toDataURL(mime);
-  var ext = (type === "jpeg" ? "jpg" : type);
-  var filename = getTimestampName("qr-code", ext);
-  download(filename, data);
+    var mime = "image/" + type;
+    var data = canvas.toDataURL(mime);
+    var ext = (type === "jpeg" ? "jpg" : type);
+    var filename = getTimestampName("qr-code", ext);
+    download(filename, data);
 }
 document.getElementById("export-png").onclick = function () {
   exportCanvas("png");
