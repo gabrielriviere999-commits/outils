@@ -316,7 +316,7 @@
 #regleCenterButton:active{background:#ddd;}
 #regleClose{
   position:absolute;
-  right:-8px;
+  left:-8px;
   top:-8px;
   width:22px;
   height:22px;
