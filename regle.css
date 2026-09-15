@@ -137,8 +137,8 @@
   position:absolute;
   background:#c00;
 }
-#reglePivot:before{left:4px;top:-5px;width:2px;height:18px;}
-#reglePivot:after{left:-5px;top:4px;width:18px;height:2px;}
+#reglePivot:before{left:4px;top:-5px;width:1px;height:18px;}
+#reglePivot:after{left:-5px;top:4px;width:18px;height:1px;}
 #regleAngleBox{
   position:absolute;
   left:50%;
