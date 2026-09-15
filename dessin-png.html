@@ -1745,8 +1745,8 @@ function drawSelectionPreview(x,y){
     // Sélection fantôme : toujours 1 pixel, quelle que soit la taille du pinceau sélectionnée.
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = ctx.strokeStyle;
-    var dash = 6;
-    var gap = 4;
+    var dash = 1;
+    var gap = 1;
     var i;
     // Haut
     for(i = sx; i <= ex; i += dash + gap){
