@@ -377,14 +377,15 @@ function drawRulerArrowBase(x1,y1,x2,y2,doubleArrow,leftArrow){
     var rightBase;
     if(leftArrow){
         leftBase = drawHead(x1,y1,-1);
-    }
-    rightBase = drawHead(x2,y2,1);
-    if(doubleArrow){
-        drawStyledPixelLine(leftBase.x,leftBase.y, rightBase.x,rightBase.y);
-    }else if(leftArrow){
-        drawStyledPixelLine(leftBase.x,leftBase.y, x2,y2);
+        if(doubleArrow){
+            rightBase = drawHead(x2,y2,1);
+            drawStyledPixelLine(leftBase.x,leftBase.y, rightBase.x,rightBase.y);
+        }else{
+            drawStyledPixelLine(leftBase.x,leftBase.y,x2,y2);
+        }
     }else{
-        drawStyledPixelLine(x1,y1, rightBase.x,rightBase.y);
+        rightBase = drawHead(x2,y2,1);
+        drawStyledPixelLine(x1,y1,rightBase.x,rightBase.y);
     }
 }
 function drawRulerArrowLeft(){
