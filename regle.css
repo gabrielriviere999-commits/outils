@@ -86,7 +86,7 @@
   top:0;
   width:24px;
   height:24px;
-  margin-left:-12px;
+  margin-left:-7px;
   border:2px solid #222;
   border-radius:50%;
   background:#fff;
@@ -100,8 +100,8 @@
   position:absolute;
   right:-8px;
   top:-8px;
-  width:22px;
-  height:22px;
+  width:24px;
+  height:24px;
   border:2px solid #222;
   border-radius:50%;
   background:#fff;
@@ -118,6 +118,7 @@
   top:-1px;
   font:bold 15px Arial,sans-serif;
   color:#222;
+  line-height:22px;
 }
 #reglePivot{
   position:absolute;
@@ -171,8 +172,8 @@
   position:absolute;
   left:calc(50% + 32px);
   top:-1px;
-  width:28px;
-  height:28px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -180,7 +181,7 @@
   background:#fff;
   color:#222;
   font:bold 16px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -192,8 +193,8 @@
   position:absolute;
   left:calc(50% + 64px);
   top:-1px;
-  width:28px;
-  height:28px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -201,7 +202,7 @@
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -213,8 +214,8 @@
   position:absolute;
   left:calc(50% + 96px);
   top:-1px;
-  width:28px;
-  height:28px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -222,7 +223,7 @@
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -233,9 +234,9 @@
 #regleLeftArrowButton{
   position:absolute;
   left:calc(50% + 32px);
-  top:30px;
-  width:28px;
-  height:28px;
+  top:35px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -243,7 +244,7 @@
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -254,9 +255,9 @@
 #regleRightArrowButton{
   position:absolute;
   left:calc(50% + 64px);
-  top:30px;
-  width:28px;
-  height:28px;
+  top:35px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -264,7 +265,7 @@
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -275,9 +276,9 @@
 #regleDoubleArrowButton{
   position:absolute;
   left:calc(50% + 96px);
-  top:30px;
-  width:28px;
-  height:28px;
+  top:35px;
+  width:24px;
+  height:24px;
   margin-left:-14px;
   padding:0;
   border:2px solid #222;
@@ -285,7 +286,7 @@
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -296,17 +297,17 @@
 #regleCenterButton {
   position:absolute;
   left:calc(50% - 32px);
-  top:30px;
-  width:28px;
-  height:28px;
-  margin-left:-14px;
+  top:35px;
+  width:24px;
+  height:24px;
+  margin-left:-7px;
   padding:0;
   border:2px solid #222;
   border-radius:50%;
   background:#fff;
   color:#222;
   font:bold 19px Arial,sans-serif;
-  line-height:24px;
+  line-height:12px;
   cursor:pointer;
   z-index:5;
   touch-action:none;
@@ -318,8 +319,8 @@
   position:absolute;
   left:-8px;
   top:-8px;
-  width:22px;
-  height:22px;
+  width:24px;
+  height:24px;
   padding:0;
   margin:0;
   border:2px solid #222;
@@ -327,7 +328,7 @@
   background:#fff;
   color:#222;
   font:bold 14px Arial,sans-serif;
-  line-height:17px;
+  line-height:12px;
   cursor:pointer;
   z-index:3;
 }
