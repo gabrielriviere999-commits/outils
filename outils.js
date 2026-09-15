@@ -146,7 +146,7 @@ pasteZones.forEach(function (item) {
         }
     };
 });
-/* Télécharger fichier noms datés */
+/* Télécharger fichier nom daté */
 function getTimestampName(prefix, ext){
     var d = new Date();
     var YYYY = d.getFullYear();
