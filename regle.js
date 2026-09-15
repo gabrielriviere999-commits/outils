@@ -5,8 +5,8 @@ var regleRotation = document.getElementById("regleRotation");
 var regleLengthHandle = document.getElementById("regleLengthHandle");
 var regleClose = document.getElementById("regleClose");
 var regleDrawButton = document.getElementById("regleDrawButton");
-var regleCircleButton = document.getElementById("regleCircleButton");
 var regleSquareButton = document.getElementById("regleSquareButton");
+var regleCircleButton = document.getElementById("regleCircleButton");
 // Si les boutons n'existent pas encore dans le HTML, on les crée automatiquement.
 if(!regleDrawButton){
     regleDrawButton = document.createElement("button");
@@ -16,15 +16,6 @@ if(!regleDrawButton){
     regleDrawButton.textContent = "✏";
     regleDrawButton.setAttribute("aria-label", "Tracer une ligne avec la règle");
     regle.appendChild(regleDrawButton);
-}
-if(!regleCircleButton){
-    regleCircleButton = document.createElement("button");
-    regleCircleButton.id = "regleCircleButton";
-    regleCircleButton.type = "button";
-    regleCircleButton.title = "Tracer un cercle avec le diamètre de la règle";
-    regleCircleButton.textContent = "○";
-    regleCircleButton.setAttribute("aria-label", "Tracer un cercle avec le diamètre de la règle");
-    regle.appendChild(regleCircleButton);
 }
 if(!regleSquareButton){
     regleSquareButton = document.createElement("button");
@@ -37,6 +28,15 @@ if(!regleSquareButton){
         "Tracer un carré avec la règle"
     );
     regle.appendChild(regleSquareButton);
+}
+if(!regleCircleButton){
+    regleCircleButton = document.createElement("button");
+    regleCircleButton.id = "regleCircleButton";
+    regleCircleButton.type = "button";
+    regleCircleButton.title = "Tracer un cercle avec le diamètre de la règle";
+    regleCircleButton.textContent = "○";
+    regleCircleButton.setAttribute("aria-label", "Tracer un cercle avec le diamètre de la règle");
+    regle.appendChild(regleCircleButton);
 }
 var regleLeftArrowButton = document.getElementById("regleLeftArrowButton");
 var regleRightArrowButton = document.getElementById("regleRightArrowButton");
@@ -427,30 +427,6 @@ function drawRulerDoubleArrow(){
         ctx.globalCompositeOperation = "source-over";
     drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, true, true);
 }
-/* CERCLE */
-function getRulerCircleOnCanvas(){
-    var rect = canvas.getBoundingClientRect();
-    var center = getRulerScreenCenter();
-    var scaleX = canvas.width / rect.width;
-    var scaleY = canvas.height / rect.height;
-    return {
-        x:(center.x - rect.left) * scaleX,
-        y:(center.y - rect.top) * scaleY,
-        radius: (regleLength / 2) * ((scaleX + scaleY) / 2)
-    };
-}
-function drawRulerCircle(){
-    if(!regleVisible)
-        return;
-    var circle = getRulerCircleOnCanvas();
-    saveState();
-    if(eraserMode)
-        ctx.globalCompositeOperation = "destination-out";
-    else
-        ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = ctx.strokeStyle;
-    drawPixelCircle(circle.x, circle.y, circle.radius);
-}
 /* CARRE */
 function drawRulerSquare(){
     if(!regleVisible)
@@ -489,6 +465,30 @@ function drawRulerSquare(){
     drawStyledPixelLine(x2, y2, x3, y3);
     drawStyledPixelLine(x3, y3, x4, y4);
     drawStyledPixelLine(x4, y4, x1, y1);
+}
+/* CERCLE */
+function getRulerCircleOnCanvas(){
+    var rect = canvas.getBoundingClientRect();
+    var center = getRulerScreenCenter();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    return {
+        x:(center.x - rect.left) * scaleX,
+        y:(center.y - rect.top) * scaleY,
+        radius: (regleLength / 2) * ((scaleX + scaleY) / 2)
+    };
+}
+function drawRulerCircle(){
+    if(!regleVisible)
+        return;
+    var circle = getRulerCircleOnCanvas();
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = ctx.strokeStyle;
+    drawPixelCircle(circle.x, circle.y, circle.radius);
 }
 /* ÉVÉNEMENTS */
 regleBody.addEventListener("pointerdown", rulerStartMove, false);
