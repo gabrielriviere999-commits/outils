@@ -4,14 +4,26 @@ var regleBody = document.getElementById("regleBody");
 var regleRotation = document.getElementById("regleRotation");
 var regleLengthHandle = document.getElementById("regleLengthHandle");
 var regleClose = document.getElementById("regleClose");
+var regleCenterButton = document.getElementById("regleCenterButton");
 var regleDrawButton = document.getElementById("regleDrawButton");
 var regleSquareButton = document.getElementById("regleSquareButton");
 var regleCircleButton = document.getElementById("regleCircleButton");
 var regleLeftArrowButton = document.getElementById("regleLeftArrowButton");
 var regleRightArrowButton = document.getElementById("regleRightArrowButton");
 var regleDoubleArrowButton = document.getElementById("regleDoubleArrowButton");
-var regleCenterButton = document.getElementById("regleCenterButton");
 // Si les boutons n'existent pas encore dans le HTML, on les crée automatiquement.
+if(!regleCenterButton){
+    regleCenterButton = document.createElement("button");
+    regleCenterButton.id = "regleCenterButton";
+    regleCenterButton.type = "button";
+    regleCenterButton.title = "Marquer le centre de la règle";
+    regleCenterButton.textContent = "✚";
+    regleCenterButton.setAttribute(
+        "aria-label",
+        "Marquer le centre de la règle"
+    );
+    regle.appendChild(regleCenterButton);
+}
 if(!regleDrawButton){
     regleDrawButton = document.createElement("button");
     regleDrawButton.id = "regleDrawButton";
@@ -77,18 +89,6 @@ if(!regleDoubleArrowButton){
         "Tracer une ligne avec des flèches aux deux extrémités"
     );
     regle.appendChild(regleDoubleArrowButton);
-}
-if(!regleCenterButton){
-    regleCenterButton = document.createElement("button");
-    regleCenterButton.id = "regleCenterButton";
-    regleCenterButton.type = "button";
-    regleCenterButton.title = "Marquer le centre de la règle";
-    regleCenterButton.textContent = "✚";
-    regleCenterButton.setAttribute(
-        "aria-label",
-        "Marquer le centre de la règle"
-    );
-    regle.appendChild(regleCenterButton);
 }
 var regleInfo = document.getElementById("regleInfo");
 var regleAngleInput = document.getElementById("regleAngleInput");
@@ -348,6 +348,26 @@ function clipRulerLineToCanvas(line){
         y2:y1+t1*dy
     };
 }
+/* MARQUER LE CENTRE */
+function drawRulerCenter(){
+    if(!regleVisible)
+        return;
+    var rect = canvas.getBoundingClientRect();
+    var center = getRulerScreenCenter();
+    var scaleX = canvas.width / rect.width;
+    var scaleY = canvas.height / rect.height;
+    var cx = (center.x - rect.left) * scaleX;
+    var cy = (center.y - rect.top) * scaleY;
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    var size = Math.max(4, parseInt(sizeInput.value,10) * 2);
+    drawStyledPixelLine(cx - size, cy, cx + size, cy);
+    drawStyledPixelLine(cx, cy - size, cx, cy + size);
+}
+/* LIGNE */
 function drawRulerLine(){
     if(!regleVisible)
         return;
@@ -504,25 +524,6 @@ function drawRulerDoubleArrow(){
         ctx.globalCompositeOperation = "source-over";
     drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, true, true);
 }
-/* MARQUER LE CENTRE */
-function drawRulerCenter(){
-    if(!regleVisible)
-        return;
-    var rect = canvas.getBoundingClientRect();
-    var center = getRulerScreenCenter();
-    var scaleX = canvas.width / rect.width;
-    var scaleY = canvas.height / rect.height;
-    var cx = (center.x - rect.left) * scaleX;
-    var cy = (center.y - rect.top) * scaleY;
-    saveState();
-    if(eraserMode)
-        ctx.globalCompositeOperation = "destination-out";
-    else
-        ctx.globalCompositeOperation = "source-over";
-    var size = Math.max(4, parseInt(sizeInput.value,10) * 2);
-    drawStyledPixelLine(cx - size, cy, cx + size, cy);
-    drawStyledPixelLine(cx, cy - size, cx, cy + size);
-}
 /* ÉVÉNEMENTS */
 regleBody.addEventListener("pointerdown", rulerStartMove, false);
 regleRotation.addEventListener("pointerdown", rulerStartRotation, false);
@@ -574,13 +575,13 @@ function setupRulerActionButton(button, action){
     }, false);
 }
 /* BOUTON TRACER */
+setupRulerActionButton(regleCenterButton, drawRulerCenter);
 setupRulerActionButton(regleDrawButton, drawRulerLine);
 setupRulerActionButton(regleSquareButton, drawRulerSquare);
 setupRulerActionButton(regleCircleButton, drawRulerCircle);
 setupRulerActionButton(regleLeftArrowButton, drawRulerArrowLeft);
 setupRulerActionButton(regleRightArrowButton, drawRulerArrowRight);
 setupRulerActionButton(regleDoubleArrowButton, drawRulerDoubleArrow);
-setupRulerActionButton(regleCenterButton, drawRulerCenter);
 /* FERMETURE */
 function closeRulerButton(e){
     e.preventDefault();
