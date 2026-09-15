@@ -246,17 +246,15 @@ function rulerMove(e){
         var rad = regleAngle * Math.PI / 180;
         var axisX = Math.cos(rad);
         var axisY = Math.sin(rad);
-        // Distance entre le centre de la règle et le doigt, projetée sur l'axe de la règle.
         var dx = e.clientX - regleLengthCenterX;
         var dy = e.clientY - regleLengthCenterY;
         var projection = dx * axisX + dy * axisY;
-        regleLength = Math.max(80, Math.min(1200, Math.abs(projection) * 2));
-        // Le centre reste exactement au même endroit.
-        var rect = regle.getBoundingClientRect();
-        var currentCenterX = (rect.left + rect.right) / 2;
-        var currentCenterY = (rect.top + rect.bottom) / 2;
-        regleX += regleLengthCenterX - currentCenterX;
-        regleY += regleLengthCenterY - currentCenterY;
+        var newLength = Math.max(80, Math.min(1200, Math.abs(projection) * 2));
+        var lengthChange = newLength - regleLength;
+        // Comme la longueur augmente des deux côtés, le coin gauche doit se déplacer de la moitié de l'augmentation, dans le sens opposé à l'axe.
+        regleX -= axisX * lengthChange / 2;
+        regleY -= axisY * lengthChange / 2;
+        regleLength = newLength;
     }
     renderRuler();
 }
