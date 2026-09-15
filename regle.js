@@ -38,6 +38,45 @@ if(!regleSquareButton){
     );
     regle.appendChild(regleSquareButton);
 }
+var regleLeftArrowButton = document.getElementById("regleLeftArrowButton");
+var regleRightArrowButton = document.getElementById("regleRightArrowButton");
+var regleDoubleArrowButton = document.getElementById("regleDoubleArrowButton");
+if(!regleLeftArrowButton){
+    regleLeftArrowButton = document.createElement("button");
+    regleLeftArrowButton.id = "regleLeftArrowButton";
+    regleLeftArrowButton.type = "button";
+    regleLeftArrowButton.title = "Tracer une ligne avec une flèche à gauche";
+    regleLeftArrowButton.textContent = "←";
+    regleLeftArrowButton.setAttribute(
+        "aria-label",
+        "Tracer une ligne avec une flèche à gauche"
+    );
+    regle.appendChild(regleLeftArrowButton);
+}
+if(!regleRightArrowButton){
+    regleRightArrowButton = document.createElement("button");
+    regleRightArrowButton.id = "regleRightArrowButton";
+    regleRightArrowButton.type = "button";
+    regleRightArrowButton.title = "Tracer une ligne avec une flèche à droite";
+    regleRightArrowButton.textContent = "→";
+    regleRightArrowButton.setAttribute(
+        "aria-label",
+        "Tracer une ligne avec une flèche à droite"
+    );
+    regle.appendChild(regleRightArrowButton);
+}
+if(!regleDoubleArrowButton){
+    regleDoubleArrowButton = document.createElement("button");
+    regleDoubleArrowButton.id = "regleDoubleArrowButton";
+    regleDoubleArrowButton.type = "button";
+    regleDoubleArrowButton.title = "Tracer une ligne avec des flèches aux deux extrémités";
+    regleDoubleArrowButton.textContent = "↔";
+    regleDoubleArrowButton.setAttribute(
+        "aria-label",
+        "Tracer une ligne avec des flèches aux deux extrémités"
+    );
+    regle.appendChild(regleDoubleArrowButton);
+}
 var regleInfo = document.getElementById("regleInfo");
 var regleAngleInput = document.getElementById("regleAngleInput");
 var rulerCheckbox = document.getElementById("rulerCheckbox");
@@ -321,6 +360,85 @@ function drawRulerLine(){
         ctx.globalCompositeOperation = "source-over";
     drawStyledPixelLine(line.x1, line.y1, line.x2, line.y2);
 }
+function drawRulerArrowBase(x1,y1,x2,y2,doubleArrow,leftArrow){
+    var dx = x2-x1;
+    var dy = y2-y1;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    if(len < 1){
+        return;
+    }
+    var ux = dx/len;
+    var uy = dy/len;
+    var headLen = Math.max(4, Math.round(parseInt(sizeInput.value,10) * 4));
+    var headWidth = headLen*0.5;
+    var px = -uy;
+    var py = ux;
+    function drawHead(px0,py0,dir){
+        var bx = px0-ux*headLen*dir;
+        var by = py0-uy*headLen*dir;
+        var aX = bx+px*headWidth;
+        var aY = by+py*headWidth;
+        var bX = bx-px*headWidth;
+        var bY = by-py*headWidth;
+        drawStyledPixelLine(px0,py0,aX,aY);
+        drawStyledPixelLine(aX,aY,bX,bY);
+        drawStyledPixelLine(bX,bY,px0,py0);
+        return {x:bx,y:by};
+    }
+    var leftBase;
+    var rightBase;
+    if(leftArrow){
+        leftBase = drawHead(x1,y1,-1);
+    }
+    rightBase = drawHead(x2,y2,1);
+    if(doubleArrow){
+        drawStyledPixelLine(leftBase.x,leftBase.y, rightBase.x,rightBase.y);
+    }else if(leftArrow){
+        drawStyledPixelLine(leftBase.x,leftBase.y, x2,y2);
+    }else{
+        drawStyledPixelLine(x1,y1, rightBase.x,rightBase.y);
+    }
+}
+function drawRulerArrowLeft(){
+    if(!regleVisible)
+        return;
+    var line = clipRulerLineToCanvas(getRulerLineOnCanvas());
+    if(!line)
+        return;
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, false, true);
+}
+function drawRulerArrowRight(){
+    if(!regleVisible)
+        return;
+    var line = clipRulerLineToCanvas(getRulerLineOnCanvas());
+    if(!line)
+        return;
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, false, false);
+}
+
+function drawRulerDoubleArrow(){
+    if(!regleVisible)
+        return;
+    var line = clipRulerLineToCanvas(getRulerLineOnCanvas());
+    if(!line)
+        return;
+    saveState();
+    if(eraserMode)
+        ctx.globalCompositeOperation = "destination-out";
+    else
+        ctx.globalCompositeOperation = "source-over";
+    drawRulerArrowBase(line.x1,line.y1, line.x2,line.y2, true, true);
+}
 /* CERCLE */
 function getRulerCircleOnCanvas(){
     var rect = canvas.getBoundingClientRect();
@@ -434,12 +552,13 @@ function setupRulerActionButton(button, action){
         action();
     }, false);
 }
-/* BOUTON TRACER MULTITOUCH */
+/* BOUTON TRACER */
 setupRulerActionButton(regleDrawButton, drawRulerLine);
-/* BOUTON CARRE MULTITOUCH */
 setupRulerActionButton(regleSquareButton, drawRulerSquare);
-/* BOUTON CERCLE MULTITOUCH */
 setupRulerActionButton(regleCircleButton, drawRulerCircle);
+setupRulerActionButton(regleLeftArrowButton, drawRulerArrowLeft);
+setupRulerActionButton(regleRightArrowButton, drawRulerArrowRight);
+setupRulerActionButton(regleDoubleArrowButton, drawRulerDoubleArrow);
 /* FERMETURE */
 function closeRulerButton(e){
     e.preventDefault();

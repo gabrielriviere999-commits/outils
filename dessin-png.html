@@ -562,7 +562,7 @@ var canvasHeightInput = document.getElementById("canvasHeight");
 function changeCanvasResolution(){
     var newWidth = parseInt(canvasWidthInput.value, 10);
     var newHeight = parseInt(canvasHeightInput.value, 10);
-    if(newWidth < 1 || newHeight < 1){
+    if(isNaN(newWidth) || isNaN(newHeight) || newWidth < 1 || newHeight < 1){
         alert("Résolution invalide.");
         return;
     }
