@@ -765,9 +765,10 @@ function telechargerToutZip() {
     zip.generateAsync({
         type:"blob"
     }).then(function(blob) {
+		var filename = getTimestampName("fichiers_traites", "zip");
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "fichiers_traites.zip";
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

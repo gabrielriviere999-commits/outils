@@ -204,7 +204,9 @@ function exportCanvas(type) {
   }
   var mime = "image/" + type;
   var data = canvas.toDataURL(mime);
-  download("qr-code." + (type === "jpeg" ? "jpg" : type), data);
+  var ext = (type === "jpeg" ? "jpg" : type);
+  var filename = getTimestampName("qr-code", ext);
+  download(filename, data);
 }
 document.getElementById("export-png").onclick = function () {
   exportCanvas("png");

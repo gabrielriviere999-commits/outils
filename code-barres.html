@@ -294,7 +294,9 @@ function exportCanvas(type) {
   if (!canvas) return;
   var mime = "image/" + type;
   var data = canvas.toDataURL(mime);
-  download("barcode." + (type === "jpeg" ? "jpg" : type), data);
+  var ext = (type === "jpeg" ? "jpg" : type);
+  var filename = getTimestampName("barcode", ext);
+  download(filename, data);
 }
 document.getElementById("export-png").onclick = function () {
   exportCanvas("png");

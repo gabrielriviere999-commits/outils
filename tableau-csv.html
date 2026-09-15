@@ -698,6 +698,7 @@ function convertirSansTextarea(rows) {
 // Importer CSV et téléchargement (sans textarea)
 var lastGeneratedTable = "";
 document.getElementById("csvFileInput").onchange = function () {
+	var filename = getTimestampName("table", "txt");
     var file = this.files[0];
     if (!file) return;
     var reader = new FileReader();
@@ -706,7 +707,7 @@ document.getElementById("csvFileInput").onchange = function () {
         var sep = document.getElementById("sep").value || ";";
         var rows = csvToRows(texte.split("\n"), sep);
         lastGeneratedTable = convertirSansTextarea(rows);
-        downloadText(lastGeneratedTable, "table.txt");
+        downloadText(lastGeneratedTable, filename);
     };
     reader.readAsText(file);
 };
@@ -923,6 +924,7 @@ function importFromOutput() {
 }
 var lastGeneratedCSV = "";
 document.getElementById("tableFileInput").onchange = function () {
+	var filename = getTimestampName("table", "csv");
     var file = this.files[0];
     if (!file) return;
     var reader = new FileReader();
@@ -931,7 +933,7 @@ document.getElementById("tableFileInput").onchange = function () {
         var rows = parseAnyTable(texte);
         lastGeneratedCSV = tableToCSV(rows);
         // Téléchargement automatique (bloqué sur Samsung Internet)
-        downloadText(lastGeneratedCSV, "table.csv");
+        downloadText(lastGeneratedCSV, filename);
     };
     reader.readAsText(file);
 };

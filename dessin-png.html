@@ -3514,14 +3514,16 @@ function importPNG(){
     img.src = base64;
 }
 function downloadPNG(){
+    var filename = getTimestampName("dessin", "png");
     var link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
-    link.download = "dessin.png";
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 function downloadJPG(){
+	var filename = getTimestampName("dessin", "jpg");
     var jpgCanvas = document.createElement("canvas");
     jpgCanvas.width = canvas.width;
     jpgCanvas.height = canvas.height;
@@ -3533,7 +3535,7 @@ function downloadJPG(){
     jpgCtx.drawImage(canvas, 0, 0);
     var link = document.createElement("a");
     link.href = jpgCanvas.toDataURL("image/jpeg", 0.92);
-    link.download = "dessin.jpg";
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
