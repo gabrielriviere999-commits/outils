@@ -116,12 +116,66 @@ pasteZones.forEach(function (item) {
         var text = pastezone.value;
         pastezone.value = "";
         if (!text) return;
-        var match = text.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s);
-        if (!match) return;
+        text = text.replace(/^\s+|\s+$/g, "");
         try {
-            var mimeType = match[1];
-            var base64 = match[2];
+            var mimeType = null;
+            var base64 = text;
+            // Avec préfixe data:image/...;base64,
+            var match = text.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s);
+            if (match) {
+                mimeType = match[1];
+                base64 = match[2];
+            }
+            // Supprime d'éventuels espaces ou retours à la ligne
+            base64 = base64.replace(/\s/g, "");
             var byteCharacters = atob(base64);
+            // Si aucun MIME n'a été fourni, on détecte le format grâce à la signature du fichier.
+            if (!mimeType) {
+                var b0 = byteCharacters.charCodeAt(0);
+                var b1 = byteCharacters.charCodeAt(1);
+                var b2 = byteCharacters.charCodeAt(2);
+                var b3 = byteCharacters.charCodeAt(3);
+                // PNG
+                if (b0 === 0x89 && b1 === 0x50 && b2 === 0x4E && b3 === 0x47) {
+                    mimeType = "image/png";
+                }
+                // JPEG
+                else if (b0 === 0xFF && b1 === 0xD8 && b2 === 0xFF) {
+                    mimeType = "image/jpeg";
+                }
+                // GIF
+                else if (
+                    byteCharacters.substr(0, 6) === "GIF87a" ||
+                    byteCharacters.substr(0, 6) === "GIF89a"
+                ) {
+                    mimeType = "image/gif";
+                }
+                // WebP : RIFF....WEBP
+                else if (
+                    byteCharacters.substr(0, 4) === "RIFF" &&
+                    byteCharacters.substr(8, 4) === "WEBP"
+                ) {
+                    mimeType = "image/webp";
+                }
+                // BMP
+                else if (b0 === 0x42 && b1 === 0x4D) {
+                    mimeType = "image/bmp";
+                }
+                // SVG éventuellement encodé en Base64
+                else {
+                    var start = byteCharacters.substr(0, 200).replace(/^\s+/, "");
+                    if (
+                        start.indexOf("<svg") === 0 ||
+                        start.indexOf("<?xml") === 0
+                    ) {
+                        mimeType = "image/svg+xml";
+                    }
+                }
+            }
+            if (!mimeType) {
+                console.error("Format d'image Base64 inconnu");
+                return;
+            }
             var byteArrays = [];
             for (var offset = 0; offset < byteCharacters.length; offset += 1024) {
                 var slice = byteCharacters.slice(offset, offset + 1024);
@@ -132,7 +186,14 @@ pasteZones.forEach(function (item) {
                 byteArrays.push(new Uint8Array(byteNumbers));
             }
             var blob = new Blob(byteArrays, { type: mimeType });
-            var extension = mimeType.split("/")[1].split("+")[0];
+            var extension;
+            if (mimeType === "image/jpeg") {
+                extension = "jpg";
+            } else if (mimeType === "image/svg+xml") {
+                extension = "svg";
+            } else {
+                extension = mimeType.split("/")[1].split("+")[0];
+            }
             var file = new File([blob], "clipboard-image." + extension, { type: mimeType });
             var dt = new DataTransfer();
             dt.items.add(file);
