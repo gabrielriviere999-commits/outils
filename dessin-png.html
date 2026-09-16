@@ -132,6 +132,7 @@ body.block-touch{touch-action:none;}
     <hr>
     <button data-action="closePopup">Fermer</button>
   </div>
+  <button data-action="shareDrawing">Partager</button>
   |
   <button data-action="openPinceauPopup">Pinceau</button>
   <div id="popupPinceauContent" style="display:none">
@@ -3540,6 +3541,36 @@ function downloadJPG(){
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+function shareDrawing() {
+    if (!navigator.share) {
+        alert("Le partage n'est pas disponible sur ce navigateur.");
+        return;
+    }
+    canvas.toBlob(function (blob) {
+        if (!blob) {
+            alert("Impossible de créer l'image.");
+            return;
+        }
+        var file;
+        try {
+            file = new File([blob], "dessin.png", { type: "image/png" });
+        } catch (e) {
+            file = null;
+        }
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+                title: "",
+                text: "",
+                files: [file]
+            });
+        } else {
+            navigator.share({
+                title: "",
+                text: ""
+            });
+        }
+    }, "image/png");
 }
 /* Au chargement */
 window.onload = function() {
