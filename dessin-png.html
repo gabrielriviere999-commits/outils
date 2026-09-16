@@ -769,16 +769,16 @@ function drawTempImage(){
     ctx.save();
     ctx.translate(c.x,c.y);
     ctx.rotate(tempImageAngle);
-    /* Image */
+    // Image
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(tempImage, -tempImageW/2, -tempImageH/2, tempImageW, tempImageH);
-    /* Cadre */
+    // Cadre
     ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#000000";
     ctx.fillStyle = "#ffffff";
     ctx.strokeRect(-tempImageW/2, -tempImageH/2, tempImageW, tempImageH);
-    /* Poignées */
+    // Poignées
     var handles = [[-tempImageW/2,-tempImageH/2], [0,-tempImageH/2], [tempImageW/2,-tempImageH/2], [tempImageW/2,0], [tempImageW/2,tempImageH/2], [0,tempImageH/2], [-tempImageW/2,tempImageH/2], [-tempImageW/2,0]];
     var i;
     for(i=0;i<handles.length;i++){
@@ -790,14 +790,14 @@ function drawTempImage(){
         ctx.fill();
         ctx.stroke();
     }
-    /* Ligne de rotation */
+    // Ligne de rotation
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, -tempImageH/2);
     ctx.lineTo(0, -tempImageH/2-20);
     ctx.stroke();
-    /* Poignée de rotation */
+    // Poignée de rotation
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 1;
