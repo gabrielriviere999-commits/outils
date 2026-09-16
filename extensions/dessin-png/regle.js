@@ -1,4 +1,3 @@
-/* REGLE VIRTUELLE */
 var regle = document.getElementById("regle");
 var regleBody = document.getElementById("regleBody");
 var regleRotation = document.getElementById("regleRotation");
