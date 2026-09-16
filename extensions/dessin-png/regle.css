@@ -1,0 +1,305 @@
+#regle{
+  position:absolute;
+  left:160px;
+  top:80px;
+  width:500px;
+  height:52px;
+  z-index:50;
+  display:none;
+  transform-origin:50% 30px;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#regle.visible{display:block;}
+#regleBody{
+  position:absolute;
+  left:0;
+  top:12px;
+  width:100%;
+  height:40px;
+  box-sizing:border-box;
+  border:2px solid #333;
+  border-radius:5px;
+  background:rgba(245,230,170,.7);
+  box-shadow:0 2px 5px rgba(0,0,0,.45);
+  cursor:move;
+  overflow:hidden;
+}
+#regleBody:after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:16px;
+  height:1px;
+  background:#333;
+}
+#regleRotation{
+  position:absolute;
+  left:calc(50% - 32px);
+  top:0;
+  width:24px;
+  height:24px;
+  margin-left:-7px;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  box-sizing:border-box;
+  cursor:crosshair;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+  z-index:5;
+}
+#regleLengthHandle{
+  position:absolute;
+  right:-8px;
+  top:-8px;
+  width:24px;
+  height:24px;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  box-sizing:border-box;
+  cursor:ew-resize;
+  touch-action:none;
+  z-index:3;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleLengthHandle:after{
+  content:"↔";
+  position:absolute;
+  left:1px;
+  top:-1px;
+  font:bold 15px Arial,sans-serif;
+  color:#222;
+  line-height:22px;
+}
+#reglePivot{
+  position:absolute;
+  left:50%;
+  top:30px;
+  width:12px;
+  height:12px;
+  margin-left:-6px;
+  margin-top:-6px;
+  border:2px solid rgba(0,0,0,0);
+  box-sizing:border-box;
+  pointer-events:none;
+  z-index:4;
+}
+#reglePivot:before,#reglePivot:after{
+  content:"";
+  position:absolute;
+  background:#c00;
+}
+#reglePivot:before{left:4px;top:-5px;width:1px;height:18px;}
+#reglePivot:after{left:-5px;top:4px;width:18px;height:1px;}
+#regleAngleBox{
+  position:absolute;
+  left:50%;
+  top:57px;
+  transform:translateX(-50%);
+  z-index:6;
+  white-space:nowrap;
+  font:12px Arial,sans-serif;
+  background:rgba(255,255,255,.95);
+  border:1px solid #777;
+  border-radius:4px;
+  padding:2px 4px;
+}
+#regleAngleInput{
+  width:52px;
+  height:20px;
+  padding:1px 3px;
+  box-sizing:border-box;
+  font:12px Arial,sans-serif;
+}
+#regleRotation:after{
+  content:"↻";
+  position:absolute;
+  left:2px;
+  top:-1px;
+  font:bold 16px Arial,sans-serif;
+  color:#222;
+}
+#regleDrawButton{
+  position:absolute;
+  left:calc(50% + 32px);
+  top:-1px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 16px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleDrawButton:hover{background:#eee;}
+#regleDrawButton:active{background:#ddd;}
+#regleSquareButton{
+  position:absolute;
+  left:calc(50% + 64px);
+  top:-1px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleSquareButton:hover{background:#eee;}
+#regleSquareButton:active{background:#ddd;}
+#regleCircleButton{
+  position:absolute;
+  left:calc(50% + 96px);
+  top:-1px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleCircleButton:hover{background:#eee;}
+#regleCircleButton:active{background:#ddd;}
+#regleLeftArrowButton{
+  position:absolute;
+  left:calc(50% + 32px);
+  top:35px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleLeftArrowButton:hover{background:#eee;}
+#regleLeftArrowButton:active{background:#ddd;}
+#regleRightArrowButton{
+  position:absolute;
+  left:calc(50% + 64px);
+  top:35px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleRightArrowButton:hover{background:#eee;}
+#regleRightArrowButton:active{background:#ddd;}
+#regleDoubleArrowButton{
+  position:absolute;
+  left:calc(50% + 96px);
+  top:35px;
+  width:24px;
+  height:24px;
+  margin-left:-14px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleDoubleArrowButton:hover{background:#eee;}
+#regleDoubleArrowButton:active{background:#ddd;}
+#regleCenterButton {
+  position:absolute;
+  left:calc(50% - 32px);
+  top:35px;
+  width:24px;
+  height:24px;
+  margin-left:-7px;
+  padding:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 19px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:5;
+  touch-action:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+#regleCenterButton:hover{background:#eee;}
+#regleCenterButton:active{background:#ddd;}
+#regleClose{
+  position:absolute;
+  left:-8px;
+  top:-8px;
+  width:24px;
+  height:24px;
+  padding:0;
+  margin:0;
+  border:2px solid #222;
+  border-radius:50%;
+  background:#fff;
+  color:#222;
+  font:bold 14px Arial,sans-serif;
+  line-height:12px;
+  cursor:pointer;
+  z-index:3;
+}
+#regleInfo{
+  position:absolute;
+  left:50%;
+  top:56px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  padding:2px 6px;
+  border:1px solid #555;
+  border-radius:3px;
+  background:rgba(255,255,255,.9);
+  color:#111;
+  font:11px Arial,sans-serif;
+  pointer-events:none;
+}
+#rulerToggleLabel{font-weight:normal;cursor:pointer;white-space:nowrap;}
+#rulerToggleLabel input{vertical-align:middle;margin-right:3px;}
