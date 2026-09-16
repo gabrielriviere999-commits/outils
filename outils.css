@@ -176,8 +176,9 @@ select:hover{background:#444;}
   box-sizing:border-box;
   overflow:auto;
 }
-.popup-window-menu button {
+.popup-window-menu button, .popup-window-menu input[type=file] {
   width:100%;
+  box-sizing:border-box;
   margin-bottom:2px;
 }
 .popup-window-menu input[type=range]{width:calc(100% - 60px);}
