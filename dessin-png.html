@@ -237,7 +237,7 @@ body.block-touch{touch-action:none;}
 	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
 	  <button class="rangebtn" data-action="zoomInputMinus">−</button>
 	  <input type="range" id="zoomInput" min="20" max="5000" value="100" step="20">
-	  <button class="rangebtn" data-action="zoomInputPlus">+</button><br>
+	  <button class="rangebtn" data-action="zoomInputPlus">+</button>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
 	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
 	  <input type="number" id="gridStepInput" value="10" min="1" max="100">
@@ -309,6 +309,8 @@ body.block-touch{touch-action:none;}
 <button class="scroll-btn" data-dir="right" data-target="canvasScroll">→</button>
 <button class="scroll-btn" data-dir="up" data-target="canvasScroll">↑</button>
 <button class="scroll-btn" data-dir="down" data-target="canvasScroll">↓</button>
+<button data-action="zoomInputMinus">−</button>
+<button data-action="zoomInputPlus">+</button>
 <div id="dimensions" style="display:inline-block;">l : 0, h : 0</div> | <div id="activeTool" style="display:inline-block;">Outil actif : Édition</div>
 <div id="canvasLoupe">
   <canvas id="loupeCanvas" width="120" height="120"></canvas>
