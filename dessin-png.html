@@ -103,10 +103,13 @@ body.block-touch{touch-action:none;}
       </div>
       <div style="display:table-row;">
         <div style="display:table-cell;">
-          <button data-action="downloadPNG">Télécharger PNG</button>
+          <button data-action="downloadPNG">Téléch. PNG</button>
         </div>
         <div style="display:table-cell;">
-          <button data-action="downloadJPG">Télécharger JPG</button>
+          <button data-action="copyPNG">Copier PNG</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="downloadJPG">Téléch. JPG</button>
         </div>
       </div>
       <div style="display:table-row;">
@@ -3519,6 +3522,21 @@ function downloadPNG(){
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+function copyPNG(){
+    canvas.toBlob(function(blob){
+        if(!blob){
+            return;
+        }
+        if(!navigator.clipboard || !window.ClipboardItem){
+            return;
+        }
+        navigator.clipboard.write([
+            new ClipboardItem({"image/png": blob})
+        ]).catch(function(){
+            return;
+        });
+    }, "image/png");
 }
 function downloadJPG(){
 	var filename = getTimestampName("dessin", "jpg");
