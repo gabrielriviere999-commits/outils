@@ -99,18 +99,18 @@ body.block-touch{touch-action:none;}
   <div id="popupFichierContent" style="display:none">
     <b class="titleb">Fichier</b><hr class="titlehr">
     <input type="file" id="textareaFileview">
-    <button data-action="copyView">Copier</button>
+    <button id="copyview">Copier</button>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
         <div style="display:table-cell;">
-          <button data-action="shareDrawing">Partager</button>
+          <button onclick="shareDrawing()">Partager</button>
         </div>
         <div style="display:table-cell;">
           <input id="shareTitle" value="dessin" placeholder="Nom du fichier" style="width:100%;box-sizing:border-box;">
         </div>
       </div>
     </div><hr>
-    <button data-action="closePopup">Fermer</button>
+    <button data-action="closePopup" class="multitouchbtn">Fermer</button>
   </div>
   <button data-action="openOptionsPopup" class="multitouchbtn">Options</button>
   <div id="popupOptionsContent" style="display:none">
@@ -421,7 +421,6 @@ function setToolCopy(){ setTool("copy"); }
 function setToolClipboard(){ setTool("clipboard"); }
 function setToolFlipH(){ setTool("fliph"); }
 function setToolFlipV(){ setTool("flipv"); }
-function copyView(btn) { copyTextarea("view", btn); }
 /* EXPORT / IMPORT */
 function exportTextReturn() {
     return view.value;
@@ -1230,7 +1229,7 @@ function toggleTextColor() {
     loupeText.style.color = colors[colorIndex];
 }
 /* AJOUTER IMAGE EN CALQUE */
-addMultiTouch(".multitouchbtn,input,#popupOptionsContent button,#popupFormeContent button,#popupSelectionContent button,#popupFichierContent button");
+addMultiTouch(".multitouchbtn,input,#popupOptionsContent button,#popupFormeContent button,#popupSelectionContent button");
 function openFichierPopup() {
   var container = document.getElementById("popupFichierContent");
   openPopupMenu(container);
