@@ -143,8 +143,6 @@
         if (!fileinput.files || !fileinput.files.length) { return;
         }
         var file = fileinput.files[0];
-        if (!file.type || file.type.indexOf("image/") !== 0) { setStatus( "Le fichier sélectionné n'est pas une image.", "error" ); return;
-        }
         var reader = new FileReader();
         reader.onload = function (event) {
 			originalImage = new Image();
