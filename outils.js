@@ -12,6 +12,7 @@ function copyTextarea(id, btn) {
 var mapTextarea = {
     copyinput: 'input',
     copyoutput: 'output',
+    copyPopupResultText: 'popupResultText',
     copyCustomPlus: 'importCustomPlusText',
     copyFancyCustomPlus: 'importFancyCustomPlusText',
     copyjson: 'json',
