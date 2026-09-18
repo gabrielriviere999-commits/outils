@@ -82,7 +82,7 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
-/* Ctrl + V image / Base64 depuis le presse-papiers */
+/* Ctrl + V image depuis le presse-papiers */
 var pasteZones = [
     { pastezone: "pastefileinput", fileinput: "fileinput" },
     { pastezone: "pastedrawingFile", fileinput: "drawingFile" },
