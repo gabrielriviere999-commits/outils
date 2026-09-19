@@ -247,6 +247,7 @@ body.block-touch{touch-action:none;}
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
 	  <label id="rulerToggleLabel"><input type="checkbox" id="rulerCheckbox">Règle</label>
 	  <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><br>
+	  <b>Grille</b><br>
 	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
 	  <input type="number" id="gridStepInput" value="10" min="1" max="100">
 	  <input id="gridColor" value="#ffffff" size="8"><button class="previewColorPicker"></button>
@@ -522,6 +523,7 @@ gridColor.oninput = function(){
     canvasGrid.style.backgroundImage =
         "linear-gradient(" + color + " 1px, transparent 1px)," +
         "linear-gradient(90deg," + color + " 1px, transparent 1px)";
+    loupeCtx.strokeStyle = color;
     if (lastLoupeEvent) {
         showLoupe(lastLoupeEvent);
     }
@@ -532,6 +534,7 @@ gridColor.onchange = function() {
     canvasGrid.style.backgroundImage =
         "linear-gradient(" + color + " 1px, transparent 1px)," +
         "linear-gradient(90deg," + color + " 1px, transparent 1px)";
+    loupeCtx.strokeStyle = color;
     if (lastLoupeEvent) {
         showLoupe(lastLoupeEvent);
     }
@@ -3764,7 +3767,6 @@ function showLoupe(e){
     if (gridEnabled) {
         var step = gridStep;
         var scaledStep = step * loupeZoom;
-        loupeCtx.strokeStyle = "#444";
         loupeCtx.lineWidth = 1;
         // Décalage de la grille selon la position du doigt
         var sourceLeft = cx - sourceSize / 2;
