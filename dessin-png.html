@@ -169,11 +169,11 @@ body.block-touch{touch-action:none;}
     <button id="btnLine" data-action="setToolLine" style="width:30px;">_</button>
     <button id="btnArrow" data-action="setToolArrow" style="width:30px;">→</button>
     <button id="btnDoubleArrow" data-action="setToolDoubleArrow" style="width:30px;">↔</button>
-    <button id="btnSquare" data-action="setToolSquare" style="width:30px;">□</button>
     <button id="btnRect" data-action="setToolRect" style="width:30px;">▭</button>
+    <button id="btnSquare" data-action="setToolSquare" style="width:30px;">□</button>
     <button id="btnTriangle" data-action="setToolTriangle" style="width:30px;">△</button>
-    <button id="btnCircle" data-action="setToolCircle" style="width:30px;">○</button>
-    <button id="btnEllipse" data-action="setToolEllipse" style="width:30px;">⬭</button><hr>
+    <button id="btnEllipse" data-action="setToolEllipse" style="width:30px;">⬭</button>
+    <button id="btnCircle" data-action="setToolCircle" style="width:30px;">○</button><hr>
     <button id="btnPolygon" data-action="setToolPolygon">⬠ Polygone : <span id="polygonSidesLabel">5</span></button>
     <button class="rangebtn" data-action="polygonSidesInputMinus">−</button>
     <input type="range" id="polygonSidesInput" min="3" max="20" value="5">
@@ -333,13 +333,13 @@ function setToolFree(){ setTool("free"); }
 function setToolLine(){ setTool("line"); }
 function setToolArrow(){ setTool("arrow"); }
 function setToolDoubleArrow(){ setTool("doublearrow"); }
-function setToolSquare(){ setTool("square"); }
 function setToolRect(){ setTool("rect"); }
+function setToolSquare(){ setTool("square"); }
 function setToolPolygon(){ setTool("polygon"); }
 function setToolTriangle(){ setTool("triangle"); }
 function setToolStar(){ setTool("star"); }
-function setToolCircle(){ setTool("circle"); }
 function setToolEllipse(){ setTool("ellipse"); }
+function setToolCircle(){ setTool("circle"); }
 function setToolText(){ setTool("text"); }
 function setToolMove(){ setTool("move"); }
 function setToolCopy(){ setTool("copy"); }
@@ -927,13 +927,13 @@ function setTool(t){
         line: "Forme/Ligne",
         arrow: "Forme/Flèche",
         doublearrow: "Forme/Double flèche",
-        square: "Forme/Carré",
         rect: "Forme/Rectangle",
+        square: "Forme/Carré",
         polygon: "Forme/Polygone",
         triangle: "Forme/Triangle",
         star: "Forme/Étoile",
-        circle: "Forme/Cercle",
         ellipse: "Forme/Ellipse",
+        circle: "Forme/Cercle",
         text: "Texte",
         fill: "Remplir",
         move: "Sélection/Déplacer",
@@ -966,13 +966,13 @@ function setTool(t){
         btnLine.className = "";
         btnArrow.className = "";
         btnDoubleArrow.className = "";
-        btnSquare.className = "";
         btnRect.className = "";
+        btnSquare.className = "";
         btnPolygon.className = "";
         btnTriangle.className = "";
         btnStar.className = "";
-        btnCircle.className = "";
         btnEllipse.className = "";
+        btnCircle.className = "";
         btnText.className = "";
         btnFill.className = "";
         btnMove.className = "";
@@ -987,13 +987,13 @@ function setTool(t){
     if(t==="line") btnLine.className = "active";
     if(t==="arrow") btnArrow.className = "active";
     if(t==="doublearrow") btnDoubleArrow.className = "active";
-    if(t==="square") btnSquare.className = "active";
     if(t==="rect") btnRect.className = "active";
+    if(t==="square") btnSquare.className = "active";
     if(t==="polygon") btnPolygon.className = "active";
     if(t==="triangle") btnTriangle.className = "active";
     if(t==="star") btnStar.className = "active";
-    if(t==="circle") btnCircle.className = "active";
     if(t==="ellipse") btnEllipse.className = "active";
+    if(t==="circle") btnCircle.className = "active";
     if(t==="text") btnText.className = "active";
     if(t==="fill") btnFill.className = "active";
     if(t==="pipette") btnPipette.className = "active";
@@ -1354,6 +1354,23 @@ function drawArrowPreview(x,y){
 function drawDoubleArrowPreview(x,y){
     drawArrowPreviewBase(x,y,true);
 }
+/* RECTANGLE */
+function drawRectPreview(x,y){
+    redrawFromUndoTop();
+    var left = Math.min(startX, x);
+    var top = Math.min(startY, y);
+    var right = Math.max(startX, x);
+    var bottom = Math.max(startY, y);
+    if(eraserMode){
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+    }
+    drawStyledPixelLine(left, top, right, top);
+    drawStyledPixelLine(right, top, right, bottom);
+    drawStyledPixelLine(right, bottom, left, bottom);
+    drawStyledPixelLine(left, bottom, left, top);
+}
 /* CARRÉ */
 function drawSquarePreview(x,y){
     redrawFromUndoTop();
@@ -1375,23 +1392,6 @@ function drawSquarePreview(x,y){
     drawStyledPixelLine(right, bottom, left, bottom);
     drawStyledPixelLine(left, bottom, left, top);
 }
-/* RECTANGLE */
-function drawRectPreview(x,y){
-    redrawFromUndoTop();
-    var left = Math.min(startX, x);
-    var top = Math.min(startY, y);
-    var right = Math.max(startX, x);
-    var bottom = Math.max(startY, y);
-    if(eraserMode){
-        ctx.globalCompositeOperation = "destination-out";
-    } else {
-        ctx.globalCompositeOperation = "source-over";
-    }
-    drawStyledPixelLine(left, top, right, top);
-    drawStyledPixelLine(right, top, right, bottom);
-    drawStyledPixelLine(right, bottom, left, bottom);
-    drawStyledPixelLine(left, bottom, left, top);
-}
 /* POLYGONE */
 var polygonSidesInput = document.getElementById("polygonSidesInput");
 var polygonSidesLabel = document.getElementById("polygonSidesLabel");
@@ -1400,7 +1400,6 @@ polygonSidesInput.oninput = function(){
     refreshShapePreview();
     refreshLoupe();
 };
-/* POLYGONE */
 function drawPixelPolygon(x1,y1,x2,y2){
     var left;
     var right;
@@ -1660,11 +1659,11 @@ function refreshShapePreview(){
         case "doublearrow":
             drawDoubleArrowPreview(previewX, previewY);
             break;
-        case "square":
-            drawSquarePreview(previewX, previewY);
-            break;
         case "rect":
             drawRectPreview(previewX, previewY);
+            break;
+        case "square":
+            drawSquarePreview(previewX, previewY);
             break;
         case "polygon":
             drawPolygonPreview(previewX, previewY);
@@ -1675,11 +1674,11 @@ function refreshShapePreview(){
         case "star":
             drawStarPreview(previewX, previewY);
             break;
-        case "circle":
-            drawCirclePreview(previewX, previewY);
-            break;
         case "ellipse":
             drawEllipsePreview(previewX, previewY);
+            break;
+        case "circle":
+            drawCirclePreview(previewX, previewY);
             break;
     }
 }
@@ -2991,11 +2990,11 @@ canvas.onpointermove = function(e){
     else if(currentTool === "doublearrow"){
         drawDoubleArrowPreview(x,y);
     }
-    else if(currentTool === "square"){
-        drawSquarePreview(x,y);
-    }
     else if(currentTool === "rect"){
         drawRectPreview(x,y);
+    }
+    else if(currentTool === "square"){
+        drawSquarePreview(x,y);
     }
     else if(currentTool === "polygon"){
         drawPolygonPreview(x,y);
@@ -3006,11 +3005,11 @@ canvas.onpointermove = function(e){
     else if(currentTool === "star"){
         drawStarPreview(x,y);
     }
-    else if(currentTool === "circle"){
-        drawCirclePreview(x,y);
-    }
     else if(currentTool === "ellipse"){
         drawEllipsePreview(x,y);
+    }
+    else if(currentTool === "circle"){
+        drawCirclePreview(x,y);
     }
     if(autoScrollCheckbox.checked){
         updateAutoScroll(e);
@@ -3091,7 +3090,7 @@ canvas.onpointermove = function(e){
 		return;
 	}
     if(
-        currentTool==="line" || currentTool==="arrow" || currentTool==="doublearrow" || currentTool==="square" || currentTool==="rect" || currentTool==="polygon" || currentTool==="triangle" || currentTool==="star" || currentTool==="circle" || currentTool==="ellipse" || currentTool==="move" || currentTool==="copy" || currentTool==="rotate" || currentTool==="fliph" || currentTool==="flipv"
+        currentTool==="line" || currentTool==="arrow" || currentTool==="doublearrow" || currentTool==="rect" || currentTool==="square" || currentTool==="polygon" || currentTool==="triangle" || currentTool==="star" || currentTool==="ellipse" || currentTool==="circle" || currentTool==="move" || currentTool==="copy" || currentTool==="rotate" || currentTool==="fliph" || currentTool==="flipv"
     ){
         updateDimensions(x,y);
     }
@@ -3101,13 +3100,13 @@ canvas.onpointermove = function(e){
     else if(currentTool==="line") drawLinePreview(x,y);
     else if(currentTool==="arrow") drawArrowPreview(x,y);
     else if(currentTool==="doublearrow") drawDoubleArrowPreview(x,y);
-    else if(currentTool==="square") drawSquarePreview(x,y);
     else if(currentTool==="rect") drawRectPreview(x,y);
+    else if(currentTool==="square") drawSquarePreview(x,y);
     else if(currentTool==="polygon") drawPolygonPreview(x,y);
     else if(currentTool==="triangle") drawTrianglePreview(x,y);
     else if(currentTool==="star") drawStarPreview(x,y);
-    else if(currentTool==="circle") drawCirclePreview(x,y);
     else if(currentTool==="ellipse") drawEllipsePreview(x,y);
+    else if(currentTool==="circle") drawCirclePreview(x,y);
 	// MOVE / COPY / ROTATE / FLIP
 	// SÉLECTION LIBRE
 	if(
@@ -3576,12 +3575,12 @@ canvas.onpointerup = function(e){
         drawDoubleArrowPreview(x,y);
         return;
     }
-    if(currentTool === "square"){
-        drawSquarePreview(x,y);
-        return;
-    }
     if(currentTool === "rect"){
         drawRectPreview(x,y);
+        return;
+    }
+    if(currentTool === "square"){
+        drawSquarePreview(x,y);
         return;
     }
     if(currentTool === "polygon"){
@@ -3596,12 +3595,12 @@ canvas.onpointerup = function(e){
         drawStarPreview(x,y);
         return;
     }
-    if(currentTool === "circle"){
-        drawCirclePreview(x,y);
-        return;
-    }
     if(currentTool === "ellipse"){
         drawEllipsePreview(x,y);
+        return;
+    }
+    if(currentTool === "circle"){
+        drawCirclePreview(x,y);
         return;
     }
     if(currentTool === "fill"){
