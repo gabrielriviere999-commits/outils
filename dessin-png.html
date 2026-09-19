@@ -245,10 +245,11 @@ body.block-touch{touch-action:none;}
 	  <input type="range" id="zoomInput" min="20" max="5000" value="100" step="20">
 	  <button class="rangebtn" data-action="zoomInputPlus">+</button>
 	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
-	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
-	  <input type="number" id="gridStepInput" value="10" min="1" max="100">
 	  <label id="rulerToggleLabel"><input type="checkbox" id="rulerCheckbox">Règle</label>
 	  <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><br>
+	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
+	  <input type="number" id="gridStepInput" value="10" min="1" max="100">
+	  <input id="gridColor" value="#ffffff" size="8"><button class="previewColorPicker"></button>
 	  <b>Transparence</b><br>
       <input id="canvasBg" value="#ffffff" size="8"><button class="previewColorPicker"></button><br>
 	  <b>Résolution</b><br>
@@ -498,8 +499,11 @@ sizeInput.oninput = function(){
 /* VARIABLES */
 var canvas = document.getElementById("canvas");
 var canvasBg = document.getElementById("canvasBg");
+var gridColor = document.getElementById("gridColor");
 attachColorPickerTo(document.getElementById("canvasBg"))
+attachColorPickerTo(document.getElementById("gridColor"))
 updatePickerFromInput(canvasBg, canvasBg.nextElementSibling);
+updatePickerFromInput(gridColor, gridColor.nextElementSibling);
 canvasBg.oninput = function() {
     canvas.style.backgroundColor = this.value;    
     if(lastLoupeEvent){
@@ -509,6 +513,25 @@ canvasBg.oninput = function() {
 canvasBg.onchange = function() {
     updatePickerFromInput(canvasBg, canvasBg.nextElementSibling);
     canvas.style.backgroundColor = canvasBg.value;
+    if (lastLoupeEvent) {
+        showLoupe(lastLoupeEvent);
+    }
+};
+gridColor.oninput = function(){
+    var color = this.value;
+    canvasGrid.style.backgroundImage =
+        "linear-gradient(" + color + " 1px, transparent 1px)," +
+        "linear-gradient(90deg," + color + " 1px, transparent 1px)";
+    if (lastLoupeEvent) {
+        showLoupe(lastLoupeEvent);
+    }
+};
+gridColor.onchange = function() {
+    updatePickerFromInput(gridColor, gridColor.nextElementSibling);
+    var color = this.value;
+    canvasGrid.style.backgroundImage =
+        "linear-gradient(" + color + " 1px, transparent 1px)," +
+        "linear-gradient(90deg," + color + " 1px, transparent 1px)";
     if (lastLoupeEvent) {
         showLoupe(lastLoupeEvent);
     }
