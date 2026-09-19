@@ -189,6 +189,9 @@ body.block-touch{touch-action:none;}
   <div id="popupSelectionContent" style="display:none">
     <b class="titleb">Sélection</b><hr class="titlehr">
     <label><input type="radio" name="pixelSelectionType" value="rectangle" checked>Rectangle</label>
+    <label><input type="radio" name="pixelSelectionType" value="square">Carré</label>
+    <label><input type="radio" name="pixelSelectionType" value="ellipse">Ovale</label>
+    <label><input type="radio" name="pixelSelectionType" value="circle">Rond</label>
     <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
     <div style="display:table;table-layout:fixed;width:100%;">
       <div style="display:table-row;">
@@ -1957,77 +1960,155 @@ confirmTextBtn.onclick = function(e){
     confirmText();
     return false;
 };
-/* DEPLACER / DUPLIQUER EN PIXELS*/
+/* DEPLACER / DUPLIQUER EN PIXELS */
+
 var selection = null;
-// selection : { x: 0, y: 0, w: 0, h: 0, data: ImageData }
+// selection : {
+//     x: 0,
+//     y: 0,
+//     w: 0,
+//     h: 0,
+//     data: ImageData,
+//     shape: "rectangle" | "square" | "ellipse" | "circle" | "free",
+//     points: []              // uniquement pour free
+// }
 var selectionBaseImage = null;
 var selectionMoving = false;
 var freeSelectionPoints = [];
 var freeSelectionDrawing = false;
-/* Crée une sélection pixel parfaite. */
-function createPixelSelection(x1,y1,x2,y2,removeOriginal){
-    var sx = Math.floor(Math.min(x1,x2));
-    var sy = Math.floor(Math.min(y1,y2));
-    var ex = Math.floor(Math.max(x1,x2));
-    var ey = Math.floor(Math.max(y1,y2));
-    var w = ex - sx + 1;
-    var h = ey - sy + 1;
+/* TYPE DE SÉLECTION */
+function getPixelSelectionType(){
+    var radios = document.getElementsByName("pixelSelectionType");
+    var i;
+    for(i = 0; i < radios.length; i++){
+        if(radios[i].checked){
+            return radios[i].value;
+        }
+    }
+    return "rectangle";
+}
+/* GÉOMÉTRIE COMMUNE */
+/*
+ * Retourne toujours une boîte englobante normalisée.
+ * Rectangle : largeur et hauteur indépendantes.
+ * Carré : largeur = hauteur.
+ * Ovale : largeur et hauteur indépendantes.
+ * Rond : largeur = hauteur.
+ * Le point de départ reste le point réellement cliqué. Cela permet de conserver un comportement identique au rectangle actuel.
+ */
+function getSelectionGeometry(x1, y1, x2, y2){
+    var type = getPixelSelectionType();
+    var left   = Math.min(x1, x2);
+    var top    = Math.min(y1, y2);
+    var right  = Math.max(x1, x2);
+    var bottom = Math.max(y1, y2);
+    var w = right - left + 1;
+    var h = bottom - top + 1;
+    // Carré / rond : on prend la plus grande dimension. Le côté est ensuite repositionné du côté opposé au déplacement afin que le coin de départ reste fixe.
+    if(type === "square" || type === "circle"){
+        var size = Math.max(w, h);
+        if(x2 < x1){
+            left = x1 - size + 1;
+        }
+        if(y2 < y1){
+            left = x1 - size + 1;
+        }
+        if(y2 < y1){
+            top = y1 - size + 1;
+        }
+        if(y2 >= y1){
+            top = y1;
+        }
+        if(x2 >= x1){
+            left = x1;
+        }
+        w = size;
+        h = size;
+    }
+    return {
+        x: Math.floor(left),
+        y: Math.floor(top),
+        w: Math.max(1, Math.floor(w)),
+        h: Math.max(1, Math.floor(h)),
+        shape: type
+    };
+}
+/* TEST D'APPARTENANCE AUX FORMES */
+function pointInEllipse(x, y, cx, cy, rx, ry){
+    if(rx <= 0 || ry <= 0){
+        return false;
+    }
+    var dx = (x - cx) / rx;
+    var dy = (y - cy) / ry;
+    return (dx * dx + dy * dy) <= 1;
+}
+function selectionContainsPixel(x, y, sel){
+    if(!sel){
+        return false;
+    }
+    var type = sel.shape || "rectangle";
+    // Rectangle / carré : tous les pixels de la boîte sont sélectionnés.
+    if(type === "rectangle" || type === "square"){
+        return (
+            x >= sel.x &&
+            y >= sel.y &&
+            x < sel.x + sel.w &&
+            y < sel.y + sel.h
+        );
+    }
+    // Ovale / rond : le centre est au milieu de la boîte.
+    if(type === "ellipse" || type === "circle"){
+        var cx = sel.x + (sel.w - 1) / 2;
+        var cy = sel.y + (sel.h - 1) / 2;
+        var rx = Math.max(0.5, (sel.w - 1) / 2);
+        var ry = Math.max(0.5, (sel.h - 1) / 2);
+        return pointInEllipse(x + 0.5, y + 0.5, cx, cy, rx, ry);
+    }
+    // Sélection libre.
+    if(type === "free"){
+        if(!sel.points || sel.points.length < 3){
+            return false;
+        }
+        return pointInPolygon(x + 0.5, y + 0.5, sel.points);
+    }
+    return false;
+}
+/* CRÉATION D'UNE SÉLECTION RECTANGLE / CARRÉ / OVALE / ROND */
+function createPixelSelection(x1, y1, x2, y2, removeOriginal){
+    var geometry = getSelectionGeometry(x1, y1, x2, y2);
+    var sx = geometry.x;
+    var sy = geometry.y;
+    var w  = geometry.w;
+    var h  = geometry.h;
+    var type = geometry.shape;
     if(w < 1 || h < 1){
         return false;
     }
-    // ImageData conserve EXACTEMENT : R G B A Aucun changement de transparence.
-    var data = ctx.getImageData(sx, sy, w, h);
-    selection = { x: sx, y: sy, w: w, h: h, data: data };
-    // Pour MOVE : on retire les pixels de l'endroit original. Pour COPY : on ne retire rien.
-    if(removeOriginal){
-        ctx.clearRect(sx, sy, w, h);
-    }
-    // Fond permettant d'afficher le déplacement sans accumuler les anciennes positions.
-    selectionBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    return true;
-}
-function createCurrentPixelSelection(x1, y1, x2, y2, removeOriginal){
-    var type = getPixelSelectionType();
-    if(type === "free"){
-        return createFreePixelSelection(
-            freeSelectionPoints,
-            removeOriginal
-        );
-    }
-    return createPixelSelection(x1, y1, x2, y2, removeOriginal);
-}
-/* Affiche la sélection à une position donnée. putImageData() ne fait aucun redimensionnement, aucune interpolation et aucune modification alpha. */
-function drawPixelSelectionAt(x,y){
-    if(!selection){
-        return;
-    }
-    //  Restaurer le fond.
-    if(selectionBaseImage){
-        ctx.putImageData(selectionBaseImage, 0, 0);
-    }
-    var px = Math.round(x - selection.w / 2);
-    var py = Math.round(y - selection.h / 2);
-    // Copier uniquement les pixels visibles. Les pixels alpha = 0 ne doivent pas effacer ce qu'il y a derrière.
-    var temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var src = selection.data.data;
-    var dst = temp.data;
-    var sx, sy;
-    var dx, dy;
-    var si, di;
-    for(sy = 0; sy < selection.h; sy++){
-        dy = py + sy;
-        if(dy < 0 || dy >= canvas.height){
-            continue;
-        }
-        for(sx = 0; sx < selection.w; sx++){
-            dx = px + sx;
-            if(dx < 0 || dx >= canvas.width){
-                continue;
-            }
-            si = (sy * selection.w + sx) * 4;
-            di = (dy * canvas.width + dx) * 4;
-            // Copier uniquement si le pixel possède réellement quelque chose.
-            if(src[si + 3] !== 0){
+    // On capture exactement les pixels présents dans la boîte.
+    var original = ctx.getImageData(sx, sy, w, h);
+    // Image de la sélection. Pour rectangle/carré : tous les pixels sont conservés. Pour ovale/rond : les pixels extérieurs deviennent transparents.
+    var img = ctx.createImageData(w, h);
+    var src = original.data;
+    var dst = img.data;
+    var x;
+    var y;
+    var si;
+    var di;
+    for(y = 0; y < h; y++){
+        for(x = 0; x < w; x++){
+            if(selectionContainsPixel(
+                sx + x,
+                sy + y,
+                {
+                    x: sx,
+                    y: sy,
+                    w: w,
+                    h: h,
+                    shape: type
+                }
+            )){
+                si = (y * w + x) * 4;
+                di = si;
                 dst[di] = src[si];
                 dst[di + 1] = src[si + 1];
                 dst[di + 2] = src[si + 2];
@@ -2035,8 +2116,339 @@ function drawPixelSelectionAt(x,y){
             }
         }
     }
+    selection = {
+        x: sx,
+        y: sy,
+        w: w,
+        h: h,
+        data: img,
+        shape: type
+    };
+    // MOVE : on retire uniquement les pixels réellement compris dans la forme. COPY : on ne retire rien.
+    if(removeOriginal){
+        var background = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var bd = background.data;
+        for(y = 0; y < h; y++){
+            for(x = 0; x < w; x++){
+                if(selectionContainsPixel(sx + x, sy + y, selection)){
+                    di = ((sy + y) * canvas.width + (sx + x)) * 4;
+                    // On efface réellement le pixel. Cela conserve le comportement actuel du déplacement.
+                    bd[di + 3] = 0;
+                }
+            }
+        }
+        ctx.putImageData(background, 0, 0);
+    }
+    // Fond utilisé pendant les aperçus.
+    selectionBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    return true;
+}
+/* SÉLECTION LIBRE */
+function pointInPolygon(x, y, points){
+    var inside = false;
+    var i;
+    var j;
+    var xi;
+    var yi;
+    var xj;
+    var yj;
+    var intersect;
+    for(
+        i = 0,
+        j = points.length - 1;
+        i < points.length;
+        j = i++
+    ){
+        xi = points[i].x;
+        yi = points[i].y;
+        xj = points[j].x;
+        yj = points[j].y;
+        intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if(intersect){
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+function createFreePixelSelection(points, removeOriginal){
+    if(!points || points.length < 3){
+        return false;
+    }
+    var minX = canvas.width;
+    var minY = canvas.height;
+    var maxX = 0;
+    var maxY = 0;
+    var i;
+    for(i = 0; i < points.length; i++){
+        if(points[i].x < minX){
+            minX = points[i].x;
+        }
+        if(points[i].y < minY){
+            minY = points[i].y;
+        }
+        if(points[i].x > maxX){
+            maxX = points[i].x;
+        }
+        if(points[i].y > maxY){
+            maxY = points[i].y;
+        }
+    }
+    minX = Math.floor(minX);
+    minY = Math.floor(minY);
+    maxX = Math.floor(maxX);
+    maxY = Math.floor(maxY);
+    var w = maxX - minX + 1;
+    var h = maxY - minY + 1;
+    if(w < 1 || h < 1){
+        return false;
+    }
+    var original = ctx.getImageData(minX, minY, w, h);
+    var img = ctx.createImageData(w, h);
+    var src = original.data;
+    var dst = img.data;
+    var x;
+    var y;
+    var si;
+    var di;
+    for(y = 0; y < h; y++){
+        for(x = 0; x < w; x++){
+            if(pointInPolygon(minX + x + 0.5, minY + y + 0.5, points)){
+                si = (y * w + x) * 4;
+                di = si;
+                dst[di] = src[si];
+                dst[di + 1] = src[si + 1];
+                dst[di + 2] = src[si + 2];
+                dst[di + 3] = src[si + 3];
+            }
+        }
+    }
+    selection = {
+        x: minX,
+        y: minY,
+        w: w,
+        h: h,
+        data: img,
+        shape: "free",
+        points: points
+    };
+    if(removeOriginal){
+        var background = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var bd = background.data;
+        for(y = 0; y < h; y++){
+            for(x = 0; x < w; x++){
+                if(pointInPolygon(minX + x + 0.5, minY + y + 0.5, points)){
+                    di = ((minY + y) * canvas.width + (minX + x)) * 4;
+                    bd[di + 3] = 0;
+                }
+            }
+        }
+        ctx.putImageData(background, 0, 0);
+    }
+    selectionBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    return true;
+}
+function createCurrentPixelSelection(x1, y1, x2, y2, removeOriginal){
+    var type = getPixelSelectionType();
+    if(type === "free"){
+        return createFreePixelSelection(freeSelectionPoints, removeOriginal);
+    }
+    return createPixelSelection(x1, y1, x2, y2, removeOriginal);
+}
+/* APERÇU RECTANGLE / CARRÉ / OVALE / ROND */
+function drawSelectionPreview(x, y){
+    // Restaurer le dessin propre.
+    if(moveBaseImage){
+        ctx.putImageData(moveBaseImage, 0, 0);
+    }
+    if(rotateBaseImage){
+        ctx.putImageData(rotateBaseImage, 0, 0);
+    }
+    var geometry = getSelectionGeometry(startX, startY, x, y);
+    var sx = geometry.x;
+    var sy = geometry.y;
+    var w  = geometry.w;
+    var h  = geometry.h;
+    var type = geometry.shape;
+    if(w < 1 || h < 1){
+        return;
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = ctx.strokeStyle;
+    // Contour pixel par pixel.
+    if(
+        type === "rectangle" || type === "square"
+    ){
+        drawSelectionRectangleOutline(sx, sy, w, h);
+    }
+    else if(
+        type === "ellipse" || type === "circle"
+    ){
+        drawSelectionEllipseOutline(sx, sy, w, h);
+    }
+    ctx.restore();
+}
+/* CONTOUR RECTANGULAIRE */
+function drawSelectionRectangleOutline(sx, sy, w, h){
+    var ex = sx + w - 1;
+    var ey = sy + h - 1;
+    var dash = 1;
+    var gap = 1;
+    var i;
+    // Haut
+    for(
+        i = sx;
+        i <= ex;
+        i += dash + gap
+    ){
+        drawPixelLine1px(i, sy, Math.min(i + dash - 1, ex), sy);
+    }
+    // Bas
+    for(
+        i = sx;
+        i <= ex;
+        i += dash + gap
+    ){
+        drawPixelLine1px(i, ey, Math.min(i + dash - 1, ex), ey);
+    }
+    // Gauche
+    for(
+        i = sy;
+        i <= ey;
+        i += dash + gap
+    ){
+        drawPixelLine1px(sx, i, sx, Math.min(i + dash - 1, ey));
+    }
+    // Droite
+    for(
+        i = sy;
+        i <= ey;
+        i += dash + gap
+    ){
+        drawPixelLine1px(ex, i, ex, Math.min(i + dash - 1, ey));
+    }
+}
+/* CONTOUR OVALE / ROND */
+function drawSelectionEllipseOutline(sx, sy, w, h){
+    var cx = sx + (w - 1) / 2;
+    var cy = sy + (h - 1) / 2;
+    var rx = Math.max(0.5, (w - 1) / 2);
+    var ry = Math.max(0.5, (h - 1) / 2);
+    // Plus l'ellipse est grande, plus on utilise de points pour obtenir un contour pixel propre.
+    var steps = Math.max(16, Math.round(2 * Math.PI * Math.max(rx, ry)));
+    var oldX = Math.round(cx + rx);
+    var oldY = Math.round(cy);
+    var i;
+    for(i = 1; i <= steps; i++){
+        var t = i / steps;
+        var angle = t * Math.PI * 2;
+        var x = Math.round(cx + Math.cos(angle) * rx);
+        var y = Math.round(cy + Math.sin(angle) * ry);
+        drawPixelLine1px(oldX, oldY, x, y);
+        oldX = x;
+        oldY = y;
+    }
+}
+/* APERÇU SÉLECTION LIBRE */
+function drawFreeSelectionPreview(){
+    if(
+        !freeSelectionPoints ||
+        freeSelectionPoints.length < 2
+    ){
+        return;
+    }
+    // Restaurer l'image propre.
+    if(currentTool === "rotate"){
+        if(rotateBaseImage){
+            ctx.putImageData(rotateBaseImage, 0, 0);
+        }
+    }else{
+        if(moveBaseImage){
+            ctx.putImageData(moveBaseImage, 0, 0);
+        }
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = ctx.strokeStyle;
+    var i;
+    var a;
+    var b;
+    for(
+        i = 1;
+        i < freeSelectionPoints.length;
+        i++
+    ){
+        a = freeSelectionPoints[i - 1];
+        b = freeSelectionPoints[i];
+        drawPixelLine1px(Math.round(a.x), Math.round(a.y), Math.round(b.x), Math.round(b.y));
+    }
+    // Fermer visuellement le contour.
+    if(freeSelectionPoints.length >= 3){
+        a = freeSelectionPoints[freeSelectionPoints.length - 1];
+        b = freeSelectionPoints[0];
+        drawPixelLine1px(Math.round(a.x), Math.round(a.y), Math.round(b.x), Math.round(b.y));
+    }
+    ctx.restore();
+}
+/* AFFICHAGE DE LA SÉLECTION EN DÉPLACEMENT */
+function drawPixelSelectionAt(x, y){
+    if(!selection){
+        return;
+    }
+    // Restaurer le fond.
+    if(selectionBaseImage){
+        ctx.putImageData(selectionBaseImage, 0, 0);
+    }
+    var px = Math.round(x - selection.w / 2);
+    var py = Math.round(y - selection.h / 2);
+    var temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var src = selection.data.data;
+    var dst = temp.data;
+    var sx;
+    var sy;
+    var dx;
+    var dy;
+    var si;
+    var di;
+    for(
+        sy = 0;
+        sy < selection.h;
+        sy++
+    ){
+        dy = py + sy;
+        if(
+            dy < 0 ||
+            dy >= canvas.height
+        ){
+            continue;
+        }
+        for(
+            sx = 0;
+            sx < selection.w;
+            sx++
+        ){
+            dx = px + sx;
+            if(
+                dx < 0 ||
+                dx >= canvas.width
+            ){
+                continue;
+            }
+            // Pour une sélection ovale/rond/libre, les pixels transparents sont ignorés.
+            si = (sy * selection.w + sx) * 4;
+            if(src[si + 3] === 0){
+                continue;
+            }
+            di = (dy * canvas.width + dx) * 4;
+            dst[di] = src[si];
+            dst[di + 1] = src[si + 1];
+            dst[di + 2] = src[si + 2];
+            dst[di + 3] = src[si + 3];
+        }
+    }
     ctx.putImageData(temp, 0, 0);
 }
+/* ROTATION */
 function drawRotatedSelectionAt(angle){
     if(!selection){
         return;
@@ -2044,54 +2456,55 @@ function drawRotatedSelectionAt(angle){
     var w = selection.w;
     var h = selection.h;
     var src = selection.data.data;
-    // Restaurer le fond propre
+    // Restaurer le fond propre.
     if(selectionBaseImage){
         ctx.putImageData(selectionBaseImage, 0, 0);
     }
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
-    // le rectangle contenant l'image pivotée doit être plus grand que la sélection originale Sinon les coins sont coupés.
+    // Nouvelle boîte englobante.
     var newW = Math.ceil(Math.abs(w * cos) + Math.abs(h * sin));
     var newH = Math.ceil(Math.abs(w * sin) + Math.abs(h * cos));
     newW = Math.max(1, newW);
     newH = Math.max(1, newH);
-    // Image destination suffisamment grande
     var img = ctx.createImageData(newW, newH);
     var dst = img.data;
-    // Centres source / destination
     var srcCX = (w - 1) / 2;
     var srcCY = (h - 1) / 2;
     var dstCX = (newW - 1) / 2;
     var dstCY = (newH - 1) / 2;
-    var dx, dy;
-    var rx, ry;
-    var sx, sy;
-    var si, di;
-    // ROTATION INVERSE Chaque pixel de destination cherche son pixel correspondant dans la sélection originale. Cela évite les trous.
-    for(dy = 0; dy < newH; dy++){
-        for(dx = 0; dx < newW; dx++){
-            // Position par rapport au centre destination
+    var dx;
+    var dy;
+    var rx;
+    var ry;
+    var sx;
+    var sy;
+    var si;
+    var di;
+    // Rotation inverse : chaque pixel destination cherche son pixel source.
+    for(
+        dy = 0;
+        dy < newH;
+        dy++
+    ){
+        for(
+            dx = 0;
+            dx < newW;
+            dx++
+        ){
             rx = dx - dstCX;
             ry = dy - dstCY;
-            // Rotation inverse vers l'image source
             sx = rx * cos + ry * sin + srcCX;
             sy = -rx * sin + ry * cos + srcCY;
-            // Pixel le plus proche
             sx = Math.round(sx);
             sy = Math.round(sy);
-            // Hors sélection
             if(
-                sx < 0 || sy < 0 || sx >= w || sy >= h){
-                continue;
-            }
-            // Sélection libre : vérifier que le pixel faisait réellement partie de la forme sélectionnée.
-            if(
-                !freeSelectionContainsPixel(selection.x + sx, selection.y + sy)
+                sx < 0 || sy < 0 || sx >= w || sy >= h
             ){
                 continue;
             }
+            // Les pixels transparents de l'ovale, du rond ou du libre restent transparents.
             si = (sy * w + sx) * 4;
-            // Pixel totalement transparent
             if(src[si + 3] === 0){
                 continue;
             }
@@ -2102,67 +2515,63 @@ function drawRotatedSelectionAt(angle){
             dst[di + 3] = src[si + 3];
         }
     }
-    // Garder le même CENTRE que la sélection originale. La nouvelle image étant plus grande, sa position doit être décalée vers le haut/gauche.
-    var oldCenterX = selection.x + w / 2;
-    var oldCenterY = selection.y + h / 2;
-    var drawX = Math.round(oldCenterX - newW / 2);
-    var drawY = Math.round(oldCenterY - newH / 2);
-    // On dessine seulement les pixels visibles : les zones transparentes ne détruisent pas ce qui se trouve derrière.
+    // Garder le même centre.
+    var centerX = selection.x + selection.w / 2;
+    var centerY = selection.y + selection.h / 2;
+    var drawX = Math.round(centerX - newW / 2);
+    var drawY = Math.round(centerY - newH / 2);
     putImageDataVisible(img, drawX, drawY);
 }
-function flipRectangleHorizontal(){
-    if(!selection){
-        return;
-    }
-    var w = selection.w;
-    var h = selection.h;
-    var src = selection.data.data;
-    var img = ctx.createImageData(w,h);
-    var dst = img.data;
-    var sx, sy;
-    var tx;
-    var si, di;
-    for(sy = 0; sy < h; sy++){
-        for(sx = 0; sx < w; sx++){
-            si = (sy * w + sx) * 4;
-            tx = w - 1 - sx;
-            di = (sy * w + tx) * 4;
-            dst[di]     = src[si];
-            dst[di + 1] = src[si + 1];
-            dst[di + 2] = src[si + 2];
-            dst[di + 3] = src[si + 3];
+/* INSERTION D'IMAGE DATA SANS ÉCRASER LES ZONES TRANSPARENTES */
+function putImageDataVisible(img, px, py){
+    var temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var src = img.data;
+    var dst = temp.data;
+    var w = img.width;
+    var h = img.height;
+    var x;
+    var y;
+    var dx;
+    var dy;
+    var si;
+    var di;
+    for(
+        y = 0;
+        y < h;
+        y++
+    ){
+        dy = py + y;
+        if(
+            dy < 0 ||
+            dy >= canvas.height
+        ){
+            continue;
         }
-    }
-    selection.data = img;
-    // NE PAS restaurer selectionBaseImage ici. Le mode sans "Copier" a déjà supprimé l'original.
-    putImageDataVisible(img, selection.x, selection.y);
-}
-function flipRectangleVertical(){
-    if(!selection){
-        return;
-    }
-    var w = selection.w;
-    var h = selection.h;
-    var src = selection.data.data;
-    var img = ctx.createImageData(w,h);
-    var dst = img.data;
-    var sx, sy;
-    var ty;
-    var si, di;
-    for(sy = 0; sy < h; sy++){
-        for(sx = 0; sx < w; sx++){
-            si = (sy * w + sx) * 4;
-            ty = h - 1 - sy;
-            di = (ty * w + sx) * 4;
+        for(
+            x = 0;
+            x < w;
+            x++
+        ){
+            dx = px + x;
+            if(
+                dx < 0 ||
+                dx >= canvas.width
+            ){
+                continue;
+            }
+            si = (y * w + x) * 4;
+            // Transparent = ne rien modifier.
+            if(src[si + 3] === 0){
+                continue;
+            }
+            di = (dy * canvas.width + dx) * 4;
             dst[di] = src[si];
             dst[di + 1] = src[si + 1];
             dst[di + 2] = src[si + 2];
             dst[di + 3] = src[si + 3];
         }
     }
-    selection.data = img;
-    // NE PAS restaurer selectionBaseImage ici.
-    putImageDataVisible(img, selection.x, selection.y);
+    ctx.putImageData(temp, 0, 0);
 }
 function flipFreeHorizontal(){
     if(!selection){
@@ -2201,8 +2610,7 @@ function flipFreeHorizontal(){
             putImageDataVisible(img, selection.x + w, selection.y);
         }
     }else{
-        // SANS COPIER : supprimer l'ancien contenu de la sélection puis remettre uniquement le miroir.
-        // On restaure le fond qui existait avant la sélection, puis on remet le miroir uniquement sur les pixels appartenant réellement à la sélection libre.
+        // SANS COPIER : supprimer l'ancien contenu de la sélection puis remettre uniquement le miroir. On restaure le fond qui existait avant la sélection, puis on remet le miroir uniquement sur les pixels appartenant réellement à la sélection libre.
         if(selectionBaseImage){
             ctx.putImageData(selectionBaseImage, 0, 0);
         }
@@ -2253,41 +2661,56 @@ function flipFreeVertical(){
         putImageDataVisible(img, selection.x, selection.y);
     }
 }
-// Dépose définitivement la sélection.
-function commitPixelSelection(x,y){
+/* DÉPÔT FINAL */
+function commitPixelSelection(x, y){
     if(!selection){
         return;
     }
-    //Restaurer le fond original.
+    // Restaurer le fond original.
     if(selectionBaseImage){
         ctx.putImageData(selectionBaseImage, 0, 0);
     }
     var px = Math.round(x - selection.w / 2);
     var py = Math.round(y - selection.h / 2);
-    // On utilise exactement la même logique que pendant l'aperçu : - alpha = 0 : on ne touche PAS au fond, - alpha > 0 : on copie le pixel Cela conserve la transparence autour de l'élément.
     var temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
     var src = selection.data.data;
     var dst = temp.data;
-    var sx, sy;
-    var dx, dy;
-    var si, di;
-    for(sy = 0; sy < selection.h; sy++){
+    var sx;
+    var sy;
+    var dx;
+    var dy;
+    var si;
+    var di;
+    for(
+        sy = 0;
+        sy < selection.h;
+        sy++
+    ){
         dy = py + sy;
-        if(dy < 0 || dy >= canvas.height){
+        if(
+            dy < 0 ||
+            dy >= canvas.height
+        ){
             continue;
         }
-        for(sx = 0; sx < selection.w; sx++){
+        for(
+            sx = 0;
+            sx < selection.w;
+            sx++
+        ){
             dx = px + sx;
-            if(dx < 0 || dx >= canvas.width){
+            if(
+                dx < 0 ||
+                dx >= canvas.width
+            ){
                 continue;
             }
             si = (sy * selection.w + sx) * 4;
-            di = (dy * canvas.width + dx) * 4;
-            // Pixel totalement transparent : surtout ne pas modifier le pixel qui se trouve derrière.
+            // Les zones transparentes de l'ovale, du rond ou du libre ne modifient pas ce qu'il y a derrière.
             if(src[si + 3] === 0){
                 continue;
             }
-            // Copier le pixel avec son alpha exact.
+            di = (dy * canvas.width + dx) * 4;
             dst[di] = src[si];
             dst[di + 1] = src[si + 1];
             dst[di + 2] = src[si + 2];
@@ -2298,144 +2721,6 @@ function commitPixelSelection(x,y){
     selection = null;
     selectionBaseImage = null;
     selectionMoving = false;
-}
-function getPixelSelectionType(){
-    var radios = document.getElementsByName("pixelSelectionType");
-    var i;
-    for(i = 0; i < radios.length; i++){
-        if(radios[i].checked){
-            return radios[i].value;
-        }
-    }
-    return "rectangle";
-}
-function pointInPolygon(x,y,points){
-    var inside = false;
-    var i;
-    var j;
-    var xi;
-    var yi;
-    var xj;
-    var yj;
-    var intersect;
-    for(i = 0, j = points.length - 1;
-        i < points.length;
-        j = i++){
-        xi = points[i].x;
-        yi = points[i].y;
-        xj = points[j].x;
-        yj = points[j].y;
-        intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        if(intersect){
-            inside = !inside;
-        }
-    }
-    return inside;
-}
-function createFreePixelSelection(points,removeOriginal){
-    if(!points || points.length < 3){
-        return false;
-    }
-    var minX = canvas.width;
-    var minY = canvas.height;
-    var maxX = 0;
-    var maxY = 0;
-    var i;
-    for(i = 0; i < points.length; i++){
-        if(points[i].x < minX) minX = points[i].x;
-        if(points[i].y < minY) minY = points[i].y;
-        if(points[i].x > maxX) maxX = points[i].x;
-        if(points[i].y > maxY) maxY = points[i].y;
-    }
-    minX = Math.floor(minX);
-    minY = Math.floor(minY);
-    maxX = Math.floor(maxX);
-    maxY = Math.floor(maxY);
-    var w = maxX - minX + 1;
-    var h = maxY - minY + 1;
-    if(w < 1 || h < 1){
-        return false;
-    }
-    var original = ctx.getImageData(minX, minY, w, h);
-    var img = ctx.createImageData(w,h);
-    var src = original.data;
-    var dst = img.data;
-    var x,y,si,di;
-    for(y = 0; y < h; y++){
-        for(x = 0; x < w; x++){
-            if(pointInPolygon(minX + x + 0.5, minY + y + 0.5, points)){
-                si = (y * w + x) * 4;
-                di = si;
-                dst[di] = src[si];
-                dst[di + 1] = src[si + 1];
-                dst[di + 2] = src[si + 2];
-                dst[di + 3] = src[si + 3];
-                if(removeOriginal){
-                    src[si + 3] = 0;
-                }
-            }
-        }
-    }
-    // Suppression uniquement de la forme sélectionnée.
-	selection = {
-		x: minX,
-		y: minY,
-		w: w,
-		h: h,
-		data: img,
-		points: points
-	};
-	// Pour toutes les transformations, on conserve une image de fond sans les pixels sélectionnés.
-	var background = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	var bd = background.data;
-	if(removeOriginal){
-    // MOVE : retirer uniquement les pixels du polygone.
-    for(y = 0; y < h; y++){
-        for(x = 0; x < w; x++){
-            if(pointInPolygon(minX + x + 0.5, minY + y + 0.5, points)){
-                di = ((minY + y) * canvas.width + (minX + x)) * 4;
-                bd[di + 3] = 0;
-            }
-        }
-    }
-    ctx.putImageData(background, 0, 0);
-    }
-    // Pour COPY / ROTATE / FLIPH / FLIPV, le fond doit rester intact.
-    selectionBaseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    return true;
-}
-function drawFreeSelectionPreview(){
-    if(!freeSelectionPoints || freeSelectionPoints.length < 2){
-        return;
-    }
-    var i;
-    var a;
-    var b;
-    // Restaurer l'image propre avant de dessiner le contour.
-    if(currentTool === "rotate"){
-        if(rotateBaseImage){
-            ctx.putImageData(rotateBaseImage, 0, 0);
-        }
-    }else{
-        if(moveBaseImage){
-            ctx.putImageData(moveBaseImage, 0, 0);
-        }
-    }
-    ctx.save();
-    ctx.globalCompositeOperation = "source-over";
-    // On ne fait PAS de lineWidth. Le contour est dessiné pixel par pixel.
-    for(i = 1; i < freeSelectionPoints.length; i++){
-        a = freeSelectionPoints[i - 1];
-        b = freeSelectionPoints[i];
-        drawPixelLine1px(Math.round(a.x), Math.round(a.y), Math.round(b.x), Math.round(b.y));
-    }
-    // Fermer le contour pendant l'aperçu uniquement si nécessaire.
-    if(freeSelectionPoints.length >= 3){
-        a = freeSelectionPoints[freeSelectionPoints.length - 1];
-        b = freeSelectionPoints[0];
-        drawPixelLine1px(Math.round(a.x), Math.round(a.y), Math.round(b.x), Math.round(b.y));
-    }
-    ctx.restore();
 }
 /* MOUSE EVENTS */
 canvas.onpointerdown = function(e){
@@ -2605,7 +2890,6 @@ canvas.onpointerdown = function(e){
         return;
      }
     }
-
     // Pour les autres outils, sauvegarde normale.
     saveState();
 	if(currentTool==="free"){
@@ -2844,7 +3128,7 @@ canvas.onpointermove = function(e){
 	){
 	// ETAPE 1 : rectangle de sélection.
 	if(
-    getPixelSelectionType() === "rectangle" &&
+    getPixelSelectionType() !== "free" &&
     (
         (currentTool === "move" && moveMode === 0) || (currentTool === "copy" && copyMode === 0) || (currentTool === "rotate" && rotateMode === 0) || currentTool === "fliph" || currentTool === "flipv"
     )
@@ -2897,33 +3181,37 @@ canvas.onpointerup = function(e){
     document.body.classList.remove('block-touch');
     stopAutoScroll();
     isDown = false;
-	if(
-		canvas.hasPointerCapture &&	canvas.hasPointerCapture(e.pointerId)
-	){
-		canvas.releasePointerCapture(e.pointerId);
-	}
+    if(
+        canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)
+    ){
+        canvas.releasePointerCapture(e.pointerId);
+    }
     var p = getPos(e);
     var x = p.x;
     var y = p.y;
     // REMPLISSAGE
-    if(currentTool==="fill"){
+    if(currentTool === "fill"){
         floodFill(Math.floor(x), Math.floor(y));
         return;
     }
-    // PIPETTE : validation au relâchement
+    // PIPETTE
     if(currentTool === "pipette"){
         drawing = false;
         document.body.classList.remove('block-touch');
-        if(canvas.releasePointerCapture && e.pointerId !== undefined){
-            try {
+        if(
+            canvas.releasePointerCapture && e.pointerId !== undefined
+        ){
+            try{
                 canvas.releasePointerCapture(e.pointerId);
-            } catch(err){}
+            }catch(err){}
         }
         setTool(previousTool);
         return;
     }
     // IMAGE
-    if(currentTool === "image" && tempImage){
+    if(
+        currentTool === "image" && tempImage
+    ){
         if(imageAction !== 0){
             imageAction = 0;
             imageHandle = "";
@@ -2939,15 +3227,31 @@ canvas.onpointerup = function(e){
     hideDimensions();
     // SÉLECTION LIBRE
     if(
-        (
-            currentTool === "move" || currentTool === "copy" || currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv"
-        ) && getPixelSelectionType() === "free" && freeSelectionDrawing
+        (currentTool === "move" || currentTool === "copy" || currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv") && getPixelSelectionType() === "free" && freeSelectionDrawing
     ){
-    freeSelectionDrawing = false;
-    // Il faut suffisamment de points pour former un contour.
-    if(freeSelectionPoints.length < 3){
-        selection = null;
-        if(currentTool === "rotate"){
+        freeSelectionDrawing = false;
+        // Il faut au minimum trois points pour créer une surface.
+        if(
+            freeSelectionPoints.length < 3
+        ){
+            selection = null;
+            if(
+                currentTool === "rotate"
+            ){
+                if(rotateBaseImage){
+                    ctx.putImageData(rotateBaseImage, 0, 0);
+                }
+            }else{
+                if(moveBaseImage){
+                    ctx.putImageData(moveBaseImage, 0, 0);
+                }
+            }
+            return;
+        }
+        // Restaurer l'image avant la capture.
+        if(
+            currentTool === "rotate"
+        ){
             if(rotateBaseImage){
                 ctx.putImageData(rotateBaseImage, 0, 0);
             }
@@ -2956,321 +3260,351 @@ canvas.onpointerup = function(e){
                 ctx.putImageData(moveBaseImage, 0, 0);
             }
         }
+        // MOVE retire l'original. COPY conserve l'original. ROTATE retire l'original si "Copier" n'est pas coché. FLIPH / FLIPV idem.
+        var removeOriginalFree = currentTool === "move" || ((currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv") && !document.getElementById("rotateCopy").checked);
+        // Fermer automatiquement le contour.
+        if(
+            freeSelectionPoints.length >= 3
+        ){
+            var firstPoint = freeSelectionPoints[0];
+            var lastPoint = freeSelectionPoints[freeSelectionPoints.length - 1];
+            if(
+                firstPoint.x !== lastPoint.x ||
+                firstPoint.y !== lastPoint.y
+            ){
+                freeSelectionPoints.push({
+                    x: firstPoint.x,
+                    y: firstPoint.y
+                });
+            }
+        }
+        // Créer la sélection libre.
+        if(
+            createFreePixelSelection(freeSelectionPoints, removeOriginalFree)
+        ){
+            // FLIP HORIZONTAL
+            if(
+                currentTool === "fliph"
+            ){
+                flipFreeHorizontal();
+                selection = null;
+                selectionBaseImage = null;
+                moveBaseImage = null;
+                return;
+            }
+            // FLIP VERTICAL
+            if(
+                currentTool === "flipv"
+            ){
+                flipFreeVertical();
+                selection = null;
+                selectionBaseImage = null;
+                moveBaseImage = null;
+                return;
+            }
+            // MOVE
+            if(
+                currentTool === "move"
+            ){
+                moveMode = 1;
+                selectionMoving = false;
+                return;
+            }
+            // COPY
+            if(
+                currentTool === "copy"
+            ){
+                copyMode = 1;
+                selectionMoving = false;
+                return;
+            }
+            // ROTATE
+            if(
+                currentTool === "rotate"
+            ){
+                rotateMode = 1;
+                selectionMoving = false;
+                rotateAngle = 0;
+                return;
+            }
+        }
         return;
     }
-    // Restaurer l'image avant de capturer les pixels.
-    if(currentTool === "rotate"){
-        if(rotateBaseImage){
-            ctx.putImageData(rotateBaseImage, 0, 0);
-        }
-    }else{
+    // MOVE : PREMIÈRE ÉTAPE
+    if(
+        currentTool === "move" && moveMode === 0
+    ){
         if(moveBaseImage){
             ctx.putImageData(moveBaseImage, 0, 0);
         }
+        if(
+            !createCurrentPixelSelection(startX, startY, x, y, true)
+        ){
+            return;
+        }
+        moveMode = 1;
+        hideDimensions();
+        return;
     }
-    // MOVE retire l'original. COPY / ROTATE / FLIP le conservent.
-	var removeOriginal = currentTool === "move" || ((currentTool === "rotate" || currentTool === "fliph" || currentTool === "flipv") && !document.getElementById("rotateCopy").checked);
-	// Fermer automatiquement le contour.
-	if(freeSelectionPoints.length >= 3){
-		var firstPoint = freeSelectionPoints[0];
-		var lastPoint =	freeSelectionPoints[freeSelectionPoints.length - 1];
-		if(
-			firstPoint.x !== lastPoint.x ||	firstPoint.y !== lastPoint.y
-		){
-			freeSelectionPoints.push({x: firstPoint.x, y: firstPoint.y});
-		}
-	}
-    if(createFreePixelSelection(
-        freeSelectionPoints, removeOriginal
-    )){
-        // FLIP : transformation immédiate.
-		if(currentTool === "fliph"){
-			flipFreeHorizontal();
-			selection = null;
-			selectionBaseImage = null;
-			return;
-		}
-		if(currentTool === "flipv"){
-			flipFreeVertical();
-			selection = null;
-			selectionBaseImage = null;
-			return;
-		}
-        // MOVE
-        if(currentTool === "move"){
-            moveMode = 1;
-            selectionMoving = false;
+    // COPY : PREMIÈRE ÉTAPE
+    if(
+        currentTool === "copy" && copyMode === 0
+    ){
+        if(moveBaseImage){
+            ctx.putImageData(moveBaseImage, 0, 0);
+        }
+        if(
+            !createCurrentPixelSelection(startX, startY, x, y, false)
+        ){
             return;
         }
-        // COPY
-        if(currentTool === "copy"){
-            copyMode = 1;
-            selectionMoving = false;
-            return;
+        copyMode = 1;
+        hideDimensions();
+        return;
+    }
+    // ROTATE : PREMIÈRE ÉTAPE
+    if(
+        currentTool === "rotate" && rotateMode === 0
+    ){
+        if(rotateBaseImage){
+            ctx.putImageData(rotateBaseImage, 0, 0);
         }
-        // ROTATE
-        if(currentTool === "rotate"){
+        var rotateRemoveOriginal =!document.getElementById("rotateCopy").checked;
+        if(
+            createCurrentPixelSelection(startX, startY, x, y, rotateRemoveOriginal)
+        ){
             rotateMode = 1;
-            selectionMoving = false;
-            rotateAngle = 0;
+        }else{
+            rotateMode = 0;
+            rotateBaseImage = null;
+        }
+        selectionMoving = false;
+        return;
+    }
+    // FLIP HORIZONTAL le bloc complet FLIPH doit être celui fourni précédemment.
+    if(currentTool === "fliph"){
+        var copyFlipH = document.getElementById("rotateCopy").checked;
+        if(moveBaseImage){
+            ctx.putImageData(moveBaseImage, 0, 0);
+        }
+        var removeOriginalFlipH = !copyFlipH;
+        if(
+            !createCurrentPixelSelection(startX, startY, x, y, removeOriginalFlipH)
+        ){
+            selection = null;
+            selectionBaseImage = null;
+            moveBaseImage = null;
             return;
         }
+        // Miroir horizontal.
+        var flipHW = selection.w;
+        var flipHH = selection.h;
+        var sourceFlipH = selection.data.data;
+        var mirrorFlipH = ctx.createImageData(flipHW, flipHH);
+        var targetFlipH = mirrorFlipH.data;
+        var fhx;
+        var fhy;
+        var fhsi;
+        var fhdi;
+        var fhtx;
+        for(
+            fhy = 0;
+            fhy < flipHH;
+            fhy++
+        ){
+            for(
+                fhx = 0;
+                fhx < flipHW;
+                fhx++
+            ){
+                fhsi = (fhy * flipHW + fhx) * 4;
+                fhtx =  flipHW - 1 - fhx;
+                fhdi = (fhy * flipHW + fhtx) * 4;
+                targetFlipH[fhdi] = sourceFlipH[fhsi];
+                targetFlipH[fhdi + 1] = sourceFlipH[fhsi + 1];
+                targetFlipH[fhdi + 2] = sourceFlipH[fhsi + 2];
+                targetFlipH[fhdi + 3] = sourceFlipH[fhsi + 3];
+            }
+        }
+        if(copyFlipH){
+            var flipOtherSideH = document.getElementById("flipOtherSide").checked;
+            if(flipOtherSideH){
+                putImageDataVisible(mirrorFlipH, selection.x - flipHW, selection.y);
+            }else{
+                putImageDataVisible(mirrorFlipH, selection.x + flipHW, selection.y);
+            }
+        }else{
+            putImageDataVisible(mirrorFlipH, selection.x, selection.y);
+        }
+        selection = null;
+        selectionBaseImage = null;
+        moveBaseImage = null;
+        moveMode = 0;
+        copyMode = 0;
+        rotateMode = 0;
+        selectionMoving = false;
+        return;
     }
-    return;
+    // FLIP VERTICAL
+    if(currentTool === "flipv"){
+        var copyFlipV =  document.getElementById("rotateCopy").checked;
+        if(moveBaseImage){
+            ctx.putImageData(moveBaseImage, 0, 0);
+        }
+        var removeOriginalFlipV = !copyFlipV;
+        if(
+            !createCurrentPixelSelection(startX, startY, x, y, removeOriginalFlipV)
+        ){
+            selection = null;
+            selectionBaseImage = null;
+            moveBaseImage = null;
+            return;
+        }
+        // Miroir vertical.
+        var flipVW = selection.w;
+        var flipVH = selection.h;
+        var sourceFlipV = selection.data.data;
+        var mirrorFlipV = ctx.createImageData(flipVW, flipVH);
+        var targetFlipV =  mirrorFlipV.data;
+        var fvx;
+        var fvy;
+        var fvsi;
+        var fvdi;
+        var fvty;
+        for(
+            fvy = 0;
+            fvy < flipVH;
+            fvy++
+        ){
+            for(
+                fvx = 0;
+                fvx < flipVW;
+                fvx++
+            ){
+                fvsi = (fvy * flipVW + fvx) * 4;
+                fvty = flipVH - 1 - fvy;
+                fvdi = (fvty * flipVW + fvx) * 4;
+                targetFlipV[fvdi] = sourceFlipV[fvsi];
+                targetFlipV[fvdi + 1] = sourceFlipV[fvsi + 1];
+                targetFlipV[fvdi + 2] = sourceFlipV[fvsi + 2];
+                targetFlipV[fvdi + 3] = sourceFlipV[fvsi + 3];
+            }
+        }
+        if(copyFlipV){
+            var flipOtherSideV =  document.getElementById("flipOtherSide").checked;
+            if(flipOtherSideV){
+                putImageDataVisible(
+                    mirrorFlipV,
+                    selection.x,
+                    selection.y - flipVH
+                );
+            }else{
+                putImageDataVisible(mirrorFlipV, selection.x, selection.y + flipVH);
+            }
+        }else{
+            putImageDataVisible(mirrorFlipV, selection.x, selection.y);
+        }
+        selection = null;
+        selectionBaseImage = null;
+        moveBaseImage = null;
+        moveMode = 0;
+        copyMode = 0;
+        rotateMode = 0;
+        selectionMoving = false;
+        return;
     }
-    // MOVE : première étape = sélection
-	if(
-		currentTool === "move" && moveMode === 0
-	){
-		// Restaurer le canvas avant de capturer les pixels.
-		if(moveBaseImage){
-			ctx.putImageData(moveBaseImage,	0, 0);
-		}
-		if(!createPixelSelection(startX, startY, x,	y, true)){
-			return;
-		}
-		moveMode = 1;
-		hideDimensions();
-		return;
-	}
-    // COPY : première étape = sélection
-	if(
-		currentTool === "copy" && copyMode === 0
-	){
-		// Restaurer le canvas avant la capture.
-		if(moveBaseImage){
-			ctx.putImageData(moveBaseImage, 0, 0);
-		}
-		if(!createPixelSelection(startX, startY, x,	y,false)){
-			return;
-		}
-		copyMode = 1;
-		hideDimensions();
-		return;
-	}
-	// ROTATE : créer la sélection
-	if(currentTool === "rotate" && rotateMode === 0){
-		if(rotateBaseImage){
-			ctx.putImageData(rotateBaseImage, 0, 0);
-		}
-		var rotateRemoveOriginal = !document.getElementById("rotateCopy").checked;
-		if(createPixelSelection(startX,	startY,	x, y, rotateRemoveOriginal)){
-			rotateMode = 1;
-		} else {
-			rotateMode = 0;
-			rotateBaseImage = null;
-		}
-		selectionMoving = false;
-		return;
-	}
-	// FLIP HORIZONTAL
-	if(currentTool === "fliph"){
-	    var copyFlipH = document.getElementById("rotateCopy").checked;
-	    // Restaurer uniquement l'image de départ pour éviter les traces éventuelles du contour de sélection.
-	    if(moveBaseImage){
-	        ctx.putImageData(moveBaseImage, 0, 0);
-	    }
-	    // Récupérer les coordonnées de la sélection.
-	    var flipHX = Math.floor(Math.min(startX, x));
-	    var flipHY = Math.floor(Math.min(startY, y));
-	    var flipHW = Math.floor(Math.abs(x - startX)) + 1;
-	    var flipHH = Math.floor(Math.abs(y - startY)) + 1;
-	    if(flipHW < 1 || flipHH < 1){
-	        return;
-	    }
-	    // Récupérer les pixels AVANT toute modification.
-	    var originalFlipH = ctx.getImageData(flipHX, flipHY, flipHW, flipHH);
-	    var srcFlipH = originalFlipH.data;
-	    var mirrorFlipH = ctx.createImageData(flipHW, flipHH);
-	    var dstFlipH = mirrorFlipH.data;
-	    var fhx, fhy;
-	    var fhsi, fhdi;
-	    var fhtx;
-	    // Construire le miroir horizontal.
-	    for(fhy = 0; fhy < flipHH; fhy++){
-	        for(fhx = 0; fhx < flipHW; fhx++){
-	            fhsi = (fhy * flipHW + fhx) * 4;
-	            fhtx = flipHW - 1 - fhx;
-	            fhdi = (fhy * flipHW + fhtx) * 4;
-	            dstFlipH[fhdi] = srcFlipH[fhsi];
-	            dstFlipH[fhdi + 1] = srcFlipH[fhsi + 1];
-	            dstFlipH[fhdi + 2] = srcFlipH[fhsi + 2];
-	            dstFlipH[fhdi + 3] = srcFlipH[fhsi + 3];
-	        }
-	    }
-	    if(copyFlipH){
-	        var flipOtherSide = document.getElementById("flipOtherSide").checked;
-	        if(flipOtherSide){
-	            // COPIER + À gauche : L'original reste à sa place. La copie symétrique est placée à gauche.
-	            putImageDataVisible(mirrorFlipH, flipHX - flipHW, flipHY);
-	        }else{
-	            // COPIER : L'original reste à sa place. La copie symétrique est placée à droite.
-	            putImageDataVisible(mirrorFlipH, flipHX + flipHW, flipHY);
-	        }
-	    }else{
-	        // SANS COPIER : supprimer complètement l'ancien contenu de la sélection, puis placer l'image inversée à la même position.
-	        ctx.clearRect( flipHX, flipHY, flipHW, flipHH);
-	        putImageDataVisible(mirrorFlipH, flipHX, flipHY);
-	    }
-	    selection = null;
-	    selectionBaseImage = null;
-	    moveBaseImage = null;
-	    moveMode = 0;
-	    copyMode = 0;
-	    rotateMode = 0;
-	    drawing = false;
-	    document.body.classList.remove('block-touch');
-	    return;
-	}
-	// FLIP VERTICAL
-	if(currentTool === "flipv"){
-	    var copyFlipV = document.getElementById("rotateCopy").checked;
-	    // Restaurer uniquement l'image de départ pour éviter les traces éventuelles du contour de sélection.
-	    if(moveBaseImage){
-	        ctx.putImageData(moveBaseImage, 0, 0);
-	    }
-	    // Récupérer les coordonnées de la sélection.
-	    var flipVX = Math.floor(Math.min(startX, x));
-	    var flipVY = Math.floor(Math.min(startY, y));
-	    var flipVW = Math.floor(Math.abs(x - startX)) + 1;
-	    var flipVH = Math.floor(Math.abs(y - startY)) + 1;
-	    if(flipVW < 1 || flipVH < 1){
-	        return;
-	    }
-	    // Récupérer les pixels AVANT toute modification.
-	    var originalFlipV = ctx.getImageData(flipVX, flipVY, flipVW, flipVH);
-	    var srcFlipV = originalFlipV.data;
-	    var mirrorFlipV = ctx.createImageData(flipVW, flipVH);
-	    var dstFlipV = mirrorFlipV.data;
-	    var fvx, fvy;
-	    var fvsi, fvdi;
-	    var fvty;
-	    // Construire le miroir vertical.
-	    for(fvy = 0; fvy < flipVH; fvy++){
-	        for(fvx = 0; fvx < flipVW; fvx++){
-	            fvsi = (fvy * flipVW + fvx) * 4;
-	            fvty = flipVH - 1 - fvy;
-	            fvdi = (fvty * flipVW + fvx) * 4;
-	            dstFlipV[fvdi]     = srcFlipV[fvsi];
-	            dstFlipV[fvdi + 1] = srcFlipV[fvsi + 1];
-	            dstFlipV[fvdi + 2] = srcFlipV[fvsi + 2];
-	            dstFlipV[fvdi + 3] = srcFlipV[fvsi + 3];
-	        }
-	    }
-	    if(copyFlipV){
-	        var flipOtherSide = document.getElementById("flipOtherSide").checked;
-	        if(flipOtherSide){
-	            // COPIER + EN HAUT : L'original reste à sa place. La copie symétrique est placée au-dessus.
-	            putImageDataVisible(mirrorFlipV, flipVX, flipVY - flipVH);
-	        }else{
-	            // COPIER :  L'original reste à sa place. La copie symétrique est placée en dessous.
-	            putImageDataVisible(mirrorFlipV, flipVX, flipVY + flipVH);
-	        }
-	    }else{
-	        // SANS COPIER :  supprimer complètement l'ancien contenu de la sélection, puis placer l'image inversée à la même position.
-	        ctx.clearRect(flipVX, flipVY, flipVW, flipVH);
-	        putImageDataVisible(mirrorFlipV, flipVX, flipVY);
-	    }
-	    selection = null;
-	    selectionBaseImage = null;
-	    moveBaseImage = null;
-	    moveMode = 0;
-	    copyMode = 0;
-	    rotateMode = 0;
-	    drawing = false;
-	    document.body.classList.remove('block-touch');
-	    return;
-	}
-    // MOVE : deuxième étape = dépôt
-	if(
-		currentTool === "move" && moveMode === 1
-	){
-		commitPixelSelection(x,	y);
-		moveMode = 0;
-		copyMode = 0;
-		moveSelection = null;
-		moveBaseImage = null;
-		return;
-	}
-    // COPY : deuxième étape = dépôt
-	if(
-		currentTool === "copy" && copyMode === 1
-	){
-		commitPixelSelection(x,	y);
-		copyMode = 0;
-		moveMode = 0;
-		moveSelection = null;
-		moveBaseImage = null;
-		return;
-	}
-	// ROTATE : déposer la rotation
-	if(currentTool === "rotate" && rotateMode === 1){
-		drawRotatedSelectionAt(rotateAngle);
-		selection = null;
-		rotateBaseImage = null;
-		rotateMode = 0;
-		selectionMoving = false;
-		return;
-	}
+    // MOVE : DEUXIÈME ÉTAPE
+    if(
+        currentTool === "move" && moveMode === 1
+    ){
+        commitPixelSelection(x, y);
+        moveMode = 0;
+        copyMode = 0;
+        moveSelection = null;
+        moveBaseImage = null;
+        return;
+    }
+    // COPY : DEUXIÈME ÉTAPE
+    if(
+        currentTool === "copy" && copyMode === 1
+    ){
+        commitPixelSelection(x, y);
+        copyMode = 0;
+        moveMode = 0;
+        moveSelection = null;
+        moveBaseImage = null;
+        return;
+    }
+    // ROTATE : DÉPÔT
+    if(
+        currentTool === "rotate" && rotateMode === 1
+    ){
+        drawRotatedSelectionAt(rotateAngle);
+        selection = null;
+        rotateBaseImage = null;
+        rotateMode = 0;
+        selectionMoving = false;
+        return;
+    }
     // DESSIN NORMAL
-    if(currentTool==="free"){
+    if(currentTool === "free"){
         if(rainbowMode){
             rainbowHue = 0;
         }
         return;
     }
-    if(currentTool==="eraser"){
+    if(currentTool === "eraser"){
         return;
     }
-	if(currentTool==="line"){
-		redrawFromUndoTop();
-		if(eraserMode){
-			ctx.globalCompositeOperation = "destination-out";
-		} else {
-			ctx.globalCompositeOperation = "source-over";
-		}
-		drawStyledPixelLine(startX,	startY,	x, y);
-		return;
-	}
-    if(currentTool==="arrow"){
+    if(currentTool === "line"){
+        redrawFromUndoTop();
+        if(eraserMode){
+            ctx.globalCompositeOperation = "destination-out";
+        }else{
+            ctx.globalCompositeOperation = "source-over";
+        }
+        drawStyledPixelLine(startX, startY, x, y);
+        return;
+    }
+    if(currentTool === "arrow"){
         redrawFromUndoTop();
         drawArrowPreview(x,y);
         return;
     }
-    if(currentTool==="doublearrow"){
+    if(currentTool === "doublearrow"){
         redrawFromUndoTop();
         drawDoubleArrowPreview(x,y);
         return;
     }
-    if(currentTool==="square"){
+    if(currentTool === "square"){
         drawSquarePreview(x,y);
         return;
     }
-	if(currentTool==="rect"){
-		drawRectPreview(x,y);
-		return;
-	}
-	if(currentTool==="polygon"){
-		drawPolygonPreview(x,y);
-		return;
-	}
-	if(currentTool==="triangle"){
-		drawTrianglePreview(x,y);
-		return;
-	}
-	if(currentTool==="star"){
-		drawStarPreview(x,y);
-		return;
-	}
-    if(currentTool==="circle"){
+    if(currentTool === "rect"){
+        drawRectPreview(x,y);
+        return;
+    }
+    if(currentTool === "polygon"){
+        drawPolygonPreview(x,y);
+        return;
+    }
+    if(currentTool === "triangle"){
+        drawTrianglePreview(x,y);
+        return;
+    }
+    if(currentTool === "star"){
+        drawStarPreview(x,y);
+        return;
+    }
+    if(currentTool === "circle"){
         drawCirclePreview(x,y);
         return;
     }
-    if(currentTool==="ellipse"){
+    if(currentTool === "ellipse"){
         drawEllipsePreview(x,y);
         return;
     }
-    if(currentTool==="fill"){
+    if(currentTool === "fill"){
         return;
     }
 };
