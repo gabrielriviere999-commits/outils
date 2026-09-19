@@ -140,13 +140,15 @@ var sliders = {
     sizeInput: ["sizeInput", 1],
     dottedGapInput: ["dottedGapValue", 1],
     polygonSidesInput: ["polygonSidesInput", 1],
-    starBranchesInput: ["starBranchesInput", 1]
+    starBranchesInput: ["starBranchesInput", 1],
+    zoom: ["zoom", 20]
 };
 var sliderLabels = {
     sizeInput: "sizeLabel",
     dottedGapInput: "dottedGapLabel",
     polygonSidesInput: "polygonSidesLabel",
-    starBranchesInput: "starBranchesLabel"
+    starBranchesInput: "starBranchesLabel",
+    zoom: "zoomLabel"
 };
 function changeSlider(id, amount) {
     var slider = document.getElementById(id);
@@ -164,6 +166,8 @@ function changeSlider(id, amount) {
     if (sliders[id] && typeof window[sliders[id][0]] === "function") {
         window[sliders[id][0]](value);
     }
+    // Déclenche exactement le même mécanisme que lorsqu'on déplace le slider à la souris
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
 }
 // Activation souris / tactile
 var sliderEvent = ("PointerEvent" in window) ? "pointerup" : "click";
