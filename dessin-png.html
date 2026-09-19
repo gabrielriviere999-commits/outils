@@ -240,13 +240,13 @@ body.block-touch{touch-action:none;}
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr">
     <div id="canvasResolution">
+	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
+	  <label id="rulerToggleLabel"><input type="checkbox" id="rulerCheckbox">Règle</label>
+	  <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><br>
 	  <b>Zoom</b> <span id="zoomLabel">100%</span><br>
 	  <button class="rangebtn" data-action="zoomInputMinus">−</button>
 	  <input type="range" id="zoomInput" min="20" max="5000" value="100" step="20">
 	  <button class="rangebtn" data-action="zoomInputPlus">+</button>
-	  <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label>
-	  <label id="rulerToggleLabel"><input type="checkbox" id="rulerCheckbox">Règle</label>
-	  <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label><br>
 	  <b>Grille</b><br>
 	  <label><input type="checkbox" id="gridCheckbox">Grille</label>
 	  <input type="number" id="gridStepInput" value="10" min="1" max="100">
