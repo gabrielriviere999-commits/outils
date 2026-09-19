@@ -3192,10 +3192,14 @@ overlay.addEventListener("click",function(e){if(overlay.dataset.canvasDrag){e.pr
 var canvasPointerDown = false;
 var canvasPointerMoved = false;
 var suppressCanvasClick = false;
-canvas.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse"&&e.button!==0)return;canvasPointerDown=true;canvasPointerMoved=false;});
-canvas.addEventListener("pointermove",function(e){if(canvasPointerDown){canvasPointerMoved=true;}});
-canvas.addEventListener("pointerup",function(e){if(!canvasPointerDown)return;suppressCanvasClick=canvasPointerMoved;canvasPointerDown=false;canvasPointerMoved=false;});
-document.addEventListener("click",function(e){if(!suppressCanvasClick)return;suppressCanvasClick = false;e.preventDefault();e.stopPropagation();},true);
+// canvas.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse"&&e.button!==0)return;canvasPointerDown=true;canvasPointerMoved=false;});
+// canvas.addEventListener("pointermove",function(e){if(canvasPointerDown){canvasPointerMoved=true;}});
+// canvas.addEventListener("pointerup",function(e){if(!canvasPointerDown)return;suppressCanvasClick=canvasPointerMoved;canvasPointerDown=false;canvasPointerMoved=false;});
+// document.addEventListener("click",function(e){if(!suppressCanvasClick)return;suppressCanvasClick=false;e.preventDefault();e.stopPropagation();},true);
+canvas.addEventListener("pointerdown",function(e){if(e.pointerType!=="mouse")return;if(e.button!==0) return;canvasPointerDown=true;canvasPointerMoved=false;});
+canvas.addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;if(canvasPointerDown){canvasPointerMoved=true;}});
+canvas.addEventListener("pointerup",function(e){if(e.pointerType!=="mouse")return;if(!canvasPointerDown)return;suppressCanvasClick=canvasPointerMoved;canvasPointerDown=false;canvasPointerMoved=false;});
+document.addEventListener("click",function(e){if(!suppressCanvasClick)return;suppressCanvasClick=false;e.preventDefault();e.stopPropagation();},true);
 canvas.onpointerup = function(e){
     hideLoupe();
     lastLoupeEvent = null;
