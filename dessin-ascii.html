@@ -63,7 +63,6 @@ select{width:55px;}
   top:0;
   width:120px;
   height:120px;
-  image-rendering:pixelated;
 }
 #bgImage {
   position:absolute;
@@ -73,7 +72,11 @@ select{width:55px;}
   pointer-events:none;
   transform-origin:top left;
 }
-canvas{image-rendering:pixelated;}
+canvas {
+  image-rendering:pixelated;
+  image-rendering:-moz-crisp-edges;
+  image-rendering:crisp-edges;
+}
 body.block-touch{touch-action:none;}
 </style>
 </head>
