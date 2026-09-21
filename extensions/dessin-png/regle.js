@@ -587,106 +587,62 @@ function closeRulerButton(e){
 }
 regleClose.addEventListener("pointerdown", closeRulerButton, false);
 regleClose.addEventListener("click", closeRulerButton, false);
-/* COMPATIBILITÉ TACTILE */
+/* FALLBACK COMPATIBILITÉ SOURIS ANCIENNES */
 if(!window.PointerEvent){
-    regleBody.ontouchstart =
-        function(e){
-            if(!e.touches ||
-               !e.touches.length)
-                return;
-            var t = e.touches[0];
-            rulerStartMove({
-                pointerType:"touch",
-                button:0,
-                pointerId:1,
-                clientX:t.clientX,
-                clientY:t.clientY,
-                preventDefault:function(){
+    function makeRulerMouseEvent(e){
+        e = e || window.event;
+        return {
+            pointerType:"mouse",
+            button:e.button,
+            pointerId:1,
+            clientX:e.clientX,
+            clientY:e.clientY,
+            preventDefault:function(){
+                if(e.preventDefault){
                     e.preventDefault();
-                },
-                stopPropagation:function(){
+                }
+            },
+            stopPropagation:function(){
+                if(e.stopPropagation){
                     e.stopPropagation();
                 }
-            });
+            }
         };
-    regleBody.ontouchmove =
-        function(e){
-            if(!e.touches ||
-               !e.touches.length)
-                return;
-            var t = e.touches[0];
-            rulerMove({
-                pointerId:1,
-                clientX:t.clientX,
-                clientY:t.clientY,
-                preventDefault:function(){
-                    e.preventDefault();
-                },
-                stopPropagation:function(){
-                    e.stopPropagation();
-                }
-            });
-        };
-    regleBody.ontouchend =
-        function(e){
-            rulerEnd({
-                pointerId:1,
-                preventDefault:function(){
-                    e.preventDefault();
-                },
-                stopPropagation:function(){
-                    e.stopPropagation();
-                }
-            });
-        };
-    regleRotation.ontouchstart =
-        function(e){
-            if(!e.touches ||
-               !e.touches.length)
-                return;
-            var t = e.touches[0];
-            rulerStartRotation({
-                pointerType:"touch",
-                button:0,
-                pointerId:1,
-                clientX:t.clientX,
-                clientY:t.clientY,
-                preventDefault:function(){
-                    e.preventDefault();
-                },
-                stopPropagation:function(){
-                    e.stopPropagation();
-                }
-            });
-        };
-    regleRotation.ontouchmove =
-        function(e){
-            if(!e.touches ||
-               !e.touches.length)
-                return;
-            var t = e.touches[0];
-            rulerMove({
-                pointerId:1,
-                clientX:t.clientX,
-                clientY:t.clientY,
-                preventDefault:function(){
-                    e.preventDefault();
-                },
-                stopPropagation:function(){
-                    e.stopPropagation();
-                }
-            });
-        };
-    regleRotation.ontouchend =
-        function(e){
-            rulerEnd({
-                pointerId:1,
-                preventDefault:function(){
-                    e.preventDefault();
-                },
-                stopPropagation:function(){
-                    e.stopPropagation();
-                }
-            });
-        };
+    }
+    // DÉBUT DU DÉPLACEMENT
+    regleBody.onmousedown = function(e){
+        e = e || window.event;
+        if(e.button !== 0)
+            return;
+        rulerStartMove(makeRulerMouseEvent(e));
+        return false;
+    };
+    // DÉBUT DE LA ROTATION
+    regleRotation.onmousedown = function(e){
+        e = e || window.event;
+        if(e.button !== 0)
+            return;
+        rulerStartRotation(makeRulerMouseEvent(e));
+        return false;
+    };
+    // DÉBUT DU REDIMENSIONNEMENT
+    regleLengthHandle.onmousedown = function(e){
+        e = e || window.event;
+        if(e.button !== 0)
+            return;
+        rulerStartLength(makeRulerMouseEvent(e));
+        return false;
+    };
+    // MOUVEMENT GLOBAL
+    document.addEventListener("mousemove", function(e){
+        if(!regleAction)
+            return;
+        rulerMove(makeRulerMouseEvent(e));
+    }, false);
+    // RELÂCHEMENT GLOBAL
+    document.addEventListener("mouseup", function(e){
+        if(!regleAction)
+            return;
+        rulerEnd(makeRulerMouseEvent(e));
+    }, false);
 }
