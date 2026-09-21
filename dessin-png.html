@@ -3633,27 +3633,71 @@ canvas.onpointerup = function(e){
         return;
     }
 };
-/* COMPATIBILITE ANCIENS NAVIGATEURS / NINTENDO 3DS */
+/* FALLBACK COMPATIBILITE ANCIENS NAVIGATEURS / NINTENDO 3DS */
 if (!window.PointerEvent) {
+    canvas.onmousedown = function(e){
+        e.preventDefault();
+        canvas.onpointerdown({
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerId: 1,
+            pointerType: "mouse",
+            button: e.button
+        });
+    };
+    canvas.onmousemove = function(e){
+        e.preventDefault();
+        canvas.onpointermove({
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerId: 1,
+            pointerType: "mouse"
+        });
+    };
+    canvas.onmouseup = function(e){
+        e.preventDefault();
+        canvas.onpointerup({
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerId: 1,
+            pointerType: "mouse"
+        });
+    };
     canvas.ontouchstart = function(e){
         if(!e.touches || !e.touches.length) return;
         e.preventDefault();
         var t = e.touches[0];
-        canvas.onpointerdown({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
+        canvas.onpointerdown({
+            clientX: t.clientX,
+            clientY: t.clientY,
+            pointerId: 1,
+            pointerType: "touch",
+            button: 0
+        });
     };
     canvas.ontouchmove = function(e){
         if(!e.touches || !e.touches.length) return;
         e.preventDefault();
         var t = e.touches[0];
-        canvas.onpointermove({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
+        canvas.onpointermove({
+            clientX: t.clientX,
+            clientY: t.clientY,
+            pointerId: 1,
+            pointerType: "touch"
+        });
     };
     canvas.ontouchend = function(e){
         e.preventDefault();
         if(!e.changedTouches || !e.changedTouches.length){
             return;
         }
-        var t = e.changedTouches[0];
-        canvas.onpointerup({ clientX: t.clientX, clientY: t.clientY, pointerId: 1 });
+        var t = e.changedTouches[0];        
+        canvas.onpointerup({
+            clientX: t.clientX,
+            clientY: t.clientY,
+            pointerId: 1,
+            pointerType: "touch"
+        });
     };
     canvas.ontouchcancel = function(){
         drawing = false;
