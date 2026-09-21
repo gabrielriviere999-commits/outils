@@ -192,15 +192,19 @@ function drawImageToCanvas(img) {
 }
 /* Copier */
 function copyText(id, btn){
-	var btn = event.target;
     var text = document.getElementById(id).innerHTML;
     var t = document.createElement("textarea");
-    t.value = text;
     document.body.appendChild(t);
+    t.value = text;
     t.select();
-    document.execCommand("copy");
+    try {
+        document.execCommand("copy");
+    } catch (err) {
+    }
     document.body.removeChild(t);
-    btn.focus();
+    if (btn && btn.focus) {
+        btn.focus();
+    }
 }
 /* Conversions couleurs */
 function toHex(c){ var h = c.toString(16); return h.length == 1 ? "0" + h : h; }
@@ -326,7 +330,9 @@ if ("onpointerdown" in canvas) {
         draggingCross = true;
         if (e.pointerType === "touch") {
             if (canvas.setPointerCapture) {
-                canvas.setPointerCapture(e.pointerId);
+                try {
+                    canvas.setPointerCapture(e.pointerId);
+                } catch(err) {}
             }
             showLoupe(p.x, p.y, e);
         }
@@ -351,7 +357,9 @@ if ("onpointerdown" in canvas) {
         if (e.pointerType === "touch") {
             if (canvas.hasPointerCapture &&
                 canvas.hasPointerCapture(e.pointerId)) {
-                canvas.releasePointerCapture(e.pointerId);
+                try {
+                    canvas.releasePointerCapture(e.pointerId);
+                } catch(err) {}
             }
             hideLoupe();
         }
@@ -362,43 +370,149 @@ if ("onpointerdown" in canvas) {
         if (e.pointerType === "touch") {
             if (canvas.hasPointerCapture &&
                 canvas.hasPointerCapture(e.pointerId)) {
-                canvas.releasePointerCapture(e.pointerId);
+                try {
+                    canvas.releasePointerCapture(e.pointerId);
+                } catch(err) {}
             }
             hideLoupe();
         }
         if (e.preventDefault) e.preventDefault();
     };
 } else {
-    /* Ancien navigateur / Nintendo 3DS */
+    // FALLBACK ANCIENNES SOURIS Firefox 52 / Windows XP
+    var mouseDragging = false;
+    function makeMouseEvent(e){
+        e = e || window.event;
+        return {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            preventDefault: function(){
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+                e.returnValue = false;
+            },
+            stopPropagation: function(){
+                if (e.stopPropagation) {
+                    e.stopPropagation();
+                }
+            }
+        };
+    }
+    // Début du déplacement de la croix
+    canvas.onmousedown = function(e){
+        e = e || window.event;
+        /* uniquement bouton gauche */
+        if (e.button !== 0) {
+            return;
+        }
+        mouseDragging = true;
+        draggingCross = true;
+        var p = getPos(e);
+        readPixel(p.x, p.y);
+        showCrossAt(e);
+        showLoupe(p.x, p.y, e);
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
+        return false;
+    };
+    // Déplacement de la souris. document et non canvas. Ainsi le déplacement continue même lorsque la souris sort du canvas.
+    document.onmousemove = function(e){
+        e = e || window.event;
+        if (!mouseDragging) {
+            return;
+        }
+        var p = getPos(e);
+        // On ne lit le pixel que si la souris est encore dans le canvas.
+        var rect = canvas.getBoundingClientRect();
+        if (
+            e.clientX >= rect.left &&
+            e.clientX < rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY < rect.bottom
+        ) {
+            readPixel(p.x, p.y);
+            showCrossAt(e);
+            showLoupe(p.x, p.y, e);
+        }
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
+    };
+    // Relâchement global. document permet de relâcher même après être sorti du canvas.
+    document.onmouseup = function(e){
+        e = e || window.event;
+        if (!mouseDragging) {
+            return;
+        }
+        mouseDragging = false;
+        draggingCross = false;
+        hideLoupe();
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
+    };
+    // Perte du focus de la fenêtre. Utile avec les vieux navigateurs : si l'utilisateur maintient le bouton, sort de la fenêtre puis relâche la souris, on évite de rester bloqué en mode déplacement.
+    window.onblur = function(){
+        if (!mouseDragging) {
+            return;
+        }
+        mouseDragging = false;
+        draggingCross = false;
+        hideLoupe();
+    };
+    // FALLBACK TACTILE
     canvas.ontouchstart = function(e){
-        if (!e.touches || !e.touches.length) return;
+        if (!e.touches || !e.touches.length) {
+            return;
+        }
         var t = e.touches[0];
         var p = getPos(t);
         draggingCross = true;
         readPixel(p.x, p.y);
         showCrossAt(t);
         showLoupe(p.x, p.y, t);
-        if (e.preventDefault) e.preventDefault();
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
     };
     canvas.ontouchmove = function(e){
-        if (!e.touches || !e.touches.length) return;
+        if (!e.touches || !e.touches.length) {
+            return;
+        }
+        if (!draggingCross) {
+            return;
+        }
         var t = e.touches[0];
         var p = getPos(t);
-        if (!draggingCross) return;
         readPixel(p.x, p.y);
         showCrossAt(t);
         showLoupe(p.x, p.y, t);
-        if (e.preventDefault) e.preventDefault();
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
     };
     canvas.ontouchend = function(e){
         draggingCross = false;
         hideLoupe();
-        if (e.preventDefault) e.preventDefault();
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
     };
     canvas.ontouchcancel = function(e){
         draggingCross = false;
         hideLoupe();
-        if (e.preventDefault) e.preventDefault();
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.returnValue = false;
     };
 }
 </script>
