@@ -3710,37 +3710,65 @@ if (!window.PointerEvent) {
     };
 }
 /* FLOOD FILL (simple) */
-function floodFill(x,y){
-    var img = ctx.getImageData(0,0,canvas.width,canvas.height);
+function floodFill(x, y){
+    var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
     var data = img.data;
-    var target = getPixel(data,x,y);
-    var fill;
-    if(eraserMode){
-        // Gomme : pixels complètement transparents
-        fill = [0,0,0,0];
-    } else {
-        fill = hexToRgba(ctx.fillStyle);
+    var target = getPixel(data, x, y);
+    var fill = eraserMode
+        ? [0, 0, 0, 0]
+        : hexToRgba(ctx.fillStyle);
+    if(colorsEqual(target, fill)){
+        return;
     }
-    if(colorsEqual(target,fill)) return;
-    var stack = [{x:x,y:y}];
-    while(stack.length){
+    var width = canvas.width;
+    var height = canvas.height;
+    // Tolérance de couleur.
+    // 0 = couleur strictement identique.
+    // 5-15 = permet de récupérer les petits écarts.
+    var tolerance = 10;
+    var stack = [{x:x, y:y}];
+    // On mémorise les pixels déjà visités.
+    var visited = new Uint8Array(width * height);
+    while(stack.length > 0){
         var p = stack.pop();
-        var px = p.x, py = p.y;
-        var idx = (py*canvas.width+px)*4;
+        var px = p.x;
+        var py = p.y;
+        if(px < 0 || px >= width || py < 0 || py >= height){
+            continue;
+        }
+        var pos = py * width + px;
+        if(visited[pos]){
+            continue;
+        }
+        visited[pos] = 1;
+        var idx = pos * 4;
         var cur = [
             data[idx],
-            data[idx+1],
-            data[idx+2],
-            data[idx+3]
+            data[idx + 1],
+            data[idx + 2],
+            data[idx + 3]
         ];
-        if(!colorsEqual(cur,target)) continue;
-        setPixel(data,px,py,fill);
-        if(px>0) stack.push({x:px-1,y:py});
-        if(px<canvas.width-1) stack.push({x:px+1,y:py});
-        if(py>0) stack.push({x:px,y:py-1});
-        if(py<canvas.height-1) stack.push({x:px,y:py+1});
+        if(!colorsEqualTolerance(cur, target, tolerance)){
+            continue;
+        }
+        // Remplissage du pixel
+        data[idx] = fill[0];
+        data[idx + 1] = fill[1];
+        data[idx + 2] = fill[2];
+        data[idx + 3] = fill[3];
+        // 4 voisins
+        stack.push({x:px - 1, y:py});
+        stack.push({x:px + 1, y:py});
+        stack.push({x:px, y:py - 1});
+        stack.push({x:px, y:py + 1});
     }
-    ctx.putImageData(img,0,0);
+    ctx.putImageData(img, 0, 0);
+}
+function colorsEqualTolerance(a, b, tolerance){
+    return Math.abs(a[0] - b[0]) <= tolerance &&
+           Math.abs(a[1] - b[1]) <= tolerance &&
+           Math.abs(a[2] - b[2]) <= tolerance &&
+           Math.abs(a[3] - b[3]) <= tolerance;
 }
 function getPixel(data,x,y){
     var i = (y*canvas.width+x)*4;
