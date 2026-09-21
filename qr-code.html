@@ -83,14 +83,14 @@
   <canvas id="canvas-file" style="display:none;"></canvas>
   <input id="pastefileinput" placeholder="Ou cliquer ici puis faire Ctrl+V" maxlength="0">
   <pre id="decode-file"></pre>
-  <button id="copy-btn">Copier</button>
+  <button onclick="copyText('decode-file', this)">Copier</button>
 </div>
 <br>
 <div class="section">
   <h3>Décoder un QR Code (caméra)</h3>
   <video id="qrVideo" autoplay playsinline muted style="width:300px;"></video>
   <pre id="qrResult"></pre>
-  <button id="copyQR">Copier</button>
+  <button onclick="copyText('qrResult', this)">Copier</button>
   <button id="startScan">Scanner</button>
   <button id="switchCam">Changer de caméra</button>
   <button id="toggleTorch">Torche</button>
@@ -361,35 +361,6 @@ document.getElementById("stopScan").onclick = function () {
     video.srcObject = null;
   }
   qrReader.reset();
-};
-// Copier
-function copyTextFrom(elementId, btn) {
-  var btn = event.target;
-  var txt = document.getElementById(elementId).textContent;
-  var t = document.createElement("textarea");
-  t.value = txt;
-  document.body.appendChild(t);
-  t.select();
-  try { document.execCommand("copy"); } catch (e) {}
-  document.body.removeChild(t);
-  btn.focus();
-}
-document.getElementById("copyQR").onclick = function (e) {
-  copyTextFrom("qrResult", e.target);
-};
-/* COPIER  */
-document.getElementById("copy-btn").onclick = function () {
-  var btn = event.target;
-  var text = document.getElementById("decode-file").innerText;
-  var temp = document.createElement("textarea");
-  temp.value = text;
-  temp.style.position = "fixed";
-  temp.style.opacity = "0";
-  document.body.appendChild(temp);
-  temp.select();
-  document.execCommand("copy");
-  document.body.removeChild(temp);
-  btn.focus();
 };
 </script>
 </body>
