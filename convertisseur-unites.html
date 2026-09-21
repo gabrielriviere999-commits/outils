@@ -102,8 +102,9 @@ label{color:#000;}
 	
 <p>
   Résultat : <strong id="result">—</strong>
-  <button id="copyBtn">Copier</button>
+  <button onclick="copyText('result', this)">Copier</button>
 </p>
+<script src="outils.js"></script>
 <script>
 /* 1. Catégories  */
 var categories = {
@@ -959,23 +960,6 @@ document.getElementById("inputValue").oninput = convert;
   for (var k in categories) catNames.push(k);
   fillCategory(catNames);
 })();
-/* 11. COPIER  */
-document.getElementById("copyBtn").onclick = function () {
-  var btn = event.target;
-  var text = document.getElementById("result").innerHTML;
-  // Créer un textarea caché
-  var temp = document.createElement("textarea");
-  temp.value = text;
-  temp.style.position = "absolute";
-  temp.style.left = "-9999px";
-  document.body.appendChild(temp);
-  // Sélectionner + copier
-  temp.select();
-  try { document.execCommand("copy"); } catch (e) {}
-  // Supprimer le textarea
-  document.body.removeChild(temp);
-  btn.focus();
-};
 document.getElementById("inputValue").value = "1";
 convert();
 /* 12. bouton Inverser De ↔ Vers  */

@@ -1,12 +1,25 @@
+/* Copier */
+function copyText(id, btn){
+    var text = document.getElementById(id).innerHTML;
+    var t = document.createElement("textarea");
+    document.body.appendChild(t);
+    t.value = text;
+    t.select();
+    try { document.execCommand("copy"); } catch (err) {}
+    document.body.removeChild(t);
+    if (btn && btn.focus) {
+        btn.focus();
+    }
+}
 /* Copier textarea */
 function copyTextarea(id, btn) {
     var code = document.getElementById(id);
-    var temp = document.createElement("textarea");
-    temp.value = code.value;
-    document.body.appendChild(temp);
-    temp.select();
+    var t = document.createElement("textarea");
+    t.value = code.value;
+    document.body.appendChild(t);
+    t.select();
     try { document.execCommand("copy"); } catch (err) {}
-    document.body.removeChild(temp);
+    document.body.removeChild(t);
     btn.focus();
 }
 var mapTextarea = {
