@@ -587,8 +587,9 @@ function closeRulerButton(e){
 }
 regleClose.addEventListener("pointerdown", closeRulerButton, false);
 regleClose.addEventListener("click", closeRulerButton, false);
-/* FALLBACK COMPATIBILITÉ SOURIS ANCIENNES */
+/* FALLBACK COMPATIBILITÉ SOURIS + TACTILE */
 if(!window.PointerEvent){
+    // SOURIS ANCIENNES
     function makeRulerMouseEvent(e){
         e = e || window.event;
         return {
@@ -645,4 +646,155 @@ if(!window.PointerEvent){
             return;
         rulerEnd(makeRulerMouseEvent(e));
     }, false);
+    // TACTILE ANCIEN
+    // DÉPLACEMENT
+    regleBody.ontouchstart = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerStartMove({
+            pointerType:"touch",
+            button:0,
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleBody.ontouchmove = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerMove({
+            pointerType:"touch",
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleBody.ontouchend = function(e){
+        e.preventDefault();
+        rulerEnd({
+            pointerId:1,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    // ROTATION
+    regleRotation.ontouchstart = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerStartRotation({
+            pointerType:"touch",
+            button:0,
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleRotation.ontouchmove = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerMove({
+            pointerType:"touch",
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleRotation.ontouchend = function(e){
+        e.preventDefault();
+        rulerEnd({
+            pointerId:1,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    // REDIMENSIONNEMENT
+    regleLengthHandle.ontouchstart = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerStartLength({
+            pointerType:"touch",
+            button:0,
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleLengthHandle.ontouchmove = function(e){
+        if(!e.touches || !e.touches.length)
+            return;
+        e.preventDefault();
+        var t = e.touches[0];
+        rulerMove({
+            pointerType:"touch",
+            pointerId:1,
+            clientX:t.clientX,
+            clientY:t.clientY,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
+    regleLengthHandle.ontouchend = function(e){
+        e.preventDefault();
+        rulerEnd({
+            pointerId:1,
+            preventDefault:function(){
+                e.preventDefault();
+            },
+            stopPropagation:function(){
+                e.stopPropagation();
+            }
+        });
+    };
 }
