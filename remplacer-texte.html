@@ -54,9 +54,9 @@
 <div class="card">
 <fieldset>
 <legend>Options</legend>
-<label><input type="checkbox" id="chk_min">minuscule</label>
-<label><input type="checkbox" id="chk_maj">MAJUSCULE</label>
-<label><input type="checkbox" id="chk_inv">iNVERSER CASSE</label>
+<label><input type="radio" name="casse" id="chk_min" value="min">minuscule</label>
+<label><input type="radio" name="casse" id="chk_maj" value="maj">MAJUSCULE</label>
+<label><input type="radio" name="casse" id="chk_inv" value="inv">iNVERSER CASSE</label>
 <br>
 <label><input type="checkbox" id="chk_acc">Sans accents</label>
 <label><input type="checkbox" id="chk_spc">Nettoyer espaces</label>
@@ -306,22 +306,23 @@ function loadState() {
     }
     loadingState = false;
 }
-/* OPTIONS DE CASSE */
-function exclusiviteCasse(chk) {
-    if (chk === "min") {
-        document.getElementById("chk_maj").checked = false;
-        document.getElementById("chk_inv").checked = false;
-    }
-    if (chk === "maj") {
-        document.getElementById("chk_min").checked = false;
-        document.getElementById("chk_inv").checked = false;
-    }
-    if (chk === "inv") {
-        document.getElementById("chk_min").checked = false;
-        document.getElementById("chk_maj").checked = false;
-    }
+/* EVENEMENTS OPTIONS */
+function saveCasse() {
     saveState();
 }
+document.getElementById("chk_min").onchange = saveCasse;
+document.getElementById("chk_maj").onchange = saveCasse;
+document.getElementById("chk_inv").onchange = saveCasse;
+document.getElementById("chk_acc").onchange = saveState;
+document.getElementById("chk_spc").onchange = saveState;
+document.getElementById("chk_quo").onchange = saveState;
+document.getElementById("chk_squo").onchange = saveState;
+document.getElementById("addPrefix").oninput = saveState;
+document.getElementById("addSuffix").oninput = saveState;
+document.getElementById("removePrefix").oninput = saveState;
+document.getElementById("removeSuffix").oninput = saveState;
+document.getElementById("repl_ignore_case").onchange = saveState;
+document.getElementById("fileSuffix").oninput = saveState;
 function decocherTout() {
     document.getElementById("chk_min").checked = false;
     document.getElementById("chk_maj").checked = false;
@@ -407,26 +408,6 @@ function effacerRemplacements() {
     document.getElementById("removeSuffix").value = "";
     saveState();
 }
-/* EVENEMENTS OPTIONS */
-document.getElementById("chk_min").onchange = function() {
-    exclusiviteCasse("min");
-};
-document.getElementById("chk_maj").onchange = function() {
-    exclusiviteCasse("maj");
-};
-document.getElementById("chk_inv").onchange = function() {
-    exclusiviteCasse("inv");
-};
-document.getElementById("chk_acc").onchange = saveState;
-document.getElementById("chk_spc").onchange = saveState;
-document.getElementById("chk_quo").onchange = saveState;
-document.getElementById("chk_squo").onchange = saveState;
-document.getElementById("addPrefix").oninput = saveState;
-document.getElementById("addSuffix").oninput = saveState;
-document.getElementById("removePrefix").oninput = saveState;
-document.getElementById("removeSuffix").oninput = saveState;
-document.getElementById("repl_ignore_case").onchange = saveState;
-document.getElementById("fileSuffix").oninput = saveState;
 /* EXPORT / IMPORT */
 function exportOptions() {
     var data = {
