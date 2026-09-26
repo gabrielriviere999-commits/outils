@@ -30,7 +30,6 @@ pre.tree{
   max-height:500px;
   max-height:70vh;
 }
-input{width:60px;}
 </style>
 </head>
 <body>
@@ -69,11 +68,11 @@ input{width:60px;}
 <textarea wrap="off" id="asciiTextArea"></textarea><br>
 <button id="copyasciiTextArea">Copier</button>
 <fieldset><legend>Couleurs</legend>
-<label>Fond : <input id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
-<label>Texte : <input id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
-<label>Dossiers : <input id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
-<label>Fichiers : <input id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
-<label>ASCII : <input id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label><hr>
+<label>Fond : <input type="text" id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
+<label>Texte : <input type="text" id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>Dossiers : <input type="text" id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
+<label>Fichiers : <input type="text" id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
+<label>ASCII : <input type="text" id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label><hr>
 <button onclick="exportColors()">Exporter</button>
 <button onclick="showImportBox()">Importer</button>
 <button onclick="resetColors()">Valeurs par défaut</button>

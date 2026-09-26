@@ -30,7 +30,6 @@
   text-align:center;
 }
 .org-node.selected .org-label{border:5px solid #f44;}
-#colorInput{width:145px;}
 </style>
 </head>
 <body>
@@ -52,7 +51,7 @@
   <button class="style-btn" onclick="changeSelectedTextColor(this)">Texte sélectionné</button>
   <button class="style-btn" onclick="changeGlobalColor(this)">Fond global</button>
   <button class="style-btn" onclick="changeSelectedBgColor(this)">Fond sélectionné</button>
-  <input type="text" id="colorInput" placeholder="#rrggbb"><button class="previewColorPicker"></button>
+  <input id="colorInput" placeholder="#rrggbb"><button class="previewColorPicker"></button>
   <div class="overlayColorPicker">
     <div class="overlayColorPicker-cell">
       <div class="mini-picker" id="miniPicker">
