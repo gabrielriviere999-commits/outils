@@ -54,49 +54,34 @@
 <div class="card">
 <fieldset>
 <legend>Options</legend>
-<label><input type="radio" name="casse" id="chk_off" value="off" checked>Désactivé</label>
-<label><input type="radio" name="casse" id="chk_min" value="min">minuscule</label>
-<label><input type="radio" name="casse" id="chk_maj" value="maj">MAJUSCULE</label>
-<label><input type="radio" name="casse" id="chk_inv" value="inv">iNVERSER CASSE</label>
-<br>
-<label><input type="checkbox" id="chk_acc">Sans accents</label>
-<label><input type="checkbox" id="chk_spc">Nettoyer espaces</label>
-<label><input type="checkbox" id="chk_quo">Guillemets → "</label>
-<label><input type="checkbox" id="chk_squo">Demi-guillemets → '</label>
-<br>
-<button onclick="decocherTout()">Décocher tout</button>
-<br>
-<hr>
-<label>Ajouter en début de ligne :</label>
-<input id="addPrefix" type="text" placeholder="ex:    ou >> ou - ">
-<br>
-<label>Ajouter en fin de ligne :</label>
-<input id="addSuffix" type="text" placeholder="ex: ; ou , ou // fin">
-<br>
-<label>Supprimer en début de ligne :</label>
-<input id="removePrefix" type="text" placeholder="ex:    ou >> ou - ">
-<br>
-<label>Supprimer en fin de ligne :</label>
-<input id="removeSuffix" type="text" placeholder="ex: ; ou , ou // fin">
-<p></p>
-<div id="repl_container"></div>
-<button onclick="ajouterRemplacement()">Ajouter un remplacement</button>
-<label>
-  <input type="checkbox" id="repl_ignore_case">
-  Ignorer casse
-</label>
-<br>
-<button onclick="effacerRemplacements()" style="margin-top:10px;">
-  Effacer préfixes/suffixes et remplacements
-</button>
-<hr>
-<button onclick="exportOptions()">Exporter</button>
-<button onclick="showImportBox()">Importer</button>
-<div id="importBox" style="display:none;">
-  <textarea wrap="off" id="json"></textarea><br>
-  <button onclick="applyImport()">Valider l'import</button>
-  <button id="copyjson">Copier</button>
-</div>
+  <label><input type="radio" name="casse" id="chk_off" value="off" checked>Désactivé</label>
+  <label><input type="radio" name="casse" id="chk_min" value="min">minuscule</label>
+  <label><input type="radio" name="casse" id="chk_maj" value="maj">MAJUSCULE</label>
+  <label><input type="radio" name="casse" id="chk_inv" value="inv">iNVERSER CASSE</label><br>
+  <label><input type="checkbox" id="chk_acc">Sans accents</label>
+  <label><input type="checkbox" id="chk_spc">Nettoyer espaces</label>
+  <label><input type="checkbox" id="chk_quo">Guillemets → "</label>
+  <label><input type="checkbox" id="chk_squo">Demi-guillemets → '</label><br>
+  <button onclick="decocherTout()">Décocher tout</button><br><hr>
+  <label>Ajouter en début de ligne :</label>
+  <input id="addPrefix" type="text" placeholder="ex:    ou >> ou - "><br>
+  <label>Ajouter en fin de ligne :</label>
+  <input id="addSuffix" type="text" placeholder="ex: ; ou , ou // fin"><br>
+  <label>Supprimer en début de ligne :</label>
+  <input id="removePrefix" type="text" placeholder="ex:    ou >> ou - "><br>
+  <label>Supprimer en fin de ligne :</label>
+  <input id="removeSuffix" type="text" placeholder="ex: ; ou , ou // fin"><br>
+  <div id="repl_container" style="margin-top:10px;"></div>
+  <button onclick="ajouterRemplacement()">Ajouter un remplacement</button>
+  <label><input type="checkbox" id="repl_ignore_case">Ignorer casse</label><br>
+  <button onclick="effacerRemplacements()" style="margin-top:10px;">Effacer préfixes/suffixes et remplacements</button><hr>
+  <button onclick="exportOptions()">Exporter</button>
+  <button onclick="showImportBox()">Importer</button>
+  <div id="importBox" style="display:none;">
+    <textarea wrap="off" id="json"></textarea><br>
+    <button onclick="applyImport()">Valider l'import</button>
+    <button id="copyjson">Copier</button>
+  </div>
 </fieldset>
 </div>
 <div class="card">
