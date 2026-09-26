@@ -54,6 +54,7 @@
 <div class="card">
 <fieldset>
 <legend>Options</legend>
+<label><input type="radio" name="casse" id="chk_off" value="off" checked>Désactivé</label>
 <label><input type="radio" name="casse" id="chk_min" value="min">minuscule</label>
 <label><input type="radio" name="casse" id="chk_maj" value="maj">MAJUSCULE</label>
 <label><input type="radio" name="casse" id="chk_inv" value="inv">iNVERSER CASSE</label>
@@ -203,6 +204,7 @@ function appliquerTransformations() {
 var STORAGE_KEY = "remplacer_texte_storage";
 var STORAGE_DEFAULTS = {
     checks: {
+		off: true,
         min: false,
         maj: false,
         inv: false,
@@ -242,6 +244,7 @@ function saveState() {
     }
     var data = {
         checks: {
+			off: document.getElementById("chk_off").checked,
             min: document.getElementById("chk_min").checked,
             maj: document.getElementById("chk_maj").checked,
             inv: document.getElementById("chk_inv").checked,
@@ -266,6 +269,7 @@ function loadState() {
     var data = loadStorage();
     loadingState = true;
     var c = data.checks || {};
+    document.getElementById("chk_off").checked = c.off !== undefined ? c.off : STORAGE_DEFAULTS.checks.off;
     document.getElementById("chk_min").checked = c.min !== undefined ? c.min : STORAGE_DEFAULTS.checks.min;
     document.getElementById("chk_maj").checked = c.maj !== undefined ? c.maj : STORAGE_DEFAULTS.checks.maj;
     document.getElementById("chk_inv").checked = c.inv !== undefined ? c.inv : STORAGE_DEFAULTS.checks.inv;
@@ -310,6 +314,7 @@ function loadState() {
 function saveCasse() {
     saveState();
 }
+document.getElementById("chk_off").onchange = saveCasse;
 document.getElementById("chk_min").onchange = saveCasse;
 document.getElementById("chk_maj").onchange = saveCasse;
 document.getElementById("chk_inv").onchange = saveCasse;
@@ -324,6 +329,7 @@ document.getElementById("removeSuffix").oninput = saveState;
 document.getElementById("repl_ignore_case").onchange = saveState;
 document.getElementById("fileSuffix").oninput = saveState;
 function decocherTout() {
+	document.getElementById("chk_off").checked = true;
     document.getElementById("chk_min").checked = false;
     document.getElementById("chk_maj").checked = false;
     document.getElementById("chk_inv").checked = false;
@@ -412,6 +418,7 @@ function effacerRemplacements() {
 function exportOptions() {
     var data = {
         checks: {
+			off: document.getElementById("chk_off").checked,
             min: document.getElementById("chk_min").checked,
             maj: document.getElementById("chk_maj").checked,
             inv: document.getElementById("chk_inv").checked,
@@ -445,6 +452,7 @@ function applyImport() {
         // Cases
         var c = data.checks;
         if (c) {
+			document.getElementById("chk_off").checked = c.off || false;
             document.getElementById("chk_min").checked = c.min || false;
             document.getElementById("chk_maj").checked = c.maj || false;
             document.getElementById("chk_inv").checked = c.inv || false;
