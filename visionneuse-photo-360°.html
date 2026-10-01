@@ -63,7 +63,7 @@
     <button id="btnRotation">Auto</button>
     <button id="btnReset">Reset</button>
     |
-    <label><label id="fov">FOV 75°</label><input type="range" id="fovSlider" min="25" max="100" step="1" value="75"></label>
+    <label><label id="fov">FOV 75°</label><input type="range" id="fovSlider" min="5" max="100" step="1" value="75"></label>
     <button class="btnDir" id="btnGauche">←</button>
     <button class="btnDir" id="btnDroite">→</button>
     <button class="btnDir" id="btnHaut">↑</button>
@@ -96,9 +96,11 @@
   var yaw   = 0;                 // lacet (radians)
   var pitch = 0;                 // tangage (radians)
   var fov   = 75;                // degrés
-  var FOV_MIN = 25, FOV_MAX = 100;
+  var FOV_MIN = 5, FOV_MAX = 100;
   var autoRotation = false;
   var vitesse = { x: 0, y: 0 };  // inertie
+  // Rendu à la demande : vrai = il faut redessiner une frame
+  var sale = true;
   // État des directions maintenues (flèches du clavier + boutons)
   var touches = { gauche: false, droite: false, haut: false, bas: false };
   // Bornage du tangage : libre jusqu'à ±89° (1.55 rad), le zénith/nadir reste
@@ -110,9 +112,11 @@
   var gl = null;
   var glCtx = window.WebGLRenderingContext || window.WebGL2RenderingContext;
   try {
-    gl = canvas.getContext("webgl", { antialias: true })
-      || (window.WebGL2RenderingContext ? canvas.getContext("webgl2") : null)
-      || canvas.getContext("experimental-webgl");
+    // Perf : pas d'antialias (un seul triangle plein écran, le MSAA ne sert à rien)
+    // et hint pour demander le GPU performant plutôt que l'iGPU.
+    gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" })
+      || (window.WebGL2RenderingContext ? canvas.getContext("webgl2", { antialias: false, powerPreference: "high-performance" }) : null)
+      || canvas.getContext("experimental-webgl", { antialias: false });
   } catch (e) { gl = null; }
   var prog = null, uni = {}, attribPos = null;
   var tailleMaxTex = 4096;
@@ -300,6 +304,7 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    sale = true; // nouvelle image : redessiner
   }
   /* Chargement d'une photo utilisateur */
   function chargerFichier(f) {
@@ -340,6 +345,7 @@
     yaw   -= dx * k;
     pitch = bornerPitch(pitch + dy * k);
     vitesse.x = -dx * k; vitesse.y = dy * k;
+    sale = true; // la vue a bougé : redessiner
   }
   function terminer() {
     saisie = false;
@@ -370,6 +376,7 @@
       fov = fov * (pincement / d);
       fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
       pincement = d;
+      sale = true;
     }
     if (e.preventDefault) e.preventDefault();
   }, false);
@@ -390,6 +397,7 @@
     var d = (e.deltaY || e.wheelDelta || 0);
     if (d > 0) fov += 5; else if (d < 0) fov -= 5;
     fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+    sale = true;
     if (e.preventDefault) e.preventDefault();
   }
   canvas.addEventListener("wheel", molette, { passive: false });
@@ -413,6 +421,7 @@
   fovSlider.addEventListener("input", function () {
     fov = parseInt(fovSlider.value, 10) || 75;
     fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+    sale = true;
   }, false);
   /* Boutons directionnels : maintenir enfoncé pour tourner en continu.
      Ils partagent le même état que les flèches du clavier. */
@@ -458,6 +467,7 @@
   }, false);
   btnReset.addEventListener("click", function () {
     yaw = 0; pitch = 0; fov = 75; vitesse.x = 0; vitesse.y = 0;
+    sale = true;
   }, false);
   function afficherErreur(msg) {
     erreur.textContent = msg;
@@ -467,6 +477,7 @@
   }
   function masquerErreur() { erreur.style.display = "none"; }
   /* Boucle de rendu */
+  // Renvoie true si la taille du canvas a changé (il faut alors redessiner)
   function redimensionner() {
     var dpr = window.devicePixelRatio || 1;
     if (dpr > 2) dpr = 2;
@@ -474,7 +485,9 @@
     var h = Math.round(canvas.clientHeight * dpr);
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w; canvas.height = h;
+      return true;
     }
+    return false;
   }
   var dernierTemps = 0;
   function boucle(ts) {
@@ -488,9 +501,13 @@
       vitesse.x *= 0.92; vitesse.y *= 0.92;
       if (Math.abs(vitesse.x) < 0.00005) vitesse.x = 0;
       if (Math.abs(vitesse.y) < 0.00005) vitesse.y = 0;
+      if (vitesse.x !== 0 || vitesse.y !== 0) sale = true;
     }
     // Rotation automatique
-    if (autoRotation && !saisie) yaw += 0.15 * dt;
+    if (autoRotation && !saisie) {
+      yaw += 0.15 * dt;
+      sale = true;
+    }
     // Déplacement continu : flèches et boutons maintenus.
     // Les diagonales sont normalisées pour garder la même vitesse en biais.
     var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
@@ -500,19 +517,26 @@
       var n = Math.sqrt(mx * mx + my * my);
       yaw += (mx / n) * pas * dt;
       pitch = bornerPitch(pitch + (my / n) * pas * dt);
+      sale = true;
     }
     // Sécurité : maintient le tangage dans les bornes (±89°)
     pitch = bornerPitch(pitch);
+    // Rendu à la demande : on ne redessine que si quelque chose a changé
     if (gl && prog) {
-      redimensionner();
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.uniform1f(uni.yaw, yaw);
-      gl.uniform1f(uni.pitch, pitch);
-      gl.uniform1f(uni.tanF, Math.tan(fov * Math.PI / 360));
-      gl.uniform1f(uni.aspect, canvas.width / Math.max(1, canvas.height));
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (redimensionner()) sale = true; // redimensionner efface le canvas
+      if (sale) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform1f(uni.yaw, yaw);
+        gl.uniform1f(uni.pitch, pitch);
+        gl.uniform1f(uni.tanF, Math.tan(fov * Math.PI / 360));
+        gl.uniform1f(uni.aspect, canvas.width / Math.max(1, canvas.height));
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        sale = false;
+      }
     }
-    fovAff.textContent = "FOV " + Math.round(fov) + "°";
+    // Affichage FOV (uniquement si la valeur affichée change)
+    var fovTxt = "FOV " + Math.round(fov) + "°";
+    if (fovAff.textContent !== fovTxt) fovAff.textContent = fovTxt;
     // Synchronise le slider quand le FOV change (molette, pincement)
     if (parseInt(fovSlider.value, 10) !== Math.round(fov)) {
       fovSlider.value = Math.round(fov);
