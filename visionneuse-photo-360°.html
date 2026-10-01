@@ -542,20 +542,19 @@ function openMenuPopup() {
     }
   }, false);
   // Boutons
-window.toggleAutoRotation = function () {
-  autoRotation = !autoRotation;
-  btnRot.className = autoRotation ? "active" : "";
-  sale = true;
-};
-
-window.resetPhoto360 = function () {
-  yaw = 0;
-  pitch = 0;
-  fov = 75;
-  vitesse.x = 0;
-  vitesse.y = 0;
-  sale = true;
-};
+  window.toggleAutoRotation = function () {
+    autoRotation = !autoRotation;
+    btnRot.className = autoRotation ? "active" : "";
+    sale = true;
+  };
+  window.resetPhoto360 = function () {
+    yaw = 0;
+    pitch = 0;
+    fov = 75;
+    vitesse.x = 0;
+    vitesse.y = 0;
+    sale = true;
+  };
   function afficherErreur(msg) {
     erreur.textContent = msg;
     erreur.style.display = "inline-block";
