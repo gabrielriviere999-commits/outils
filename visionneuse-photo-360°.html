@@ -52,6 +52,7 @@
 #depot.actif{display:block;}
 #depot span{color:#fff;}
 #erreur{color:#ef4444}
+#statut{display:block;}
 </style>
 </head>
 <body>
@@ -557,7 +558,7 @@ function openMenuPopup() {
   };
   function afficherErreur(msg) {
     erreur.textContent = msg;
-    erreur.style.display = "inline-block";
+    erreur.style.display = "block";
     if (typeof erreur._timer !== "undefined") clearTimeout(erreur._timer);
     erreur._timer = setTimeout(function () { masquerErreur(); }, 5000);
   }
