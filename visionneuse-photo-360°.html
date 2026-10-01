@@ -122,517 +122,514 @@ function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
   openPopupMenu(container);
 }
-(function () {
-  "use strict";
-  /* Références DOM */
-  var canvas = document.getElementById("scene");
-  var statut = document.getElementById("statut");
-  var fovAff = document.getElementById("fov");
-  var depot = document.getElementById("depot");
-  var erreur = document.getElementById("erreur");
-  var btnRot = document.getElementById("btnRotation");
-  var btnReset = document.getElementById("btnReset");
-  var fileinput = document.getElementById("fileinput");
-  var fovSlider = document.getElementById("fovSlider");
-  var btnGauche = document.getElementById("btnGauche");
-  var btnHaut = document.getElementById("btnHaut");
-  var btnBas = document.getElementById("btnBas");
-  var btnDroit = document.getElementById("btnDroite");
-  var tailleMaxInput = document.getElementById("tailleMaxInput");
-  var tailleMaxLabel = document.getElementById("tailleMaxLabel");
-  /* État de la caméra */
-  var yaw = 0;                 // lacet (radians)
-  var pitch = 0;                 // tangage (radians)
-  var fov = 75;                // degrés
-  var FOV_MIN = 5, FOV_MAX = 100;
-  var autoRotation = false;
-  var vitesse = { x: 0, y: 0 };  // inertie
-  // Rendu à la demande : vrai = il faut redessiner une frame
-  var sale = true;
-  // État des directions maintenues (flèches du clavier + boutons)
-  var touches = { gauche: false, droite: false, haut: false, bas: false };
-  // Bornage du tangage : libre jusqu'à ±89° (1.55 rad), le zénith/nadir reste
-  // atteignable mais on évite le blocage exact du pôle (dégénéré).
-  function bornerPitch(p) {
-    return Math.max(-1.55, Math.min(1.55, p));
-  }
-  /* Initialisation WebGL (rendu par lancer de rayon sur sphère) */
-  var gl = null;
-  var glCtx = window.WebGLRenderingContext || window.WebGL2RenderingContext;
-  try {
-    // Perf : pas d'antialias (un seul triangle plein écran, le MSAA ne sert à rien)
-    // et hint pour demander le GPU performant plutôt que l'iGPU.
-    gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" })
-      || (window.WebGL2RenderingContext ? canvas.getContext("webgl2", { antialias: false, powerPreference: "high-performance" }) : null)
-      || canvas.getContext("experimental-webgl", { antialias: false });
-  } catch (e) { gl = null; }
-  var prog = null, uni = {}, attribPos = null;
-  var TAILLE_MAX_DEFAUT = 8192;
-  var tailleMaxTex = TAILLE_MAX_DEFAUT;
-  var tailleMaxGPU = TAILLE_MAX_DEFAUT;
-  var VERT =
-    "attribute vec2 aPos;\n" +
-    "varying vec2 vNdc;\n" +
-    "void main() {\n" +
-    "  vNdc = aPos;\n" +
-    "  gl_Position = vec4(aPos, 0.0, 1.0);\n" +
-    "}\n";
-  // Pour chaque pixel : on construit le rayon caméra puis on le convertit
-  // en coordonnées équirectangulaires (longitude / latitude) pour échantillonner la photo.
-  var FRAG =
-    "precision highp float;\n" +
-    "uniform float uYaw;\n" +
-    "uniform float uPitch;\n" +
-    "uniform float uTanF;\n" +   // tan(fov / 2)
-    "uniform float uAspect;\n" +
-    "uniform sampler2D uTex;\n" +
-    "varying vec2 vNdc;\n" +
-    "const float PI = 3.141592653589793;\n" +
-    "void main() {\n" +
-    "  float cy = cos(uYaw),  sy = sin(uYaw);\n" +
-    "  float cp = cos(uPitch), sp = sin(uPitch);\n" +
-    "  vec3 fwd = vec3(sy * cp, sp, -cy * cp);\n" +
-    "  vec3 right = vec3(cy, 0.0, sy);\n" +
-    "  vec3 up = vec3(-sy * sp, cp, cy * sp);\n" +
-    "  vec3 ray = fwd + right * (vNdc.x * uTanF * uAspect) + up * (vNdc.y * uTanF);\n" +
-    "  ray = normalize(ray);\n" +
-    "  float u = atan(ray.x, -ray.z) / (2.0 * PI) + 0.5;\n" +
-    "  float v = 0.5 + asin(clamp(ray.y, -1.0, 1.0)) / PI;\n" +
-    "  gl_FragColor = texture2D(uTex, vec2(u, v));\n" +
-    "}\n";
-  function initGL() {
-    if (!gl) { afficherErreur("WebGL n'est pas disponible sur ce navigateur."); return false; }
-    function compiler(type, source) {
-      var s = gl.createShader(type);
-      gl.shaderSource(s, source);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        afficherErreur("Erreur de shader : " + gl.getShaderInfoLog(s));
-        return null;
-      }
-      return s;
+/* Références DOM */
+var canvas = document.getElementById("scene");
+var statut = document.getElementById("statut");
+var fovAff = document.getElementById("fov");
+var depot = document.getElementById("depot");
+var erreur = document.getElementById("erreur");
+var btnRot = document.getElementById("btnRotation");
+var btnReset = document.getElementById("btnReset");
+var fileinput = document.getElementById("fileinput");
+var fovSlider = document.getElementById("fovSlider");
+var btnGauche = document.getElementById("btnGauche");
+var btnHaut = document.getElementById("btnHaut");
+var btnBas = document.getElementById("btnBas");
+var btnDroit = document.getElementById("btnDroite");
+var tailleMaxInput = document.getElementById("tailleMaxInput");
+var tailleMaxLabel = document.getElementById("tailleMaxLabel");
+/* État de la caméra */
+var yaw = 0;                 // lacet (radians)
+var pitch = 0;                 // tangage (radians)
+var fov = 75;                // degrés
+var FOV_MIN = 5, FOV_MAX = 100;
+var autoRotation = false;
+var vitesse = { x: 0, y: 0 };  // inertie
+// Rendu à la demande : vrai = il faut redessiner une frame
+var sale = true;
+// État des directions maintenues (flèches du clavier + boutons)
+var touches = { gauche: false, droite: false, haut: false, bas: false };
+// Bornage du tangage : libre jusqu'à ±89° (1.55 rad), le zénith/nadir reste
+// atteignable mais on évite le blocage exact du pôle (dégénéré).
+function bornerPitch(p) {
+  return Math.max(-1.55, Math.min(1.55, p));
+}
+/* Initialisation WebGL (rendu par lancer de rayon sur sphère) */
+var gl = null;
+var glCtx = window.WebGLRenderingContext || window.WebGL2RenderingContext;
+try {
+  // Perf : pas d'antialias (un seul triangle plein écran, le MSAA ne sert à rien)
+  // et hint pour demander le GPU performant plutôt que l'iGPU.
+  gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" })
+    || (window.WebGL2RenderingContext ? canvas.getContext("webgl2", { antialias: false, powerPreference: "high-performance" }) : null)
+    || canvas.getContext("experimental-webgl", { antialias: false });
+} catch (e) { gl = null; }
+var prog = null, uni = {}, attribPos = null;
+var TAILLE_MAX_DEFAUT = 8192;
+var tailleMaxTex = TAILLE_MAX_DEFAUT;
+var tailleMaxGPU = TAILLE_MAX_DEFAUT;
+var VERT =
+  "attribute vec2 aPos;\n" +
+  "varying vec2 vNdc;\n" +
+  "void main() {\n" +
+  "  vNdc = aPos;\n" +
+  "  gl_Position = vec4(aPos, 0.0, 1.0);\n" +
+  "}\n";
+// Pour chaque pixel : on construit le rayon caméra puis on le convertit
+// en coordonnées équirectangulaires (longitude / latitude) pour échantillonner la photo.
+var FRAG =
+  "precision highp float;\n" +
+  "uniform float uYaw;\n" +
+  "uniform float uPitch;\n" +
+  "uniform float uTanF;\n" +   // tan(fov / 2)
+  "uniform float uAspect;\n" +
+  "uniform sampler2D uTex;\n" +
+  "varying vec2 vNdc;\n" +
+  "const float PI = 3.141592653589793;\n" +
+  "void main() {\n" +
+  "  float cy = cos(uYaw),  sy = sin(uYaw);\n" +
+  "  float cp = cos(uPitch), sp = sin(uPitch);\n" +
+  "  vec3 fwd = vec3(sy * cp, sp, -cy * cp);\n" +
+  "  vec3 right = vec3(cy, 0.0, sy);\n" +
+  "  vec3 up = vec3(-sy * sp, cp, cy * sp);\n" +
+  "  vec3 ray = fwd + right * (vNdc.x * uTanF * uAspect) + up * (vNdc.y * uTanF);\n" +
+  "  ray = normalize(ray);\n" +
+  "  float u = atan(ray.x, -ray.z) / (2.0 * PI) + 0.5;\n" +
+  "  float v = 0.5 + asin(clamp(ray.y, -1.0, 1.0)) / PI;\n" +
+  "  gl_FragColor = texture2D(uTex, vec2(u, v));\n" +
+  "}\n";
+function initGL() {
+  if (!gl) { afficherErreur("WebGL n'est pas disponible sur ce navigateur."); return false; }
+  function compiler(type, source) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      afficherErreur("Erreur de shader : " + gl.getShaderInfoLog(s));
+      return null;
     }
-    var vs = compiler(gl.VERTEX_SHADER, VERT);
-    var fs = compiler(gl.FRAGMENT_SHADER, FRAG);
-    if (!vs || !fs) return false;
-    prog = gl.createProgram();
-    gl.attachShader(prog, vs);
-    gl.attachShader(prog, fs);
-    gl.bindAttribLocation(prog, 0, "aPos");
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      afficherErreur("Erreur de liaison du programme WebGL.");
-      return false;
-    }
-    gl.useProgram(prog);
-    // Un seul grand triangle couvrant tout l'écran
-    var buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    attribPos = gl.getAttribLocation(prog, "aPos");
-    gl.enableVertexAttribArray(attribPos);
-    gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, false, 0, 0);
-    // Taille maximale de texture acceptée par ce GPU.
-    // La limite choisie par l'utilisateur ne pourra jamais la dépasser.
-    tailleMaxGPU = gl.getParameter(gl.MAX_TEXTURE_SIZE) || TAILLE_MAX_DEFAUT;
-    var valeurInitiale = parseInt(tailleMaxInput.value, 10);
-    if (isNaN(valeurInitiale)) valeurInitiale = TAILLE_MAX_DEFAUT;
-    tailleMaxTex = Math.min(valeurInitiale, tailleMaxGPU);
-    tailleMaxInput.value = tailleMaxTex;
-    uni.yaw = gl.getUniformLocation(prog, "uYaw");
-    uni.pitch = gl.getUniformLocation(prog, "uPitch");
-    uni.tanF = gl.getUniformLocation(prog, "uTanF");
-    uni.aspect = gl.getUniformLocation(prog, "uAspect");
-    uni.tex = gl.getUniformLocation(prog, "uTex");
-    gl.uniform1i(uni.tex, 0);
-    gl.activeTexture(gl.TEXTURE0);
-    return true;
+    return s;
   }
-  /* Texture : démonstration générée au canvas 2D */
-  function textureDemonstration() {
-    var c = document.createElement("canvas");
-    c.width = 2048; c.height = 1024;
-    var g = c.getContext("2d");
-    // Ciel
-    var ciel = g.createLinearGradient(0, 0, 0, 512);
-    ciel.addColorStop(0.00, "#0b1e4d");
-    ciel.addColorStop(0.45, "#3f6fb5");
-    ciel.addColorStop(0.90, "#a8cbe8");
-    ciel.addColorStop(1.00, "#dfeaf2");
-    g.fillStyle = ciel;
-    g.fillRect(0, 0, 2048, 512);
-    // Soleil
-    var soleil = g.createRadialGradient(1550, 170, 10, 1550, 170, 120);
-    soleil.addColorStop(0, "rgba(255,244,200,1)");
-    soleil.addColorStop(1, "rgba(255,244,200,0)");
-    g.fillStyle = soleil;
-    g.fillRect(1400, 20, 300, 300);
-    // Sol
-    var sol = g.createLinearGradient(0, 512, 0, 1024);
-    sol.addColorStop(0.00, "#8fae6a");
-    sol.addColorStop(0.25, "#5f8b46");
-    sol.addColorStop(1.00, "#2e4a26");
-    g.fillStyle = sol;
-    g.fillRect(0, 512, 2048, 512);
-    // Grille : méridiens tous les 15°, parallèles tous les 15°
-    g.strokeStyle = "rgba(255,255,255,0.28)";
-    g.lineWidth = 2;
-    var i, x, y;
-    for (i = 0; i <= 24; i++) {
-      x = Math.round(i * 2048 / 24);
-      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 1024); g.stroke();
-    }
-    for (i = 1; i < 12; i++) {
-      y = Math.round(i * 1024 / 12);
-      g.beginPath(); g.moveTo(0, y); g.lineTo(2048, y); g.stroke();
-    }
-    // Équateur + méridien central plus visibles
-    g.strokeStyle = "rgba(255,255,255,0.55)";
-    g.beginPath(); g.moveTo(0, 512); g.lineTo(2048, 512); g.stroke();
-    g.beginPath(); g.moveTo(1024, 0); g.lineTo(1024, 1024); g.stroke();
-    // Points cardinaux (u = 0.5 correspond à la vue initiale "Nord")
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    var card = [ { l: "N", x: 1024 }, { l: "E", x: 1536 }, { l: "S", x: 2048 }, { l: "S", x: 0 }, { l: "O", x: 512 } ];
-    for (i = 0; i < card.length; i++) {
-      g.fillStyle = "rgba(255,255,255,0.92)";
-      g.font = "bold 90px 'Segoe UI', sans-serif";
-      g.fillText(card[i].l, card[i].x, 300);
-      g.beginPath(); g.arc(card[i].x, 300, 60, 0, Math.PI * 2);
-      g.strokeStyle = "rgba(255,255,255,0.8)"; g.lineWidth = 4; g.stroke();
-    }
-    // Repère texte pour vérifier le sens de lecture
-    g.font = "bold 48px 'Segoe UI', sans-serif";
-    g.fillStyle = "rgba(255,255,255,0.85)";
-    g.fillText("← Test de texture 360° →", 1024, 860);
-    return c;
-  }
-  var texture = null;
-  var imageSourceOriginale = null;
-  var nomFichierActuel = "";
-  /* Préparation de la source avant envoi au GPU :
-     - si l'image dépasse MAX_TEXTURE_SIZE, on la réduit ;
-     - si l'image est équirectangulaire (~2:1) et pas en puissance de 2,
-       on la réduit au plus grand format 2:1 en puissance de 2,
-       ce qui permet le REPEAT (pas de couture horizontale). */
-  function dimensionsCible(w, h) {
-    var max = tailleMaxTex;
-    var estPot = w >= 2 && h >= 2 && (w & (w - 1)) === 0 && (h & (h - 1)) === 0;
-    var ratio = w / h;
-    if (Math.abs(ratio - 2) < 0.2) {
-      // plus grande largeur en puissance de 2 qui tient dans l'image et le GPU
-      var p = 1;
-      while (p * 2 <= w && p * 2 <= max) { p = p * 2; }
-      if (p >= 1024 && p / 2 <= max && (p < w || (p / 2) < h || !estPot)) {
-        return { w: p, h: p / 2, modifiee: !(p === w && (p / 2) === h) };
-      }
-    }
-    if (w > max || h > max) {
-      var s = Math.min(max / w, max / h);
-      return { w: Math.max(1, Math.floor(w * s)), h: Math.max(1, Math.floor(h * s)), modifiee: true };
-    }
-    return { w: w, h: h, modifiee: false };
-  }
-  function preparerSource(img) {
-    var w = img.naturalWidth || img.width;
-    var h = img.naturalHeight || img.height;
-    var cible = dimensionsCible(w, h);
-    if (!cible.modifiee) return { source: img, w: w, h: h, redimensionnee: false };
-    var c = document.createElement("canvas");
-    c.width = cible.w;
-    c.height = cible.h;
-    var g = c.getContext("2d");
-    g.drawImage(img, 0, 0, cible.w, cible.h);
-    return { source: c, w: cible.w, h: cible.h, redimensionnee: true };
-  }
-  function envoyerTexture(source, largeur, hauteur) {
-    if (!gl) return;
-    if (texture) gl.deleteTexture(texture);
-    texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
-    // REPEAT évite la couture horizontale, mais exige une taille en puissance de 2
-    var pot = (largeur & (largeur - 1)) === 0 && (hauteur & (hauteur - 1)) === 0;
-    var wrap = pot ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    sale = true; // nouvelle image : redessiner
-  }
-  /* Chargement d'une photo utilisateur */
-  function chargerFichier(f) {
-    var lecteur = new FileReader();
-    lecteur.onload = function (e) {
-      var img = new Image();
-      img.onload = function () {
-        imageSourceOriginale = img;
-        nomFichierActuel = f.name;
-        var prep = preparerSource(img);
-        envoyerTexture(prep.source, prep.w, prep.h);
-        statut.textContent = f.name + " - " + prep.w + "×" + prep.h +
-          (prep.redimensionnee ? " (adaptée à la taille max)" : "");
-        masquerErreur();
-      };
-      img.onerror = function () {
-        afficherErreur("Impossible de décoder cette image dans ce contexte.");
-      };
-      img.src = e.target.result;
-    };
-    lecteur.onerror = function () { afficherErreur("Lecture du fichier impossible."); };
-    lecteur.readAsDataURL(f);
-  }
-  /* Interactions : souris, molette, tactile, clavier */
-  var saisie = false;
-  var dernier = { x: 0, y: 0 };
-  var pincement = null; // distance entre 2 doigts
-  function commencer(x, y) {
-    saisie = true;
-    dernier.x = x; dernier.y = y;
-    vitesse.x = 0; vitesse.y = 0;
-    canvas.className = "saisie";
-  }
-  function deplacer(x, y) {
-    var dx = x - dernier.x, dy = y - dernier.y;
-    dernier.x = x; dernier.y = y;
-    // Sensibilité "naturelle" : un mouvement d'une largeur d'écran ≈ un demi-tour visuel.
-    // On relie l'angle à la largeur de la fenêtre, pas à un chiffre fixe.
-    var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
-    yaw   -= dx * k;
-    pitch = bornerPitch(pitch + dy * k);
-    vitesse.x = -dx * k; vitesse.y = dy * k;
-    sale = true; // la vue a bougé : redessiner
-  }
-  function terminer() {
-    saisie = false;
-    canvas.className = "";
-  }
-  canvas.addEventListener("mousedown", function (e) {
-    if (e.preventDefault) e.preventDefault();
-    commencer(e.clientX, e.clientY);
-  }, false);
-  window.addEventListener("mousemove", function (e) {
-    if (saisie) deplacer(e.clientX, e.clientY);
-  }, false);
-  window.addEventListener("mouseup", terminer, false);
-  // Tactile : 1 doigt = rotation, 2 doigts = pincement (zoom)
-  canvas.addEventListener("touchstart", function (e) {
-    if (e.touches.length === 1) {
-      commencer(e.touches[0].clientX, e.touches[0].clientY);
-    } else if (e.touches.length === 2) {
-      pincement = distanceTouches(e.touches);
-    }
-    if (e.preventDefault) e.preventDefault();
-  }, false);
-  canvas.addEventListener("touchmove", function (e) {
-    if (e.touches.length === 1 && saisie) {
-      deplacer(e.touches[0].clientX, e.touches[0].clientY);
-    } else if (e.touches.length === 2 && pincement !== null) {
-      var d = distanceTouches(e.touches);
-      fov = fov * (pincement / d);
-      fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-      pincement = d;
-      sale = true;
-    }
-    if (e.preventDefault) e.preventDefault();
-  }, false);
-  canvas.addEventListener("touchend", function (e) {
-    if (e.touches.length === 0) { terminer(); pincement = null; }
-    else if (e.touches.length === 1) {
-      saisie = false;
-      commencer(e.touches[0].clientX, e.touches[0].clientY);
-    }
-    if (e.preventDefault) e.preventDefault();
-  }, false);
-  function distanceTouches(t) {
-    var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-  // Molette : zoom
-  function molette(e) {
-    var d = (e.deltaY || e.wheelDelta || 0);
-    if (d > 0) fov += 5; else if (d < 0) fov -= 5;
-    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-    sale = true;
-    if (e.preventDefault) e.preventDefault();
-  }
-  canvas.addEventListener("wheel", molette, { passive: false });
-  /* Clavier : on mémorise les flèches maintenues (permet les diagonales,
-     car la lecture se fait à chaque image dans la boucle de rendu) */
-  window.addEventListener("keydown", function (e) {
-    if (e.keyCode === 37) touches.gauche = true;
-    else if (e.keyCode === 39) touches.droite = true;
-    else if (e.keyCode === 38) touches.haut = true;
-    else if (e.keyCode === 40) touches.bas = true;
-    else return;
-    if (e.preventDefault) e.preventDefault(); // évite le défilement de la page
-  }, false);
-  window.addEventListener("keyup", function (e) {
-    if (e.keyCode === 37) touches.gauche = false;
-    else if (e.keyCode === 39) touches.droite = false;
-    else if (e.keyCode === 38) touches.haut = false;
-    else if (e.keyCode === 40) touches.bas = false;
-  }, false);
-  // Slider FOV
-  fovSlider.addEventListener("input", function () {
-    fov = parseInt(fovSlider.value, 10) || 75;
-    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-    sale = true;
-  }, false);
-  // Taille maximale choisie pour les textures.
-  // Aucune limite min/max artificielle dans le champ ; seule la capacité du GPU est respectée.
-  // On valide seulement lorsque l'utilisateur termine sa saisie.
-  // Cela évite de remettre 8192 lorsque le champ est momentanément vide.
-  function appliquerTailleMax() {
-    var valeur = parseInt(tailleMaxInput.value, 10);
-    if (isNaN(valeur)) {
-      valeur = TAILLE_MAX_DEFAUT;
-    }
-    valeur = Math.max(1, valeur);
-    valeur = Math.min(valeur, tailleMaxGPU);
-    tailleMaxTex = valeur;
-    tailleMaxInput.value = valeur;
-    // Si une image est déjà chargée, la retraiter immédiatement.
-    if (imageSourceOriginale) {
-      var prep = preparerSource(imageSourceOriginale);
-      envoyerTexture(prep.source, prep.w, prep.h);
-      statut.textContent = nomFichierActuel + " - " + prep.w + "×" + prep.h +
-        (prep.redimensionnee ? " (adaptée à la taille max)" : "");
-    }
-    sale = true;
-  }
-  // "change" est déclenché lorsque l'utilisateur valide la nouvelle valeur.
-  tailleMaxInput.addEventListener("change", appliquerTailleMax, false);
-  // "blur" couvre aussi le cas où l'utilisateur clique ailleurs après sa saisie.
-  tailleMaxInput.addEventListener("blur", appliquerTailleMax, false);
-  /* Boutons directionnels : maintenir enfoncé pour tourner en continu. Ils partagent le même état que les flèches du clavier. */
-  function boutonMaintenir(btn, cle) {
-    function activer() { touches[cle] = true; }
-    function relacher() { touches[cle] = false; }
-    btn.addEventListener("mousedown", activer, false);
-    btn.addEventListener("touchstart", function (e) {
-      if (e.preventDefault) e.preventDefault();
-      activer();
-    }, false);
-    btn.addEventListener("mouseleave", relacher, false);
-    window.addEventListener("mouseup", relacher, false);
-    window.addEventListener("touchend", relacher, false);
-    window.addEventListener("touchcancel", relacher, false);
-  }
-  boutonMaintenir(btnGauche, "gauche");
-  boutonMaintenir(btnHaut, "haut");
-  boutonMaintenir(btnBas, "bas");
-  boutonMaintenir(btnDroit, "droite");
-  // Sélection via le bouton
-  fileinput.addEventListener("change", function () {
-    if (fileinput.files && fileinput.files[0]) chargerFichier(fileinput.files[0]);
-    fileinput.value = "";
-  }, false);
-  // Glisser-déposer d'une image sur la page
-  window.addEventListener("dragover", function (e) {
-    if (e.preventDefault) e.preventDefault();
-    depot.className = "actif";
-  }, false);
-  window.addEventListener("dragleave", function () { depot.className = ""; }, false);
-  window.addEventListener("drop", function (e) {
-    if (e.preventDefault) e.preventDefault();
-    depot.className = "";
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-      chargerFichier(e.dataTransfer.files[0]);
-    }
-  }, false);
-  // Boutons
-  btnRot.addEventListener("click", function () {
-    autoRotation = !autoRotation;
-    if (autoRotation) btnRot.className = "active"; else btnRot.className = "";
-  }, false);
-  btnReset.addEventListener("click", function () {
-    yaw = 0; pitch = 0; fov = 75; vitesse.x = 0; vitesse.y = 0;
-    sale = true;
-  }, false);
-  function afficherErreur(msg) {
-    erreur.textContent = msg;
-    erreur.style.display = "inline-block";
-    if (typeof erreur._timer !== "undefined") clearTimeout(erreur._timer);
-    erreur._timer = setTimeout(function () { masquerErreur(); }, 5000);
-  }
-  function masquerErreur() { erreur.style.display = "none"; }
-  /* Boucle de rendu */
-  // Renvoie true si la taille du canvas a changé (il faut alors redessiner)
-  function redimensionner() {
-    var dpr = window.devicePixelRatio || 1;
-    if (dpr > 2) dpr = 2;
-    var w = Math.round(canvas.clientWidth * dpr);
-    var h = Math.round(canvas.clientHeight * dpr);
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w; canvas.height = h;
-      return true;
-    }
+  var vs = compiler(gl.VERTEX_SHADER, VERT);
+  var fs = compiler(gl.FRAGMENT_SHADER, FRAG);
+  if (!vs || !fs) return false;
+  prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.bindAttribLocation(prog, 0, "aPos");
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    afficherErreur("Erreur de liaison du programme WebGL.");
     return false;
   }
-  var dernierTemps = 0;
-  function boucle(ts) {
-    var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
-    if (dt > 0.1) dt = 0.1;
-    dernierTemps = ts;
-    // Inertie après relâchement
-    if (!saisie) {
-      yaw += vitesse.x;
-      pitch = bornerPitch(pitch + vitesse.y);
-      vitesse.x *= 0.92; vitesse.y *= 0.92;
-      if (Math.abs(vitesse.x) < 0.00005) vitesse.x = 0;
-      if (Math.abs(vitesse.y) < 0.00005) vitesse.y = 0;
-      if (vitesse.x !== 0 || vitesse.y !== 0) sale = true;
-    }
-    // Rotation automatique
-    if (autoRotation && !saisie) {
-      yaw += 0.15 * dt;
-      sale = true;
-    }
-    // Déplacement continu : flèches et boutons maintenus.
-    // Les diagonales sont normalisées pour garder la même vitesse en biais.
-    var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
-    var my = (touches.haut   ? 1 : 0) - (touches.bas    ? 1 : 0);
-    if (mx !== 0 || my !== 0) {
-      var pas = 1.3 * (fov / 75); // radians par seconde
-      var n = Math.sqrt(mx * mx + my * my);
-      yaw += (mx / n) * pas * dt;
-      pitch = bornerPitch(pitch + (my / n) * pas * dt);
-      sale = true;
-    }
-    // Sécurité : maintient le tangage dans les bornes (±89°)
-    pitch = bornerPitch(pitch);
-    // Rendu à la demande : on ne redessine que si quelque chose a changé
-    if (gl && prog) {
-      if (redimensionner()) sale = true; // redimensionner efface le canvas
-      if (sale) {
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.uniform1f(uni.yaw, yaw);
-        gl.uniform1f(uni.pitch, pitch);
-        gl.uniform1f(uni.tanF, Math.tan(fov * Math.PI / 360));
-        gl.uniform1f(uni.aspect, canvas.width / Math.max(1, canvas.height));
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        sale = false;
-      }
-    }
-    // Affichage FOV (uniquement si la valeur affichée change)
-    var fovTxt = "FOV " + Math.round(fov) + "°";
-    if (fovAff.textContent !== fovTxt) fovAff.textContent = fovTxt;
-    // Synchronise le slider quand le FOV change (molette, pincement)
-    if (parseInt(fovSlider.value, 10) !== Math.round(fov)) {
-      fovSlider.value = Math.round(fov);
-    }
-    (window.requestAnimationFrame || function (f) { setTimeout(function () { f(Date.now()); }, 16); })(boucle);
+  gl.useProgram(prog);
+  // Un seul grand triangle couvrant tout l'écran
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  attribPos = gl.getAttribLocation(prog, "aPos");
+  gl.enableVertexAttribArray(attribPos);
+  gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, false, 0, 0);
+  // Taille maximale de texture acceptée par ce GPU.
+  // La limite choisie par l'utilisateur ne pourra jamais la dépasser.
+  tailleMaxGPU = gl.getParameter(gl.MAX_TEXTURE_SIZE) || TAILLE_MAX_DEFAUT;
+  var valeurInitiale = parseInt(tailleMaxInput.value, 10);
+  if (isNaN(valeurInitiale)) valeurInitiale = TAILLE_MAX_DEFAUT;
+  tailleMaxTex = Math.min(valeurInitiale, tailleMaxGPU);
+  tailleMaxInput.value = tailleMaxTex;
+  uni.yaw = gl.getUniformLocation(prog, "uYaw");
+  uni.pitch = gl.getUniformLocation(prog, "uPitch");
+  uni.tanF = gl.getUniformLocation(prog, "uTanF");
+  uni.aspect = gl.getUniformLocation(prog, "uAspect");
+  uni.tex = gl.getUniformLocation(prog, "uTex");
+  gl.uniform1i(uni.tex, 0);
+  gl.activeTexture(gl.TEXTURE0);
+  return true;
+}
+/* Texture : démonstration générée au canvas 2D */
+function textureDemonstration() {
+  var c = document.createElement("canvas");
+  c.width = 2048; c.height = 1024;
+  var g = c.getContext("2d");
+  // Ciel
+  var ciel = g.createLinearGradient(0, 0, 0, 512);
+  ciel.addColorStop(0.00, "#0b1e4d");
+  ciel.addColorStop(0.45, "#3f6fb5");
+  ciel.addColorStop(0.90, "#a8cbe8");
+  ciel.addColorStop(1.00, "#dfeaf2");
+  g.fillStyle = ciel;
+  g.fillRect(0, 0, 2048, 512);
+  // Soleil
+  var soleil = g.createRadialGradient(1550, 170, 10, 1550, 170, 120);
+  soleil.addColorStop(0, "rgba(255,244,200,1)");
+  soleil.addColorStop(1, "rgba(255,244,200,0)");
+  g.fillStyle = soleil;
+  g.fillRect(1400, 20, 300, 300);
+  // Sol
+  var sol = g.createLinearGradient(0, 512, 0, 1024);
+  sol.addColorStop(0.00, "#8fae6a");
+  sol.addColorStop(0.25, "#5f8b46");
+  sol.addColorStop(1.00, "#2e4a26");
+  g.fillStyle = sol;
+  g.fillRect(0, 512, 2048, 512);
+  // Grille : méridiens tous les 15°, parallèles tous les 15°
+  g.strokeStyle = "rgba(255,255,255,0.28)";
+  g.lineWidth = 2;
+  var i, x, y;
+  for (i = 0; i <= 24; i++) {
+    x = Math.round(i * 2048 / 24);
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 1024); g.stroke();
   }
-  /* Démarrage */
-  if (initGL()) {
-    var demo = textureDemonstration();
-    var prepDemo = preparerSource(demo);
-    envoyerTexture(prepDemo.source, prepDemo.w, prepDemo.h);
-    boucle(0);
+  for (i = 1; i < 12; i++) {
+    y = Math.round(i * 1024 / 12);
+    g.beginPath(); g.moveTo(0, y); g.lineTo(2048, y); g.stroke();
   }
-})();
+  // Équateur + méridien central plus visibles
+  g.strokeStyle = "rgba(255,255,255,0.55)";
+  g.beginPath(); g.moveTo(0, 512); g.lineTo(2048, 512); g.stroke();
+  g.beginPath(); g.moveTo(1024, 0); g.lineTo(1024, 1024); g.stroke();
+  // Points cardinaux (u = 0.5 correspond à la vue initiale "Nord")
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  var card = [ { l: "N", x: 1024 }, { l: "E", x: 1536 }, { l: "S", x: 2048 }, { l: "S", x: 0 }, { l: "O", x: 512 } ];
+  for (i = 0; i < card.length; i++) {
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    g.font = "bold 90px 'Segoe UI', sans-serif";
+    g.fillText(card[i].l, card[i].x, 300);
+    g.beginPath(); g.arc(card[i].x, 300, 60, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(255,255,255,0.8)"; g.lineWidth = 4; g.stroke();
+  }
+  // Repère texte pour vérifier le sens de lecture
+  g.font = "bold 48px 'Segoe UI', sans-serif";
+  g.fillStyle = "rgba(255,255,255,0.85)";
+  g.fillText("← Test de texture 360° →", 1024, 860);
+  return c;
+}
+var texture = null;
+var imageSourceOriginale = null;
+var nomFichierActuel = "";
+/* Préparation de la source avant envoi au GPU :
+   - si l'image dépasse MAX_TEXTURE_SIZE, on la réduit ;
+   - si l'image est équirectangulaire (~2:1) et pas en puissance de 2,
+     on la réduit au plus grand format 2:1 en puissance de 2,
+     ce qui permet le REPEAT (pas de couture horizontale). */
+function dimensionsCible(w, h) {
+  var max = tailleMaxTex;
+  var estPot = w >= 2 && h >= 2 && (w & (w - 1)) === 0 && (h & (h - 1)) === 0;
+  var ratio = w / h;
+  if (Math.abs(ratio - 2) < 0.2) {
+    // plus grande largeur en puissance de 2 qui tient dans l'image et le GPU
+    var p = 1;
+    while (p * 2 <= w && p * 2 <= max) { p = p * 2; }
+    if (p >= 1024 && p / 2 <= max && (p < w || (p / 2) < h || !estPot)) {
+      return { w: p, h: p / 2, modifiee: !(p === w && (p / 2) === h) };
+    }
+  }
+  if (w > max || h > max) {
+    var s = Math.min(max / w, max / h);
+    return { w: Math.max(1, Math.floor(w * s)), h: Math.max(1, Math.floor(h * s)), modifiee: true };
+  }
+  return { w: w, h: h, modifiee: false };
+}
+function preparerSource(img) {
+  var w = img.naturalWidth || img.width;
+  var h = img.naturalHeight || img.height;
+  var cible = dimensionsCible(w, h);
+  if (!cible.modifiee) return { source: img, w: w, h: h, redimensionnee: false };
+  var c = document.createElement("canvas");
+  c.width = cible.w;
+  c.height = cible.h;
+  var g = c.getContext("2d");
+  g.drawImage(img, 0, 0, cible.w, cible.h);
+  return { source: c, w: cible.w, h: cible.h, redimensionnee: true };
+}
+function envoyerTexture(source, largeur, hauteur) {
+  if (!gl) return;
+  if (texture) gl.deleteTexture(texture);
+  texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  // REPEAT évite la couture horizontale, mais exige une taille en puissance de 2
+  var pot = (largeur & (largeur - 1)) === 0 && (hauteur & (hauteur - 1)) === 0;
+  var wrap = pot ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  sale = true; // nouvelle image : redessiner
+}
+/* Chargement d'une photo utilisateur */
+function chargerFichier(f) {
+  var lecteur = new FileReader();
+  lecteur.onload = function (e) {
+    var img = new Image();
+    img.onload = function () {
+      imageSourceOriginale = img;
+      nomFichierActuel = f.name;
+      var prep = preparerSource(img);
+      envoyerTexture(prep.source, prep.w, prep.h);
+      statut.textContent = f.name + " - " + prep.w + "×" + prep.h +
+        (prep.redimensionnee ? " (adaptée à la taille max)" : "");
+      masquerErreur();
+    };
+    img.onerror = function () {
+      afficherErreur("Impossible de décoder cette image dans ce contexte.");
+    };
+    img.src = e.target.result;
+  };
+  lecteur.onerror = function () { afficherErreur("Lecture du fichier impossible."); };
+  lecteur.readAsDataURL(f);
+}
+/* Interactions : souris, molette, tactile, clavier */
+var saisie = false;
+var dernier = { x: 0, y: 0 };
+var pincement = null; // distance entre 2 doigts
+function commencer(x, y) {
+  saisie = true;
+  dernier.x = x; dernier.y = y;
+  vitesse.x = 0; vitesse.y = 0;
+  canvas.className = "saisie";
+}
+function deplacer(x, y) {
+  var dx = x - dernier.x, dy = y - dernier.y;
+  dernier.x = x; dernier.y = y;
+  // Sensibilité "naturelle" : un mouvement d'une largeur d'écran ≈ un demi-tour visuel.
+  // On relie l'angle à la largeur de la fenêtre, pas à un chiffre fixe.
+  var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
+  yaw   -= dx * k;
+  pitch = bornerPitch(pitch + dy * k);
+  vitesse.x = -dx * k; vitesse.y = dy * k;
+  sale = true; // la vue a bougé : redessiner
+}
+function terminer() {
+  saisie = false;
+  canvas.className = "";
+}
+canvas.addEventListener("mousedown", function (e) {
+  if (e.preventDefault) e.preventDefault();
+  commencer(e.clientX, e.clientY);
+}, false);
+window.addEventListener("mousemove", function (e) {
+  if (saisie) deplacer(e.clientX, e.clientY);
+}, false);
+window.addEventListener("mouseup", terminer, false);
+// Tactile : 1 doigt = rotation, 2 doigts = pincement (zoom)
+canvas.addEventListener("touchstart", function (e) {
+  if (e.touches.length === 1) {
+    commencer(e.touches[0].clientX, e.touches[0].clientY);
+  } else if (e.touches.length === 2) {
+    pincement = distanceTouches(e.touches);
+  }
+  if (e.preventDefault) e.preventDefault();
+}, false);
+canvas.addEventListener("touchmove", function (e) {
+  if (e.touches.length === 1 && saisie) {
+    deplacer(e.touches[0].clientX, e.touches[0].clientY);
+  } else if (e.touches.length === 2 && pincement !== null) {
+    var d = distanceTouches(e.touches);
+    fov = fov * (pincement / d);
+    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+    pincement = d;
+    sale = true;
+  }
+  if (e.preventDefault) e.preventDefault();
+}, false);
+canvas.addEventListener("touchend", function (e) {
+  if (e.touches.length === 0) { terminer(); pincement = null; }
+  else if (e.touches.length === 1) {
+    saisie = false;
+    commencer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+  if (e.preventDefault) e.preventDefault();
+}, false);
+function distanceTouches(t) {
+  var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+// Molette : zoom
+function molette(e) {
+  var d = (e.deltaY || e.wheelDelta || 0);
+  if (d > 0) fov += 5; else if (d < 0) fov -= 5;
+  fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+  sale = true;
+  if (e.preventDefault) e.preventDefault();
+}
+canvas.addEventListener("wheel", molette, { passive: false });
+/* Clavier : on mémorise les flèches maintenues (permet les diagonales,
+   car la lecture se fait à chaque image dans la boucle de rendu) */
+window.addEventListener("keydown", function (e) {
+  if (e.keyCode === 37) touches.gauche = true;
+  else if (e.keyCode === 39) touches.droite = true;
+  else if (e.keyCode === 38) touches.haut = true;
+  else if (e.keyCode === 40) touches.bas = true;
+  else return;
+  if (e.preventDefault) e.preventDefault(); // évite le défilement de la page
+}, false);
+window.addEventListener("keyup", function (e) {
+  if (e.keyCode === 37) touches.gauche = false;
+  else if (e.keyCode === 39) touches.droite = false;
+  else if (e.keyCode === 38) touches.haut = false;
+  else if (e.keyCode === 40) touches.bas = false;
+}, false);
+// Slider FOV
+fovSlider.addEventListener("input", function () {
+  fov = parseInt(fovSlider.value, 10) || 75;
+  fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+  sale = true;
+}, false);
+// Taille maximale choisie pour les textures.
+// Aucune limite min/max artificielle dans le champ ; seule la capacité du GPU est respectée.
+// On valide seulement lorsque l'utilisateur termine sa saisie.
+// Cela évite de remettre 8192 lorsque le champ est momentanément vide.
+function appliquerTailleMax() {
+  var valeur = parseInt(tailleMaxInput.value, 10);
+  if (isNaN(valeur)) {
+    valeur = TAILLE_MAX_DEFAUT;
+  }
+  valeur = Math.max(1, valeur);
+  valeur = Math.min(valeur, tailleMaxGPU);
+  tailleMaxTex = valeur;
+  tailleMaxInput.value = valeur;
+  // Si une image est déjà chargée, la retraiter immédiatement.
+  if (imageSourceOriginale) {
+    var prep = preparerSource(imageSourceOriginale);
+    envoyerTexture(prep.source, prep.w, prep.h);
+    statut.textContent = nomFichierActuel + " - " + prep.w + "×" + prep.h +
+      (prep.redimensionnee ? " (adaptée à la taille max)" : "");
+  }
+  sale = true;
+}
+// "change" est déclenché lorsque l'utilisateur valide la nouvelle valeur.
+tailleMaxInput.addEventListener("change", appliquerTailleMax, false);
+// "blur" couvre aussi le cas où l'utilisateur clique ailleurs après sa saisie.
+tailleMaxInput.addEventListener("blur", appliquerTailleMax, false);
+/* Boutons directionnels : maintenir enfoncé pour tourner en continu. Ils partagent le même état que les flèches du clavier. */
+function boutonMaintenir(btn, cle) {
+  function activer() { touches[cle] = true; }
+  function relacher() { touches[cle] = false; }
+  btn.addEventListener("mousedown", activer, false);
+  btn.addEventListener("touchstart", function (e) {
+    if (e.preventDefault) e.preventDefault();
+    activer();
+  }, false);
+  btn.addEventListener("mouseleave", relacher, false);
+  window.addEventListener("mouseup", relacher, false);
+  window.addEventListener("touchend", relacher, false);
+  window.addEventListener("touchcancel", relacher, false);
+}
+boutonMaintenir(btnGauche, "gauche");
+boutonMaintenir(btnHaut, "haut");
+boutonMaintenir(btnBas, "bas");
+boutonMaintenir(btnDroit, "droite");
+// Sélection via le bouton
+fileinput.addEventListener("change", function () {
+  if (fileinput.files && fileinput.files[0]) chargerFichier(fileinput.files[0]);
+  fileinput.value = "";
+}, false);
+// Glisser-déposer d'une image sur la page
+window.addEventListener("dragover", function (e) {
+  if (e.preventDefault) e.preventDefault();
+  depot.className = "actif";
+}, false);
+window.addEventListener("dragleave", function () { depot.className = ""; }, false);
+window.addEventListener("drop", function (e) {
+  if (e.preventDefault) e.preventDefault();
+  depot.className = "";
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+    chargerFichier(e.dataTransfer.files[0]);
+  }
+}, false);
+// Boutons
+btnRot.addEventListener("click", function () {
+  autoRotation = !autoRotation;
+  if (autoRotation) btnRot.className = "active"; else btnRot.className = "";
+}, false);
+btnReset.addEventListener("click", function () {
+  yaw = 0; pitch = 0; fov = 75; vitesse.x = 0; vitesse.y = 0;
+  sale = true;
+}, false);
+function afficherErreur(msg) {
+  erreur.textContent = msg;
+  erreur.style.display = "inline-block";
+  if (typeof erreur._timer !== "undefined") clearTimeout(erreur._timer);
+  erreur._timer = setTimeout(function () { masquerErreur(); }, 5000);
+}
+function masquerErreur() { erreur.style.display = "none"; }
+/* Boucle de rendu */
+// Renvoie true si la taille du canvas a changé (il faut alors redessiner)
+function redimensionner() {
+  var dpr = window.devicePixelRatio || 1;
+  if (dpr > 2) dpr = 2;
+  var w = Math.round(canvas.clientWidth * dpr);
+  var h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+    return true;
+  }
+  return false;
+}
+var dernierTemps = 0;
+function boucle(ts) {
+  var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
+  if (dt > 0.1) dt = 0.1;
+  dernierTemps = ts;
+  // Inertie après relâchement
+  if (!saisie) {
+    yaw += vitesse.x;
+    pitch = bornerPitch(pitch + vitesse.y);
+    vitesse.x *= 0.92; vitesse.y *= 0.92;
+    if (Math.abs(vitesse.x) < 0.00005) vitesse.x = 0;
+    if (Math.abs(vitesse.y) < 0.00005) vitesse.y = 0;
+    if (vitesse.x !== 0 || vitesse.y !== 0) sale = true;
+  }
+  // Rotation automatique
+  if (autoRotation && !saisie) {
+    yaw += 0.15 * dt;
+    sale = true;
+  }
+  // Déplacement continu : flèches et boutons maintenus.
+  // Les diagonales sont normalisées pour garder la même vitesse en biais.
+  var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
+  var my = (touches.haut   ? 1 : 0) - (touches.bas    ? 1 : 0);
+  if (mx !== 0 || my !== 0) {
+    var pas = 1.3 * (fov / 75); // radians par seconde
+    var n = Math.sqrt(mx * mx + my * my);
+    yaw += (mx / n) * pas * dt;
+    pitch = bornerPitch(pitch + (my / n) * pas * dt);
+    sale = true;
+  }
+  // Sécurité : maintient le tangage dans les bornes (±89°)
+  pitch = bornerPitch(pitch);
+  // Rendu à la demande : on ne redessine que si quelque chose a changé
+  if (gl && prog) {
+    if (redimensionner()) sale = true; // redimensionner efface le canvas
+    if (sale) {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform1f(uni.yaw, yaw);
+      gl.uniform1f(uni.pitch, pitch);
+      gl.uniform1f(uni.tanF, Math.tan(fov * Math.PI / 360));
+      gl.uniform1f(uni.aspect, canvas.width / Math.max(1, canvas.height));
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      sale = false;
+    }
+  }
+  // Affichage FOV (uniquement si la valeur affichée change)
+  var fovTxt = "FOV " + Math.round(fov) + "°";
+  if (fovAff.textContent !== fovTxt) fovAff.textContent = fovTxt;
+  // Synchronise le slider quand le FOV change (molette, pincement)
+  if (parseInt(fovSlider.value, 10) !== Math.round(fov)) {
+    fovSlider.value = Math.round(fov);
+  }
+  (window.requestAnimationFrame || function (f) { setTimeout(function () { f(Date.now()); }, 16); })(boucle);
+}
+/* Démarrage */
+if (initGL()) {
+  var demo = textureDemonstration();
+  var prepDemo = preparerSource(demo);
+  envoyerTexture(prepDemo.source, prepDemo.w, prepDemo.h);
+  boucle(0);
+}
 </script>
 </body>
 </html>
