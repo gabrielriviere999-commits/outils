@@ -458,9 +458,26 @@ function openMenuPopup() {
     if (e.preventDefault) e.preventDefault();
   }
   canvas.addEventListener("wheel", molette, { passive: false });
-  /* Clavier : on mémorise les flèches maintenues (permet les diagonales,
-     car la lecture se fait à chaque image dans la boucle de rendu) */
+  /* Clavier : on mémorise les flèches maintenues (permet les diagonales, car la lecture se fait à chaque image dans la boucle de rendu) */
   window.addEventListener("keydown", function (e) {
+  // Ctrl + / Ctrl - : zoom
+  if (e.ctrlKey) {
+    if (e.key === "+" || e.key === "=") {
+      fov -= 5; // zoom avant
+      fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+      sale = true;
+      if (e.preventDefault) e.preventDefault();
+      return;
+    }
+    if (e.key === "-" || e.key === "_") {
+      fov += 5; // dézoom
+      fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+      sale = true;
+      if (e.preventDefault) e.preventDefault();
+      return;
+    }
+  }
+  // Flèches
     if (e.keyCode === 37) touches.gauche = true;
     else if (e.keyCode === 39) touches.droite = true;
     else if (e.keyCode === 38) touches.haut = true;
