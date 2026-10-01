@@ -60,6 +60,7 @@
   <div id="ui">
     <input type="file" id="fileinput">
     <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0">
+    <label id="tailleMaxLabel">Taille max : <input type="number" id="tailleMaxInput" step="1" value="8192"> px</label>
     <button id="btnRotation">Auto</button>
     <button id="btnReset">Reset</button>
     |
@@ -79,23 +80,25 @@
 (function () {
   "use strict";
   /* Références DOM */
-  var canvas   = document.getElementById("scene");
-  var statut   = document.getElementById("statut");
-  var fovAff   = document.getElementById("fov");
-  var depot    = document.getElementById("depot");
-  var erreur   = document.getElementById("erreur");
-  var btnRot   = document.getElementById("btnRotation");
+  var canvas = document.getElementById("scene");
+  var statut = document.getElementById("statut");
+  var fovAff = document.getElementById("fov");
+  var depot = document.getElementById("depot");
+  var erreur = document.getElementById("erreur");
+  var btnRot = document.getElementById("btnRotation");
   var btnReset = document.getElementById("btnReset");
-  var fileinput  = document.getElementById("fileinput");
+  var fileinput = document.getElementById("fileinput");
   var fovSlider = document.getElementById("fovSlider");
   var btnGauche = document.getElementById("btnGauche");
-  var btnHaut   = document.getElementById("btnHaut");
-  var btnBas    = document.getElementById("btnBas");
-  var btnDroit  = document.getElementById("btnDroite");
+  var btnHaut = document.getElementById("btnHaut");
+  var btnBas = document.getElementById("btnBas");
+  var btnDroit = document.getElementById("btnDroite");
+  var tailleMaxInput = document.getElementById("tailleMaxInput");
+  var tailleMaxLabel = document.getElementById("tailleMaxLabel");
   /* État de la caméra */
-  var yaw   = 0;                 // lacet (radians)
+  var yaw = 0;                 // lacet (radians)
   var pitch = 0;                 // tangage (radians)
-  var fov   = 75;                // degrés
+  var fov = 75;                // degrés
   var FOV_MIN = 5, FOV_MAX = 100;
   var autoRotation = false;
   var vitesse = { x: 0, y: 0 };  // inertie
@@ -119,7 +122,9 @@
       || canvas.getContext("experimental-webgl", { antialias: false });
   } catch (e) { gl = null; }
   var prog = null, uni = {}, attribPos = null;
-  var tailleMaxTex = 4096;
+  var TAILLE_MAX_DEFAUT = 8192;
+  var tailleMaxTex = TAILLE_MAX_DEFAUT;
+  var tailleMaxGPU = TAILLE_MAX_DEFAUT;
   var VERT =
     "attribute vec2 aPos;\n" +
     "varying vec2 vNdc;\n" +
@@ -141,9 +146,9 @@
     "void main() {\n" +
     "  float cy = cos(uYaw),  sy = sin(uYaw);\n" +
     "  float cp = cos(uPitch), sp = sin(uPitch);\n" +
-    "  vec3 fwd   = vec3(sy * cp, sp, -cy * cp);\n" +
+    "  vec3 fwd = vec3(sy * cp, sp, -cy * cp);\n" +
     "  vec3 right = vec3(cy, 0.0, sy);\n" +
-    "  vec3 up    = vec3(-sy * sp, cp, cy * sp);\n" +
+    "  vec3 up = vec3(-sy * sp, cp, cy * sp);\n" +
     "  vec3 ray = fwd + right * (vNdc.x * uTanF * uAspect) + up * (vNdc.y * uTanF);\n" +
     "  ray = normalize(ray);\n" +
     "  float u = atan(ray.x, -ray.z) / (2.0 * PI) + 0.5;\n" +
@@ -182,13 +187,18 @@
     attribPos = gl.getAttribLocation(prog, "aPos");
     gl.enableVertexAttribArray(attribPos);
     gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, false, 0, 0);
-    // Taille maximale de texture acceptée par ce GPU
-    tailleMaxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096;
-    uni.yaw    = gl.getUniformLocation(prog, "uYaw");
-    uni.pitch  = gl.getUniformLocation(prog, "uPitch");
-    uni.tanF   = gl.getUniformLocation(prog, "uTanF");
+    // Taille maximale de texture acceptée par ce GPU.
+    // La limite choisie par l'utilisateur ne pourra jamais la dépasser.
+    tailleMaxGPU = gl.getParameter(gl.MAX_TEXTURE_SIZE) || TAILLE_MAX_DEFAUT;
+    var valeurInitiale = parseInt(tailleMaxInput.value, 10);
+    if (isNaN(valeurInitiale)) valeurInitiale = TAILLE_MAX_DEFAUT;
+    tailleMaxTex = Math.min(valeurInitiale, tailleMaxGPU);
+    tailleMaxInput.value = tailleMaxTex;
+    uni.yaw = gl.getUniformLocation(prog, "uYaw");
+    uni.pitch = gl.getUniformLocation(prog, "uPitch");
+    uni.tanF = gl.getUniformLocation(prog, "uTanF");
     uni.aspect = gl.getUniformLocation(prog, "uAspect");
-    uni.tex    = gl.getUniformLocation(prog, "uTex");
+    uni.tex = gl.getUniformLocation(prog, "uTex");
     gl.uniform1i(uni.tex, 0);
     gl.activeTexture(gl.TEXTURE0);
     return true;
@@ -253,13 +263,13 @@
     return c;
   }
   var texture = null;
-  /* ------------------------------------------------------------
-     Préparation de la source avant envoi au GPU :
+  var imageSourceOriginale = null;
+  var nomFichierActuel = "";
+  /* Préparation de la source avant envoi au GPU :
      - si l'image dépasse MAX_TEXTURE_SIZE, on la réduit ;
      - si l'image est équirectangulaire (~2:1) et pas en puissance de 2,
        on la réduit au plus grand format 2:1 en puissance de 2,
-       ce qui permet le REPEAT (pas de couture horizontale).
-     ------------------------------------------------------------ */
+       ce qui permet le REPEAT (pas de couture horizontale). */
   function dimensionsCible(w, h) {
     var max = tailleMaxTex;
     var estPot = w >= 2 && h >= 2 && (w & (w - 1)) === 0 && (h & (h - 1)) === 0;
@@ -312,10 +322,12 @@
     lecteur.onload = function (e) {
       var img = new Image();
       img.onload = function () {
+        imageSourceOriginale = img;
+        nomFichierActuel = f.name;
         var prep = preparerSource(img);
         envoyerTexture(prep.source, prep.w, prep.h);
         statut.textContent = f.name + " - " + prep.w + "×" + prep.h +
-          (prep.redimensionnee ? " (adaptée au GPU)" : "");
+          (prep.redimensionnee ? " (adaptée à la taille max)" : "");
         masquerErreur();
       };
       img.onerror = function () {
@@ -404,18 +416,18 @@
   /* Clavier : on mémorise les flèches maintenues (permet les diagonales,
      car la lecture se fait à chaque image dans la boucle de rendu) */
   window.addEventListener("keydown", function (e) {
-    if      (e.keyCode === 37) touches.gauche = true;
+    if (e.keyCode === 37) touches.gauche = true;
     else if (e.keyCode === 39) touches.droite = true;
-    else if (e.keyCode === 38) touches.haut   = true;
-    else if (e.keyCode === 40) touches.bas    = true;
+    else if (e.keyCode === 38) touches.haut = true;
+    else if (e.keyCode === 40) touches.bas = true;
     else return;
     if (e.preventDefault) e.preventDefault(); // évite le défilement de la page
   }, false);
   window.addEventListener("keyup", function (e) {
-    if      (e.keyCode === 37) touches.gauche = false;
+    if (e.keyCode === 37) touches.gauche = false;
     else if (e.keyCode === 39) touches.droite = false;
-    else if (e.keyCode === 38) touches.haut   = false;
-    else if (e.keyCode === 40) touches.bas    = false;
+    else if (e.keyCode === 38) touches.haut = false;
+    else if (e.keyCode === 40) touches.bas = false;
   }, false);
   // Slider FOV
   fovSlider.addEventListener("input", function () {
@@ -423,8 +435,33 @@
     fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
     sale = true;
   }, false);
-  /* Boutons directionnels : maintenir enfoncé pour tourner en continu.
-     Ils partagent le même état que les flèches du clavier. */
+  // Taille maximale choisie pour les textures.
+  // Aucune limite min/max artificielle dans le champ ; seule la capacité du GPU est respectée.
+  // On valide seulement lorsque l'utilisateur termine sa saisie.
+  // Cela évite de remettre 8192 lorsque le champ est momentanément vide.
+  function appliquerTailleMax() {
+    var valeur = parseInt(tailleMaxInput.value, 10);
+    if (isNaN(valeur)) {
+      valeur = TAILLE_MAX_DEFAUT;
+    }
+    valeur = Math.max(1, valeur);
+    valeur = Math.min(valeur, tailleMaxGPU);
+    tailleMaxTex = valeur;
+    tailleMaxInput.value = valeur;
+    // Si une image est déjà chargée, la retraiter immédiatement.
+    if (imageSourceOriginale) {
+      var prep = preparerSource(imageSourceOriginale);
+      envoyerTexture(prep.source, prep.w, prep.h);
+      statut.textContent = nomFichierActuel + " - " + prep.w + "×" + prep.h +
+        (prep.redimensionnee ? " (adaptée à la taille max)" : "");
+    }
+    sale = true;
+  }
+  // "change" est déclenché lorsque l'utilisateur valide la nouvelle valeur.
+  tailleMaxInput.addEventListener("change", appliquerTailleMax, false);
+  // "blur" couvre aussi le cas où l'utilisateur clique ailleurs après sa saisie.
+  tailleMaxInput.addEventListener("blur", appliquerTailleMax, false);
+  /* Boutons directionnels : maintenir enfoncé pour tourner en continu. Ils partagent le même état que les flèches du clavier. */
   function boutonMaintenir(btn, cle) {
     function activer() { touches[cle] = true; }
     function relacher() { touches[cle] = false; }
