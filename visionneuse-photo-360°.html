@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="outils.css">
 <title>Photo 360°</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
 #scene {
   position:absolute;
   top:0;
@@ -20,11 +19,11 @@
 }
 #scene.saisie{cursor:grabbing;}
 /* --- Panneau de contrôle --- */
-#ui {
+.menu {
+  top:0;
+  left:0;
   position:absolute;
   z-index:10;
-  background:rgba(0, 0, 0, 0.6);
-  padding:4px;
 }
 /* --- Boutons directionnels (maintenir pour tourner) --- */
 .btnDir {
@@ -56,28 +55,73 @@
 </style>
 </head>
 <body>
-  <canvas id="scene"></canvas>
-  <div id="ui">
-    <input type="file" id="fileinput">
-    <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0">
-    |
-    <label id="tailleMaxLabel">Taille max :</label> <input type="number" id="tailleMaxInput" step="1" value="8192">px
-    |
-    <label><label id="fov">FOV 75°</label><input type="range" id="fovSlider" min="5" max="100" step="1" value="75"></label>
-    <button class="btnDir" id="btnGauche">←</button>
-    <button class="btnDir" id="btnDroite">→</button>
-    <button class="btnDir" id="btnHaut">↑</button>
-    <button class="btnDir" id="btnBas">↓</button>
-    <button id="btnReset">Reset</button>
-    <button id="btnRotation">Auto</button>
-    |
-    <label id="statut">Texture de démonstration</label>
-    |
-    <label id="erreur"></label>
+<canvas id="scene"></canvas>
+<button onclick="openMenuPopup()" class="menu">Menu</button>
+<div id="popupMenuContent" style="display:none">
+  <b class="titleb">Menu</b><hr class="titlehr">
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <input type="file" id="fileinput">
+      </div>
+      <div style="display:table-cell;">
+        <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0" style="width:100%;box-sizing:border-box;">
+      </div>
+    </div>
   </div>
-  <div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
+  <label id="tailleMaxLabel">Taille max :</label> <input type="number" id="tailleMaxInput" step="1" value="8192">px<br>
+  <hr>
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;width:25%;">
+        <span id="fov">FOV 75°</span>
+      </div>
+      <div style="display:table-cell;">
+        <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <button class="btnDir" id="btnGauche">←</button>
+      </div>
+      <div style="display:table-cell;">
+        <button class="btnDir" id="btnDroite">→</button>
+      </div>
+      <div style="display:table-cell;">
+        <button class="btnDir" id="btnHaut">↑</button>
+      </div>
+      <div style="display:table-cell;">
+        <button class="btnDir" id="btnBas">↓</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <button id="btnReset">Reset</button>
+      </div>
+      <div style="display:table-cell;">
+        <button id="btnRotation">Auto</button>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <span id="statut">Texture de démonstration</span>
+  <span id="erreur"></span>
+  <hr>
+  <button onclick="closePopup()">Fermer</button>
+</div>
+<div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="outils.js"></script>
+<script src="popup.js"></script>
 <script>
+function openMenuPopup() {
+  var container = document.getElementById("popupMenuContent");
+  openPopupMenu(container);
+}
 (function () {
   "use strict";
   /* Références DOM */
