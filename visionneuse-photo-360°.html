@@ -834,8 +834,7 @@ function deplacer(x, y) {
   var dy = y - dernierY;
   dernierX = x;
   dernierY = y;
-  var k = (fov * Math.PI / 180) /
-    Math.max(1, canvas.clientWidth);
+  var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
   yaw -= dx * k;
   pitch = bornerPitch(pitch + dy * k);
   vitesseX = -dx * k;
