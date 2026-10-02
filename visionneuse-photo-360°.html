@@ -67,7 +67,6 @@
       </div>
     </div>
   </div>
-  <label id="tailleMaxLabel" title="Taille maximale d'une tuile envoyée au GPU. Une image plus large est découpée en plusieurs tuiles.">Taille max (par tuile) :</label> <input type="number" id="tailleMaxInput" step="1"> px<br>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
     <div style="display:table-row;">
@@ -119,12 +118,17 @@
 <script src="popup.js"></script>
 <script src="multitouch.js"></script>
 <script>
+/* MENU */
 function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
   openPopupMenu(container);
 }
-/* Références DOM */
+/* DOM */
 var canvas = document.getElementById("scene");
+var ctx = canvas.getContext("2d", {
+  alpha: false
+});
+ctx.imageSmoothingEnabled = true;
 var statut = document.getElementById("statut");
 var fovAff = document.getElementById("fov");
 var depot = document.getElementById("depot");
@@ -134,615 +138,959 @@ var btnReset = document.getElementById("btnReset");
 var fileinput = document.getElementById("fileinput");
 var fovSlider = document.getElementById("fovSlider");
 var btnGauche = document.getElementById("btnGauche");
+var btnDroite = document.getElementById("btnDroite");
 var btnHaut = document.getElementById("btnHaut");
 var btnBas = document.getElementById("btnBas");
-var btnDroit = document.getElementById("btnDroite");
-var tailleMaxInput = document.getElementById("tailleMaxInput");
-var tailleMaxLabel = document.getElementById("tailleMaxLabel");
-/* État de la caméra */
-var yaw = 0;                 // lacet (radians)
-var pitch = 0;                 // tangage (radians)
-var fov = 75;                // degrés
-var FOV_MIN = 5, FOV_MAX = 100;
+/* CAMÉRA */
+var yaw = 0;
+var pitch = 0;
+var fov = 75;
+var FOV_MIN = 5;
+var FOV_MAX = 100;
 var autoRotation = false;
-var vitesse = { x: 0, y: 0 };  // inertie
-// Rendu à la demande : vrai = il faut redessiner une frame
+var vitesseX = 0;
+var vitesseY = 0;
+var saisie = false;
+var touches = {
+  gauche: false,
+  droite: false,
+  haut: false,
+  bas: false
+};
+/* IMAGE */
+var imageSourceOriginale = null;
+var nomFichierActuel = "";
+/* DIRTY FLAG */
 var sale = true;
-// État des directions maintenues (flèches du clavier + boutons)
-var touches = { gauche: false, droite: false, haut: false, bas: false };
-// Bornage du tangage : libre jusqu'à ±89° (1.55 rad), le zénith/nadir reste
-// atteignable mais on évite le blocage exact du pôle (dégénéré).
-function bornerPitch(p) {
-  return Math.max(-1.55, Math.min(1.55, p));
-}
-/* Initialisation WebGL (rendu par lancer de rayon sur sphère) */
-var gl = null;
-var glCtx = window.WebGLRenderingContext || window.WebGL2RenderingContext;
-try {
-  // Perf : pas d'antialias (un seul triangle plein écran, le MSAA ne sert à rien)
-  // et hint pour demander le GPU performant plutôt que l'iGPU.
-  gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" })
-    || (window.WebGL2RenderingContext ? canvas.getContext("webgl2", { antialias: false, powerPreference: "high-performance" }) : null)
-    || canvas.getContext("experimental-webgl", { antialias: false });
-} catch (e) { gl = null; }
-var prog = null, uni = {}, attribPos = null;
-var TAILLE_MAX_DEFAUT = 8192;
-var tailleMaxTex = TAILLE_MAX_DEFAUT;   // taille max d'UNE tuile
-var tailleMaxGPU = TAILLE_MAX_DEFAUT;   // vraie limite matérielle
-// Grandes images : découpage en tuiles verticales (bandes de longitudes).
-// Jusqu'à TUILES_MAX textures, chacune tenant dans la limite du GPU.
-var tuiles = [];
-var texDummy = null;                    // 1x1 px pour les unités inutilisées
-var TUILES_MAX = 4;                     // ajusté selon MAX_TEXTURE_IMAGE_UNITS
-var VERT =
-  "attribute vec2 aPos;\n" +
-  "varying vec2 vNdc;\n" +
-  "void main() {\n" +
-  "  vNdc = aPos;\n" +
-  "  gl_Position = vec4(aPos, 0.0, 1.0);\n" +
-  "}\n";
-// Pour chaque pixel : on construit le rayon caméra puis on le convertit
-// en coordonnées équirectangulaires (longitude / latitude).
-// La longitude est découpée en uTuiles bandes : on sélectionne la texture
-// correspondante (uTex0..uTex3) et on échantillonne dedans en coordonnées
-// locales (le petit recouvrement uPad évite une couture entre tuiles).
-var FRAG =
-  "precision highp float;\n" +
-  "uniform float uYaw;\n" +
-  "uniform float uPitch;\n" +
-  "uniform float uTanF;\n" +     // tan(fov / 2)
-  "uniform float uAspect;\n" +
-  "uniform float uTuiles;\n" +   // nombre de tuiles en longitude (1..4)
-  "uniform float uPad;\n" +      // fraction de recouvrement dans la tuile
-  "uniform sampler2D uTex0;\n" +
-  "uniform sampler2D uTex1;\n" +
-  "uniform sampler2D uTex2;\n" +
-  "uniform sampler2D uTex3;\n" +
-  "varying vec2 vNdc;\n" +
-  "const float PI = 3.141592653589793;\n" +
-  "void main() {\n" +
-  "  float cy = cos(uYaw),  sy = sin(uYaw);\n" +
-  "  float cp = cos(uPitch), sp = sin(uPitch);\n" +
-  "  vec3 fwd = vec3(sy * cp, sp, -cy * cp);\n" +
-  "  vec3 right = vec3(cy, 0.0, sy);\n" +
-  "  vec3 up = vec3(-sy * sp, cp, cy * sp);\n" +
-  "  vec3 ray = fwd + right * (vNdc.x * uTanF * uAspect) + up * (vNdc.y * uTanF);\n" +
-  "  ray = normalize(ray);\n" +
-  "  float u = fract(atan(ray.x, -ray.z) / (2.0 * PI) + 0.5);\n" + // bouclage horizontal
-  "  float v = 0.5 + asin(clamp(ray.y, -1.0, 1.0)) / PI;\n" +
-  "  float f = u * uTuiles;\n" +
-  "  float idx = floor(f);\n" +
-  "  float lu = uPad + (f - idx) * (1.0 - 2.0 * uPad);\n" + // coordonnée locale dans la tuile
-  "  vec2 luv = vec2(lu, v);\n" +
-  "  vec4 col;\n" +
-  "  if (idx < 0.5)      { col = texture2D(uTex0, luv); }\n" +
-  "  else if (idx < 1.5) { col = texture2D(uTex1, luv); }\n" +
-  "  else if (idx < 2.5) { col = texture2D(uTex2, luv); }\n" +
-  "  else                { col = texture2D(uTex3, luv); }\n" +
-  "  gl_FragColor = col;\n" +
-  "}\n";
-function initGL() {
-  if (!gl) { afficherErreur("WebGL n'est pas disponible sur ce navigateur."); return false; }
-  function compiler(type, source) {
-    var s = gl.createShader(type);
-    gl.shaderSource(s, source);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      afficherErreur("Erreur de shader : " + gl.getShaderInfoLog(s));
-      return null;
+// QUALITÉS DE RENDU Pendant une interaction on privilégie la fluidité. Au repos, le système peut remonter progressivement vers une qualité supérieure.
+var QUALITES_360 = [
+  { lon: 20, lat: 10 },
+  { lon: 28, lat: 14 },
+  { lon: 36, lat: 18 },
+  { lon: 44, lat: 22 },
+  { lon: 52, lat: 26 }
+];
+var niveauQualite360 = 2;
+// Niveau temporaire utilisé pendant les mouvements. On ne détruit pas le niveau normal : on utilise simplement un niveau inférieur pendant l'interaction.
+var niveauInteraction360 = 1;
+/* ADAPTATION FPS */
+var tempsCible360 = 16.0;
+var compteurLent360 = 0;
+var compteurRapide360 = 0;
+var NB_MESURES_AVANT_BAISSE = 3;
+var NB_MESURES_AVANT_HAUSSE = 14;
+// MAILLAGES Tous les niveaux sont construits une fois puis conservés. Cela évite de reconstruire le maillage à chaque changement de qualité.
+var maillages360 = [];
+var maillage360 = null;
+/* CONSTRUCTION D'UN MAILLAGE */
+function construireMaillage360PourQualite(niveau) {
+  var q = QUALITES_360[niveau];
+  var nx = q.lon;
+  var ny = q.lat;
+  var largeurLigne = nx + 1;
+  var nbSommets = largeurLigne * (ny + 1);
+  var nbTriangles = nx * ny * 2;
+  var positions = new Float32Array(nbSommets * 3);
+  var uv = new Float32Array(nbSommets * 2);
+  var uvPixels = new Float32Array(nbSommets * 2);
+  var indices = new Uint16Array(nbTriangles * 3);
+  var screenX = new Float32Array(nbSommets);
+  var screenY = new Float32Array(nbSommets);
+  var depth = new Float32Array(nbSommets);
+  // Données source par triangle. Elles sont calculées une seule fois.
+  var sourceX0 = new Float32Array(nbTriangles);
+  var sourceY0 = new Float32Array(nbTriangles);
+  var sourceX1 = new Float32Array(nbTriangles);
+  var sourceY1 = new Float32Array(nbTriangles);
+  var sourceX2 = new Float32Array(nbTriangles);
+  var sourceY2 = new Float32Array(nbTriangles);
+  var pi = Math.PI;
+  var pi2 = Math.PI * 2;
+  var i;
+  var j;
+  var vertex = 0;
+  // SOMMETS
+  for (j = 0; j <= ny; j++) {
+    var v0 = j / ny;
+    // Répartition non linéaire : davantage de précision près du haut et du bas.
+    var puissance = 1.8;
+    var v;
+    if (v0 < 0.5) {
+      v = 0.5 * Math.pow(v0 * 2, puissance);
+    } else {
+      v = 1 - 0.5 * Math.pow((1 - v0) * 2, puissance);
     }
-    return s;
+    var lat = (0.5 - v) * pi;
+    var cl = Math.cos(lat);
+    var sl = Math.sin(lat);
+    for (i = 0; i <= nx; i++) {
+      var u = i / nx;
+      var lon = (u - 0.5) * pi2;
+      var co = Math.cos(lon);
+      var si = Math.sin(lon);
+      positions[vertex * 3] = si * cl;
+      positions[vertex * 3 + 1] = sl;
+      positions[vertex * 3 + 2] = -co * cl;
+      uv[vertex * 2] = u;
+      uv[vertex * 2 + 1] = v;
+      vertex++;
+    }
   }
-  var vs = compiler(gl.VERTEX_SHADER, VERT);
-  var fs = compiler(gl.FRAGMENT_SHADER, FRAG);
-  if (!vs || !fs) return false;
-  prog = gl.createProgram();
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-  gl.bindAttribLocation(prog, 0, "aPos");
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    afficherErreur("Erreur de liaison du programme WebGL.");
-    return false;
+  // INDICES
+  var ti = 0;
+  var triangle = 0;
+  for (j = 0; j < ny; j++) {
+    var ligne = j * largeurLigne;
+    var ligneSuivante = ligne + largeurLigne;
+    for (i = 0; i < nx; i++) {
+      var a = ligne + i;
+      var b = a + 1;
+      var c = ligneSuivante + i;
+      var d = c + 1;
+      // Triangle 1
+      indices[ti++] = a;
+      indices[ti++] = b;
+      indices[ti++] = c;
+      // Triangle 2
+      indices[ti++] = b;
+      indices[ti++] = d;
+      indices[ti++] = c;
+      triangle++;
+      triangle++;
+    }
   }
-  gl.useProgram(prog);
-  // Un seul grand triangle couvrant tout l'écran
-  var buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  attribPos = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(attribPos);
-  gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, false, 0, 0);
-  // Taille maximale de texture acceptée par ce GPU.
-  // La limite choisie par l'utilisateur ne pourra jamais la dépasser.
-  tailleMaxGPU = gl.getParameter(gl.MAX_TEXTURE_SIZE) || TAILLE_MAX_DEFAUT;
-  var valeurInitiale = parseInt(tailleMaxInput.value, 10);
-  if (isNaN(valeurInitiale)) valeurInitiale = TAILLE_MAX_DEFAUT;
-  tailleMaxTex = Math.min(valeurInitiale, tailleMaxGPU);
-  tailleMaxInput.value = tailleMaxTex;
-  // Nombre de tuiles possibles : limité par les unités de texture du fragment shader
-  TUILES_MAX = Math.min(4, gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) || 8);
-  // Emplacement des uniforms
-  uni.yaw = gl.getUniformLocation(prog, "uYaw");
-  uni.pitch = gl.getUniformLocation(prog, "uPitch");
-  uni.tanF = gl.getUniformLocation(prog, "uTanF");
-  uni.aspect = gl.getUniformLocation(prog, "uAspect");
-  uni.tuiles = gl.getUniformLocation(prog, "uTuiles");
-  uni.pad = gl.getUniformLocation(prog, "uPad");
-  uni.tex0 = gl.getUniformLocation(prog, "uTex0");
-  uni.tex1 = gl.getUniformLocation(prog, "uTex1");
-  uni.tex2 = gl.getUniformLocation(prog, "uTex2");
-  uni.tex3 = gl.getUniformLocation(prog, "uTex3");
-  // Chaque sampler pointe vers son unité de texture (0 à 3)
-  gl.uniform1i(uni.tex0, 0);
-  gl.uniform1i(uni.tex1, 1);
-  gl.uniform1i(uni.tex2, 2);
-  gl.uniform1i(uni.tex3, 3);
-  // Texture 1x1 noire : les unités inutilisées doivent rester liées
-  // (les samplers sont actifs même si la branche n'est jamais prise).
-  texDummy = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texDummy);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
-  return true;
+  // Structure finale
+  var mesh = {
+    nx: nx,
+    ny: ny,
+    nbSommets: nbSommets,
+    nbTriangles: nbTriangles,
+    positions: positions,
+    uv: uv,
+    uvPixels: uvPixels,
+    indices: indices,
+    screenX: screenX,
+    screenY: screenY,
+    depth: depth,
+    sourceX0: sourceX0,
+    sourceY0: sourceY0,
+    sourceX1: sourceX1,
+    sourceY1: sourceY1,
+    sourceX2: sourceX2,
+    sourceY2: sourceY2
+  };
+  maillages360[niveau] = mesh;
+  // Les coordonnées source dépendent de la texture.
+  if (imageSourceOriginale) {
+    mettreAJourUVPixelsMaillage(mesh);
+  }
+  return mesh;
 }
-/* Texture : démonstration générée au canvas 2D */
+/* INITIALISATION DES MAILLAGES */
+function construireTousLesMaillages360() {
+  var i;
+  for (i = 0; i < QUALITES_360.length; i++) {
+    construireMaillage360PourQualite(i);
+  }
+  maillage360 = maillages360[niveauQualite360];
+}
+/* UV PIXELS */
+function mettreAJourUVPixelsMaillage(mesh) {
+  if (!mesh || !imageSourceOriginale) {
+    return;
+  }
+  var uv = mesh.uv;
+  var uvPixels = mesh.uvPixels;
+  var iw = imageSourceOriginale.width;
+  var ih = imageSourceOriginale.height;
+  var i;
+  var n = mesh.nbSommets;
+  for (i = 0; i < n; i++) {
+    uvPixels[i * 2] = uv[i * 2] * iw;
+    uvPixels[i * 2 + 1] = uv[i * 2 + 1] * ih;
+  }
+  // Pré-calcul des coordonnées source par triangle.
+  var indices = mesh.indices;
+  var sx0 = mesh.sourceX0;
+  var sy0 = mesh.sourceY0;
+  var sx1 = mesh.sourceX1;
+  var sy1 = mesh.sourceY1;
+  var sx2 = mesh.sourceX2;
+  var sy2 = mesh.sourceY2;
+  var t;
+  for (t = 0; t < mesh.nbTriangles; t++) {
+    var ii = t * 3;
+    var i0 = indices[ii];
+    var i1 = indices[ii + 1];
+    var i2 = indices[ii + 2];
+    sx0[t] = uvPixels[i0 * 2];
+    sy0[t] = uvPixels[i0 * 2 + 1];
+    sx1[t] = uvPixels[i1 * 2];
+    sy1[t] = uvPixels[i1 * 2 + 1];
+    sx2[t] = uvPixels[i2 * 2];
+    sy2[t] = uvPixels[i2 * 2 + 1];
+  }
+}
+/* TEXTURE */
+function definirTexture360(image) {
+  imageSourceOriginale = image;
+  var i;
+  for (i = 0; i < maillages360.length; i++) {
+    mettreAJourUVPixelsMaillage(maillages360[i]);
+  }
+  maillage360 = obtenirMaillageActuel();
+  sale = true;
+}
+/* MAILLAGE ACTUEL */
+function obtenirNiveauRendu() {
+  // Pendant la saisie : on privilégie immédiatement la fluidité.
+  if (saisie) {
+    return Math.min(niveauQualite360, niveauInteraction360);
+  }
+  // Pendant l'inertie, on reste légèrement plus prudent qu'à l'arrêt complet.
+  if (
+    vitesseX !== 0 || vitesseY !== 0
+  ) {
+    return Math.min(niveauQualite360, Math.max(0, niveauInteraction360 + 1));
+  }
+  return niveauQualite360;
+}
+function obtenirMaillageActuel() {
+  var niveau = obtenirNiveauRendu();
+  if (!maillages360[niveau]) {
+    construireMaillage360PourQualite(niveau);
+  }
+  return maillages360[niveau];
+}
+/* QUALITÉ ADAPTATIVE */
+function ajusterQualite360(tempsMs) {
+  // Très lent : on descend rapidement.
+  if (tempsMs > 21) {
+    compteurLent360++;
+    compteurRapide360 = 0;
+    if (
+      compteurLent360 >= NB_MESURES_AVANT_BAISSE &&  niveauQualite360 > 0
+    ) {
+      niveauQualite360--;
+      compteurLent360 = 0;
+      maillage360 = obtenirMaillageActuel();
+      sale = true;
+    }
+    return;
+  }
+  // Rapide : on remonte lentement.
+  if (tempsMs < 10) {
+    compteurRapide360++;
+    compteurLent360 = 0;
+    if (
+      compteurRapide360 >= NB_MESURES_AVANT_HAUSSE && niveauQualite360 < QUALITES_360.length - 1
+    ) {
+      niveauQualite360++;
+      compteurRapide360 = 0;
+      maillage360 = obtenirMaillageActuel();
+      sale = true;
+    }
+    return;
+  }
+  // Zone stable.
+  compteurLent360 = 0;
+  compteurRapide360 = 0;
+}
+/* PITCH */
+function bornerPitch(p) {
+  if (p < -1.55) {
+    return -1.55;
+  }
+  if (p > 1.55) {
+    return 1.55;
+  }
+  return p;
+}
+// RENDU D'UN TRIANGLE save/restore reste nécessaire ici car Canvas 2D ne permet pas de retirer un clip une fois celui-ci appliqué. On ne fait donc aucun save/restore ailleurs.
+function dessinerTriangleOptimise(image, s0x, s0y, s1x, s1y, s2x, s2y, d0x, d0y, d1x, d1y, d2x, d2y) {
+  var sux = s1x - s0x;
+  var suy = s1y - s0y;
+  var svx = s2x - s0x;
+  var svy = s2y - s0y;
+  var det = sux * svy - svx * suy;
+  if (
+    det > -0.000001 && det < 0.000001
+  ) {
+    return;
+  }
+  var dux = d1x - d0x;
+  var duy = d1y - d0y;
+  var dvx = d2x - d0x;
+  var dvy = d2y - d0y;
+  // Transformation affine.
+  var a = (dux * svy - dvx * suy) / det;
+  var c = (dvx * sux - dux * svx) / det;
+  var b = (duy * svy - dvy * suy) / det;
+  var d = (dvy * sux - duy * svx) / det;
+  var e = d0x - a * s0x - c * s0y;
+  var f = d0y - b * s0x - d * s0y;
+  // Chevauchement volontaire des triangles pour supprimer complètement les micro-interstices noirs.
+  var cx = (d0x + d1x + d2x) / 3;
+  var cy = (d0y + d1y + d2y) / 3;
+  var dx0 = d0x - cx;
+  var dy0 = d0y - cy;
+  var dx1 = d1x - cx;
+  var dy1 = d1y - cy;
+  var dx2 = d2x - cx;
+  var dy2 = d2y - cy;
+  // Plus cette valeur est grande, plus les triangles se recouvrent.
+  var expansion = 0.06;
+  var e0x = d0x + dx0 * expansion;
+  var e0y = d0y + dy0 * expansion;
+  var e1x = d1x + dx1 * expansion;
+  var e1y = d1y + dy1 * expansion;
+  var e2x = d2x + dx2 * expansion;
+  var e2y = d2y + dy2 * expansion;
+  // Clip + texture.
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(e0x, e0y);
+  ctx.lineTo(e1x, e1y);
+  ctx.lineTo(e2x, e2y);
+  ctx.closePath();
+  ctx.clip();
+  ctx.setTransform(a, b, c, d, e, f);
+  ctx.drawImage(image, 0, 0);
+  ctx.restore();
+}
+/* RENDU PRINCIPAL */
+function maintenant() {
+  if (window.performance && typeof window.performance.now === "function") {
+    return window.performance.now();
+  }
+  return new Date().getTime();
+}
+function dessinerPhoto360() {
+  if (!imageSourceOriginale) {
+    return;
+  }
+  var debutRendu = maintenant();
+  var largeur = canvas.width;
+  var hauteur = canvas.height;
+  // Fond.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, largeur, hauteur);
+  // Caméra. Tout est calculé directement dans des scalaires.
+  var cyaw = Math.cos(yaw);
+  var syaw = Math.sin(yaw);
+  var cpitch = Math.cos(pitch);
+  var spitch = Math.sin(pitch);
+  // RIGHT
+  var rx = cyaw;
+  var rz = syaw;
+  // UP
+  var ux = -syaw * spitch;
+  var uy = cpitch;
+  var uz = cyaw * spitch;
+  // FORWARD
+  var fx = syaw * cpitch;
+  var fy = spitch;
+  var fz = -cyaw * cpitch;
+  // Projection.
+  var focal = (hauteur * 0.5) / Math.tan(fov * Math.PI / 360);
+  var centreX = largeur * 0.5;
+  var centreY = hauteur * 0.5;
+  // Maillage.
+  var mesh = obtenirMaillageActuel();
+  maillage360 = mesh;
+  var positions = mesh.positions;
+  var screenX = mesh.screenX;
+  var screenY = mesh.screenY;
+  var depth = mesh.depth;
+  var indices = mesh.indices;
+  // Projection des sommets.
+  var i;
+  for (
+    i = 0;
+    i < mesh.nbSommets;
+    i++
+  ) {
+    var p = i * 3;
+    var px = positions[p];
+    var py = positions[p + 1];
+    var pz = positions[p + 2];
+    // Profondeur.
+    var z = px * fx + py * fy + pz * fz;
+    depth[i] = z;
+    // Derrière la caméra.
+    if (z <= 0.0001) {
+      screenX[i] = 0;
+      screenY[i] = 0;
+      continue;
+    }
+    // Coordonnées caméra.
+    var x = px * rx + pz * rz;
+    var y = px * ux + py * uy + pz * uz;
+    screenX[i] = centreX + (x / z) * focal;
+    screenY[i] = centreY - (y / z) * focal;
+  }
+  // Triangles.
+  var sx0 = mesh.sourceX0;
+  var sy0 = mesh.sourceY0;
+  var sx1 = mesh.sourceX1;
+  var sy1 = mesh.sourceY1;
+  var sx2 = mesh.sourceX2;
+  var sy2 = mesh.sourceY2;
+  var t;
+  for (
+    t = 0;
+    t < mesh.nbTriangles;
+    t++
+  ) {
+    var ii = t * 3;
+    var i0 = indices[ii];
+    var i1 = indices[ii + 1];
+    var i2 = indices[ii + 2];
+    //  Horizon
+    var z0 = depth[i0];
+    var z1 = depth[i1];
+    var z2 = depth[i2];
+    var Z_MIN = 0.08;
+    if (z0 <= Z_MIN || z1 <= Z_MIN || z2 <= Z_MIN) {
+      continue;
+    }
+    // Coordonnées écran.
+    var d0x = screenX[i0];
+    var d0y = screenY[i0];
+    var d1x = screenX[i1];
+    var d1y = screenY[i1];
+    var d2x = screenX[i2];
+    var d2y = screenY[i2];
+    // Triangle source. Déjà pré-calculé.
+    dessinerTriangleOptimise(imageSourceOriginale, sx0[t], sy0[t], sx1[t], sy1[t], sx2[t], sy2[t], d0x, d0y, d1x, d1y, d2x, d2y);
+  }
+  // Transformation normale.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // Adaptation qualité.
+  var tempsRendu = maintenant() - debutRendu;
+  ajusterQualite360(tempsRendu);
+}
+/* REDIMENSIONNEMENT */
+function interactionActive360() {
+  return (saisie || vitesseX !== 0 || vitesseY !== 0 || autoRotation);
+}
+function redimensionner() {
+  // Plafond volontairement plus bas. Le nombre de pixels est souvent plus important que le nombre de triangles.
+  var dpr = window.devicePixelRatio || 1;
+  dpr = Math.min(dpr, 1.25);
+  // Pendant une interaction on peut réduire légèrement la résolution interne. Le CSS reste évidemment en 100%.
+  if (interactionActive360()) {
+    dpr *= 0.7;
+  }
+  var w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+  var h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+  if (
+    canvas.width !== w || canvas.height !== h
+  ) {
+    canvas.width = w;
+    canvas.height = h;
+    sale = true;
+    return true;
+  }
+  return false;
+}
+/* BOUCLE */
+var dernierTemps = 0;
+var dernierFovAffiche = -1;
+function boucle(ts) {
+  var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
+  dernierTemps = ts;
+  // Évite les énormes sauts après changement d'onglet ou mise en veille.
+  if (dt > 0.1) {
+    dt = 0.1;
+  }
+  var interactionAvant = interactionActive360();
+  // INERTIE
+  if (!saisie) {
+    if (vitesseX !== 0 || vitesseY !== 0) {
+      yaw += vitesseX;
+      pitch = bornerPitch(pitch + vitesseY);
+      vitesseX *= 0.92;
+      vitesseY *= 0.92;
+      if (Math.abs(vitesseX) < 0.00005) {
+        vitesseX = 0;
+      }
+      if (Math.abs(vitesseY) < 0.00005) {
+        vitesseY = 0;
+      }
+      sale = true;
+    }
+  }
+  // ROTATION AUTOMATIQUE
+  if (autoRotation && !saisie) {
+    yaw += 0.15 * dt;
+    sale = true;
+  }
+  // Si l'interaction vient de se terminer, on force un rendu pleine résolution.
+  var interactionApres = interactionActive360();
+  if (interactionAvant && !interactionApres) {
+    sale = true;
+  }
+  // TOUCHES / BOUTONS
+  var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
+  var my = (touches.haut ? 1 : 0) - (touches.bas ? 1 : 0);
+  if (mx !== 0 || my !== 0) {
+    var pas = 1.3 * (fov / 75);
+    var longueur =
+      Math.sqrt(mx * mx + my * my);
+    yaw += (mx / longueur) * pas * dt;
+    pitch = bornerPitch(pitch + (my / longueur) * pas * dt);
+    sale = true;
+  }
+  pitch = bornerPitch(pitch);
+  // REDIMENSIONNEMENT
+  redimensionner();
+  // RENDU
+  if (sale && imageSourceOriginale) {
+    dessinerPhoto360();
+    sale = false;
+  }
+  // UI FOV. On ne modifie le DOM que si la valeur affichée a réellement changé.
+  var fovEntier = Math.round(fov);
+  if (
+    fovEntier !== dernierFovAffiche
+  ) {
+    dernierFovAffiche = fovEntier;
+    fovAff.textContent = "FOV " + fovEntier + "°";
+    if (
+      parseInt(fovSlider.value, 10) !== fovEntier
+    ) {
+      fovSlider.value = fovEntier;
+    }
+  }
+  requestFrame(boucle);
+}
+/* INITIALISATION */
+construireTousLesMaillages360();
+/* TEXTURE DE DÉMONSTRATION */
 function textureDemonstration() {
   var c = document.createElement("canvas");
-  c.width = 2048; c.height = 1024;
+  c.width = 2048;
+  c.height = 1024;
   var g = c.getContext("2d");
-  // Ciel
+  // CIEL
   var ciel = g.createLinearGradient(0, 0, 0, 512);
-  ciel.addColorStop(0.00, "#0b1e4d");
+  ciel.addColorStop(0, "#0b1e4d");
   ciel.addColorStop(0.45, "#3f6fb5");
   ciel.addColorStop(0.90, "#a8cbe8");
-  ciel.addColorStop(1.00, "#dfeaf2");
+  ciel.addColorStop(1, "#dfeaf2");
   g.fillStyle = ciel;
   g.fillRect(0, 0, 2048, 512);
-  // Soleil
+  // SOLEIL
   var soleil = g.createRadialGradient(1550, 170, 10, 1550, 170, 120);
   soleil.addColorStop(0, "rgba(255,244,200,1)");
   soleil.addColorStop(1, "rgba(255,244,200,0)");
   g.fillStyle = soleil;
   g.fillRect(1400, 20, 300, 300);
-  // Sol
+  // SOL
   var sol = g.createLinearGradient(0, 512, 0, 1024);
-  sol.addColorStop(0.00, "#8fae6a");
+  sol.addColorStop(0, "#8fae6a");
   sol.addColorStop(0.25, "#5f8b46");
-  sol.addColorStop(1.00, "#2e4a26");
+  sol.addColorStop(1, "#2e4a26");
   g.fillStyle = sol;
   g.fillRect(0, 512, 2048, 512);
-  // Grille : méridiens tous les 15°, parallèles tous les 15°
+  // GRILLE LONGITUDE
+  var i;
   g.strokeStyle = "rgba(255,255,255,0.28)";
   g.lineWidth = 2;
-  var i, x, y;
-  for (i = 0; i <= 24; i++) {
-    x = Math.round(i * 2048 / 24);
-    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 1024); g.stroke();
+  for (
+    i = 0;
+    i <= 24;
+    i++
+  ) {
+    var x = Math.round(i * 2048 / 24);
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.lineTo(x, 1024);
+    g.stroke();
   }
-  for (i = 1; i < 12; i++) {
-    y = Math.round(i * 1024 / 12);
-    g.beginPath(); g.moveTo(0, y); g.lineTo(2048, y); g.stroke();
+  // GRILLE LATITUDE
+  for (
+    i = 1;
+    i < 12;
+    i++
+  ) {
+    var y = Math.round(i * 1024 / 12);
+    g.beginPath();
+    g.moveTo(0, y);
+    g.lineTo(2048, y);
+    g.stroke();
   }
-  // Équateur + méridien central plus visibles
+  // ÉQUATEUR
   g.strokeStyle = "rgba(255,255,255,0.55)";
-  g.beginPath(); g.moveTo(0, 512); g.lineTo(2048, 512); g.stroke();
-  g.beginPath(); g.moveTo(1024, 0); g.lineTo(1024, 1024); g.stroke();
-  // Points cardinaux (u = 0.5 correspond à la vue initiale "Nord")
+  g.beginPath();
+  g.moveTo(0, 512);
+  g.lineTo(2048, 512);
+  g.stroke();
+  // MÉRIDIEN CENTRAL
+  g.beginPath();
+  g.moveTo(1024, 0);
+  g.lineTo(1024, 1024);
+  g.stroke();
+  // POINTS CARDINAUX
   g.textAlign = "center";
   g.textBaseline = "middle";
-  var card = [ { l: "N", x: 1024 }, { l: "E", x: 1536 }, { l: "S", x: 2048 }, { l: "S", x: 0 }, { l: "O", x: 512 } ];
-  for (i = 0; i < card.length; i++) {
+  var card = [
+    { l: "N", x: 1024 },
+    { l: "E", x: 1536 },
+    { l: "S", x: 2048 },
+    { l: "S", x: 0 },
+    { l: "O", x: 512 }
+  ];
+  for (
+    i = 0;
+    i < card.length;
+    i++
+  ) {
     g.fillStyle = "rgba(255,255,255,0.92)";
     g.font = "bold 90px 'Segoe UI', sans-serif";
     g.fillText(card[i].l, card[i].x, 300);
-    g.beginPath(); g.arc(card[i].x, 300, 60, 0, Math.PI * 2);
-    g.strokeStyle = "rgba(255,255,255,0.8)"; g.lineWidth = 4; g.stroke();
+    g.beginPath();
+    g.arc(card[i].x, 300, 60, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(255,255,255,0.8)";
+    g.lineWidth = 4;
+    g.stroke();
   }
-  // Repère texte pour vérifier le sens de lecture
+  // TEXTE DE TEST
   g.font = "bold 48px 'Segoe UI', sans-serif";
   g.fillStyle = "rgba(255,255,255,0.85)";
   g.fillText("← Test de texture 360° →", 1024, 860);
   return c;
 }
-/* ------------------------------------------------------------
-   Envoi d'une image au GPU, avec découpage en tuiles si besoin :
-   - si la hauteur dépasse la taille max, l'image entière est réduite ;
-   - si la largeur dépasse la taille max, l'image est découpée en
-     tuiles verticales (bandes de longitudes), chacune tenant dans
-     la limite du GPU — jusqu'à TUILES_MAX tuiles (sinon réduction) ;
-   - les tuiles se recouvrent de quelques pixels pour éviter une
-     couture, et le bouclage horizontal est fait dans le shader.
-   ------------------------------------------------------------ */
-// Dessine une bande verticale [x, x+largeur[ de la source, avec bouclage
-// horizontal si la bande dépasse le bord droit de l'image.
-function dessinerBande(g, source, W, H, x, largeur, xDest) {
-  x = ((x % W) + W) % W;
-  if (x + largeur <= W) {
-    g.drawImage(source, x, 0, largeur, H, xDest, 0, largeur, H);
-  } else {
-    var part1 = W - x;
-    g.drawImage(source, x, 0, part1, H, xDest, 0, part1, H);
-    g.drawImage(source, 0, 0, largeur - part1, H, xDest + part1, 0, largeur - part1, H);
-  }
-}
-// Crée le canvas d'une tuile : la bande [xDebut, xDebut+largeur[ plus
-// "pad" pixels de recouvrement de chaque côté (le filtre LINEAR peut
-// ainsi interpoler avec les vrais pixels voisins, sans couture).
-function creerTuile(source, W, H, xDebut, largeur, pad) {
-  var c = document.createElement("canvas");
-  c.width = largeur + 2 * pad;
-  c.height = H;
-  var g = c.getContext("2d");
-  g.drawImage(source, xDebut, 0, largeur, H, pad, 0, largeur, H);
-  dessinerBande(g, source, W, H, xDebut - pad, pad, 0);
-  dessinerBande(g, source, W, H, xDebut + largeur, pad, pad + largeur);
-  return c;
-}
-function envoyerTexture(source, largeur, hauteur) {
-  if (!gl) return null;
-  var max = tailleMaxTex;
-  var redimensionnee = false;
-  var i;
-  // 1) Hauteur trop grande pour le GPU : on réduit l'image entière
-  if (hauteur > max) {
-    var sh = max / hauteur;
-    var ch = document.createElement("canvas");
-    ch.width = Math.max(1, Math.floor(largeur * sh));
-    ch.height = max;
-    ch.getContext("2d").drawImage(source, 0, 0, ch.width, ch.height);
-    source = ch; largeur = ch.width; hauteur = ch.height;
-    redimensionnee = true;
-  }
-  // 2) Largeur : nombre de tuiles nécessaires
-  var n = 1;
-  if (largeur > max) n = Math.ceil(largeur / max);
-  if (n > TUILES_MAX) {
-    // Image trop large même pour TUILES_MAX tuiles : réduction finale
-    var sw = (TUILES_MAX * max) / largeur;
-    var cw = document.createElement("canvas");
-    cw.width = TUILES_MAX * max;
-    cw.height = Math.max(1, Math.floor(hauteur * sw));
-    cw.getContext("2d").drawImage(source, 0, 0, cw.width, cw.height);
-    source = cw; largeur = cw.width; hauteur = cw.height;
-    n = TUILES_MAX;
-    redimensionnee = true;
-  }
-  // 3) Largeur multiple exacte de n (découpage régulier dans le shader)
-  var chunkPx = Math.floor(largeur / n);
-  if (chunkPx * n !== largeur) {
-    var creg = document.createElement("canvas");
-    creg.width = chunkPx * n;
-    creg.height = hauteur;
-    creg.getContext("2d").drawImage(source, 0, 0, creg.width, creg.height);
-    source = creg; largeur = creg.width;
-  }
-  var pad = 4; // pixels de recouvrement entre tuiles
-  var padFrac = pad / (chunkPx + 2 * pad);
-  // 4) Libération des anciennes tuiles puis création des nouvelles
-  for (i = 0; i < tuiles.length; i++) gl.deleteTexture(tuiles[i]);
-  tuiles = [];
-  for (i = 0; i < n; i++) {
-    var t = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE0 + i);
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
-      creerTuile(source, largeur, hauteur, i * chunkPx, chunkPx, pad));
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    tuiles.push(t);
-  }
-  // 5) Les unités de texture inutilisées restent liées au dummy 1x1
-  for (i = n; i < 4; i++) {
-    gl.activeTexture(gl.TEXTURE0 + i);
-    gl.bindTexture(gl.TEXTURE_2D, texDummy);
-  }
-  gl.uniform1f(uni.tuiles, n);
-  gl.uniform1f(uni.pad, padFrac);
-  sale = true; // nouvelle image : redessiner
-  return { w: largeur, h: hauteur, tuiles: n, redimensionnee: redimensionnee };
-}
-/* Envoie une source (Image ou canvas) au GPU et met à jour le statut */
-function chargerTexture(source, nom) {
-  var w = source.naturalWidth || source.width;
-  var h = source.naturalHeight || source.height;
-  var info = envoyerTexture(source, w, h);
-  if (!info) return;
-  statut.textContent = nom + " - " + info.w + "x" + info.h +
-    (info.tuiles > 1 ? " (" + info.tuiles + " tuiles)" : "") +
-    (info.redimensionnee ? " (adaptée à la taille max)" : "");
-}
-/* Chargement d'une photo utilisateur */
-var imageSourceOriginale = null;
-var nomFichierActuel = "";
+/* CHARGEMENT IMAGE */
 function chargerFichier(f) {
+  if (!f) {
+    return;
+  }
   var lecteur = new FileReader();
-  lecteur.onload = function (e) {
-    var img = new Image();
-    img.onload = function () {
-      imageSourceOriginale = img;
-      nomFichierActuel = f.name;
-      chargerTexture(img, f.name);
-      masquerErreur();
+  lecteur.onload =
+    function(e) {
+      var img =
+        new Image();
+      img.onload =
+        function() {
+          definirTexture360(img);
+          nomFichierActuel = f.name;
+          statut.textContent = f.name + " - " + img.naturalWidth + "x" + img.naturalHeight;
+          masquerErreur();
+          yaw = 0;
+          pitch = 0;
+          vitesseX = 0;
+          vitesseY = 0;
+          sale = true;
+        };
+      img.onerror =
+        function() {
+          afficherErreur("Impossible de décoder cette image.");
+        };
+      img.src = e.target.result;
     };
-    img.onerror = function () {
-      afficherErreur("Impossible de décoder cette image dans ce contexte.");
+  lecteur.onerror =
+    function() {
+      afficherErreur("Lecture du fichier impossible.");
     };
-    img.src = e.target.result;
-  };
-  lecteur.onerror = function () { afficherErreur("Lecture du fichier impossible."); };
   lecteur.readAsDataURL(f);
 }
-/* Interactions : souris, molette, tactile, clavier */
-var saisie = false;
-var dernier = { x: 0, y: 0 };
-var pincement = null; // distance entre 2 doigts
+/* INTERACTION SOURIS */
+var dernierX = 0;
+var dernierY = 0;
+var pincement = null;
 function commencer(x, y) {
   saisie = true;
-  dernier.x = x; dernier.y = y;
-  vitesse.x = 0; vitesse.y = 0;
+  dernierX = x;
+  dernierY = y;
+  vitesseX = 0;
+  vitesseY = 0;
   canvas.className = "saisie";
+  // On passe immédiatement en qualité d'interaction.
+  sale = true;
 }
 function deplacer(x, y) {
-  var dx = x - dernier.x, dy = y - dernier.y;
-  dernier.x = x; dernier.y = y;
-  // Sensibilité "naturelle" : un mouvement d'une largeur d'écran ≈ un demi-tour visuel.
-  // On relie l'angle à la largeur de la fenêtre, pas à un chiffre fixe.
-  var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
-  yaw   -= dx * k;
+  var dx = x - dernierX;
+  var dy = y - dernierY;
+  dernierX = x;
+  dernierY = y;
+  var k = (fov * Math.PI / 180) /
+    Math.max(1, canvas.clientWidth);
+  yaw -= dx * k;
   pitch = bornerPitch(pitch + dy * k);
-  vitesse.x = -dx * k; vitesse.y = dy * k;
-  sale = true; // la vue a bougé : redessiner
+  vitesseX = -dx * k;
+  vitesseY = dy * k;
+  sale = true;
 }
 function terminer() {
   saisie = false;
   canvas.className = "";
+  sale = true;
 }
-canvas.addEventListener("mousedown", function (e) {
-  if (e.preventDefault) e.preventDefault();
-  commencer(e.clientX, e.clientY);
-}, false);
-window.addEventListener("mousemove", function (e) {
-  if (saisie) deplacer(e.clientX, e.clientY);
-}, false);
+/* SOURIS */
+canvas.addEventListener("mousedown",
+  function(e) {
+    e.preventDefault();
+    commencer(e.clientX, e.clientY);
+  },
+  false
+);
+window.addEventListener("mousemove",
+  function(e) {
+    if (saisie) {
+      deplacer(e.clientX, e.clientY);
+    }
+  },
+  false
+);
 window.addEventListener("mouseup", terminer, false);
-// Tactile : 1 doigt = rotation, 2 doigts = pincement (zoom)
-canvas.addEventListener("touchstart", function (e) {
-  if (e.touches.length === 1) {
-    commencer(e.touches[0].clientX, e.touches[0].clientY);
-  } else if (e.touches.length === 2) {
-    pincement = distanceTouches(e.touches);
+/* TACTILE */
+canvas.addEventListener("touchstart",
+  function(e) {
+    if (
+      e.touches.length === 1
+    ) {
+      commencer(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (
+      e.touches.length === 2
+    ) {
+      pincement = distanceTouches(e.touches);
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
   }
-  if (e.preventDefault) e.preventDefault();
-}, false);
-canvas.addEventListener("touchmove", function (e) {
-  if (e.touches.length === 1 && saisie) {
-    deplacer(e.touches[0].clientX, e.touches[0].clientY);
-  } else if (e.touches.length === 2 && pincement !== null) {
-    var d = distanceTouches(e.touches);
-    fov = fov * (pincement / d);
-    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-    pincement = d;
-    sale = true;
+);
+canvas.addEventListener("touchmove",
+  function(e) {
+    if (e.touches.length === 1 && saisie) {
+      deplacer(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2 && pincement !== null) {
+      var d = distanceTouches(e.touches);
+      if (d > 0) {
+        fov = fov * (pincement / d);
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        pincement = d;
+        sale = true;
+      }
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
   }
-  if (e.preventDefault) e.preventDefault();
-}, false);
-canvas.addEventListener("touchend", function (e) {
-  if (e.touches.length === 0) { terminer(); pincement = null; }
-  else if (e.touches.length === 1) {
-    saisie = false;
-    commencer(e.touches[0].clientX, e.touches[0].clientY);
+);
+canvas.addEventListener("touchend",
+  function(e) {
+    if (e.touches.length === 0) {
+      terminer();
+      pincement = null;
+    } else if (e.touches.length === 1) {
+      saisie = false;
+      commencer(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
   }
-  if (e.preventDefault) e.preventDefault();
-}, false);
+);
 function distanceTouches(t) {
-  var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+  var dx = t[0].clientX - t[1].clientX;
+  var dy = t[0].clientY - t[1].clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
-// Molette : zoom
+/* MOLETTE */
 function molette(e) {
-  var d = (e.deltaY || e.wheelDelta || 0);
-  if (d > 0) fov += 5; else if (d < 0) fov -= 5;
+  var d = e.deltaY || e.wheelDelta || 0;
+  if (d > 0) {
+    fov += 5;
+  } else if (d < 0) {
+    fov -= 5;
+  }
   fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
   sale = true;
-  if (e.preventDefault) e.preventDefault();
+  e.preventDefault();
 }
-canvas.addEventListener("wheel", molette, { passive: false });
-/* Clavier : on mémorise les flèches maintenues (permet les diagonales, car la lecture se fait à chaque image dans la boucle de rendu) */
-window.addEventListener("keydown", function (e) {
-// Ctrl + / Ctrl - : zoom
-if (e.ctrlKey) {
-  if (e.key === "+" || e.key === "=") {
-    fov -= 5; // zoom avant
+canvas.addEventListener("wheel", molette,
+  {
+    passive:false
+  }
+);
+/* CLAVIER */
+window.addEventListener("keydown",
+  function(e) {
+    // Ctrl + / Ctrl -
+    if (e.ctrlKey) {
+      if (
+        e.key === "+" || e.key === "="
+      ) {
+        fov -= 5;
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        sale = true;
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "-" || e.key === "_") {
+        fov += 5;
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        sale = true;
+        e.preventDefault();
+        return;
+      }
+    }
+    // Flèches
+    if (e.keyCode === 37) {
+      touches.gauche = true;
+    } else if (e.keyCode === 39) {
+      touches.droite = true;
+    } else if (e.keyCode === 38) {
+      touches.haut = true;
+    } else if (e.keyCode === 40) {
+      touches.bas = true;
+    } else {
+      return;
+    }
+    e.preventDefault();
+  },
+  false
+);
+window.addEventListener("keyup",
+  function(e) {
+    if (e.keyCode === 37) {
+      touches.gauche = false;
+    } else if (e.keyCode === 39) {
+      touches.droite = false;
+    } else if (e.keyCode === 38) {
+      touches.haut = false;
+    } else if (e.keyCode === 40) {
+      touches.bas = false;
+    }
+  },
+  false
+);
+/* FOV */
+fovSlider.addEventListener("input",
+  function() {
+    fov = parseInt(fovSlider.value, 10) || 75;
     fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
     sale = true;
-    if (e.preventDefault) e.preventDefault();
-    return;
-  }
-  if (e.key === "-" || e.key === "_") {
-    fov += 5; // dézoom
-    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-    sale = true;
-    if (e.preventDefault) e.preventDefault();
-    return;
-  }
-}
-// Flèches
-  if (e.keyCode === 37) touches.gauche = true;
-  else if (e.keyCode === 39) touches.droite = true;
-  else if (e.keyCode === 38) touches.haut = true;
-  else if (e.keyCode === 40) touches.bas = true;
-  else return;
-  if (e.preventDefault) e.preventDefault(); // évite le défilement de la page
-}, false);
-window.addEventListener("keyup", function (e) {
-  if (e.keyCode === 37) touches.gauche = false;
-  else if (e.keyCode === 39) touches.droite = false;
-  else if (e.keyCode === 38) touches.haut = false;
-  else if (e.keyCode === 40) touches.bas = false;
-}, false);
-// Slider FOV
-fovSlider.addEventListener("input", function () {
-  fov = parseInt(fovSlider.value, 10) || 75;
-  fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
-  sale = true;
-}, false);
-// Taille maximale choisie pour UNE TUILE (une image plus large est
-// simplement découpée en plusieurs tuiles, sans perte de résolution).
-// Aucune limite min/max artificielle dans le champ ; seule la capacité
-// du GPU est respectée. On valide quand l'utilisateur termine sa saisie.
-function appliquerTailleMax() {
-  var valeur = parseInt(tailleMaxInput.value, 10);
-  if (isNaN(valeur)) {
-    valeur = TAILLE_MAX_DEFAUT;
-  }
-  valeur = Math.max(1, valeur);
-  valeur = Math.min(valeur, tailleMaxGPU);
-  tailleMaxTex = valeur;
-  tailleMaxInput.value = valeur;
-  // Si une image est déjà chargée, la retraiter immédiatement.
-  if (imageSourceOriginale) {
-    chargerTexture(imageSourceOriginale, nomFichierActuel);
-  }
-  sale = true;
-}
-// "change" est déclenché lorsque l'utilisateur valide la nouvelle valeur.
-tailleMaxInput.addEventListener("change", appliquerTailleMax, false);
-// "blur" couvre aussi le cas où l'utilisateur clique ailleurs après sa saisie.
-tailleMaxInput.addEventListener("blur", appliquerTailleMax, false);
-/* Boutons directionnels : maintenir enfoncé pour tourner en continu. Ils partagent le même état que les flèches du clavier. */
+  },
+  false
+);
+/* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
-  function activer() { touches[cle] = true; }
-  function relacher() { touches[cle] = false; }
+  function activer() {
+    touches[cle] = true;
+  }
+  function relacher() {
+    touches[cle] = false;
+  }
   btn.addEventListener("mousedown", activer, false);
-  btn.addEventListener("touchstart", function (e) {
-    if (e.preventDefault) e.preventDefault();
-    activer();
-  }, false);
+  btn.addEventListener("touchstart",
+    function(e) {
+      e.preventDefault();
+      activer();
+    },
+    {
+      passive:false
+    }
+  );
   btn.addEventListener("mouseleave", relacher, false);
   window.addEventListener("mouseup", relacher, false);
   window.addEventListener("touchend", relacher, false);
   window.addEventListener("touchcancel", relacher, false);
 }
 boutonMaintenir(btnGauche, "gauche");
+boutonMaintenir(btnDroite, "droite");
 boutonMaintenir(btnHaut, "haut");
 boutonMaintenir(btnBas, "bas");
-boutonMaintenir(btnDroit, "droite");
-// Sélection via le bouton
-fileinput.addEventListener("change", function () {
-  if (fileinput.files && fileinput.files[0]) chargerFichier(fileinput.files[0]);
-  fileinput.value = "";
-}, false);
-// Glisser-déposer d'une image sur la page
-window.addEventListener("dragover", function (e) {
-  if (e.preventDefault) e.preventDefault();
-  depot.className = "actif";
-}, false);
-window.addEventListener("dragleave", function () { depot.className = ""; }, false);
-window.addEventListener("drop", function (e) {
-  if (e.preventDefault) e.preventDefault();
-  depot.className = "";
-  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-    chargerFichier(e.dataTransfer.files[0]);
-  }
-}, false);
-// Boutons
+/* FICHIER */
+fileinput.addEventListener("change",
+  function() {
+    if (fileinput.files && fileinput.files[0]) {
+      chargerFichier(fileinput.files[0]);
+    }
+    fileinput.value = "";
+  },
+  false
+);
+/* DRAG & DROP */
+window.addEventListener("dragover",
+  function(e) {
+    e.preventDefault();
+    depot.className = "actif";
+  },
+  false
+);
+window.addEventListener("dragleave",
+  function() {
+    depot.className = "";
+  }, false);
+window.addEventListener(
+  "drop",
+  function(e) {
+    e.preventDefault();
+    depot.className = "";
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      chargerFichier(e.dataTransfer.files[0]);
+    }
+  },
+  false
+);
+/* BOUTONS */
 function toggleAutoRotation() {
   autoRotation = !autoRotation;
   btnRot.className = autoRotation ? "active" : "";
   sale = true;
-};
+}
 function resetPhoto360() {
   yaw = 0;
   pitch = 0;
   fov = 75;
-  vitesse.x = 0;
-  vitesse.y = 0;
+  vitesseX = 0;
+  vitesseY = 0;
   sale = true;
-};
+}
+/* ERREURS */
 function afficherErreur(msg) {
   erreur.textContent = msg;
   erreur.style.display = "block";
-  if (typeof erreur._timer !== "undefined") clearTimeout(erreur._timer);
-  erreur._timer = setTimeout(function () { masquerErreur(); }, 5000);
+  if (
+    typeof erreur._timer !== "undefined"
+  ) {
+    clearTimeout(erreur._timer);
+  }
+  erreur._timer =
+    setTimeout(
+      function() {
+        masquerErreur();
+      },
+      5000
+    );
 }
-function masquerErreur() { erreur.style.display = "none"; }
-/* Boucle de rendu */
-// Renvoie true si la taille du canvas a changé (il faut alors redessiner)
-function redimensionner() {
-  var dpr = window.devicePixelRatio || 1;
-  if (dpr > 2) dpr = 2;
-  var w = Math.round(canvas.clientWidth * dpr);
-  var h = Math.round(canvas.clientHeight * dpr);
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width = w; canvas.height = h;
-    return true;
-  }
-  return false;
+function masquerErreur() {
+  erreur.style.display = "none";
 }
-var dernierTemps = 0;
-function boucle(ts) {
-  var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
-  if (dt > 0.1) dt = 0.1;
-  dernierTemps = ts;
-  // Inertie après relâchement
-  if (!saisie) {
-    yaw += vitesse.x;
-    pitch = bornerPitch(pitch + vitesse.y);
-    vitesse.x *= 0.92; vitesse.y *= 0.92;
-    if (Math.abs(vitesse.x) < 0.00005) vitesse.x = 0;
-    if (Math.abs(vitesse.y) < 0.00005) vitesse.y = 0;
-    if (vitesse.x !== 0 || vitesse.y !== 0) sale = true;
-  }
-  // Rotation automatique
-  if (autoRotation && !saisie) {
-    yaw += 0.15 * dt;
-    sale = true;
-  }
-  // Déplacement continu : flèches et boutons maintenus.
-  // Les diagonales sont normalisées pour garder la même vitesse en biais.
-  var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
-  var my = (touches.haut   ? 1 : 0) - (touches.bas    ? 1 : 0);
-  if (mx !== 0 || my !== 0) {
-    var pas = 1.3 * (fov / 75); // radians par seconde
-    var n = Math.sqrt(mx * mx + my * my);
-    yaw += (mx / n) * pas * dt;
-    pitch = bornerPitch(pitch + (my / n) * pas * dt);
-    sale = true;
-  }
-  // Sécurité : maintient le tangage dans les bornes (±89°)
-  pitch = bornerPitch(pitch);
-  // Rendu à la demande : on ne redessine que si quelque chose a changé
-  if (gl && prog) {
-    if (redimensionner()) sale = true; // redimensionner efface le canvas
-    if (sale) {
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.uniform1f(uni.yaw, yaw);
-      gl.uniform1f(uni.pitch, pitch);
-      gl.uniform1f(uni.tanF, Math.tan(fov * Math.PI / 360));
-      gl.uniform1f(uni.aspect, canvas.width / Math.max(1, canvas.height));
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      sale = false;
-    }
-  }
-  // Affichage FOV (uniquement si la valeur affichée change)
-  var fovTxt = "FOV " + Math.round(fov) + "°";
-  if (fovAff.textContent !== fovTxt) fovAff.textContent = fovTxt;
-  // Synchronise le slider quand le FOV change (molette, pincement)
-  if (parseInt(fovSlider.value, 10) !== Math.round(fov)) {
-    fovSlider.value = Math.round(fov);
-  }
-  (window.requestAnimationFrame || function (f) { setTimeout(function () { f(Date.now()); }, 16); })(boucle);
+/* DÉMARRAGE */
+var demo = textureDemonstration();
+definirTexture360(demo);
+statut.textContent = "Texture de démonstration - " + demo.width + "x" + demo.height;
+redimensionner();
+var requestFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame ||
+  function (callback) {
+    return window.setTimeout(function () {
+      callback(new Date().getTime());
+    }, 16);
+  };
+requestFrame(boucle);
+/* MULTITOUCH EXTERNE */
+if (typeof addMultiTouch === "function") {
+  addMultiTouch("button,input");
 }
-/* Démarrage */
-if (initGL()) {
-  var demo = textureDemonstration();
-  chargerTexture(demo, "Texture de démonstration");
-  boucle(0);
-}
-addMultiTouch("button,input");
 </script>
 </body>
 </html>
