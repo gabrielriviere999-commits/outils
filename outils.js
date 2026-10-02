@@ -154,7 +154,8 @@ var sliders = {
     dottedGapInput: ["dottedGapValue", 1],
     polygonSidesInput: ["polygonSidesInput", 1],
     starBranchesInput: ["starBranchesInput", 1],
-    zoom: ["zoom", 20]
+    zoom: ["zoom", 20],
+    fovSlider: ["fovSlider", 1]
 };
 var sliderLabels = {
     sizeInput: "sizeLabel",
