@@ -70,7 +70,7 @@
       </div>
     </div>
   </div>
-  <label id="tailleMaxLabel" title="Taille maximale d'une tuile envoyée au GPU. Une image plus large est découpée en plusieurs tuiles.">Taille max (par tuile) :</label> <input type="number" id="tailleMaxInput" step="1"> px<br>
+  <label id="tailleMaxLabel">Taille max :</label> <input type="number" id="tailleMaxInput" step="1"> px<br>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
     <div style="display:table-row;">
@@ -168,13 +168,8 @@ try {
 } catch (e) { gl = null; }
 var prog = null, uni = {}, attribPos = null;
 var TAILLE_MAX_DEFAUT = 8192;
-var tailleMaxTex = TAILLE_MAX_DEFAUT;   // taille max d'UNE tuile
-var tailleMaxGPU = TAILLE_MAX_DEFAUT;   // vraie limite matérielle
-// Grandes images : découpage en tuiles verticales (bandes de longitudes).
-// Jusqu'à TUILES_MAX textures, chacune tenant dans la limite du GPU.
-var tuiles = [];
-var texDummy = null;                    // 1x1 px pour les unités inutilisées
-var TUILES_MAX = 4;                     // ajusté selon MAX_TEXTURE_IMAGE_UNITS
+var tailleMaxTex = TAILLE_MAX_DEFAUT;
+var tailleMaxGPU = TAILLE_MAX_DEFAUT;
 var VERT =
   "attribute vec2 aPos;\n" +
   "varying vec2 vNdc;\n" +
@@ -183,22 +178,14 @@ var VERT =
   "  gl_Position = vec4(aPos, 0.0, 1.0);\n" +
   "}\n";
 // Pour chaque pixel : on construit le rayon caméra puis on le convertit
-// en coordonnées équirectangulaires (longitude / latitude).
-// La longitude est découpée en uTuiles bandes : on sélectionne la texture
-// correspondante (uTex0..uTex3) et on échantillonne dedans en coordonnées
-// locales (le petit recouvrement uPad évite une couture entre tuiles).
+// en coordonnées équirectangulaires (longitude / latitude) pour échantillonner la photo.
 var FRAG =
   "precision highp float;\n" +
   "uniform float uYaw;\n" +
   "uniform float uPitch;\n" +
-  "uniform float uTanF;\n" +     // tan(fov / 2)
+  "uniform float uTanF;\n" +   // tan(fov / 2)
   "uniform float uAspect;\n" +
-  "uniform float uTuiles;\n" +   // nombre de tuiles en longitude (1..4)
-  "uniform float uPad;\n" +      // fraction de recouvrement dans la tuile
-  "uniform sampler2D uTex0;\n" +
-  "uniform sampler2D uTex1;\n" +
-  "uniform sampler2D uTex2;\n" +
-  "uniform sampler2D uTex3;\n" +
+  "uniform sampler2D uTex;\n" +
   "varying vec2 vNdc;\n" +
   "const float PI = 3.141592653589793;\n" +
   "void main() {\n" +
@@ -209,18 +196,9 @@ var FRAG =
   "  vec3 up = vec3(-sy * sp, cp, cy * sp);\n" +
   "  vec3 ray = fwd + right * (vNdc.x * uTanF * uAspect) + up * (vNdc.y * uTanF);\n" +
   "  ray = normalize(ray);\n" +
-  "  float u = fract(atan(ray.x, -ray.z) / (2.0 * PI) + 0.5);\n" + // bouclage horizontal
+  "  float u = atan(ray.x, -ray.z) / (2.0 * PI) + 0.5;\n" +
   "  float v = 0.5 + asin(clamp(ray.y, -1.0, 1.0)) / PI;\n" +
-  "  float f = u * uTuiles;\n" +
-  "  float idx = floor(f);\n" +
-  "  float lu = uPad + (f - idx) * (1.0 - 2.0 * uPad);\n" + // coordonnée locale dans la tuile
-  "  vec2 luv = vec2(lu, v);\n" +
-  "  vec4 col;\n" +
-  "  if (idx < 0.5)      { col = texture2D(uTex0, luv); }\n" +
-  "  else if (idx < 1.5) { col = texture2D(uTex1, luv); }\n" +
-  "  else if (idx < 2.5) { col = texture2D(uTex2, luv); }\n" +
-  "  else                { col = texture2D(uTex3, luv); }\n" +
-  "  gl_FragColor = col;\n" +
+  "  gl_FragColor = texture2D(uTex, vec2(u, v));\n" +
   "}\n";
 function initGL() {
   if (!gl) { afficherErreur("WebGL n'est pas disponible sur ce navigateur."); return false; }
@@ -261,29 +239,13 @@ function initGL() {
   if (isNaN(valeurInitiale)) valeurInitiale = TAILLE_MAX_DEFAUT;
   tailleMaxTex = Math.min(valeurInitiale, tailleMaxGPU);
   tailleMaxInput.value = tailleMaxTex;
-  // Nombre de tuiles possibles : limité par les unités de texture du fragment shader
-  TUILES_MAX = Math.min(4, gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) || 8);
-  // Emplacement des uniforms
   uni.yaw = gl.getUniformLocation(prog, "uYaw");
   uni.pitch = gl.getUniformLocation(prog, "uPitch");
   uni.tanF = gl.getUniformLocation(prog, "uTanF");
   uni.aspect = gl.getUniformLocation(prog, "uAspect");
-  uni.tuiles = gl.getUniformLocation(prog, "uTuiles");
-  uni.pad = gl.getUniformLocation(prog, "uPad");
-  uni.tex0 = gl.getUniformLocation(prog, "uTex0");
-  uni.tex1 = gl.getUniformLocation(prog, "uTex1");
-  uni.tex2 = gl.getUniformLocation(prog, "uTex2");
-  uni.tex3 = gl.getUniformLocation(prog, "uTex3");
-  // Chaque sampler pointe vers son unité de texture (0 à 3)
-  gl.uniform1i(uni.tex0, 0);
-  gl.uniform1i(uni.tex1, 1);
-  gl.uniform1i(uni.tex2, 2);
-  gl.uniform1i(uni.tex3, 3);
-  // Texture 1x1 noire : les unités inutilisées doivent rester liées
-  // (les samplers sont actifs même si la branche n'est jamais prise).
-  texDummy = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texDummy);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+  uni.tex = gl.getUniformLocation(prog, "uTex");
+  gl.uniform1i(uni.tex, 0);
+  gl.activeTexture(gl.TEXTURE0);
   return true;
 }
 /* Texture : démonstration générée au canvas 2D */
@@ -345,119 +307,61 @@ function textureDemonstration() {
   g.fillText("← Test de texture 360° →", 1024, 860);
   return c;
 }
-/* ------------------------------------------------------------
-   Envoi d'une image au GPU, avec découpage en tuiles si besoin :
-   - si la hauteur dépasse la taille max, l'image entière est réduite ;
-   - si la largeur dépasse la taille max, l'image est découpée en
-     tuiles verticales (bandes de longitudes), chacune tenant dans
-     la limite du GPU — jusqu'à TUILES_MAX tuiles (sinon réduction) ;
-   - les tuiles se recouvrent de quelques pixels pour éviter une
-     couture, et le bouclage horizontal est fait dans le shader.
-   ------------------------------------------------------------ */
-// Dessine une bande verticale [x, x+largeur[ de la source, avec bouclage
-// horizontal si la bande dépasse le bord droit de l'image.
-function dessinerBande(g, source, W, H, x, largeur, xDest) {
-  x = ((x % W) + W) % W;
-  if (x + largeur <= W) {
-    g.drawImage(source, x, 0, largeur, H, xDest, 0, largeur, H);
-  } else {
-    var part1 = W - x;
-    g.drawImage(source, x, 0, part1, H, xDest, 0, part1, H);
-    g.drawImage(source, 0, 0, largeur - part1, H, xDest + part1, 0, largeur - part1, H);
-  }
-}
-// Crée le canvas d'une tuile : la bande [xDebut, xDebut+largeur[ plus
-// "pad" pixels de recouvrement de chaque côté (le filtre LINEAR peut
-// ainsi interpoler avec les vrais pixels voisins, sans couture).
-function creerTuile(source, W, H, xDebut, largeur, pad) {
-  var c = document.createElement("canvas");
-  c.width = largeur + 2 * pad;
-  c.height = H;
-  var g = c.getContext("2d");
-  g.drawImage(source, xDebut, 0, largeur, H, pad, 0, largeur, H);
-  dessinerBande(g, source, W, H, xDebut - pad, pad, 0);
-  dessinerBande(g, source, W, H, xDebut + largeur, pad, pad + largeur);
-  return c;
-}
-function envoyerTexture(source, largeur, hauteur) {
-  if (!gl) return null;
-  var max = tailleMaxTex;
-  var redimensionnee = false;
-  var i;
-  // 1) Hauteur trop grande pour le GPU : on réduit l'image entière
-  if (hauteur > max) {
-    var sh = max / hauteur;
-    var ch = document.createElement("canvas");
-    ch.width = Math.max(1, Math.floor(largeur * sh));
-    ch.height = max;
-    ch.getContext("2d").drawImage(source, 0, 0, ch.width, ch.height);
-    source = ch; largeur = ch.width; hauteur = ch.height;
-    redimensionnee = true;
-  }
-  // 2) Largeur : nombre de tuiles nécessaires
-  var n = 1;
-  if (largeur > max) n = Math.ceil(largeur / max);
-  if (n > TUILES_MAX) {
-    // Image trop large même pour TUILES_MAX tuiles : réduction finale
-    var sw = (TUILES_MAX * max) / largeur;
-    var cw = document.createElement("canvas");
-    cw.width = TUILES_MAX * max;
-    cw.height = Math.max(1, Math.floor(hauteur * sw));
-    cw.getContext("2d").drawImage(source, 0, 0, cw.width, cw.height);
-    source = cw; largeur = cw.width; hauteur = cw.height;
-    n = TUILES_MAX;
-    redimensionnee = true;
-  }
-  // 3) Largeur multiple exacte de n (découpage régulier dans le shader)
-  var chunkPx = Math.floor(largeur / n);
-  if (chunkPx * n !== largeur) {
-    var creg = document.createElement("canvas");
-    creg.width = chunkPx * n;
-    creg.height = hauteur;
-    creg.getContext("2d").drawImage(source, 0, 0, creg.width, creg.height);
-    source = creg; largeur = creg.width;
-  }
-  var pad = 4; // pixels de recouvrement entre tuiles
-  var padFrac = pad / (chunkPx + 2 * pad);
-  // 4) Libération des anciennes tuiles puis création des nouvelles
-  for (i = 0; i < tuiles.length; i++) gl.deleteTexture(tuiles[i]);
-  tuiles = [];
-  for (i = 0; i < n; i++) {
-    var t = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE0 + i);
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
-      creerTuile(source, largeur, hauteur, i * chunkPx, chunkPx, pad));
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    tuiles.push(t);
-  }
-  // 5) Les unités de texture inutilisées restent liées au dummy 1x1
-  for (i = n; i < 4; i++) {
-    gl.activeTexture(gl.TEXTURE0 + i);
-    gl.bindTexture(gl.TEXTURE_2D, texDummy);
-  }
-  gl.uniform1f(uni.tuiles, n);
-  gl.uniform1f(uni.pad, padFrac);
-  sale = true; // nouvelle image : redessiner
-  return { w: largeur, h: hauteur, tuiles: n, redimensionnee: redimensionnee };
-}
-/* Envoie une source (Image ou canvas) au GPU et met à jour le statut */
-function chargerTexture(source, nom) {
-  var w = source.naturalWidth || source.width;
-  var h = source.naturalHeight || source.height;
-  var info = envoyerTexture(source, w, h);
-  if (!info) return;
-  statut.textContent = nom + " - " + info.w + "×" + info.h +
-    (info.tuiles > 1 ? " (" + info.tuiles + " tuiles)" : "") +
-    (info.redimensionnee ? " (adaptée à la taille max)" : "");
-}
-/* Chargement d'une photo utilisateur */
+var texture = null;
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
+/* Préparation de la source avant envoi au GPU :
+   - si l'image dépasse MAX_TEXTURE_SIZE, on la réduit ;
+   - si l'image est équirectangulaire (~2:1) et pas en puissance de 2,
+     on la réduit au plus grand format 2:1 en puissance de 2,
+     ce qui permet le REPEAT (pas de couture horizontale). */
+function dimensionsCible(w, h) {
+  var max = tailleMaxTex;
+  var estPot = w >= 2 && h >= 2 && (w & (w - 1)) === 0 && (h & (h - 1)) === 0;
+  var ratio = w / h;
+  if (Math.abs(ratio - 2) < 0.2) {
+    // plus grande largeur en puissance de 2 qui tient dans l'image et le GPU
+    var p = 1;
+    while (p * 2 <= w && p * 2 <= max) { p = p * 2; }
+    if (p >= 1024 && p / 2 <= max && (p < w || (p / 2) < h || !estPot)) {
+      return { w: p, h: p / 2, modifiee: !(p === w && (p / 2) === h) };
+    }
+  }
+  if (w > max || h > max) {
+    var s = Math.min(max / w, max / h);
+    return { w: Math.max(1, Math.floor(w * s)), h: Math.max(1, Math.floor(h * s)), modifiee: true };
+  }
+  return { w: w, h: h, modifiee: false };
+}
+function preparerSource(img) {
+  var w = img.naturalWidth || img.width;
+  var h = img.naturalHeight || img.height;
+  var cible = dimensionsCible(w, h);
+  if (!cible.modifiee) return { source: img, w: w, h: h, redimensionnee: false };
+  var c = document.createElement("canvas");
+  c.width = cible.w;
+  c.height = cible.h;
+  var g = c.getContext("2d");
+  g.drawImage(img, 0, 0, cible.w, cible.h);
+  return { source: c, w: cible.w, h: cible.h, redimensionnee: true };
+}
+function envoyerTexture(source, largeur, hauteur) {
+  if (!gl) return;
+  if (texture) gl.deleteTexture(texture);
+  texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  // REPEAT évite la couture horizontale, mais exige une taille en puissance de 2
+  var pot = (largeur & (largeur - 1)) === 0 && (hauteur & (hauteur - 1)) === 0;
+  var wrap = pot ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  sale = true; // nouvelle image : redessiner
+}
+/* Chargement d'une photo utilisateur */
 function chargerFichier(f) {
   var lecteur = new FileReader();
   lecteur.onload = function (e) {
@@ -465,7 +369,10 @@ function chargerFichier(f) {
     img.onload = function () {
       imageSourceOriginale = img;
       nomFichierActuel = f.name;
-      chargerTexture(img, f.name);
+      var prep = preparerSource(img);
+      envoyerTexture(prep.source, prep.w, prep.h);
+      statut.textContent = f.name + " - " + prep.w + "×" + prep.h +
+        (prep.redimensionnee ? " (adaptée à la taille max)" : "");
       masquerErreur();
     };
     img.onerror = function () {
@@ -590,10 +497,10 @@ fovSlider.addEventListener("input", function () {
   fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
   sale = true;
 }, false);
-// Taille maximale choisie pour UNE TUILE (une image plus large est
-// simplement découpée en plusieurs tuiles, sans perte de résolution).
-// Aucune limite min/max artificielle dans le champ ; seule la capacité
-// du GPU est respectée. On valide quand l'utilisateur termine sa saisie.
+// Taille maximale choisie pour les textures.
+// Aucune limite min/max artificielle dans le champ ; seule la capacité du GPU est respectée.
+// On valide seulement lorsque l'utilisateur termine sa saisie.
+// Cela évite de remettre 8192 lorsque le champ est momentanément vide.
 function appliquerTailleMax() {
   var valeur = parseInt(tailleMaxInput.value, 10);
   if (isNaN(valeur)) {
@@ -605,7 +512,10 @@ function appliquerTailleMax() {
   tailleMaxInput.value = valeur;
   // Si une image est déjà chargée, la retraiter immédiatement.
   if (imageSourceOriginale) {
-    chargerTexture(imageSourceOriginale, nomFichierActuel);
+    var prep = preparerSource(imageSourceOriginale);
+    envoyerTexture(prep.source, prep.w, prep.h);
+    statut.textContent = nomFichierActuel + " - " + prep.w + "×" + prep.h +
+      (prep.redimensionnee ? " (adaptée à la taille max)" : "");
   }
   sale = true;
 }
@@ -740,7 +650,8 @@ function boucle(ts) {
 /* Démarrage */
 if (initGL()) {
   var demo = textureDemonstration();
-  chargerTexture(demo, "Texture de démonstration");
+  var prepDemo = preparerSource(demo);
+  envoyerTexture(prepDemo.source, prepDemo.w, prepDemo.h);
   boucle(0);
 }
 addMultiTouch("button,input");
