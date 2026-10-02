@@ -151,6 +151,9 @@ var autoRotation = false;
 var vitesseX = 0;
 var vitesseY = 0;
 var saisie = false;
+var interactionTemporaire360 = false;
+var timerInteraction360 = null;
+var DUREE_INTERACTION360 = 180;
 var touches = {
   gauche: false,
   droite: false,
@@ -573,7 +576,19 @@ function dessinerPhoto360() {
 }
 /* REDIMENSIONNEMENT */
 function interactionActive360() {
-  return (saisie || vitesseX !== 0 || vitesseY !== 0 || autoRotation);
+  return (saisie || vitesseX !== 0 || vitesseY !== 0 || autoRotation || interactionTemporaire360);
+}
+function activerInteractionTemporaire360() {
+  interactionTemporaire360 = true;
+  if (timerInteraction360 !== null) {
+    clearTimeout(timerInteraction360);
+  }
+  timerInteraction360 = setTimeout(function() {
+    interactionTemporaire360 = false;
+    timerInteraction360 = null;
+    sale = true;
+  }, DUREE_INTERACTION360);
+  sale = true;
 }
 function redimensionner() {
   // Plafond volontairement plus bas. Le nombre de pixels est souvent plus important que le nombre de triangles.
@@ -912,6 +927,7 @@ function molette(e) {
     fov -= 5;
   }
   fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+  activerInteractionTemporaire360();
   sale = true;
   e.preventDefault();
 }
@@ -930,6 +946,7 @@ window.addEventListener("keydown",
       ) {
         fov -= 5;
         fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        activerInteractionTemporaire360();
         sale = true;
         e.preventDefault();
         return;
@@ -937,6 +954,7 @@ window.addEventListener("keydown",
       if (e.key === "-" || e.key === "_") {
         fov += 5;
         fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        activerInteractionTemporaire360();
         sale = true;
         e.preventDefault();
         return;
@@ -945,12 +963,16 @@ window.addEventListener("keydown",
     // Flèches
     if (e.keyCode === 37) {
       touches.gauche = true;
+      activerInteractionTemporaire360();
     } else if (e.keyCode === 39) {
       touches.droite = true;
+      activerInteractionTemporaire360();
     } else if (e.keyCode === 38) {
       touches.haut = true;
+      activerInteractionTemporaire360();
     } else if (e.keyCode === 40) {
       touches.bas = true;
+      activerInteractionTemporaire360();
     } else {
       return;
     }
@@ -977,6 +999,7 @@ fovSlider.addEventListener("input",
   function() {
     fov = parseInt(fovSlider.value, 10) || 75;
     fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+    activerInteractionTemporaire360();
     sale = true;
   },
   false
@@ -985,6 +1008,7 @@ fovSlider.addEventListener("input",
 function boutonMaintenir(btn, cle) {
   function activer() {
     touches[cle] = true;
+    activerInteractionTemporaire360();
   }
   function relacher() {
     touches[cle] = false;
