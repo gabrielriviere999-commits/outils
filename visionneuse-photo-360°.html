@@ -451,7 +451,7 @@ function chargerTexture(source, nom) {
   var h = source.naturalHeight || source.height;
   var info = envoyerTexture(source, w, h);
   if (!info) return;
-  statut.textContent = nom + " - " + info.w + "×" + info.h +
+  statut.textContent = nom + " - " + info.w + "x" + info.h +
     (info.tuiles > 1 ? " (" + info.tuiles + " tuiles)" : "") +
     (info.redimensionnee ? " (adaptée à la taille max)" : "");
 }
