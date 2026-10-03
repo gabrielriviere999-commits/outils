@@ -77,12 +77,17 @@
         <span id="fov">FOV 75°</span>
       </div>
       <div style="display:table-cell;">
-		<button class="rangebtn" data-action="fovSliderMinus">−</button>
+        <button class="rangebtn" data-action="fovSliderMinus">−</button>
         <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
         <button class="rangebtn" data-action="fovSliderPlus">+</button>
       </div>
     </div>
   </div>
+  <hr>
+  <span>Interaction</span> <input type="number" id="renduInteractionInput" step="1000" value="125000">
+  <span title="Pixels max du buffer pendant l'inertie, l'auto-rotation ou les flèches">Inertie</span> <input type="number" id="renduInertieInput" step="1000" value="250000">
+  <span title="Pixels max du buffer une fois immobile">Repos</span> <input type="number" id="renduReposInput" step="1000" value="700000">
+  <button id="btnResetQualite" data-action="resetQualiteRendu" title="Restaurer 125000 / 250000 / 700000">Défaut</button>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
     <div style="display:table-row;">
@@ -144,6 +149,9 @@ var btnGauche = document.getElementById("btnGauche");
 var btnDroite = document.getElementById("btnDroite");
 var btnHaut = document.getElementById("btnHaut");
 var btnBas = document.getElementById("btnBas");
+var renduInteractionInput = document.getElementById("renduInteractionInput");
+var renduInertieInput = document.getElementById("renduInertieInput");
+var renduReposInput = document.getElementById("renduReposInput");
 /* TEMPS */
 function maintenant() {
   if (window.performance && typeof window.performance.now === "function") {
@@ -806,6 +814,85 @@ fovSlider.addEventListener("input",
   },
   false
 );
+/* QUALITÉ DE RENDU (pixels max du buffer) */
+var CLE_STOCKAGE_RENDU = "photo360QualiteRendu";
+var RENDU_DEFAUTS = {
+  interaction: 125000,
+  inertie: 250000,
+  repos: 700000
+};
+function appliquerQualiteRendu(interaction, inertie, repos) {
+  RENDU_INTERACTION_MAX_PIXELS = interaction;
+  RENDU_INERTIE_MAX_PIXELS = inertie;
+  RENDU_REPOS_MAX_PIXELS = repos;
+  renduInteractionInput.value = interaction;
+  renduInertieInput.value = inertie;
+  renduReposInput.value = repos;
+  // Le changement de taille du buffer est géré automatiquement
+  // par preparerBuffer360 / preparerRayons360 au prochain rendu.
+  sale = true;
+}
+function sauvegarderQualiteRendu() {
+  try {
+    localStorage.setItem(
+      CLE_STOCKAGE_RENDU,
+      JSON.stringify({
+        interaction: RENDU_INTERACTION_MAX_PIXELS,
+        inertie: RENDU_INERTIE_MAX_PIXELS,
+        repos: RENDU_REPOS_MAX_PIXELS
+      })
+    );
+  } catch (e) {
+    // localStorage indisponible (navigation privée, etc.) : on ignore.
+  }
+}
+function chargerQualiteRendu() {
+  try {
+    var brut = localStorage.getItem(CLE_STOCKAGE_RENDU);
+    if (!brut) {
+      return;
+    }
+    var o = JSON.parse(brut);
+    appliquerQualiteRendu(
+      Math.max(1000, parseInt(o.interaction, 10) || RENDU_DEFAUTS.interaction),
+      Math.max(1000, parseInt(o.inertie, 10) || RENDU_DEFAUTS.inertie),
+      Math.max(1000, parseInt(o.repos, 10) || RENDU_DEFAUTS.repos)
+    );
+  } catch (e) {
+    // Valeur corrompue : on garde les défauts.
+  }
+}
+function resetQualiteRendu() {
+  appliquerQualiteRendu(
+    RENDU_DEFAUTS.interaction,
+    RENDU_DEFAUTS.inertie,
+    RENDU_DEFAUTS.repos
+  );
+  sauvegarderQualiteRendu();
+}
+function lierEntreeRendu(input, appliquer) {
+  function maj() {
+    var v = parseInt(input.value, 10);
+    if (isNaN(v) || v < 1000) {
+      v = 1000;
+    }
+    appliquer(v);
+    // Sauvegarde immédiate à chaque modification.
+    sauvegarderQualiteRendu();
+    sale = true;
+  }
+  input.addEventListener("input", maj, false);
+  input.addEventListener("change", maj, false);
+}
+lierEntreeRendu(renduInteractionInput, function(v) {
+  RENDU_INTERACTION_MAX_PIXELS = v;
+});
+lierEntreeRendu(renduInertieInput, function(v) {
+  RENDU_INERTIE_MAX_PIXELS = v;
+});
+lierEntreeRendu(renduReposInput, function(v) {
+  RENDU_REPOS_MAX_PIXELS = v;
+});
 /* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
   function activer() {
@@ -904,6 +991,8 @@ function masquerErreur() {
 var demo = textureDemonstration();
 definirTexture360(demo);
 statut.textContent = "Texture de démonstration - " + demo.width + "x" + demo.height;
+// Restaure la dernière qualité de rendu sauvegardée (si présente).
+chargerQualiteRendu();
 redimensionner();
 var requestFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame ||
   function (callback) {
