@@ -144,6 +144,13 @@ var btnGauche = document.getElementById("btnGauche");
 var btnDroite = document.getElementById("btnDroite");
 var btnHaut = document.getElementById("btnHaut");
 var btnBas = document.getElementById("btnBas");
+/* TEMPS */
+function maintenant() {
+  if (window.performance && typeof window.performance.now === "function") {
+    return window.performance.now();
+  }
+  return new Date().getTime();
+}
 /* CAMÉRA */
 var yaw = 0;
 var pitch = 0;
@@ -166,425 +173,209 @@ var touches = {
 /* IMAGE */
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
+/* RENDU 360° EN CANVAS 2D, SANS WEBGL ET SANS TRIANGLES.
+ * La photo est une équirectangulaire 2:1.
+ * Pour chaque pixel du petit buffer de rendu :
+ *   pixel écran -> rayon caméra -> yaw/pitch
+ *              -> longitude/latitude
+ *              -> pixel dans la photo 360
+ * Le buffer est ensuite agrandi par Canvas.
+ * On garde deux qualités :
+ *   - pendant le mouvement : petit buffer + échantillonnage rapide
+ *   - au repos             : buffer plus grand + interpolation bilinéaire */
+var RENDU_INTERACTION_MAX_PIXELS = 180000;
+var RENDU_INERTIE_MAX_PIXELS = 320000;
+var RENDU_REPOS_MAX_PIXELS = 1200000;
+var buffer360 = document.createElement("canvas");
+var buffer360Ctx = buffer360.getContext("2d", { alpha: false });
+var buffer360ImageData = null;
+var buffer360Data = null;
+var buffer360W = 0;
+var buffer360H = 0;
+/* Petit cache des coordonnées de rayon caméra. */
+var rayX360 = null;
+var rayY360 = null;
+var rayZ360 = null;
+var derniereQualiteInteraction = true;
+var derniereLargeurCanvas = 0;
+var derniereHauteurCanvas = 0;
+var dernierFovRendu = -1;
 /* DIRTY FLAG */
 var sale = true;
-// QUALITÉS DE RENDU Pendant une interaction on privilégie la fluidité. Au repos, le système peut remonter progressivement vers une qualité supérieure.
-var QUALITES_360 = [
-  { lon: 32,  lat: 16 },
-  { lon: 48,  lat: 32 },
-  { lon: 64,  lat: 48 },
-  { lon: 96, lat: 48 },
-  { lon: 128, lat: 64 }
-];
-var niveauQualite360 = 2;
-// Niveau temporaire utilisé pendant les mouvements. On ne détruit pas le niveau normal : on utilise simplement un niveau inférieur pendant l'interaction.
-var niveauInteraction360 = 1;
-/* ADAPTATION FPS */
-var tempsCible360 = 16.0;
-var compteurLent360 = 0;
-var compteurRapide360 = 0;
-var NB_MESURES_AVANT_BAISSE = 3;
-var NB_MESURES_AVANT_HAUSSE = 14;
-// MAILLAGES Tous les niveaux sont construits une fois puis conservés. Cela évite de reconstruire le maillage à chaque changement de qualité.
-var maillages360 = [];
-var maillage360 = null;
-/* CONSTRUCTION D'UN MAILLAGE */
-function construireMaillage360PourQualite(niveau) {
-  var q = QUALITES_360[niveau];
-  var nx = q.lon;
-  var ny = q.lat;
-  var largeurLigne = nx + 1;
-  var nbSommets = largeurLigne * (ny + 1);
-  var nbTriangles = nx * ny * 2;
-  var positions = new Float32Array(nbSommets * 3);
-  var uv = new Float32Array(nbSommets * 2);
-  var uvPixels = new Float32Array(nbSommets * 2);
-  var indices = new Uint16Array(nbTriangles * 3);
-  var screenX = new Float32Array(nbSommets);
-  var screenY = new Float32Array(nbSommets);
-  var depth = new Float32Array(nbSommets);
-  // Données source par triangle. Elles sont calculées une seule fois.
-  var sourceX0 = new Float32Array(nbTriangles);
-  var sourceY0 = new Float32Array(nbTriangles);
-  var sourceX1 = new Float32Array(nbTriangles);
-  var sourceY1 = new Float32Array(nbTriangles);
-  var sourceX2 = new Float32Array(nbTriangles);
-  var sourceY2 = new Float32Array(nbTriangles);
-  var pi = Math.PI;
-  var pi2 = Math.PI * 2;
-  var i;
-  var j;
-  var vertex = 0;
-  // SOMMETS
-  for (j = 0; j <= ny; j++) {
-    var v0 = j / ny;
-    // Répartition non linéaire : davantage de précision près du haut et du bas.
-    var puissance = 1.8;
-    var v;
-    if (v0 < 0.5) {
-      v = 0.5 * Math.pow(v0 * 2, puissance);
-    } else {
-      v = 1 - 0.5 * Math.pow((1 - v0) * 2, puissance);
-    }
-    var lat = (0.5 - v) * pi;
-    var cl = Math.cos(lat);
-    var sl = Math.sin(lat);
-    for (i = 0; i <= nx; i++) {
-      var u = i / nx;
-      var lon = (u - 0.5) * pi2;
-      var co = Math.cos(lon);
-      var si = Math.sin(lon);
-      positions[vertex * 3] = si * cl;
-      positions[vertex * 3 + 1] = sl;
-      positions[vertex * 3 + 2] = -co * cl;
-      uv[vertex * 2] = u;
-      uv[vertex * 2 + 1] = v;
-      vertex++;
-    }
-  }
-  // INDICES
-  var ti = 0;
-  var triangle = 0;
-  for (j = 0; j < ny; j++) {
-    var ligne = j * largeurLigne;
-    var ligneSuivante = ligne + largeurLigne;
-    for (i = 0; i < nx; i++) {
-      var a = ligne + i;
-      var b = a + 1;
-      var c = ligneSuivante + i;
-      var d = c + 1;
-      // Triangle 1
-      indices[ti++] = a;
-      indices[ti++] = b;
-      indices[ti++] = c;
-      // Triangle 2
-      indices[ti++] = b;
-      indices[ti++] = d;
-      indices[ti++] = c;
-      triangle++;
-      triangle++;
-    }
-  }
-  // Structure finale
-  var mesh = {
-    nx: nx,
-    ny: ny,
-    nbSommets: nbSommets,
-    nbTriangles: nbTriangles,
-    positions: positions,
-    uv: uv,
-    uvPixels: uvPixels,
-    indices: indices,
-    screenX: screenX,
-    screenY: screenY,
-    depth: depth,
-    sourceX0: sourceX0,
-    sourceY0: sourceY0,
-    sourceX1: sourceX1,
-    sourceY1: sourceY1,
-    sourceX2: sourceX2,
-    sourceY2: sourceY2
-  };
-  maillages360[niveau] = mesh;
-  // Les coordonnées source dépendent de la texture.
-  if (imageSourceOriginale) {
-    mettreAJourUVPixelsMaillage(mesh);
-  }
-  return mesh;
-}
-/* INITIALISATION DES MAILLAGES */
-function construireTousLesMaillages360() {
-  var i;
-  for (i = 0; i < QUALITES_360.length; i++) {
-    construireMaillage360PourQualite(i);
-  }
-  maillage360 = maillages360[niveauQualite360];
-}
-/* UV PIXELS */
-function mettreAJourUVPixelsMaillage(mesh) {
-  if (!mesh || !imageSourceOriginale) {
-    return;
-  }
-  var uv = mesh.uv;
-  var uvPixels = mesh.uvPixels;
-  var iw = imageSourceOriginale.width;
-  var ih = imageSourceOriginale.height;
-  var i;
-  var n = mesh.nbSommets;
-  for (i = 0; i < n; i++) {
-    uvPixels[i * 2] = uv[i * 2] * iw;
-    uvPixels[i * 2 + 1] = uv[i * 2 + 1] * ih;
-  }
-  // Pré-calcul des coordonnées source par triangle.
-  var indices = mesh.indices;
-  var sx0 = mesh.sourceX0;
-  var sy0 = mesh.sourceY0;
-  var sx1 = mesh.sourceX1;
-  var sy1 = mesh.sourceY1;
-  var sx2 = mesh.sourceX2;
-  var sy2 = mesh.sourceY2;
-  var t;
-  for (t = 0; t < mesh.nbTriangles; t++) {
-    var ii = t * 3;
-    var i0 = indices[ii];
-    var i1 = indices[ii + 1];
-    var i2 = indices[ii + 2];
-    sx0[t] = uvPixels[i0 * 2];
-    sy0[t] = uvPixels[i0 * 2 + 1];
-    sx1[t] = uvPixels[i1 * 2];
-    sy1[t] = uvPixels[i1 * 2 + 1];
-    sx2[t] = uvPixels[i2 * 2];
-    sy2[t] = uvPixels[i2 * 2 + 1];
-  }
-}
-/* TEXTURE */
-function definirTexture360(image) {
-  imageSourceOriginale = image;
-  var i;
-  for (i = 0; i < maillages360.length; i++) {
-    mettreAJourUVPixelsMaillage(maillages360[i]);
-  }
-  maillage360 = obtenirMaillageActuel();
-  sale = true;
-}
-/* MAILLAGE ACTUEL */
-function obtenirNiveauRendu() {
-  // Pendant la saisie : on privilégie immédiatement la fluidité.
-  if (saisie) {
-    return Math.min(niveauQualite360, niveauInteraction360);
-  }
-  // Pendant l'inertie, on reste légèrement plus prudent qu'à l'arrêt complet.
-  if (
-    vitesseX !== 0 || vitesseY !== 0
-  ) {
-    return Math.min(niveauQualite360, Math.max(0, niveauInteraction360 + 1));
-  }
-  return niveauQualite360;
-}
-function obtenirMaillageActuel() {
-  var niveau = obtenirNiveauRendu();
-  if (!maillages360[niveau]) {
-    construireMaillage360PourQualite(niveau);
-  }
-  return maillages360[niveau];
-}
-/* QUALITÉ ADAPTATIVE */
-function ajusterQualite360(tempsMs) {
-  // Très lent : on descend rapidement.
-  if (tempsMs > 21) {
-    compteurLent360++;
-    compteurRapide360 = 0;
-    if (
-      compteurLent360 >= NB_MESURES_AVANT_BAISSE &&  niveauQualite360 > 0
-    ) {
-      niveauQualite360--;
-      compteurLent360 = 0;
-      maillage360 = obtenirMaillageActuel();
-      sale = true;
-    }
-    return;
-  }
-  // Rapide : on remonte lentement.
-  if (tempsMs < 10) {
-    compteurRapide360++;
-    compteurLent360 = 0;
-    if (
-      compteurRapide360 >= NB_MESURES_AVANT_HAUSSE && niveauQualite360 < QUALITES_360.length - 1
-    ) {
-      niveauQualite360++;
-      compteurRapide360 = 0;
-      maillage360 = obtenirMaillageActuel();
-      sale = true;
-    }
-    return;
-  }
-  // Zone stable.
-  compteurLent360 = 0;
-  compteurRapide360 = 0;
-}
-/* PITCH */
 function bornerPitch(p) {
-  if (p < -1.55) {
-    return -1.55;
-  }
-  if (p > 1.55) {
-    return 1.55;
-  }
+  if (p < -1.55) return -1.55;
+  if (p > 1.55) return 1.55;
   return p;
 }
-// RENDU D'UN TRIANGLE save/restore reste nécessaire ici car Canvas 2D ne permet pas de retirer un clip une fois celui-ci appliqué. On ne fait donc aucun save/restore ailleurs.
-function dessinerTriangleOptimise(image, s0x, s0y, s1x, s1y, s2x, s2y, d0x, d0y, d1x, d1y, d2x, d2y) {
-  var sux = s1x - s0x;
-  var suy = s1y - s0y;
-  var svx = s2x - s0x;
-  var svy = s2y - s0y;
-  var det = sux * svy - svx * suy;
+// Choisit la taille du buffer. Le buffer garde exactement le même rapport largeur/hauteur que l'écran.
+function obtenirTailleBuffer360() {
+  var w = Math.max(1, canvas.width);
+  var h = Math.max(1, canvas.height);
+  var aspect = w / h;
+  var maxPixels;
+  if (saisie || interactionTemporaire360) {
+    maxPixels = RENDU_INTERACTION_MAX_PIXELS;
+  } else if (vitesseX !== 0 || vitesseY !== 0) {
+    maxPixels = RENDU_INERTIE_MAX_PIXELS;
+  } else {
+    maxPixels = RENDU_REPOS_MAX_PIXELS;
+  }
+  var bh = Math.round(Math.sqrt(maxPixels / aspect));
+  var bw = Math.round(bh * aspect);
+  bw = Math.min(bw, w);
+  bh = Math.min(bh, h);
+  return {
+    w: bw,
+    h: bh
+  };
+}
+// Recrée les rayons caméra uniquement lorsque la résolution ou le FOV change.
+function preparerRayons360(w, h, focal) {
   if (
-    det > -0.000001 && det < 0.000001
+    rayX360 && buffer360W === w && buffer360H === h && dernierFovRendu === fov
   ) {
     return;
   }
-  var dux = d1x - d0x;
-  var duy = d1y - d0y;
-  var dvx = d2x - d0x;
-  var dvy = d2y - d0y;
-  // Transformation affine.
-  var a = (dux * svy - dvx * suy) / det;
-  var c = (dvx * sux - dux * svx) / det;
-  var b = (duy * svy - dvy * suy) / det;
-  var d = (dvy * sux - duy * svx) / det;
-  var e = d0x - a * s0x - c * s0y;
-  var f = d0y - b * s0x - d * s0y;
-  // Chevauchement volontaire des triangles pour supprimer complètement les micro-interstices noirs.
-  var cx = (d0x + d1x + d2x) / 3;
-  var cy = (d0y + d1y + d2y) / 3;
-  var dx0 = d0x - cx;
-  var dy0 = d0y - cy;
-  var dx1 = d1x - cx;
-  var dy1 = d1y - cy;
-  var dx2 = d2x - cx;
-  var dy2 = d2y - cy;
-  // Plus cette valeur est grande, plus les triangles se recouvrent.
-  var expansion = 0.06;
-  var e0x = d0x + dx0 * expansion;
-  var e0y = d0y + dy0 * expansion;
-  var e1x = d1x + dx1 * expansion;
-  var e1y = d1y + dy1 * expansion;
-  var e2x = d2x + dx2 * expansion;
-  var e2y = d2y + dy2 * expansion;
-  // Clip + texture.
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(e0x, e0y);
-  ctx.lineTo(e1x, e1y);
-  ctx.lineTo(e2x, e2y);
-  ctx.closePath();
-  ctx.clip();
-  ctx.setTransform(a, b, c, d, e, f);
-  ctx.drawImage(image, 0, 0);
-  ctx.restore();
-}
-/* RENDU PRINCIPAL */
-function maintenant() {
-  if (window.performance && typeof window.performance.now === "function") {
-    return window.performance.now();
+  var n = w * h;
+  rayX360 = new Float32Array(n);
+  rayY360 = new Float32Array(n);
+  rayZ360 = new Float32Array(n);
+  var cx = w * 0.5;
+  var cy = h * 0.5;
+  var i = 0;
+  var y;
+  var x;
+  for (y = 0; y < h; y++) {
+    var sy = y + 0.5;
+    for (x = 0; x < w; x++) {
+      var sx = x + 0.5;
+      var rx = (sx - cx) / focal;
+      var ry = -(sy - cy) / focal;
+      var rz = 1;
+      var longueur = Math.sqrt(rx * rx + ry * ry + rz * rz);
+      rayX360[i] = rx / longueur;
+      rayY360[i] = ry / longueur;
+      rayZ360[i] = rz / longueur;
+      i++;
+    }
   }
-  return new Date().getTime();
+  buffer360W = w;
+  buffer360H = h;
+  dernierFovRendu = fov;
 }
+// Prépare le ImageData du buffer.
+function preparerBuffer360(w, h) {
+  if (buffer360.width !== w || buffer360.height !== h) {
+    buffer360.width = w;
+    buffer360.height = h;
+    buffer360ImageData = buffer360Ctx.createImageData(w, h);
+    buffer360Data = buffer360ImageData.data;
+    // Le changement de taille invalide les rayons.
+    buffer360W = 0;
+    buffer360H = 0;
+  }
+  if (!buffer360ImageData) {
+    buffer360ImageData = buffer360Ctx.createImageData(w, h);
+    buffer360Data = buffer360ImageData.data;
+  }
+}
+// Rendu pixel par pixel. C'est la projection inverse : on part de l'écran et on cherche quel pixel de la photo équirectangulaire doit être affiché.
 function dessinerPhoto360() {
-  if (!imageSourceOriginale) {
-    return;
+  if (!imageSourceOriginale) return;
+  var taille = obtenirTailleBuffer360();
+  var w = taille.w;
+  var h = taille.h;
+  preparerBuffer360(w, h);
+  var focal = (h * 0.5) / Math.tan(fov * Math.PI / 360);
+  preparerRayons360(w, h, focal);
+  var img = imageSourceOriginale;
+  var iw = img.naturalWidth || img.width;
+  var ih = img.naturalHeight || img.height;
+  // Prépare la texture source une seule fois.
+  if (
+    !texture360SourceCanvas ||
+    texture360SourceCanvas.width !== iw ||
+    texture360SourceCanvas.height !== ih ||
+    texture360SourceImage !== img
+  ) {
+    texture360SourceCanvas = document.createElement("canvas");
+    texture360SourceCanvas.width = iw;
+    texture360SourceCanvas.height = ih;
+    texture360SourceCtx = texture360SourceCanvas.getContext("2d", {
+      willReadFrequently: true
+    });
+    texture360SourceCtx.drawImage(img, 0, 0, iw, ih);
+    texture360SourceImage = img;
+    texture360SourceImageData = texture360SourceCtx.getImageData(0, 0, iw, ih);
+    texture360SourceData = texture360SourceImageData.data;
   }
-  var debutRendu = maintenant();
-  var largeur = canvas.width;
-  var hauteur = canvas.height;
-  // Fond.
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = "#ccc";
-  ctx.fillRect(0, 0, largeur, hauteur);
-  // Caméra. Tout est calculé directement dans des scalaires.
+  var src = texture360SourceData;
+  var dst = buffer360Data;
   var cyaw = Math.cos(yaw);
   var syaw = Math.sin(yaw);
   var cpitch = Math.cos(pitch);
   var spitch = Math.sin(pitch);
-  // RIGHT
-  var rx = cyaw;
-  var rz = syaw;
-  // UP
-  var ux = -syaw * spitch;
-  var uy = cpitch;
-  var uz = cyaw * spitch;
-  // FORWARD
-  var fx = syaw * cpitch;
-  var fy = spitch;
-  var fz = -cyaw * cpitch;
-  // Projection.
-  var focal = (hauteur * 0.5) / Math.tan(fov * Math.PI / 360);
-  var centreX = largeur * 0.5;
-  var centreY = hauteur * 0.5;
-  // Maillage.
-  var mesh = obtenirMaillageActuel();
-  maillage360 = mesh;
-  var positions = mesh.positions;
-  var screenX = mesh.screenX;
-  var screenY = mesh.screenY;
-  var depth = mesh.depth;
-  var indices = mesh.indices;
-  // Projection des sommets.
+  var iw1 = iw - 1;
+  var ih1 = ih - 1;
+  var INV_2PI = 1 / (Math.PI * 2);
+  var INV_PI = 1 / Math.PI;
   var i;
-  for (
-    i = 0;
-    i < mesh.nbSommets;
-    i++
-  ) {
-    var p = i * 3;
-    var px = positions[p];
-    var py = positions[p + 1];
-    var pz = positions[p + 2];
-    // Profondeur.
-    var z = px * fx + py * fy + pz * fz;
-    depth[i] = z;
-    // Derrière la caméra.
-    if (z <= 0.0001) {
-      screenX[i] = 0;
-      screenY[i] = 0;
-      continue;
-    }
-    // Coordonnées caméra.
-    var x = px * rx + pz * rz;
-    var y = px * ux + py * uy + pz * uz;
-    screenX[i] = centreX + (x / z) * focal;
-    screenY[i] = centreY - (y / z) * focal;
+  var p = 0;
+  var n = w * h;
+  for (i = 0; i < n; i++) {
+    var x = rayX360[i];
+    var y = rayY360[i];
+    var z = rayZ360[i];
+    // Pitch
+    var py = y * cpitch - z * spitch;
+    var pz = y * spitch + z * cpitch;
+    // Yaw
+    var wx = x * cyaw + pz * syaw;
+    var wy = py;
+    var wz = -x * syaw + pz * cyaw;
+    // Sphère -> équirectangulaire
+    var longitude = Math.atan2(wx, wz);
+    // atan2 retourne déjà [-PI, PI], donc u est déjà dans [0, 1].
+    var u = longitude * INV_2PI + 0.5;
+    // Protection numérique pour asin()
+    if (wy < -1) wy = -1;
+    else if (wy > 1) wy = 1;
+    var v = 0.5 - Math.asin(wy) * INV_PI;
+    var sx = u * iw1;
+    var sy = v * ih1;
+    // NEAREST NEIGHBOR UNIQUEMENT
+    var ix = Math.round(sx);
+    var iy = Math.round(sy);
+    var si = (iy * iw + ix) * 4;
+    dst[p++] = src[si];
+    dst[p++] = src[si + 1];
+    dst[p++] = src[si + 2];
+    dst[p++] = 255;
   }
-  // Triangles.
-  var sx0 = mesh.sourceX0;
-  var sy0 = mesh.sourceY0;
-  var sx1 = mesh.sourceX1;
-  var sy1 = mesh.sourceY1;
-  var sx2 = mesh.sourceX2;
-  var sy2 = mesh.sourceY2;
-  var t;
-  for (
-    t = 0;
-    t < mesh.nbTriangles;
-    t++
-  ) {
-    var ii = t * 3;
-    var i0 = indices[ii];
-    var i1 = indices[ii + 1];
-    var i2 = indices[ii + 2];
-    //  Horizon
-    var z0 = depth[i0];
-    var z1 = depth[i1];
-    var z2 = depth[i2];
-    var Z_MIN = 0.08;
-    if (z0 <= Z_MIN || z1 <= Z_MIN || z2 <= Z_MIN) {
-      continue;
-    }
-    // Coordonnées écran.
-    var d0x = screenX[i0];
-    var d0y = screenY[i0];
-    var d1x = screenX[i1];
-    var d1y = screenY[i1];
-    var d2x = screenX[i2];
-    var d2y = screenY[i2];
-    // Culling écran : triangle entièrement hors du canvas.
-    var minX = Math.min(d0x, d1x, d2x);
-    var maxX = Math.max(d0x, d1x, d2x);
-    var minY = Math.min(d0y, d1y, d2y);
-    var maxY = Math.max(d0y, d1y, d2y);
-    if (maxX < 0 || minX > largeur || maxY < 0 || minY > hauteur) {
-      continue;
-    }
-    // Triangle source. Déjà pré-calculé.
-    dessinerTriangleOptimise(imageSourceOriginale, sx0[t], sy0[t], sx1[t], sy1[t], sx2[t], sy2[t], d0x, d0y, d1x, d1y, d2x, d2y);
-  }
-  // Transformation normale.
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  // Adaptation qualité.
-  var tempsRendu = maintenant() - debutRendu;
-  ajusterQualite360(tempsRendu);
+  buffer360Ctx.putImageData(buffer360ImageData, 0, 0);
+  // Le buffer basse résolution est agrandi avec le lissage Canvas.
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(buffer360, 0, 0, canvas.width, canvas.height);
 }
+/* TEXTURE 360° */
+var texture360SourceCanvas = null;
+var texture360SourceCtx = null;
+var texture360SourceImage = null;
+var texture360SourceImageData = null;
+var texture360SourceData = null;
+function definirTexture360(image) {
+  imageSourceOriginale = image;
+  texture360SourceCanvas = null;
+  texture360SourceCtx = null;
+  texture360SourceImage = null;
+  texture360SourceImageData = null;
+  texture360SourceData = null;
+  buffer360W = 0;
+  buffer360H = 0;
+  dernierFovRendu = -1;
+  sale = true;
+}
+/* FIN DU RENDU 360° */
 /* REDIMENSIONNEMENT */
 function interactionActive360() {
   return (saisie || vitesseX !== 0 || vitesseY !== 0 || autoRotation || interactionTemporaire360);
@@ -602,13 +393,9 @@ function activerInteractionTemporaire360() {
   sale = true;
 }
 function redimensionner() {
-  // Plafond volontairement plus bas. Le nombre de pixels est souvent plus important que le nombre de triangles.
+  // Plafond volontairement plus bas.
   var dpr = window.devicePixelRatio || 1;
   dpr = Math.min(dpr, 1.25);
-  // Pendant une interaction on peut réduire légèrement la résolution interne. Le CSS reste évidemment en 100%.
-  if (interactionActive360()) {
-    dpr *= 0.7;
-  }
   var w = Math.max(1, Math.round(canvas.clientWidth * dpr));
   var h = Math.max(1, Math.round(canvas.clientHeight * dpr));
   if (
@@ -637,8 +424,9 @@ function boucle(ts) {
     if (vitesseX !== 0 || vitesseY !== 0) {
       yaw += vitesseX;
       pitch = bornerPitch(pitch + vitesseY);
-      vitesseX *= 0.92;
-      vitesseY *= 0.92;
+      var amortissement = Math.pow(0.05, dt);
+      vitesseX *= amortissement;
+      vitesseY *= amortissement;
       if (Math.abs(vitesseX) < 0.00005) {
         vitesseX = 0;
       }
@@ -693,7 +481,7 @@ function boucle(ts) {
   requestFrame(boucle);
 }
 /* INITIALISATION */
-construireTousLesMaillages360();
+
 /* TEXTURE DE DÉMONSTRATION */
 function textureDemonstration() {
   var c = document.createElement("canvas");
@@ -844,9 +632,9 @@ function deplacer(x, y) {
   dernierY = y;
   var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
   yaw -= dx * k;
-  pitch = bornerPitch(pitch + dy * k);
+  pitch = bornerPitch(pitch - dy * k);
   vitesseX = -dx * k;
-  vitesseY = dy * k;
+  vitesseY = -dy * k;
   sale = true;
 }
 function terminer() {
@@ -1064,8 +852,7 @@ window.addEventListener("dragleave",
   function() {
     depot.className = "";
   }, false);
-window.addEventListener(
-  "drop",
+window.addEventListener("drop",
   function(e) {
     e.preventDefault();
     depot.className = "";
