@@ -182,13 +182,13 @@ var VERT =
 // correspondante (uTex0..uTex3) et on échantillonne dedans en coordonnées
 // locales (le petit recouvrement uPad évite une couture entre tuiles).
 var FRAG =
-  "precision mediump float;\n" +
+  "precision highp float;\n" +
   "uniform float uYaw;\n" +
   "uniform float uPitch;\n" +
-  "uniform float uTanF;\n" +     // tan(fov / 2)
+  "uniform float uTanF;\n" +
   "uniform float uAspect;\n" +
-  "uniform float uTuiles;\n" +   // nombre de tuiles en longitude (1..4)
-  "uniform float uPad;\n" +      // fraction de recouvrement dans la tuile
+  "uniform float uTuiles;\n" +
+  "uniform float uPad;\n" +
   "uniform sampler2D uTex0;\n" +
   "uniform sampler2D uTex1;\n" +
   "uniform sampler2D uTex2;\n" +
