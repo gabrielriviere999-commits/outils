@@ -173,8 +173,8 @@ var QUALITES_360 = [
   { lon: 32,  lat: 16 },
   { lon: 48,  lat: 32 },
   { lon: 64,  lat: 48 },
-  { lon: 96, lat: 64 },
-  { lon: 128, lat: 96 }
+  { lon: 96, lat: 48 },
+  { lon: 128, lat: 64 }
 ];
 var niveauQualite360 = 2;
 // Niveau temporaire utilisé pendant les mouvements. On ne détruit pas le niveau normal : on utilise simplement un niveau inférieur pendant l'interaction.
@@ -568,6 +568,14 @@ function dessinerPhoto360() {
     var d1y = screenY[i1];
     var d2x = screenX[i2];
     var d2y = screenY[i2];
+    // Culling écran : triangle entièrement hors du canvas.
+    var minX = Math.min(d0x, d1x, d2x);
+    var maxX = Math.max(d0x, d1x, d2x);
+    var minY = Math.min(d0y, d1y, d2y);
+    var maxY = Math.max(d0y, d1y, d2y);
+    if (maxX < 0 || minX > largeur || maxY < 0 || minY > hauteur) {
+      continue;
+    }
     // Triangle source. Déjà pré-calculé.
     dessinerTriangleOptimise(imageSourceOriginale, sx0[t], sy0[t], sx1[t], sy1[t], sx2[t], sy2[t], d0x, d0y, d1x, d1y, d2x, d2y);
   }
