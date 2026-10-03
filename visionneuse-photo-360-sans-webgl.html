@@ -84,9 +84,9 @@
     </div>
   </div>
   <hr>
-  <span>Interaction</span> <input type="number" id="renduInteractionInput" step="1000" value="125000">
-  <span title="Pixels max du buffer pendant l'inertie, l'auto-rotation ou les flèches">Inertie</span> <input type="number" id="renduInertieInput" step="1000" value="250000">
-  <span title="Pixels max du buffer une fois immobile">Repos</span> <input type="number" id="renduReposInput" step="1000" value="700000">
+  <span>Interaction</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
+  <span >Inertie</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
+  <span >Repos</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
   <button id="btnResetQualite" data-action="resetQualiteRendu" title="Restaurer 125000 / 250000 / 700000">Défaut</button>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
