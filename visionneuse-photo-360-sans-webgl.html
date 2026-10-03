@@ -183,9 +183,9 @@ var nomFichierActuel = "";
  * On garde deux qualités :
  *   - pendant le mouvement : petit buffer + échantillonnage rapide
  *   - au repos             : buffer plus grand + interpolation bilinéaire */
-var RENDU_INTERACTION_MAX_PIXELS = 175000;
-var RENDU_INERTIE_MAX_PIXELS = 350000;
-var RENDU_REPOS_MAX_PIXELS = 1100000;
+var RENDU_INTERACTION_MAX_PIXELS = 125000;
+var RENDU_INERTIE_MAX_PIXELS = 250000;
+var RENDU_REPOS_MAX_PIXELS = 700000;
 var buffer360 = document.createElement("canvas");
 var buffer360Ctx = buffer360.getContext("2d", { alpha: false });
 var buffer360ImageData = null;
