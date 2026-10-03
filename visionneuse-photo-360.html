@@ -166,6 +166,47 @@ var touches = {
 /* IMAGE */
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
+// PYRAMIDE : copies de l'image pré-réduites (mipmaps maison). Le rendu pioche dans le plus petit niveau dont la bande visible couvre encore l'écran : on n'échantillonne jamais plus de pixels source qu'il n'y a de pixels à l'écran.
+var pyramide360 = [];
+var echellePyramide360 = 1;
+function construirePyramide360(image) {
+  pyramide360 = [image];
+  var w = image.width || image.naturalWidth;
+  var h = image.height || image.naturalHeight;
+  var source = image;
+  // Niveaux /2 jusqu'à 4 niveaux max, pas sous 2048 px.
+  while (w >= 2048 && pyramide360.length < 4) {
+    w = Math.floor(w / 2);
+    h = Math.floor(h / 2);
+    var c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    c.getContext("2d").drawImage(source, 0, 0, w, h);
+    pyramide360.push(c);
+    source = c;
+  }
+}
+// Plus petit niveau tel que largeurNiveau >= largeurEcran * 360 / fovHorizontal. (Le fov du programme est VERTICAL : focal est calculé sur la hauteur, on retrouve donc le fov horizontal réel via l'aspect.)
+function choisirNiveauPyramide360(largeurEcran, hauteurEcran) {
+  if (pyramide360.length === 0) {
+    return -1;
+  }
+  var t = Math.tan(fov * Math.PI / 360) * (largeurEcran / Math.max(1, hauteurEcran));
+  var fovH = 2 * Math.atan(t) * 180 / Math.PI;
+  var besoin = largeurEcran * 360 / Math.max(1, fovH);
+  var i;
+  var meilleur = 0;
+  for (i = 0; i < pyramide360.length; i++) {
+    var img = pyramide360[i];
+    var w = img.width || img.naturalWidth;
+    if (w >= besoin) {
+      meilleur = i;
+    } else {
+      break;
+    }
+  }
+  return meilleur;
+}
 /* DIRTY FLAG */
 var sale = true;
 // QUALITÉS DE RENDU Pendant une interaction on privilégie la fluidité. Au repos, le système peut remonter progressivement vers une qualité supérieure.
@@ -502,6 +543,12 @@ function dessinerPhoto360() {
   var focal = (hauteur * 0.5) / Math.tan(fov * Math.PI / 360);
   var centreX = largeur * 0.5;
   var centreY = hauteur * 0.5;
+  // Niveau de pyramide adapté au FOV et à la taille du canvas.
+  var niveauPyr = choisirNiveauPyramide360(largeur, hauteur);
+  var imageRendu = (niveauPyr >= 0) ? pyramide360[niveauPyr] : imageSourceOriginale;
+  var wOriginal = imageSourceOriginale.width || imageSourceOriginale.naturalWidth;
+  var wRendu = imageRendu.width || imageRendu.naturalWidth;
+  echellePyramide360 = wRendu / wOriginal;
   // Maillage.
   var mesh = obtenirMaillageActuel();
   maillage360 = mesh;
@@ -568,8 +615,20 @@ function dessinerPhoto360() {
     var d1y = screenY[i1];
     var d2x = screenX[i2];
     var d2y = screenY[i2];
-    // Triangle source. Déjà pré-calculé.
-    dessinerTriangleOptimise(imageSourceOriginale, sx0[t], sy0[t], sx1[t], sy1[t], sx2[t], sy2[t], d0x, d0y, d1x, d1y, d2x, d2y);
+    // Culling écran : triangle entièrement hors du canvas.
+    var minX = Math.min(d0x, d1x, d2x);
+    var maxX = Math.max(d0x, d1x, d2x);
+    var minY = Math.min(d0y, d1y, d2y);
+    var maxY = Math.max(d0y, d1y, d2y);
+    if (maxX < 0 || minX > largeur || maxY < 0 || minY > hauteur) {
+      continue;
+    }
+    // Triangle source (repère image d'origine), mis à l'échelle du niveau choisi.
+    dessinerTriangleOptimise(imageRendu,
+      sx0[t] * echellePyramide360, sy0[t] * echellePyramide360,
+      sx1[t] * echellePyramide360, sy1[t] * echellePyramide360,
+      sx2[t] * echellePyramide360, sy2[t] * echellePyramide360,
+      d0x, d0y, d1x, d1y, d2x, d2y);
   }
   // Transformation normale.
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -794,6 +853,7 @@ function chargerFichier(f) {
       img.onload =
         function() {
           definirTexture360(img);
+          construirePyramide360(img);
           nomFichierActuel = f.name;
           statut.textContent = f.name + " - " + img.naturalWidth + "x" + img.naturalHeight;
           masquerErreur();
@@ -1104,6 +1164,7 @@ function masquerErreur() {
 /* DÉMARRAGE */
 var demo = textureDemonstration();
 definirTexture360(demo);
+construirePyramide360(demo);
 statut.textContent = "Texture de démonstration - " + demo.width + "x" + demo.height;
 redimensionner();
 var requestFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame ||
