@@ -191,9 +191,8 @@ var nomFichierActuel = "";
  * On garde deux qualités :
  *   - pendant le mouvement : petit buffer + échantillonnage rapide
  *   - au repos             : buffer plus grand + interpolation bilinéaire */
-var RENDU_INTERACTION_MAX_PIXELS = 125000;
-var RENDU_INERTIE_MAX_PIXELS = 250000;
-var RENDU_REPOS_MAX_PIXELS = 700000;
+/* Les tailles max du buffer sont initialisées plus bas,
+   dans la section QUALITÉ DE RENDU, à partir de RENDU_DEFAUTS. */
 var buffer360 = document.createElement("canvas");
 var buffer360Ctx = buffer360.getContext("2d", { alpha: false });
 var buffer360ImageData = null;
@@ -821,6 +820,10 @@ var RENDU_DEFAUTS = {
   inertie: 250000,
   repos: 700000
 };
+/* Initialisation à partir de RENDU_DEFAUTS : source unique. */
+var RENDU_INTERACTION_MAX_PIXELS = RENDU_DEFAUTS.interaction;
+var RENDU_INERTIE_MAX_PIXELS = RENDU_DEFAUTS.inertie;
+var RENDU_REPOS_MAX_PIXELS = RENDU_DEFAUTS.repos;
 function appliquerQualiteRendu(interaction, inertie, repos) {
   RENDU_INTERACTION_MAX_PIXELS = interaction;
   RENDU_INERTIE_MAX_PIXELS = inertie;
@@ -877,12 +880,22 @@ function lierEntreeRendu(input, appliquer) {
       v = 1000;
     }
     appliquer(v);
-    // Sauvegarde immédiate à chaque modification.
+    // Sauvegarde à la validation du champ (pas à chaque frappe).
     sauvegarderQualiteRendu();
     sale = true;
   }
-  input.addEventListener("input", maj, false);
+  // "change" se déclenche à la sortie du champ (ou clic sur les flèches du spinner),
+  // contrairement à "input" qui se déclenche à chaque frappe.
   input.addEventListener("change", maj, false);
+  // Entrée = validation immédiate : le blur déclenche le "change".
+  input.addEventListener("keydown",
+    function(e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        input.blur();
+      }
+    },
+    false
+  );
 }
 lierEntreeRendu(renduInteractionInput, function(v) {
   RENDU_INTERACTION_MAX_PIXELS = v;
