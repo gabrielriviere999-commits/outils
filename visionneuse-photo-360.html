@@ -349,8 +349,8 @@ function dessinerPhoto360() {
     var sx = u * iw1;
     var sy = v * ih1;
     // NEAREST NEIGHBOR UNIQUEMENT
-    var ix = Math.round(sx);
-    var iy = Math.round(sy);
+    var ix = (sx + 0.5) | 0;
+    var iy = (sy + 0.5) | 0;
     var si = (iy * iw + ix) * 4;
     dst[p++] = src[si];
     dst[p++] = src[si + 1];
@@ -453,11 +453,10 @@ function boucle(ts) {
   }
   // TOUCHES / BOUTONS
   var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
-  var my = (touches.haut ? 1 : 0) - (touches.bas ? 1 : 0);
+  var my = (touches.haut ? 0 : 1) - (touches.bas ? 0 : 1);
   if (mx !== 0 || my !== 0) {
     var pas = 1.3 * (fov / 75);
-    var longueur =
-      Math.sqrt(mx * mx + my * my);
+    var longueur = Math.sqrt(mx * mx + my * my);
     yaw += (mx / longueur) * pas * dt;
     pitch = bornerPitch(pitch + (my / longueur) * pas * dt);
     sale = true;
