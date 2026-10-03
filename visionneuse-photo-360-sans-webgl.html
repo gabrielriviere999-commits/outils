@@ -84,10 +84,10 @@
     </div>
   </div>
   <hr>
-  <span>Interaction</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
-  <span >Inertie</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
-  <span >Repos</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
-  <button id="btnResetQualite" data-action="resetQualiteRendu" title="Restaurer 125000 / 250000 / 700000">Défaut</button>
+  <span>Interaction :</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
+  <span >Inertie :</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
+  <span >Repos :</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
+  <button id="btnResetQualite" data-action="resetQualiteRendu">Défaut</button>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
     <div style="display:table-row;">
@@ -831,8 +831,7 @@ function appliquerQualiteRendu(interaction, inertie, repos) {
   renduInteractionInput.value = interaction;
   renduInertieInput.value = inertie;
   renduReposInput.value = repos;
-  // Le changement de taille du buffer est géré automatiquement
-  // par preparerBuffer360 / preparerRayons360 au prochain rendu.
+  // Le changement de taille du buffer est géré automatiquement par preparerBuffer360 / preparerRayons360 au prochain rendu.
   sale = true;
 }
 function sauvegarderQualiteRendu() {
