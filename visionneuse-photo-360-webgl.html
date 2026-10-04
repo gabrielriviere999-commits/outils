@@ -445,6 +445,7 @@ function chargerTexture(source, nom) {
 /* Chargement d'une photo utilisateur */
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
+var PHOTO_DEMARRAGE = "photo360.jpg";
 function chargerFichier(f) {
   var lecteur = new FileReader();
   lecteur.onload = function (e) {
@@ -462,6 +463,33 @@ function chargerFichier(f) {
   };
   lecteur.onerror = function () { afficherErreur("Lecture du fichier impossible."); };
   lecteur.readAsDataURL(f);
+}
+/* CHARGEMENT D'UNE PHOTO PAR CHEMIN (fichier servi par le site) */
+/* CHARGEMENT D'UNE PHOTO PAR CHEMIN (fichier servi par le site) */
+function chargerPhoto(src) {
+  statut.textContent = "Chargement de " + src + "...";
+  var img = new Image();
+  img.onload = function() {
+    if (!gl || !prog) {
+      afficherErreur("WebGL indisponible : photo non affichée.");
+      statut.textContent = "Texture de démonstration";
+      return;
+    }
+    imageSourceOriginale = img;
+    nomFichierActuel = src;
+    chargerTexture(img, src); /* envoie au GPU (tuiles, réduction) + statut */
+    masquerErreur();
+    yaw = 0;
+    pitch = 0;
+    vitesse.x = 0;
+    vitesse.y = 0;
+    sale = true;
+  };
+  img.onerror = function() {
+    afficherErreur("Impossible de charger : " + src);
+    statut.textContent = "Texture de démonstration";
+  };
+  img.src = src;
 }
 /* Interactions : souris, molette, tactile, clavier */
 var saisie = false;
@@ -646,6 +674,18 @@ function redimensionner() {
     return true;
   }
   return false;
+}
+/* Chargement automatique : ?photo=... dans l'URL est prioritaire
+   sur PHOTO_DEMARRAGE. */
+var photoDemarrage = PHOTO_DEMARRAGE;
+try {
+  var m = window.location.search.match(/[?&]photo=([^&]+)/);
+  if (m) {
+    photoDemarrage = decodeURIComponent(m[1]);
+  }
+} catch (e) {}
+if (photoDemarrage) {
+  chargerPhoto(photoDemarrage);
 }
 var dernierTemps = 0;
 var requestFrame =
