@@ -149,7 +149,22 @@ function chargerTextareaFile() {
         })(textarea, fichierUrl, xhr);
     }
 }
-window.onload = chargerTextareaFile;
+if (document.addEventListener) {
+    document.addEventListener("DOMContentLoaded", chargerTextareaFile, false);
+    window.addEventListener("load", chargerTextareaFile, false);
+} else if (document.attachEvent) {
+    document.attachEvent("onreadystatechange", function(){
+        if (document.readyState === "complete") chargerTextareaFile;
+    });
+    window.attachEvent("onload", chargerTextareaFile);
+} else {
+    // Dernier fallback ES3
+    var old = window.onload;
+    window.onload = function(){
+        if (typeof old === "function") old();
+        chargerTextareaFile;
+    };
+}
 /* Ctrl + V image depuis le presse-papiers */
 var pasteZones = [
     { pastezone: "pastefileinput", fileinput: "fileinput" },
