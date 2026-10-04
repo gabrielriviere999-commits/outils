@@ -674,10 +674,10 @@ function redimensionner() {
   }
   return false;
 }
-/* Chargement automatique : ?photo=... dans l'URL est prioritaire sur PHOTO_DEMARRAGE. */
+/* Chargement automatique : ?file=... dans l'URL est prioritaire sur PHOTO_DEMARRAGE. */
 var photoDemarrage = PHOTO_DEMARRAGE;
 try {
-  var m = window.location.search.match(/[?&]photo=([^&]+)/);
+  var m = window.location.search.match(/[?&]file=([^&]+)/);
   if (m) {
     photoDemarrage = decodeURIComponent(m[1]);
   }
