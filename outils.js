@@ -71,6 +71,8 @@ setupDragDrop("textB");
 setupDragDrop("view");
 setupDragDrop("textInput");
 setupDragDrop("json");
+setupDragDrop("importCustomPlusText");
+setupDragDrop("importFancyCustomPlusText");
 /* Sélecteur de fichiers importer textarea */
 function importTextareaFile(fileInputId, textareaId) {
     var file = document.getElementById(fileInputId);
