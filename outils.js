@@ -165,6 +165,140 @@ if (document.addEventListener) {
         chargerTextareaFile;
     };
 }
+/* Paramètre URL fichier input file */
+function chargerInputFile() {
+    var query = window.location.search.substring(1);
+    var params = query.split("&");
+    var i;
+    var parts;
+    var paramName;
+    var paramValue;
+    var morceaux;
+    var inputId;
+    var fichierUrl;
+    var input;
+    var xhr;
+    for (i = 0; i < params.length; i++) {
+        parts = params[i].split("=");
+        if (parts.length < 2) {
+            continue;
+        }
+        paramName = decodeURIComponent(parts[0]);
+        paramValue = decodeURIComponent(parts.slice(1).join("="));
+        /* Format : ?inputfile=ID|FICHIER
+         * Exemple : ?inputfile=fileinput|image.jpg
+         */
+        if (paramName != "inputfile") {
+            continue;
+        }
+        morceaux = paramValue.split("|");
+        if (morceaux.length < 2) {
+            continue;
+        }
+        inputId = morceaux[0];
+        fichierUrl = morceaux.slice(1).join("|");
+        input = document.getElementById(inputId);
+        if (!input) {
+            continue;
+        }
+        xhr = new XMLHttpRequest();
+        (function(input, fichierUrl, xhr) {
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState != 4) {
+                    return;
+                }
+                if (xhr.status != 200 && xhr.status != 0) {
+                    return;
+                }
+                var blob;
+                var nomFichier;
+                var fichier;
+                var dataTransfer;
+                var event;
+                // Nom du fichier
+                nomFichier = fichierUrl.substring(
+                    fichierUrl.lastIndexOf("/") + 1
+                );
+                // Le XHR doit avoir été demandé en "blob".
+                blob = xhr.response;
+                if (!blob) {
+                    return;
+                }
+                // Création du File
+                try {
+                    fichier = new File(
+                        [blob],
+                        nomFichier,
+                        {
+                            type: blob.type || "application/octet-stream"
+                        }
+                    );
+                }
+                catch (e) {
+                    // Si File() n'est pas disponible, on ne peut pas créer le fichier.
+                    return;
+                }
+                // Mise du fichier dans l'input
+                if (typeof DataTransfer != "undefined") {
+                    try {
+                        dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(fichier);
+                        input.files = dataTransfer.files;
+                    }
+                    catch (e) {
+                        // Le navigateur refuse l'affectation à input.files.
+                    }
+                }
+                // Cela permet d'exécuter le traitement même si le navigateur ne permet pas de modifier input.files.
+                if (typeof loadFile == "function") {
+                    loadFile(fichier);
+                }
+                // On déclenche également "change" pour les scripts qui utilisent : input.onchange input.addEventListener("change", ...)
+                if (input.dispatchEvent) {
+                    try {
+                        event = document.createEvent("HTMLEvents");
+                        event.initEvent(
+                            "change",
+                            true,
+                            false
+                        );
+                        input.dispatchEvent(event);
+                    }
+                    catch (e) {}
+                }
+            };
+            // On récupère directement le fichier sous forme de Blob.
+            xhr.open("GET", fichierUrl, true);
+            xhr.responseType = "blob";
+            xhr.send(null);
+        })(input, fichierUrl, xhr);
+    }
+}
+// Exécution lorsque le DOM est prêt
+if (document.addEventListener) {
+    document.addEventListener("DOMContentLoaded",
+        chargerInputFile,
+        false
+    );
+}
+else if (document.attachEvent) {
+    document.attachEvent("onreadystatechange",
+        function() {
+            if (document.readyState == "complete") {
+                chargerInputFile();
+            }
+        }
+    );
+}
+else {
+    var oldInputFileOnload = window.onload;
+    window.onload = function() {
+        if (typeof oldInputFileOnload == "function") {
+            oldInputFileOnload();
+        }
+        chargerInputFile();
+    };
+}
 /* Ctrl + V image depuis le presse-papiers */
 var pasteZones = [
     { pastezone: "pastefileinput", fileinput: "fileinput" },
