@@ -96,6 +96,60 @@ importTextareaFile("textareaFileview", "view");
 importTextareaFile("textareaFiletext", "text");
 importTextareaFile("textareaFiletextA", "textA");
 importTextareaFile("textareaFiletextB", "textB");
+/* Paramètre URL fichier textarea */
+function chargerTextareaFile() {
+    var query = window.location.search.substring(1);
+    var params = query.split("&");
+    var i;
+    var parts;
+    var paramName;
+    var paramValue;
+    var morceaux;
+    var textareaId;
+    var fichierUrl;
+    var textarea;
+    var xhr;
+    for (i = 0; i < params.length; i++) {
+        parts = params[i].split("=");
+        if (parts.length < 2) {
+            continue;
+        }
+        paramName = decodeURIComponent(parts[0]);
+        paramValue = decodeURIComponent(parts.slice(1).join("="));
+        /* On cherche : ?textareafile=ID|FICHIER
+           Exemple : ?textareafile=input|fichier.txt
+        */
+        if (paramName != "textareafile") {
+            continue;
+        }
+        morceaux = paramValue.split("|");
+        if (morceaux.length < 2) {
+            continue;
+        }
+        textareaId = morceaux[0];
+        fichierUrl = morceaux.slice(1).join("|");
+        textarea = document.getElementById(textareaId);
+        if (!textarea) {
+            continue;
+        }
+        xhr = new XMLHttpRequest();
+        (function(textarea, fichierUrl, xhr) {
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200 || xhr.status == 0) {
+                        textarea.value = xhr.responseText;
+                    }
+                    else {
+                        textarea.value = "Erreur lors du chargement du fichier : " + xhr.status;
+                    }
+                }
+            };
+            xhr.open("GET", fichierUrl, true);
+            xhr.send(null);
+        })(textarea, fichierUrl, xhr);
+    }
+}
+window.onload = chargerTextareaFile;
 /* Ctrl + V image depuis le presse-papiers */
 var pasteZones = [
     { pastezone: "pastefileinput", fileinput: "fileinput" },
