@@ -30,8 +30,7 @@ var mapTextarea = {
     copyFancyCustomPlus: 'importFancyCustomPlusText',
     copyjson: 'json',
     copyview: 'view',
-    copyasciiTextArea: 'asciiTextArea',
-    copyhtmlCode: 'htmlCode'
+    copyasciiTextArea: 'asciiTextArea'
 };
 Object.keys(mapTextarea).forEach(function(btnId) {
     var el = document.getElementById(btnId);

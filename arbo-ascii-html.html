@@ -70,7 +70,7 @@
   <button onclick="copyTreeHtml(this)">Copier HTML couleur</button><br><hr>
   <button onclick="showTreeText()">Afficher texte</button>
   <button onclick="showTreeHtml()">Afficher HTML couleur</button>
-  <br><textarea wrap="off" id="previewBox" style="display:none;"></textarea>
+  <br><textarea wrap="off" id="output" style="display:none;"></textarea>
   <div class="overlayColorPicker">
     <div class="overlayColorPicker-cell">
       <div class="mini-picker" id="miniPicker">
@@ -199,7 +199,7 @@ function copyTree(btn) {
     btn.focus();
 }
 function showTreeText() {
-    var box = document.getElementById("previewBox");
+    var box = document.getElementById("output");
     box.style.display = "block";
     box.value = lastAsciiText;
 }
@@ -235,7 +235,7 @@ function copyTreeHtml(btn) {
 }
 function showTreeHtml() {
     var finalHtml = buildHtml();
-    var box = document.getElementById("previewBox");
+    var box = document.getElementById("output");
     box.style.display = "block";
     box.value = finalHtml;
 }

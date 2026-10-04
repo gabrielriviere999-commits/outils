@@ -83,15 +83,15 @@ pre.tree{
 </div>
 </fieldset>
 <p id="stats"></p>
-<pre class="tree" id="output"></pre>
+<pre class="tree" id="tree"></pre>
 <details><summary>Bibliothèque ZIP</summary>
 <a href="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js</a>- MIT or GPLv3 - Stuart Knightley
 </details>
 </div>
 <div class="card">
 <h3>Code HTML</h3>
-<textarea wrap="off" id="htmlCode"></textarea><br>
-<button id="copyhtmlCode">Copier</button>
+<textarea wrap="off" id="output"></textarea><br>
+<button id="copyoutput">Copier</button>
 </div>
 </div>
 <script src="outils.js"></script>
@@ -191,7 +191,7 @@ document.getElementById("zipInput").onchange = function (e) {
             document.getElementById("stats").innerHTML =
                 "Dossiers : " + counts.folders + ", Fichiers : " + counts.files;
             // Affichage HTML
-            document.getElementById("output").innerHTML = html;
+            document.getElementById("tree").innerHTML = html;
             // Affichage ASCII dans textarea
             var asciiText = buildAsciiText(tree, "", true);
             document.getElementById("asciiTextArea").value = asciiText;
@@ -238,7 +238,7 @@ function generateHtml() {
         'document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};' +
         '<\/script>\n' +
         '</body>\n</html>';
-    document.getElementById("htmlCode").value = fullPage;
+    document.getElementById("output").value = fullPage;
 }
 /* Construction de l'arbre  */
 function buildTree(node, parts, isDir, fullPath) {
