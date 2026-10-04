@@ -871,46 +871,59 @@ function commitTempImage(){
     moved = false;
 }
 /* IMPORTER UN DESSIN ENTIER */
+function importImage(src) {
+    var img = new Image();
+    img.onload = function() {
+        // Sauvegarder l'ancien dessin pour Annuler
+        saveState();
+        // Toujours utiliser le mode normal pendant l'import
+        ctx.globalCompositeOperation = "source-over";
+        // Effacer le dessin actuel
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Adapter l'image au canvas sans déformer ses proportions
+        var scaleX = canvas.width / img.width;
+        var scaleY = canvas.height / img.height;
+        var scale = Math.min(scaleX, scaleY);
+        var w = img.width * scale;
+        var h = img.height * scale;
+        var x = (canvas.width - w) / 2;
+        var y = (canvas.height - h) / 2;
+        ctx.drawImage(img, x, y, w, h);
+        // Restaurer l'outil actif
+        if (eraserMode) {
+            ctx.globalCompositeOperation = "destination-out";
+        } else {
+            ctx.globalCompositeOperation = "source-over";
+        }
+    };
+    img.onerror = function() {
+        alert("Impossible de charger cette image : " + src);
+    };
+    img.src = src;
+}
+/* IMPORTER UN DESSIN DEPUIS UN FICHIER */
 var drawingFile = document.getElementById("drawingFile");
-drawingFile.onchange = function(){
-    if(!drawingFile.files || !drawingFile.files.length){
+drawingFile.onchange = function() {
+    if (!drawingFile.files || !drawingFile.files.length) {
         return;
     }
     var file = drawingFile.files[0];
     var reader = new FileReader();
-    reader.onload = function(e){
-        var img = new Image();
-        img.onload = function(){
-            // Sauvegarder l'ancien dessin mettre Annuler.
-            saveState();
-            //  l'import doit toujours utiliser le mode de dessin normal. Sinon, si la gomme était active, destination-out effacerait l'image.
-            ctx.globalCompositeOperation = "source-over";
-            // Effacer le dessin actuel.
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Adapter l'image au canvas sans déformer ses proportions.
-            var scaleX = canvas.width / img.width;
-            var scaleY = canvas.height / img.height;
-            var scale = Math.min(scaleX, scaleY);
-            var w = img.width * scale;
-            var h = img.height * scale;
-            var x = (canvas.width - w) / 2;
-            var y = (canvas.height - h) / 2;
-            ctx.drawImage(img, x, y, w, h);
-            // Si la gomme était l'outil actif, on remet destination-out après l'import pour qu'elle continue à fonctionner normalement.
-            if(eraserMode){
-                ctx.globalCompositeOperation = "destination-out";
-            } else {
-                ctx.globalCompositeOperation = "source-over";
-            }
-            drawingFile.value = "";
-        };
-        img.onerror = function(){
-            alert("Impossible de charger cette image.");
-        };
-        img.src = e.target.result;
+    reader.onload = function(e) {
+        importImage(e.target.result);
+        drawingFile.value = "";
     };
     reader.readAsDataURL(file);
 };
+// IMPORTER UNE IMAGE DEPUIS L'URL : site.html?file=image.png
+var imageURL = null;
+var match = window.location.search.match(/[?&]file=([^&]+)/);
+if (match) {
+    imageURL = decodeURIComponent(match[1]);
+}
+if (imageURL) {
+    importImage(imageURL);
+}
 var textBox = document.getElementById("textBox");
 var textInput = document.getElementById("textInput");
 var fontInput = document.getElementById("fontInput");

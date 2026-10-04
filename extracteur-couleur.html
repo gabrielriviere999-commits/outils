@@ -176,6 +176,31 @@ function loadFile(file){
     };
     reader.readAsDataURL(file);
 }
+function loadImageFromURL(src) {
+    if (!src) return;
+    var img = new Image();
+    img.onload = function() {
+        currentImage = img;
+        drawImageToCanvas(img);
+    };
+    img.onerror = function() {
+        alert("Impossible de charger l'image : " + src);
+    };
+    img.src = src;
+}
+/* CHARGEMENT AUTOMATIQUE : ?file=image.png */
+var imageURL = null;
+try {
+    var matchFile = window.location.search.match(/[?&](?:file|image)=([^&]+)/);
+    if (matchFile) {
+        imageURL = decodeURIComponent(matchFile[1]);
+    }
+} catch (e) {
+    imageURL = null;
+}
+if (imageURL) {
+    loadImageFromURL(imageURL);
+}
 function drawImageToCanvas(img) {
     var scroll = document.getElementById("canvasScroll");
     // Résolution réelle = résolution originale de l'image
