@@ -14,11 +14,11 @@
   position:absolute;
   z-index:10;
   font-size:14px;
-  height:35px;
+  height:36px;
 }
 .menu {
   left:0;
-  width:35px;
+  width:36px;
 }
 .photos360{left:36px;}
 #commandesDirection {
@@ -30,8 +30,8 @@
 }
 #commandesDirection .btnDir {
   position:absolute;
-  width:35px;
-  height:35px;
+  width:36px;
+  height:36px;
   font-size:14px;
   -webkit-user-select:none;
   -moz-user-select:none;
