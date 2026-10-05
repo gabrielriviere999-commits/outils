@@ -124,7 +124,6 @@ var touches = {
 /* IMAGE */
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
-var PHOTO_DEMARRAGE = "photo360.jpg";
 /* RENDU 360° EN CANVAS 2D, SANS WEBGL ET SANS TRIANGLES.
  * La photo est une équirectangulaire 2:1.
  * Pour chaque pixel du petit buffer de rendu :
@@ -365,16 +364,12 @@ function redimensionner() {
   return false;
 }
 /* Chargement automatique : ?file=... dans l'URL est prioritaire sur PHOTO_DEMARRAGE. */
-var photoDemarrage = PHOTO_DEMARRAGE;
 try {
   var m = window.location.search.match(/[?&]file=([^&]+)/);
   if (m) {
-    photoDemarrage = decodeURIComponent(m[1]);
+    chargerPhoto(decodeURIComponent(m[1]));
   }
 } catch (e) {}
-if (photoDemarrage) {
-  chargerPhoto(photoDemarrage);
-}
 /* BOUCLE */
 var dernierTemps = 0;
 var dernierFovAffiche = -1;
