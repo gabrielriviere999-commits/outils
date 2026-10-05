@@ -36,6 +36,7 @@
   </div>
   <hr>
   <span id="statut">Texture de démonstration</span>
+  <br><span id="gps"></span>
   <span id="erreur"></span>
   <hr>
   <button onclick="closePopup()">Fermer</button>
@@ -395,10 +396,151 @@ function chargerTexture(source, nom) {
     (info.redimensionnee ? " (adaptée à la taille max)" : "");
 }
 /* Chargement d'une photo utilisateur */
+/* GPS EXIF : extraction des coordonnées d'un JPEG.
+ * (JPEG -> segment APP1 "Exif" -> IFD0 -> IFD GPS -> lat/lon rationnels) */
+var gps360 = null; // { lat: degrés décimaux, lon: ... } ou null
+
+function lire16(b, o, petit) {
+  if (petit) return b[o] | (b[o + 1] << 8);
+  return (b[o] << 8) | b[o + 1];
+}
+function lire32(b, o, petit) {
+  if (petit) return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16)) + b[o + 3] * 16777216;
+  return ((b[o] * 16777216) + (b[o + 1] << 16) + (b[o + 2] << 8)) + b[o + 3];
+}
+function lireRationnel(b, base, o, petit) {
+  var num = lire32(b, base + o, petit);
+  var den = lire32(b, base + o + 4, petit);
+  if (!den) return 0;
+  return num / den;
+}
+
+/* Retourne {lat, lon} en degrés décimaux, ou null si pas de GPS. */
+function extraireGpsExif(octets) {
+  var n = octets.length;
+  if (n < 12 || octets[0] !== 0xFF || octets[1] !== 0xD8) return null;
+  // Parcours des segments JPEG jusqu'à APP1/Exif.
+  var pos = 2;
+  var tiff = -1;
+  while (pos + 4 < n) {
+    if (octets[pos] !== 0xFF) return null;
+    var marqueur = octets[pos + 1];
+    if (marqueur === 0xD8 || marqueur === 0x01 || (marqueur >= 0xD0 && marqueur <= 0xD7)) {
+      pos += 2;
+      continue;
+    }
+    var longueur = lire16(octets, pos + 2, false);
+    if (marqueur === 0xE1 &&
+        octets[pos + 4] === 0x45 && octets[pos + 5] === 0x78 &&
+        octets[pos + 6] === 0x69 && octets[pos + 7] === 0x66 &&
+        octets[pos + 8] === 0x00) {
+      tiff = pos + 10; // début de l'en-tête TIFF
+      break;
+    }
+    pos += 2 + longueur;
+  }
+  if (tiff < 0 || tiff + 8 > n) return null;
+  // En-tête TIFF : boutisme + magic + offset IFD0.
+  var petit = octets[tiff] === 0x49 && octets[tiff + 1] === 0x49;
+  if (lire16(octets, tiff + 2, petit) !== 0x2A) return null;
+  var ifd0 = tiff + lire32(octets, tiff + 4, petit);
+  // IFD0 : chercher le pointeur vers l'IFD GPS (tag 0x8825).
+  var nb0 = lire16(octets, ifd0, petit);
+  var gpsOffset = 0;
+  var i;
+  for (i = 0; i < nb0 && ifd0 + 2 + i * 12 + 12 <= n; i++) {
+    var entree = ifd0 + 2 + i * 12;
+    if (lire16(octets, entree, petit) === 0x8825) {
+      gpsOffset = tiff + lire32(octets, entree + 8, petit);
+      break;
+    }
+  }
+  if (!gpsOffset) return null;
+  // IFD GPS : tag 1 = LatRef, 2 = Latitude, 3 = LonRef, 4 = Longitude.
+  var nbG = lire16(octets, gpsOffset, petit);
+  var latRef = "N", lonRef = "E";
+  var lat = null, lon = null;
+  for (i = 0; i < nbG && gpsOffset + 2 + i * 12 + 12 <= n; i++) {
+    var e = gpsOffset + 2 + i * 12;
+    var tag = lire16(octets, e, petit);
+    // LatRef / LonRef : ASCII de 1 octet, valeur INLINE dans l'entrée (elle tient dans les 4 octets du champ valeur, ce n'est pas un offset).
+    if (tag === 1) latRef = String.fromCharCode(octets[e + 8]);
+    else if (tag === 3) lonRef = String.fromCharCode(octets[tiff + lire32(octets, e + 8, petit)]);
+    else if (tag === 2) {
+      var oLat = lire32(octets, e + 8, petit);
+      lat = lireRationnel(octets, tiff, oLat, petit) +
+        lireRationnel(octets, tiff, oLat + 8, petit) / 60 +
+        lireRationnel(octets, tiff, oLat + 16, petit) / 3600;
+    } else if (tag === 4) {
+      var oLon = lire32(octets, e + 8, petit);
+      lon = lireRationnel(octets, tiff, oLon, petit) +
+        lireRationnel(octets, tiff, oLon + 8, petit) / 60 +
+        lireRationnel(octets, tiff, oLon + 16, petit) / 3600;
+    }
+  }
+  if (lat === null || lon === null) return null;
+  if (latRef === "S") lat = -lat;
+  if (lonRef === "W") lon = -lon;
+  return { lat: lat, lon: lon };
+}
+/* Affichage dans le menu + lien Google Maps. */
+function afficherGps() {
+  var gps = document.getElementById("gps");
+  if (!gps360) {
+    gps.innerHTML = "";
+    return;
+  }
+  var txt = gps360.lat.toFixed(6) + ", " + gps360.lon.toFixed(6);
+  var url = "https://www.openstreetmap.org/?mlat=" + gps360.lat + "&mlon=" + gps360.lon + "#map=18/" + gps360.lat + "/" + gps360.lon;
+  gps.innerHTML = "";
+  var a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.appendChild(document.createTextNode("📍 " + txt + " (OpenStreetMap)"));
+  gps.appendChild(a);
+}
+/* Analyse les octets d'un JPEG et met à jour l'affichage GPS. */
+function analyserGpsOctets(octets) {
+  gps360 = null;
+  try {
+    gps360 = extraireGpsExif(new Uint8Array(octets));
+  } catch (e) {
+    gps360 = null;
+  }
+  afficherGps();
+}
+/* Lecture GPS depuis un File (input / drag-drop). */
+function chargerGpsFichier(f) {
+  gps360 = null;
+  afficherGps();
+  if (!f) return;
+  var lecteur = new FileReader();
+  lecteur.onload = function(e) { analyserGpsOctets(e.target.result); };
+  lecteur.onerror = function() {};
+  lecteur.readAsArrayBuffer(f);
+}
+/* Lecture GPS depuis une URL (same-origin ; XHR, pas d'API moderne). */
+function chargerGpsUrl(src) {
+  gps360 = null;
+  afficherGps();
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", src, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function() {
+      if (xhr.status === 200 || xhr.status === 0) {
+        analyserGpsOctets(xhr.response);
+      }
+    };
+    xhr.onerror = function() {};
+    xhr.send(null);
+  } catch (e) {}
+}
 var imageSourceOriginale = null;
 var nomFichierActuel = "";
 var PHOTO_DEMARRAGE = "photo360.jpg";
 function chargerFichier(f) {
+  chargerGpsFichier(f);
   var lecteur = new FileReader();
   lecteur.onload = function (e) {
     var img = new Image();
@@ -419,6 +561,7 @@ function chargerFichier(f) {
 /* CHARGEMENT D'UNE PHOTO PAR CHEMIN (fichier servi par le site) */
 function chargerPhoto(src) {
   statut.textContent = "Chargement de " + src + "...";
+  chargerGpsUrl(src);
   var img = new Image();
   img.onload = function() {
     if (!gl || !prog) {
