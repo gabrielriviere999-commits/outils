@@ -41,7 +41,7 @@
   </div>
   <hr>
   <span id="statut">Texture de démonstration</span>
-  <br><span id="gps"></span>
+  <span id="gps"></span>
   <span id="erreur"></span>
   <hr>
   <button onclick="closePopup()">Fermer</button>
@@ -447,7 +447,6 @@ function boucle(ts) {
   requestFrame(boucle);
 }
 /* INITIALISATION */
-
 /* TEXTURE DE DÉMONSTRATION */
 function textureDemonstration() {
   var c = document.createElement("canvas");
@@ -632,7 +631,7 @@ function extraireGpsExif(octets) {
 function afficherGps() {
   var gps = document.getElementById("gps");
   if (!gps360) {
-    gps.innerHTML = "";
+    gps.innerHTML = "Aucune donnée GPS.";
     return;
   }
   var txt = gps360.lat.toFixed(6) + ", " + gps360.lon.toFixed(6);

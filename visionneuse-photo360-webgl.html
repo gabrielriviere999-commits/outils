@@ -36,7 +36,7 @@
   </div>
   <hr>
   <span id="statut">Texture de démonstration</span>
-  <br><span id="gps"></span>
+  <span id="gps"></span>
   <span id="erreur"></span>
   <hr>
   <button onclick="closePopup()">Fermer</button>
@@ -396,10 +396,8 @@ function chargerTexture(source, nom) {
     (info.redimensionnee ? " (adaptée à la taille max)" : "");
 }
 /* Chargement d'une photo utilisateur */
-/* GPS EXIF : extraction des coordonnées d'un JPEG.
- * (JPEG -> segment APP1 "Exif" -> IFD0 -> IFD GPS -> lat/lon rationnels) */
+/* GPS EXIF : extraction des coordonnées d'un JPEG. (JPEG -> segment APP1 "Exif" -> IFD0 -> IFD GPS -> lat/lon rationnels) */
 var gps360 = null; // { lat: degrés décimaux, lon: ... } ou null
-
 function lire16(b, o, petit) {
   if (petit) return b[o] | (b[o + 1] << 8);
   return (b[o] << 8) | b[o + 1];
@@ -414,7 +412,6 @@ function lireRationnel(b, base, o, petit) {
   if (!den) return 0;
   return num / den;
 }
-
 /* Retourne {lat, lon} en degrés décimaux, ou null si pas de GPS. */
 function extraireGpsExif(octets) {
   var n = octets.length;
@@ -487,7 +484,7 @@ function extraireGpsExif(octets) {
 function afficherGps() {
   var gps = document.getElementById("gps");
   if (!gps360) {
-    gps.innerHTML = "";
+    gps.innerHTML = "Aucune donnée GPS.";
     return;
   }
   var txt = gps360.lat.toFixed(6) + ", " + gps360.lon.toFixed(6);
