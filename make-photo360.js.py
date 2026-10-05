@@ -6,7 +6,7 @@ from urllib.parse import quote
 # ============================================================
 
 # Chemin du dossier contenant tes photos 360
-DOSSIER = Path(r"../photos360")
+DOSSIER = Path(r"https://gabrielriviere999-commits.github.io/photos360")
 
 # Chemin du fichier JavaScript qui sera généré
 FICHIER_SORTIE = Path("photos360.js")
