@@ -604,7 +604,6 @@ function extraireGpsExif(octets) {
     // LatRef / LonRef : ASCII de 1 octet, valeur INLINE dans l'entrée (elle tient dans les 4 octets du champ valeur, ce n'est pas un offset).
     if (tag === 1) latRef = String.fromCharCode(octets[e + 8]);
     else if (tag === 3) lonRef = String.fromCharCode(octets[e + 8]);
-    else if (tag === 3) lonRef = String.fromCharCode(octets[tiff + lire32(octets, e + 8, petit)]);
     else if (tag === 2) {
       var oLat = lire32(octets, e + 8, petit);
       lat = lireRationnel(octets, tiff, oLat, petit) +
