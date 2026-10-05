@@ -1,4 +1,4 @@
-name: Générer l'arborescence
+name: Générer photo360.js
 
 on:
   workflow_dispatch:   # déclenchement manuel uniquement
