@@ -1,0 +1,84 @@
+#scene {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:block;
+  cursor:grab;
+  touch-action:none;
+}
+#scene.saisie{cursor:grabbing;}
+.menu,.photos360 {
+  top:0;
+  position:absolute;
+  z-index:10;
+  font-size:14px;
+  height:36px;
+}
+.menu {
+  left:0;
+  width:36px;
+}
+.photos360{left:36px;}
+#commandesDirection {
+  position:absolute;
+  left:0px;
+  bottom:0px;
+  width:108px;
+  height:65px;
+  z-index:20;
+}
+#commandesDirection .btnDir {
+  position:absolute;
+  width:32px;
+  height:32px;
+  font-size:14px;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+}
+#btnHaut {
+  left:37px;
+  top:0;
+}
+#ligneBas {
+  position:absolute;
+  left:0;
+  top:34px;
+  width:108px;
+  height:30px;
+}
+#btnGauche {
+  left:0;
+  top:0;
+}
+#btnBas {
+  left:37px;
+  top:0;
+}
+#btnDroite {
+  left:74px;
+  top:0;
+}
+#fovSliderContainer {
+  position:absolute;
+  right:0px;
+  bottom:0px;
+}
+#depot {
+  position:absolute;
+  inset:0;
+  z-index:50;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  background:rgba(20,40,80,0.45);
+  border:3px dashed #7aa7ff;
+}
+#depot.actif{display:block;}
+#depot span{color:#fff;}
+#erreur{color:#ef4444}
+#statut{display:block;}

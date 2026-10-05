@@ -5,59 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="photo360.css">
 <title>Photo 360°</title>
-<style>
-#scene {
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  display:block;
-  cursor:grab;
-  touch-action:none;
-}
-#scene.saisie{cursor:grabbing;}
-.menu {
-  top:0;
-  left:0;
-  position:absolute;
-  z-index:10;
-  font-size:14px;
-  height:36px;
-  padding:0 10px;
-}
-.btnDir {
-  width:34px;
-  height:30px;
-  padding:0;
-  line-height:1;
-  font-size:14px;
-  -webkit-user-select:none;
-  -moz-user-select:none;
-  -ms-user-select:none;
-  user-select:none;
-}
-#depot {
-  position:absolute;
-  inset:0;
-  z-index:50;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  pointer-events:none;
-  background:rgba(20,40,80,0.45);
-  border:3px dashed #7aa7ff;
-}
-#depot.actif{display:block;}
-#depot span{color:#fff;}
-#erreur{color:#ef4444}
-#statut{display:block;}
-</style>
 </head>
 <body>
 <canvas id="scene"></canvas>
-<button data-action="openMenuPopup" class="menu multitouchbtn">≡</button>
+<button onclick="openMenuPopup()" class="menu">≡</button>
 <div id="popupMenuContent" style="display:none">
   <b class="titleb">Menu</b><hr class="titlehr">
   <div style="display:table;table-layout:fixed;width:100%;">
@@ -71,47 +24,18 @@
     </div>
   </div>
   <hr>
-  <div style="display:table;table-layout:fixed;width:100%;">
-    <div style="display:table-row;">
-      <div style="display:table-cell;width:25%;">
-        <span id="fov">FOV 75°</span>
-      </div>
-      <div style="display:table-cell;">
-        <button class="rangebtn" data-action="fovSliderMinus">−</button>
-        <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
-        <button class="rangebtn" data-action="fovSliderPlus">+</button>
-      </div>
-    </div>
-  </div>
-  <hr>
   <span>Interaction :</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
   <span >Inertie :</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
   <span >Repos :</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
-  <button id="btnResetQualite" data-action="resetQualiteRendu">Défaut</button>
+  <button id="btnResetQualite" onclick="resetQualiteRendu()">Défaut</button>
   <hr>
   <div style="display:table;table-layout:fixed;width:100%;">
     <div style="display:table-row;">
       <div style="display:table-cell;">
-        <button class="btnDir" id="btnGauche">←</button>
+        <button id="btnReset" onclick="resetPhoto360()">Reset</button>
       </div>
       <div style="display:table-cell;">
-        <button class="btnDir" id="btnDroite">→</button>
-      </div>
-      <div style="display:table-cell;">
-        <button class="btnDir" id="btnHaut">↑</button>
-      </div>
-      <div style="display:table-cell;">
-        <button class="btnDir" id="btnBas">↓</button>
-      </div>
-    </div>
-  </div>
-  <div style="display:table;table-layout:fixed;width:100%;">
-    <div style="display:table-row;">
-      <div style="display:table-cell;">
-        <button id="btnReset" data-action="resetPhoto360">Reset</button>
-      </div>
-      <div style="display:table-cell;">
-        <button id="btnRotation" data-action="toggleAutoRotation">Auto</button>
+        <button id="btnRotation" onclick="toggleAutoRotation()">Auto</button>
       </div>
     </div>
   </div>
@@ -119,16 +43,34 @@
   <span id="statut">Texture de démonstration</span>
   <span id="erreur"></span>
   <hr>
-  <button data-action="closePopup">Fermer</button>
+  <button onclick="closePopup()">Fermer</button>
+</div>
+<button onclick="openPhotos360Popup()" class="photos360">Photos 360</button>
+<div id="popupPhotos360Content" style="display:none"></div>
+<div id="commandesDirection">
+  <button class="btnDir" id="btnHaut">↑</button>
+  <div id="ligneBas">
+    <button class="btnDir" id="btnGauche">←</button>
+    <button class="btnDir" id="btnBas">↓</button>
+    <button class="btnDir" id="btnDroite">→</button>
+  </div>
+</div>
+<div id="fovSliderContainer">
+  <span id="fov">75°</span> <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
 </div>
 <div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
-<script src="multitouch.js"></script>
+<script src="photos360.js"></script>
 <script>
 /* MENU */
 function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
+  openPopupMenu(container);
+}
+function openPhotos360Popup() {
+  var container = document.getElementById("popupPhotos360Content");
+  container.innerHTML = window.popupPhotos360HTML;
   openPopupMenu(container);
 }
 /* DOM */
@@ -494,7 +436,7 @@ function boucle(ts) {
     fovEntier !== dernierFovAffiche
   ) {
     dernierFovAffiche = fovEntier;
-    fovAff.textContent = "FOV " + fovEntier + "°";
+    fovAff.textContent = fovEntier + "°";
     if (
       parseInt(fovSlider.value, 10) !== fovEntier
     ) {
@@ -1046,10 +988,6 @@ var requestFrame = window.requestAnimationFrame || window.webkitRequestAnimation
     }, 16);
   };
 requestFrame(boucle);
-/* MULTITOUCH EXTERNE */
-if (typeof addMultiTouch === "function") {
-  addMultiTouch("button,input");
-}
 </script>
 </body>
 </html>
