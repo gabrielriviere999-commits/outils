@@ -81,4 +81,4 @@
 #depot.actif{display:block;}
 #depot span{color:#fff;}
 #erreur{color:#ef4444}
-#statut{display:block;}
+#statut{display:block;word-break:overflow-wrap:anywhere;word-break:break-word;}
