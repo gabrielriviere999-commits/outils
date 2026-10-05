@@ -338,15 +338,25 @@ function envoyerTexture(source, largeur, hauteur) {
     redimensionnee = true;
   }
   // 3) Largeur multiple exacte de n (découpage régulier dans le shader)
+  var pad = 4;
+  // La tuile contient chunkPx + 2*pad pixels. Il faut donc garder la taille totale <= MAX_TEXTURE_SIZE.
+  var maxChunkPx = max - 2 * pad;
   var chunkPx = Math.floor(largeur / n);
-  if (chunkPx * n !== largeur) {
-    var creg = document.createElement("canvas");
-    creg.width = chunkPx * n;
-    creg.height = hauteur;
-    creg.getContext("2d").drawImage(source, 0, 0, creg.width, creg.height);
-    source = creg; largeur = creg.width;
+  // Sécurité supplémentaire : aucune tuile ne doit dépasser la limite GPU.
+  chunkPx = Math.min(chunkPx, maxChunkPx);
+  // On ajuste la largeur totale pour avoir exactement n tuiles.
+  var largeurTuiles = chunkPx * n;
+  if (largeurTuiles !== largeur) {
+      var creg = document.createElement("canvas");
+      creg.width = largeurTuiles;
+      creg.height = hauteur;
+      creg.getContext("2d").drawImage(
+          source,
+          0, 0, largeurTuiles, hauteur
+      );
+      source = creg;
+      largeur = creg.width;
   }
-  var pad = 4; // pixels de recouvrement entre tuiles
   var padFrac = pad / (chunkPx + 2 * pad);
   // 4) Libération des anciennes tuiles puis création des nouvelles
   for (i = 0; i < tuiles.length; i++) gl.deleteTexture(tuiles[i]);
