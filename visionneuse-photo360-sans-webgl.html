@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="../outils/outils.css">
+<link rel="stylesheet" href="photo360.css">
+<title>Photo 360°</title>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<button onclick="openMenuPopup()" class="menu">≡</button>
+<div id="popupMenuContent" style="display:none">
+  <b class="titleb">Menu</b><hr class="titlehr">
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <input type="file" id="fileinput">
+      </div>
+      <div style="display:table-cell;">
+        <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0" style="width:100%;box-sizing:border-box;">
+      </div>
+    </div>
+  </div>
+  <hr>
+  <span>Interaction :</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
+  <span >Inertie :</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
+  <span >Repos :</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
+  <button id="btnResetQualite" onclick="resetQualiteRendu()">Défaut</button>
+  <hr>
+  <div style="display:table;table-layout:fixed;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <button id="btnReset" onclick="resetPhoto360()">Reset</button>
+      </div>
+      <div style="display:table-cell;">
+        <button id="btnRotation" onclick="toggleAutoRotation()">Auto</button>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <span id="statut">Texture de démonstration</span>
+  <span id="erreur"></span>
+  <hr>
+  <button onclick="closePopup()">Fermer</button>
+</div>
+<button onclick="openPhotos360Popup()" class="photos360">Photos 360</button>
+<div id="popupPhotos360Content" style="display:none"></div>
+<div id="commandesDirection">
+  <button class="btnDir" id="btnHaut">↑</button>
+  <div id="ligneBas">
+    <button class="btnDir" id="btnGauche">←</button>
+    <button class="btnDir" id="btnBas">↓</button>
+    <button class="btnDir" id="btnDroite">→</button>
+  </div>
+</div>
+<div id="fovSliderContainer">
+  <span id="fov">75°</span> <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
+</div>
+<div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
+<script src="../outils/outils.js"></script>
+<script src="../outils/popup.js"></script>
+<script src="photos360.js"></script>
+<script>
+/* MENU */
+function openMenuPopup() {
+  var container = document.getElementById("popupMenuContent");
+  openPopupMenu(container);
+}
+function openPhotos360Popup() {
+  var container = document.getElementById("popupPhotos360Content");
+  container.innerHTML = window.popupPhotos360HTML;
+  openPopupMenu(container);
+}
+/* DOM */
+var canvas = document.getElementById("scene");
+var ctx = canvas.getContext("2d", {
+  alpha: false
+});
+ctx.imageSmoothingEnabled = true;
+var statut = document.getElementById("statut");
+var fovAff = document.getElementById("fov");
+var depot = document.getElementById("depot");
+var erreur = document.getElementById("erreur");
+var btnRot = document.getElementById("btnRotation");
+var btnReset = document.getElementById("btnReset");
+var fileinput = document.getElementById("fileinput");
+var fovSlider = document.getElementById("fovSlider");
+var btnGauche = document.getElementById("btnGauche");
+var btnDroite = document.getElementById("btnDroite");
+var btnHaut = document.getElementById("btnHaut");
+var btnBas = document.getElementById("btnBas");
+var renduInteractionInput = document.getElementById("renduInteractionInput");
+var renduInertieInput = document.getElementById("renduInertieInput");
+var renduReposInput = document.getElementById("renduReposInput");
+/* TEMPS */
+function maintenant() {
+  if (window.performance && typeof window.performance.now === "function") {
+    return window.performance.now();
+  }
+  return new Date().getTime();
+}
+/* CAMÉRA */
+var yaw = 0;
+var pitch = 0;
+var fov = 75;
+var FOV_MIN = 5;
+var FOV_MAX = 100;
+var autoRotation = false;
+var vitesseX = 0;
+var vitesseY = 0;
+var saisie = false;
+var interactionTemporaire360 = false;
+var timerInteraction360 = null;
+var DUREE_INTERACTION360 = 180;
+var touches = {
+  gauche: false,
+  droite: false,
+  haut: false,
+  bas: false
+};
+/* IMAGE */
+var imageSourceOriginale = null;
+var nomFichierActuel = "";
+var PHOTO_DEMARRAGE = "photo360.jpg";
+/* RENDU 360° EN CANVAS 2D, SANS WEBGL ET SANS TRIANGLES.
+ * La photo est une équirectangulaire 2:1.
+ * Pour chaque pixel du petit buffer de rendu :
+ *   pixel écran -> rayon caméra -> yaw/pitch
+ *              -> longitude/latitude
+ *              -> pixel dans la photo 360
+ * Le buffer est ensuite agrandi par Canvas.
+ * On garde deux qualités :
+ *   - pendant le mouvement : petit buffer + échantillonnage rapide
+ *   - au repos             : buffer plus grand + interpolation bilinéaire */
+/* Les tailles max du buffer sont initialisées plus bas,
+   dans la section QUALITÉ DE RENDU, à partir de RENDU_DEFAUTS. */
+var buffer360 = document.createElement("canvas");
+var buffer360Ctx = buffer360.getContext("2d", { alpha: false });
+var buffer360ImageData = null;
+var buffer360Data = null;
+var buffer360W = 0;
+var buffer360H = 0;
+/* Petit cache des coordonnées de rayon caméra. */
+var rayX360 = null;
+var rayY360 = null;
+var rayZ360 = null;
+var dernierFovRendu = -1;
+/* DIRTY FLAG */
+var sale = true;
+function bornerPitch(p) {
+  if (p < -1.55) return -1.55;
+  if (p > 1.55) return 1.55;
+  return p;
+}
+// Choisit la taille du buffer. Le buffer garde exactement le même rapport largeur/hauteur que l'écran.
+function obtenirTailleBuffer360() {
+  var w = Math.max(1, canvas.width);
+  var h = Math.max(1, canvas.height);
+  var aspect = w / h;
+  var maxPixels;
+  if (saisie || interactionTemporaire360) {
+    maxPixels = RENDU_INTERACTION_MAX_PIXELS;
+  } else if (
+    vitesseX !== 0 ||
+    vitesseY !== 0 ||
+    autoRotation ||
+    touches.gauche ||
+    touches.droite ||
+    touches.haut ||
+    touches.bas
+  ) {
+    maxPixels = RENDU_INERTIE_MAX_PIXELS;
+  } else {
+    maxPixels = RENDU_REPOS_MAX_PIXELS;
+  }
+  var bh = Math.round(Math.sqrt(maxPixels / aspect));
+  var bw = Math.round(bh * aspect);
+  bw = Math.min(bw, w);
+  bh = Math.min(bh, h);
+  return {
+    w: bw,
+    h: bh
+  };
+}
+// Recrée les rayons caméra uniquement lorsque la résolution ou le FOV change.
+function preparerRayons360(w, h, focal) {
+  if (
+    rayX360 && buffer360W === w && buffer360H === h && dernierFovRendu === fov
+  ) {
+    return;
+  }
+  var n = w * h;
+  rayX360 = new Float32Array(n);
+  rayY360 = new Float32Array(n);
+  rayZ360 = new Float32Array(n);
+  var cx = w * 0.5;
+  var cy = h * 0.5;
+  var i = 0;
+  var y;
+  var x;
+  for (y = 0; y < h; y++) {
+    var sy = y + 0.5;
+    for (x = 0; x < w; x++) {
+      var sx = x + 0.5;
+      var rx = (sx - cx) / focal;
+      var ry = -(sy - cy) / focal;
+      var rz = 1;
+      var longueur = Math.sqrt(rx * rx + ry * ry + rz * rz);
+      rayX360[i] = rx / longueur;
+      rayY360[i] = ry / longueur;
+      rayZ360[i] = rz / longueur;
+      i++;
+    }
+  }
+  buffer360W = w;
+  buffer360H = h;
+  dernierFovRendu = fov;
+}
+// Prépare le ImageData du buffer.
+function preparerBuffer360(w, h) {
+  if (buffer360.width !== w || buffer360.height !== h) {
+    buffer360.width = w;
+    buffer360.height = h;
+    buffer360ImageData = buffer360Ctx.createImageData(w, h);
+    buffer360Data = buffer360ImageData.data;
+    // Le changement de taille invalide les rayons.
+    buffer360W = 0;
+    buffer360H = 0;
+  }
+  if (!buffer360ImageData) {
+    buffer360ImageData = buffer360Ctx.createImageData(w, h);
+    buffer360Data = buffer360ImageData.data;
+  }
+}
+// Rendu pixel par pixel. C'est la projection inverse : on part de l'écran et on cherche quel pixel de la photo équirectangulaire doit être affiché.
+function dessinerPhoto360() {
+  if (!imageSourceOriginale) return;
+  var taille = obtenirTailleBuffer360();
+  var w = taille.w;
+  var h = taille.h;
+  preparerBuffer360(w, h);
+  var focal = (h * 0.5) / Math.tan(fov * Math.PI / 360);
+  preparerRayons360(w, h, focal);
+  var img = imageSourceOriginale;
+  var iw = img.naturalWidth || img.width;
+  var ih = img.naturalHeight || img.height;
+  // Prépare la texture source une seule fois.
+  if (
+    !texture360SourceCanvas ||
+    texture360SourceCanvas.width !== iw ||
+    texture360SourceCanvas.height !== ih ||
+    texture360SourceImage !== img
+  ) {
+    texture360SourceCanvas = document.createElement("canvas");
+    texture360SourceCanvas.width = iw;
+    texture360SourceCanvas.height = ih;
+    texture360SourceCtx = texture360SourceCanvas.getContext("2d", {
+      willReadFrequently: true
+    });
+    texture360SourceCtx.drawImage(img, 0, 0, iw, ih);
+    texture360SourceImage = img;
+    texture360SourceImageData = texture360SourceCtx.getImageData(0, 0, iw, ih);
+    texture360SourceData = texture360SourceImageData.data;
+  }
+  var src = texture360SourceData;
+  var dst = buffer360Data;
+  var cyaw = Math.cos(yaw);
+  var syaw = Math.sin(yaw);
+  var cpitch = Math.cos(pitch);
+  var spitch = Math.sin(pitch);
+  var iw1 = iw - 1;
+  var ih1 = ih - 1;
+  var INV_2PI = 1 / (Math.PI * 2);
+  var INV_PI = 1 / Math.PI;
+  var i;
+  var p = 0;
+  var n = w * h;
+  for (i = 0; i < n; i++) {
+    var x = rayX360[i];
+    var y = rayY360[i];
+    var z = rayZ360[i];
+    // Pitch
+    var py = y * cpitch - z * spitch;
+    var pz = y * spitch + z * cpitch;
+    // Yaw
+    var wx = x * cyaw + pz * syaw;
+    var wy = py;
+    var wz = -x * syaw + pz * cyaw;
+    // Sphère -> équirectangulaire
+    var longitude = Math.atan2(wx, wz);
+    // atan2 retourne déjà [-PI, PI], donc u est déjà dans [0, 1].
+    var u = longitude * INV_2PI + 0.5;
+    // Protection numérique pour asin()
+    if (wy < -1) wy = -1;
+    else if (wy > 1) wy = 1;
+    var v = 0.5 - Math.asin(wy) * INV_PI;
+    var sx = u * iw1;
+    var sy = v * ih1;
+    // NEAREST NEIGHBOR UNIQUEMENT
+    var ix = (sx + 0.5) | 0;
+    var iy = (sy + 0.5) | 0;
+    var si = (iy * iw + ix) * 4;
+    dst[p++] = src[si];
+    dst[p++] = src[si + 1];
+    dst[p++] = src[si + 2];
+    dst[p++] = 255;
+  }
+  buffer360Ctx.putImageData(buffer360ImageData, 0, 0);
+  // Le buffer basse résolution est agrandi avec le lissage Canvas.
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(buffer360, 0, 0, canvas.width, canvas.height);
+}
+/* TEXTURE 360° */
+var texture360SourceCanvas = null;
+var texture360SourceCtx = null;
+var texture360SourceImage = null;
+var texture360SourceImageData = null;
+var texture360SourceData = null;
+function definirTexture360(image) {
+  imageSourceOriginale = image;
+  texture360SourceCanvas = null;
+  texture360SourceCtx = null;
+  texture360SourceImage = null;
+  texture360SourceImageData = null;
+  texture360SourceData = null;
+  buffer360W = 0;
+  buffer360H = 0;
+  dernierFovRendu = -1;
+  sale = true;
+}
+/* FIN DU RENDU 360° */
+/* REDIMENSIONNEMENT */
+function interactionActive360() {
+  return (saisie || vitesseX !== 0 || vitesseY !== 0 || autoRotation || interactionTemporaire360);
+}
+function activerInteractionTemporaire360() {
+  interactionTemporaire360 = true;
+  if (timerInteraction360 !== null) {
+    clearTimeout(timerInteraction360);
+  }
+  timerInteraction360 = setTimeout(function() {
+    interactionTemporaire360 = false;
+    timerInteraction360 = null;
+    sale = true;
+  }, DUREE_INTERACTION360);
+  sale = true;
+}
+function redimensionner() {
+  // Plafond volontairement plus bas.
+  var dpr = window.devicePixelRatio || 1;
+  dpr = Math.min(dpr, 1.25);
+  var w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+  var h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+  if (
+    canvas.width !== w || canvas.height !== h
+  ) {
+    canvas.width = w;
+    canvas.height = h;
+    sale = true;
+    return true;
+  }
+  return false;
+}
+/* Chargement automatique : ?file=... dans l'URL est prioritaire sur PHOTO_DEMARRAGE. */
+var photoDemarrage = PHOTO_DEMARRAGE;
+try {
+  var m = window.location.search.match(/[?&]file=([^&]+)/);
+  if (m) {
+    photoDemarrage = decodeURIComponent(m[1]);
+  }
+} catch (e) {}
+if (photoDemarrage) {
+  chargerPhoto(photoDemarrage);
+}
+/* BOUCLE */
+var dernierTemps = 0;
+var dernierFovAffiche = -1;
+function boucle(ts) {
+  var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
+  dernierTemps = ts;
+  // Évite les énormes sauts après changement d'onglet ou mise en veille.
+  if (dt > 0.1) {
+    dt = 0.1;
+  }
+  var interactionAvant = interactionActive360();
+  // INERTIE
+  if (!saisie) {
+    if (vitesseX !== 0 || vitesseY !== 0) {
+      yaw += vitesseX;
+      pitch = bornerPitch(pitch + vitesseY);
+      var amortissement = Math.pow(0.05, dt);
+      vitesseX *= amortissement;
+      vitesseY *= amortissement;
+      if (Math.abs(vitesseX) < 0.00005) {
+        vitesseX = 0;
+      }
+      if (Math.abs(vitesseY) < 0.00005) {
+        vitesseY = 0;
+      }
+      sale = true;
+    }
+  }
+  // ROTATION AUTOMATIQUE
+  if (autoRotation && !saisie) {
+    yaw += 0.15 * dt;
+    sale = true;
+  }
+  // Si l'interaction vient de se terminer, on force un rendu pleine résolution.
+  var interactionApres = interactionActive360();
+  if (interactionAvant && !interactionApres) {
+    sale = true;
+  }
+  // TOUCHES / BOUTONS
+  var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
+  var my = (touches.haut ? 0 : 1) - (touches.bas ? 0 : 1);
+  if (mx !== 0 || my !== 0) {
+    var pas = 1.3 * (fov / 75);
+    var longueur = Math.sqrt(mx * mx + my * my);
+    yaw += (mx / longueur) * pas * dt;
+    pitch = bornerPitch(pitch + (my / longueur) * pas * dt);
+    sale = true;
+  }
+  pitch = bornerPitch(pitch);
+  // REDIMENSIONNEMENT
+  redimensionner();
+  // RENDU
+  if (sale && imageSourceOriginale) {
+    dessinerPhoto360();
+    sale = false;
+  }
+  // UI FOV. On ne modifie le DOM que si la valeur affichée a réellement changé.
+  var fovEntier = Math.round(fov);
+  if (
+    fovEntier !== dernierFovAffiche
+  ) {
+    dernierFovAffiche = fovEntier;
+    fovAff.textContent = fovEntier + "°";
+    if (
+      parseInt(fovSlider.value, 10) !== fovEntier
+    ) {
+      fovSlider.value = fovEntier;
+    }
+  }
+  requestFrame(boucle);
+}
+/* INITIALISATION */
+
+/* TEXTURE DE DÉMONSTRATION */
+function textureDemonstration() {
+  var c = document.createElement("canvas");
+  c.width = 2048;
+  c.height = 1024;
+  var g = c.getContext("2d");
+  // CIEL
+  var ciel = g.createLinearGradient(0, 0, 0, 512);
+  ciel.addColorStop(0, "#0b1e4d");
+  ciel.addColorStop(0.45, "#3f6fb5");
+  ciel.addColorStop(0.90, "#a8cbe8");
+  ciel.addColorStop(1, "#dfeaf2");
+  g.fillStyle = ciel;
+  g.fillRect(0, 0, 2048, 512);
+  // SOLEIL
+  var soleil = g.createRadialGradient(1550, 170, 10, 1550, 170, 120);
+  soleil.addColorStop(0, "rgba(255,244,200,1)");
+  soleil.addColorStop(1, "rgba(255,244,200,0)");
+  g.fillStyle = soleil;
+  g.fillRect(1400, 20, 300, 300);
+  // SOL
+  var sol = g.createLinearGradient(0, 512, 0, 1024);
+  sol.addColorStop(0, "#8fae6a");
+  sol.addColorStop(0.25, "#5f8b46");
+  sol.addColorStop(1, "#2e4a26");
+  g.fillStyle = sol;
+  g.fillRect(0, 512, 2048, 512);
+  // GRILLE LONGITUDE
+  var i;
+  g.strokeStyle = "rgba(255,255,255,0.28)";
+  g.lineWidth = 2;
+  for (
+    i = 0;
+    i <= 24;
+    i++
+  ) {
+    var x = Math.round(i * 2048 / 24);
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.lineTo(x, 1024);
+    g.stroke();
+  }
+  // GRILLE LATITUDE
+  for (
+    i = 1;
+    i < 12;
+    i++
+  ) {
+    var y = Math.round(i * 1024 / 12);
+    g.beginPath();
+    g.moveTo(0, y);
+    g.lineTo(2048, y);
+    g.stroke();
+  }
+  // ÉQUATEUR
+  g.strokeStyle = "rgba(255,255,255,0.55)";
+  g.beginPath();
+  g.moveTo(0, 512);
+  g.lineTo(2048, 512);
+  g.stroke();
+  // MÉRIDIEN CENTRAL
+  g.beginPath();
+  g.moveTo(1024, 0);
+  g.lineTo(1024, 1024);
+  g.stroke();
+  // POINTS CARDINAUX
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  var card = [
+    { l: "N", x: 1024 },
+    { l: "E", x: 1536 },
+    { l: "S", x: 2048 },
+    { l: "S", x: 0 },
+    { l: "O", x: 512 }
+  ];
+  for (
+    i = 0;
+    i < card.length;
+    i++
+  ) {
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    g.font = "bold 90px 'Segoe UI', sans-serif";
+    g.fillText(card[i].l, card[i].x, 300);
+    g.beginPath();
+    g.arc(card[i].x, 300, 60, 0, Math.PI * 2);
+    g.strokeStyle = "rgba(255,255,255,0.8)";
+    g.lineWidth = 4;
+    g.stroke();
+  }
+  // TEXTE DE TEST
+  g.font = "bold 48px 'Segoe UI', sans-serif";
+  g.fillStyle = "rgba(255,255,255,0.85)";
+  g.fillText("← Test de texture 360° →", 1024, 860);
+  return c;
+}
+/* CHARGEMENT IMAGE */
+function chargerFichier(f) {
+  if (!f) {
+    return;
+  }
+  var lecteur = new FileReader();
+  lecteur.onload =
+    function(e) {
+      var img =
+        new Image();
+      img.onload =
+        function() {
+          definirTexture360(img);
+          nomFichierActuel = f.name;
+          statut.textContent = f.name + " - " + img.naturalWidth + "x" + img.naturalHeight;
+          masquerErreur();
+          yaw = 0;
+          pitch = 0;
+          vitesseX = 0;
+          vitesseY = 0;
+          sale = true;
+        };
+      img.onerror =
+        function() {
+          afficherErreur("Impossible de décoder cette image.");
+        };
+      img.src = e.target.result;
+    };
+  lecteur.onerror =
+    function() {
+      afficherErreur("Lecture du fichier impossible.");
+    };
+  lecteur.readAsDataURL(f);
+}
+/* CHARGEMENT D'UNE PHOTO PAR CHEMIN (fichier servi par le site) */
+function chargerPhoto(src) {
+  statut.textContent = "Chargement de " + src + "...";
+  var img = new Image();
+  img.onload = function() {
+    definirTexture360(img);
+    nomFichierActuel = src;
+    statut.textContent = src + " - " + img.naturalWidth + "x" + img.naturalHeight;
+    masquerErreur();
+    yaw = 0;
+    pitch = 0;
+    vitesseX = 0;
+    vitesseY = 0;
+    sale = true;
+  };
+  img.onerror = function() {
+    afficherErreur("Impossible de charger : " + src);
+    statut.textContent = "Texture de démonstration";
+  };
+  img.src = src;
+}
+/* INTERACTION SOURIS */
+var dernierX = 0;
+var dernierY = 0;
+var pincement = null;
+function commencer(x, y) {
+  saisie = true;
+  dernierX = x;
+  dernierY = y;
+  vitesseX = 0;
+  vitesseY = 0;
+  canvas.className = "saisie";
+  // On passe immédiatement en qualité d'interaction.
+  sale = true;
+}
+function deplacer(x, y) {
+  var dx = x - dernierX;
+  var dy = y - dernierY;
+  dernierX = x;
+  dernierY = y;
+  var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
+  yaw -= dx * k;
+  pitch = bornerPitch(pitch - dy * k);
+  vitesseX = -dx * k;
+  vitesseY = -dy * k;
+  sale = true;
+}
+function terminer() {
+  saisie = false;
+  canvas.className = "";
+  sale = true;
+}
+/* SOURIS */
+canvas.addEventListener("mousedown",
+  function(e) {
+    e.preventDefault();
+    commencer(e.clientX, e.clientY);
+  },
+  false
+);
+window.addEventListener("mousemove",
+  function(e) {
+    if (saisie) {
+      deplacer(e.clientX, e.clientY);
+    }
+  },
+  false
+);
+window.addEventListener("mouseup", terminer, false);
+/* TACTILE */
+canvas.addEventListener("touchstart",
+  function(e) {
+    if (
+      e.touches.length === 1
+    ) {
+      commencer(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (
+      e.touches.length === 2
+    ) {
+      pincement = distanceTouches(e.touches);
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
+  }
+);
+canvas.addEventListener("touchmove",
+  function(e) {
+    if (e.touches.length === 1 && saisie) {
+      deplacer(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2 && pincement !== null) {
+      var d = distanceTouches(e.touches);
+      if (d > 0) {
+        fov = fov * (pincement / d);
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        pincement = d;
+        sale = true;
+      }
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
+  }
+);
+canvas.addEventListener("touchend",
+  function(e) {
+    if (e.touches.length === 0) {
+      terminer();
+      pincement = null;
+    } else if (e.touches.length === 1) {
+      saisie = false;
+      commencer(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    e.preventDefault();
+  },
+  {
+    passive:false
+  }
+);
+function distanceTouches(t) {
+  var dx = t[0].clientX - t[1].clientX;
+  var dy = t[0].clientY - t[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+/* MOLETTE */
+function molette(e) {
+  var d = e.deltaY || e.wheelDelta || 0;
+  if (d > 0) {
+    fov += 5;
+  } else if (d < 0) {
+    fov -= 5;
+  }
+  fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+  activerInteractionTemporaire360();
+  sale = true;
+  e.preventDefault();
+}
+canvas.addEventListener("wheel", molette,
+  {
+    passive:false
+  }
+);
+/* CLAVIER */
+window.addEventListener("keydown",
+  function(e) {
+    // Ctrl + / Ctrl -
+    if (e.ctrlKey) {
+      if (
+        e.key === "+" || e.key === "="
+      ) {
+        fov -= 5;
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        activerInteractionTemporaire360();
+        sale = true;
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "-" || e.key === "_") {
+        fov += 5;
+        fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+        activerInteractionTemporaire360();
+        sale = true;
+        e.preventDefault();
+        return;
+      }
+    }
+    // Flèches
+    if (e.keyCode === 37) {
+      touches.gauche = true;
+      activerInteractionTemporaire360();
+    } else if (e.keyCode === 39) {
+      touches.droite = true;
+      activerInteractionTemporaire360();
+    } else if (e.keyCode === 38) {
+      touches.haut = true;
+      activerInteractionTemporaire360();
+    } else if (e.keyCode === 40) {
+      touches.bas = true;
+      activerInteractionTemporaire360();
+    } else {
+      return;
+    }
+    e.preventDefault();
+  },
+  false
+);
+window.addEventListener("keyup",
+  function(e) {
+    if (e.keyCode === 37) {
+      touches.gauche = false;
+    } else if (e.keyCode === 39) {
+      touches.droite = false;
+    } else if (e.keyCode === 38) {
+      touches.haut = false;
+    } else if (e.keyCode === 40) {
+      touches.bas = false;
+    }
+  },
+  false
+);
+/* FOV */
+fovSlider.addEventListener("input",
+  function() {
+    fov = parseInt(fovSlider.value, 10) || 75;
+    fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
+    activerInteractionTemporaire360();
+    sale = true;
+  },
+  false
+);
+/* QUALITÉ DE RENDU (pixels max du buffer) */
+var CLE_STOCKAGE_RENDU = "photo360QualiteRendu";
+var RENDU_DEFAUTS = {
+  interaction: 125000,
+  inertie: 250000,
+  repos: 700000
+};
+/* Initialisation à partir de RENDU_DEFAUTS : source unique. */
+var RENDU_INTERACTION_MAX_PIXELS = RENDU_DEFAUTS.interaction;
+var RENDU_INERTIE_MAX_PIXELS = RENDU_DEFAUTS.inertie;
+var RENDU_REPOS_MAX_PIXELS = RENDU_DEFAUTS.repos;
+function appliquerQualiteRendu(interaction, inertie, repos) {
+  RENDU_INTERACTION_MAX_PIXELS = interaction;
+  RENDU_INERTIE_MAX_PIXELS = inertie;
+  RENDU_REPOS_MAX_PIXELS = repos;
+  renduInteractionInput.value = interaction;
+  renduInertieInput.value = inertie;
+  renduReposInput.value = repos;
+  // Le changement de taille du buffer est géré automatiquement par preparerBuffer360 / preparerRayons360 au prochain rendu.
+  sale = true;
+}
+function sauvegarderQualiteRendu() {
+  try {
+    localStorage.setItem(
+      CLE_STOCKAGE_RENDU,
+      JSON.stringify({
+        interaction: RENDU_INTERACTION_MAX_PIXELS,
+        inertie: RENDU_INERTIE_MAX_PIXELS,
+        repos: RENDU_REPOS_MAX_PIXELS
+      })
+    );
+  } catch (e) {
+    // localStorage indisponible (navigation privée, etc.) : on ignore.
+  }
+}
+function chargerQualiteRendu() {
+  try {
+    var brut = localStorage.getItem(CLE_STOCKAGE_RENDU);
+    if (!brut) {
+      return;
+    }
+    var o = JSON.parse(brut);
+    appliquerQualiteRendu(
+      Math.max(1000, parseInt(o.interaction, 10) || RENDU_DEFAUTS.interaction),
+      Math.max(1000, parseInt(o.inertie, 10) || RENDU_DEFAUTS.inertie),
+      Math.max(1000, parseInt(o.repos, 10) || RENDU_DEFAUTS.repos)
+    );
+  } catch (e) {
+    // Valeur corrompue : on garde les défauts.
+  }
+}
+function resetQualiteRendu() {
+  appliquerQualiteRendu(
+    RENDU_DEFAUTS.interaction,
+    RENDU_DEFAUTS.inertie,
+    RENDU_DEFAUTS.repos
+  );
+  sauvegarderQualiteRendu();
+}
+function lierEntreeRendu(input, appliquer) {
+  function maj() {
+    var v = parseInt(input.value, 10);
+    if (isNaN(v) || v < 1000) {
+      v = 1000;
+    }
+    appliquer(v);
+    // Sauvegarde à la validation du champ (pas à chaque frappe).
+    sauvegarderQualiteRendu();
+    sale = true;
+  }
+  // "change" se déclenche à la sortie du champ (ou clic sur les flèches du spinner),
+  // contrairement à "input" qui se déclenche à chaque frappe.
+  input.addEventListener("change", maj, false);
+  // Entrée = validation immédiate : le blur déclenche le "change".
+  input.addEventListener("keydown",
+    function(e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        input.blur();
+      }
+    },
+    false
+  );
+}
+lierEntreeRendu(renduInteractionInput, function(v) {
+  RENDU_INTERACTION_MAX_PIXELS = v;
+});
+lierEntreeRendu(renduInertieInput, function(v) {
+  RENDU_INERTIE_MAX_PIXELS = v;
+});
+lierEntreeRendu(renduReposInput, function(v) {
+  RENDU_REPOS_MAX_PIXELS = v;
+});
+/* BOUTONS DIRECTIONNELS */
+function boutonMaintenir(btn, cle) {
+  function activer() {
+    touches[cle] = true;
+    activerInteractionTemporaire360();
+  }
+  function relacher() {
+    touches[cle] = false;
+  }
+  btn.addEventListener("mousedown", activer, false);
+  btn.addEventListener("touchstart",
+    function(e) {
+      e.preventDefault();
+      activer();
+    },
+    {
+      passive:false
+    }
+  );
+  btn.addEventListener("mouseleave", relacher, false);
+  window.addEventListener("mouseup", relacher, false);
+  window.addEventListener("touchend", relacher, false);
+  window.addEventListener("touchcancel", relacher, false);
+}
+boutonMaintenir(btnGauche, "gauche");
+boutonMaintenir(btnDroite, "droite");
+boutonMaintenir(btnHaut, "haut");
+boutonMaintenir(btnBas, "bas");
+/* FICHIER */
+fileinput.addEventListener("change",
+  function() {
+    if (fileinput.files && fileinput.files[0]) {
+      chargerFichier(fileinput.files[0]);
+    }
+    fileinput.value = "";
+  },
+  false
+);
+/* DRAG & DROP */
+window.addEventListener("dragover",
+  function(e) {
+    e.preventDefault();
+    depot.className = "actif";
+  },
+  false
+);
+window.addEventListener("dragleave",
+  function() {
+    depot.className = "";
+  }, false);
+window.addEventListener("drop",
+  function(e) {
+    e.preventDefault();
+    depot.className = "";
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      chargerFichier(e.dataTransfer.files[0]);
+    }
+  },
+  false
+);
+/* BOUTONS */
+function toggleAutoRotation() {
+  autoRotation = !autoRotation;
+  btnRot.className = autoRotation ? "active" : "";
+  sale = true;
+}
+function resetPhoto360() {
+  yaw = 0;
+  pitch = 0;
+  fov = 75;
+  vitesseX = 0;
+  vitesseY = 0;
+  sale = true;
+}
+/* ERREURS */
+function afficherErreur(msg) {
+  erreur.textContent = msg;
+  erreur.style.display = "block";
+  if (
+    typeof erreur._timer !== "undefined"
+  ) {
+    clearTimeout(erreur._timer);
+  }
+  erreur._timer =
+    setTimeout(
+      function() {
+        masquerErreur();
+      },
+      5000
+    );
+}
+function masquerErreur() {
+  erreur.style.display = "none";
+}
+/* DÉMARRAGE */
+var demo = textureDemonstration();
+definirTexture360(demo);
+statut.textContent = "Texture de démonstration - " + demo.width + "x" + demo.height;
+// Restaure la dernière qualité de rendu sauvegardée (si présente).
+chargerQualiteRendu();
+redimensionner();
+var requestFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame ||
+  function (callback) {
+    return window.setTimeout(function () {
+      callback(new Date().getTime());
+    }, 16);
+  };
+requestFrame(boucle);
+</script>
+</body>
+</html>
