@@ -15,7 +15,7 @@ pre.tree{padding:5px;}
 </style>
 </head>
 <body>
-<p>Dossiers : 3, Fichiers : 44</p>
+<p>Dossiers : 3, Fichiers : 46</p>
 <pre class="tree">
 <span class="folder">outils/</span>
 <span class="ascii">├── </span><span class="folder">extensions/</span>
@@ -48,6 +48,7 @@ pre.tree{padding:5px;}
 <span class="ascii">├── </span><a class="file" href="index.html">index.html</a><a class="file" href="index.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="LICENSE">LICENSE</a><a class="file" href="LICENSE" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="make-arbo.py">make-arbo.py</a><a class="file" href="make-arbo.py" download> [↓] </a>
+<span class="ascii">├── </span><a class="file" href="make-photo360.js.py">make-photo360.js.py</a><a class="file" href="make-photo360.js.py" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="make-search-index.html">make-search-index.html</a><a class="file" href="make-search-index.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="make-search-index.py">make-search-index.py</a><a class="file" href="make-search-index.py" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="markdown.html">markdown.html</a><a class="file" href="markdown.html" download> [↓] </a>
@@ -55,6 +56,7 @@ pre.tree{padding:5px;}
 <span class="ascii">├── </span><a class="file" href="organigramme-html.html">organigramme-html.html</a><a class="file" href="organigramme-html.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="outils.css">outils.css</a><a class="file" href="outils.css" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="outils.js">outils.js</a><a class="file" href="outils.js" download> [↓] </a>
+<span class="ascii">├── </span><a class="file" href="photo360.css">photo360.css</a><a class="file" href="photo360.css" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="popup.js">popup.js</a><a class="file" href="popup.js" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="qr-code.html">qr-code.html</a><a class="file" href="qr-code.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="remplacer-texte.html">remplacer-texte.html</a><a class="file" href="remplacer-texte.html" download> [↓] </a>
@@ -63,8 +65,8 @@ pre.tree{padding:5px;}
 <span class="ascii">├── </span><a class="file" href="tableau-csv.html">tableau-csv.html</a><a class="file" href="tableau-csv.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="tableau-html.html">tableau-html.html</a><a class="file" href="tableau-html.html" download> [↓] </a>
 <span class="ascii">├── </span><a class="file" href="tester-polices.html">tester-polices.html</a><a class="file" href="tester-polices.html" download> [↓] </a>
-<span class="ascii">├── </span><a class="file" href="visionneuse-photo-360-sans-webgl.html">visionneuse-photo-360-sans-webgl.html</a><a class="file" href="visionneuse-photo-360-sans-webgl.html" download> [↓] </a>
-<span class="ascii">└── </span><a class="file" href="visionneuse-photo-360-webgl.html">visionneuse-photo-360-webgl.html</a><a class="file" href="visionneuse-photo-360-webgl.html" download> [↓] </a>
+<span class="ascii">├── </span><a class="file" href="visionneuse-photo360-sans-webgl.html">visionneuse-photo360-sans-webgl.html</a><a class="file" href="visionneuse-photo360-sans-webgl.html" download> [↓] </a>
+<span class="ascii">└── </span><a class="file" href="visionneuse-photo360-webgl.html">visionneuse-photo360-webgl.html</a><a class="file" href="visionneuse-photo360-webgl.html" download> [↓] </a>
 </pre>
 <button id="copyarbo" style="background:#000;color:#ccc;border:none;cursor:pointer;">[Copier]</button>
 <br><textarea wrap="off" id="arbo" style="width:100%;height:200px;box-sizing:border-box;background:#000;color:#ccc;border:2px groove #888;font-family:monospace;">
@@ -99,6 +101,7 @@ outils/
 ├── index.html
 ├── LICENSE
 ├── make-arbo.py
+├── make-photo360.js.py
 ├── make-search-index.html
 ├── make-search-index.py
 ├── markdown.html
@@ -106,6 +109,7 @@ outils/
 ├── organigramme-html.html
 ├── outils.css
 ├── outils.js
+├── photo360.css
 ├── popup.js
 ├── qr-code.html
 ├── remplacer-texte.html
@@ -114,8 +118,8 @@ outils/
 ├── tableau-csv.html
 ├── tableau-html.html
 ├── tester-polices.html
-├── visionneuse-photo-360-sans-webgl.html
-└── visionneuse-photo-360-webgl.html
+├── visionneuse-photo360-sans-webgl.html
+└── visionneuse-photo360-webgl.html
 </textarea>
 <script>function copyFrom(id,btn){var code=document.getElementById(id);var temp=document.createElement("textarea");temp.value=code.value;document.body.appendChild(temp);temp.select();try{document.execCommand("copy");}catch(err){}document.body.removeChild(temp);btn.focus();}document.getElementById("copyarbo").onclick=function(e){copyFrom("arbo",e.target);};</script>
 </body>
