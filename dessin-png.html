@@ -915,12 +915,37 @@ drawingFile.onchange = function() {
     };
     reader.readAsDataURL(file);
 };
-// IMPORTER UNE IMAGE DEPUIS L'URL : site.html?file=image.png
+// IMPORTER UN DESSIN DEPUIS L'URL
+// Exemple : dessin.html?file=image.png&resolution=200x200
 var imageURL = null;
-var match = window.location.search.match(/[?&]file=([^&]+)/);
-if (match) {
-    imageURL = decodeURIComponent(match[1]);
+var resolutionURL = null;
+// Paramètre file
+var matchFile = window.location.search.match(/[?&]file=([^&]+)/);
+if (matchFile) {
+    imageURL = decodeURIComponent(matchFile[1]);
 }
+// Paramètre resolution
+var matchResolution = window.location.search.match(/[?&]resolution=([0-9]+)x([0-9]+)/);
+if (matchResolution) {
+    resolutionURL = {
+        width: parseInt(matchResolution[1], 10),
+        height: parseInt(matchResolution[2], 10)
+    };
+}
+// Appliquer la résolution avant de charger l'image
+if (resolutionURL) {
+    if (
+        resolutionURL.width > 0 &&
+        resolutionURL.height > 0
+    ) {
+        canvas.width = resolutionURL.width;
+        canvas.height = resolutionURL.height;
+        canvasWidthInput.value = resolutionURL.width;
+        canvasHeightInput.value = resolutionURL.height;
+        applyZoom();
+    }
+}
+// Charger l'image
 if (imageURL) {
     importImage(imageURL);
 }
