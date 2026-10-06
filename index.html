@@ -473,6 +473,7 @@ Inverser De et Vers
 <script>
 function sansAccents(str) {
     return str
+        .replace(/[_]/g, " ")
         .replace(/[àáâãäå]/g, "a")
         .replace(/[ç]/g, "c")
         .replace(/[èéêë]/g, "e")
