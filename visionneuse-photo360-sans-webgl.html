@@ -992,18 +992,7 @@ function lierEntreeRendu(input, appliquer) {
     sauvegarderQualiteRendu();
     sale = true;
   }
-  // "change" se déclenche à la sortie du champ (ou clic sur les flèches du spinner),
-  // contrairement à "input" qui se déclenche à chaque frappe.
   input.addEventListener("change", maj, false);
-  // Entrée = validation immédiate : le blur déclenche le "change".
-  input.addEventListener("keydown",
-    function(e) {
-      if (e.key === "Enter" || e.keyCode === 13) {
-        input.blur();
-      }
-    },
-    false
-  );
 }
 lierEntreeRendu(renduInteractionInput, function(v) {
   RENDU_INTERACTION_MAX_PIXELS = v;
