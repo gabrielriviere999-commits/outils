@@ -175,6 +175,18 @@ function obtenirTailleBuffer360() {
   } else {
     maxPixels = RENDU_REPOS_MAX_PIXELS;
   }
+  // Plafond : l'image ne peut pas offrir plus de détails que sa propre résolution dans l'angle visible. Au-delà, on calcule des pixels identiques pour rien.
+  var img = imageSourceOriginale;
+  if (img) {
+    var iw = img.naturalWidth || img.width;
+    var ih = img.naturalHeight || img.height;
+    // Nombre de pixels image visibles ≈ (iw * fovH/360) * (ih * fovV/180).
+    var fovH = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * aspect) * 180 / Math.PI;
+    var utile = (iw * fovH / 360) * (ih * fov / 180);
+    if (utile < maxPixels) {
+      maxPixels = Math.max(1, utile);
+    }
+  }
   var bh = Math.round(Math.sqrt(maxPixels / aspect));
   var bw = Math.round(bh * aspect);
   bw = Math.min(bw, w);
@@ -308,8 +320,8 @@ function dessinerPhoto360() {
     dst[p++] = 255;
   }
   buffer360Ctx.putImageData(buffer360ImageData, 0, 0);
-  // Le buffer basse résolution est agrandi avec le lissage Canvas.
-  ctx.imageSmoothingEnabled = true;
+  // Pixels purs : l'agrandissement du buffer se fait sans lissage.
+  ctx.imageSmoothingEnabled = false;
   ctx.drawImage(buffer360, 0, 0, canvas.width, canvas.height);
 }
 /* TEXTURE 360° */
