@@ -171,7 +171,12 @@ var pasteZones = [
     { pastezone: "pastefileinput", fileinput: "fileinput" },
     { pastezone: "pastedrawingFile", fileinput: "drawingFile" },
     { pastezone: "pasteimageFile", fileinput: "imageFile" },
-    { pastezone: "pasteimgLoader", fileinput: "imgLoader" }
+    { pastezone: "pastefileNorth", fileinput: "fileNorth" },
+    { pastezone: "pastefileEast", fileinput: "fileEast" },
+    { pastezone: "pastefileSouth", fileinput: "fileSouth" },
+    { pastezone: "pastefileWest", fileinput: "fileWest" },
+    { pastezone: "pastefileTop", fileinput: "fileTop" },
+    { pastezone: "pastefileBottom", fileinput: "fileBottom" }
 ];
 pasteZones.forEach(function (item) {
     var pastezone = document.getElementById(item.pastezone);
