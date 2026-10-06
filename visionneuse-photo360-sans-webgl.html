@@ -95,13 +95,6 @@ var btnBas = document.getElementById("btnBas");
 var renduInteractionInput = document.getElementById("renduInteractionInput");
 var renduInertieInput = document.getElementById("renduInertieInput");
 var renduReposInput = document.getElementById("renduReposInput");
-/* TEMPS */
-function maintenant() {
-  if (window.performance && typeof window.performance.now === "function") {
-    return window.performance.now();
-  }
-  return new Date().getTime();
-}
 /* CAMÉRA */
 var yaw = 0;
 var pitch = 0;
@@ -123,7 +116,6 @@ var touches = {
 };
 /* IMAGE */
 var imageSourceOriginale = null;
-var nomFichierActuel = "";
 /* RENDU 360° EN CANVAS 2D, SANS WEBGL ET SANS TRIANGLES.
  * La photo est une équirectangulaire 2:1.
  * Pour chaque pixel du petit buffer de rendu :
@@ -160,16 +152,14 @@ function obtenirTailleBuffer360() {
   var h = Math.max(1, canvas.height);
   var aspect = w / h;
   var maxPixels;
-  if (saisie || interactionTemporaire360) {
+  // Flèches (clavier ET boutons) : mouvement volontaire et contrôlé, on lui donne le budget d'interaction, pas celui d'inertie.
+  if (
+    saisie || interactionTemporaire360 || touches.gauche || touches.droite || touches.haut || touches.bas
+  ) {
     maxPixels = RENDU_INTERACTION_MAX_PIXELS;
   } else if (
-    vitesseX !== 0 ||
-    vitesseY !== 0 ||
-    autoRotation ||
-    touches.gauche ||
-    touches.droite ||
-    touches.haut ||
-    touches.bas
+    vitesseX !== 0 || vitesseY !== 0 ||
+    autoRotation
   ) {
     maxPixels = RENDU_INERTIE_MAX_PIXELS;
   } else {
@@ -385,6 +375,7 @@ try {
 /* BOUCLE */
 var dernierTemps = 0;
 var dernierFovAffiche = -1;
+var flechesActivesAvant360 = false;
 function boucle(ts) {
   var dt = dernierTemps ? (ts - dernierTemps) / 1000 : 0;
   dernierTemps = ts;
@@ -420,6 +411,12 @@ function boucle(ts) {
   if (interactionAvant && !interactionApres) {
     sale = true;
   }
+  // On compare l'état des touches d'une frame à l'autre : dès qu'elles retombent toutes à false, on force le rendu de repos.
+  var flechesActives = touches.gauche || touches.droite || touches.haut || touches.bas;
+  if (flechesActivesAvant360 && !flechesActives) {
+    sale = true;
+  }
+  flechesActivesAvant360 = flechesActives;
   // TOUCHES / BOUTONS
   var mx = (touches.droite ? 1 : 0) - (touches.gauche ? 1 : 0);
   var my = (touches.haut ? 0 : 1) - (touches.bas ? 0 : 1);
@@ -700,7 +697,6 @@ function chargerFichier(f) {
       img.onload =
         function() {
           definirTexture360(img);
-          nomFichierActuel = f.name;
           statut.textContent = f.name + " - " + img.naturalWidth + "x" + img.naturalHeight;
           masquerErreur();
           yaw = 0;
@@ -728,7 +724,6 @@ function chargerPhoto(src) {
   var img = new Image();
   img.onload = function() {
     definirTexture360(img);
-    nomFichierActuel = src;
     statut.textContent = src + " - " + img.naturalWidth + "x" + img.naturalHeight;
     masquerErreur();
     yaw = 0;
@@ -920,6 +915,36 @@ window.addEventListener("keyup",
       touches.haut = false;
     } else if (e.keyCode === 40) {
       touches.bas = false;
+    }
+  },
+  false
+);
+/* Perte de focus : le keyup d'une flèche maintenue ne nous parvient jamais (alt-tab, popup, mise en veille). On remet tout à zéro. */
+window.addEventListener("blur",
+  function() {
+    saisie = false;
+    touches.gauche = false;
+    touches.droite = false;
+    touches.haut = false;
+    touches.bas = false;
+    vitesseX = 0;
+    vitesseY = 0;
+    canvas.className = "";
+    sale = true;
+  },
+  false
+);
+document.addEventListener("visibilitychange",
+  function() {
+    if (document.hidden) {
+      touches.gauche = false;
+      touches.droite = false;
+      touches.haut = false;
+      touches.bas = false;
+      saisie = false;
+      vitesseX = 0;
+      vitesseY = 0;
+      sale = true;
     }
   },
   false

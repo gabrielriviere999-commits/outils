@@ -534,7 +534,6 @@ function chargerGpsUrl(src) {
   } catch (e) {}
 }
 var imageSourceOriginale = null;
-var nomFichierActuel = "";
 function chargerFichier(f) {
   chargerGpsFichier(f);
   var lecteur = new FileReader();
@@ -542,7 +541,6 @@ function chargerFichier(f) {
     var img = new Image();
     img.onload = function () {
       imageSourceOriginale = img;
-      nomFichierActuel = f.name;
       chargerTexture(img, f.name);
       masquerErreur();
     };
@@ -566,7 +564,6 @@ function chargerPhoto(src) {
       return;
     }
     imageSourceOriginale = img;
-    nomFichierActuel = src;
     chargerTexture(img, src); /* envoie au GPU (tuiles, réduction) + statut */
     masquerErreur();
     yaw = 0;
