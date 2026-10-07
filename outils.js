@@ -77,7 +77,6 @@ function setupDragDrop(textareaId) {
 }
 setupDragDrop("input");
 setupDragDrop("output");
-setupDragDrop("text");
 setupDragDrop("textA");
 setupDragDrop("textB");
 setupDragDrop("view");
