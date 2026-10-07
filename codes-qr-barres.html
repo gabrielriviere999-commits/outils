@@ -202,6 +202,17 @@ function generateSVG_QR(qrObj) {
     svg += '</svg>';
     return svg;
 }
+/* Affiche le code dans un <img> (data URL) pour que le clic droit
+   du navigateur propose "Enregistrer l'image sous…" / "Copier l'image" */
+function showAsImage(dataUrl) {
+  var img = document.createElement("img");
+  img.src = dataUrl;
+  img.alt = "Code généré";
+  img.style.display = "block";
+  img.style.maxWidth = "100%";
+  codeDiv.innerHTML = "";
+  codeDiv.appendChild(img);
+}
 function generateCode() {
   var value = input.value.trim();
   codeDiv.innerHTML = "";
@@ -215,8 +226,9 @@ function generateCode() {
     qr = qrcode(0, 'H');
     qr.addData(value, 'Byte');
     qr.make();
-    codeDiv.innerHTML = generateSVG_QR(qr);
-    currentSvg = codeDiv.querySelector("svg");
+    var svgStr = generateSVG_QR(qr);
+    // Affichage en <img> : le clic droit du navigateur fonctionne
+    showAsImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr));
     return;
   }
   // Vérifications checksum pour les formats numériques
@@ -262,6 +274,8 @@ function generateCode() {
   }
   codeDiv.appendChild(svg);
   currentSvg = svg;
+  // Affichage en <img> (PNG depuis le canvas) : clic droit → "Enregistrer l'image sous…"
+  showAsImage(document.getElementById("barcodeCanvas").toDataURL("image/png"));
 }
 document.getElementById("codeFormat").onchange = generateCode;
 /* EXPORT PNG / JPG / SVG */
@@ -314,7 +328,13 @@ document.getElementById("export-jpg").onclick = function () {
 };
 document.getElementById("export-svg").onclick = function () {
   var format = document.getElementById("codeFormat").value;
-  var svg = currentSvg || codeDiv.querySelector("svg");
+  var svg;
+  if (format === "QR") {
+    if (!qr) return;
+    svg = { outerHTML: generateSVG_QR(qr) };
+  } else {
+    svg = currentSvg || codeDiv.querySelector("svg");
+  }
   if (!svg) return;
   var blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
   var url = URL.createObjectURL(blob);
@@ -341,10 +361,19 @@ function decodeFromCanvas() {
   tempImg.onerror = function () {
     decodeFile.innerText = "Impossible de préparer l'image.";
   };
-  tempImg.src = canvasFile.toDataURL("image/png");
+  try {
+    tempImg.src = canvasFile.toDataURL("image/png");
+  } catch (e) {
+    // Canvas contaminé (image d'une autre origine sans en-têtes CORS)
+    decodeFile.innerText = "Erreur : image d'une autre origine (CORS), lecture du canvas bloquée.";
+  }
 }
 function loadImageToCanvas(src, onErrorMsg) {
   var img = new Image();
+  // Nécessaire pour que le canvas reste lisible si l'image est distante (CORS)
+  if (/^https?:\/\//i.test(src)) {
+    img.crossOrigin = "anonymous";
+  }
   img.onload = function () {
     var maxSize = 1000;
     var scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
