@@ -1,3 +1,15 @@
+/* Fonction sansAccents pour filtres */
+function sansAccents(str){return str
+        .replace(/[_]/g, " ")
+        .replace(/[àáâãäå]/g, "a")
+        .replace(/[ç]/g, "c")
+        .replace(/[èéêë]/g, "e")
+        .replace(/[ìíîï]/g, "i")
+        .replace(/[ñ]/g, "n")
+        .replace(/[òóôõö]/g, "o")
+        .replace(/[ùúûü]/g, "u")
+        .replace(/[ýÿ]/g, "y");
+}
 /* Copier */
 function copyText(id, btn){
     var text = document.getElementById(id).innerHTML;
