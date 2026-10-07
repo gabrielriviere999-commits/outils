@@ -6,9 +6,9 @@ body {
 *{accent-color:#f44;}
 ::-moz-selection{background:rgba(255,0,0,0.7);color:#ccc;}
 ::selection{background:rgba(255,0,0,0.7);color:#ccc;}
-h2,h3{margin-top:0;margin-bottom:10px}
+h2,h3,h4{margin-top:0;margin-bottom:10px}
 h2{color:#f44;padding-bottom:5px;border-bottom:2px solid #f44;}
-h3{padding-bottom:5px;border-bottom:1px solid #888;}
+h3,h4{padding-bottom:5px;border-bottom:1px solid #888;}
 fieldset{border:2px groove #888;}
 hr{border:1px inset #888;}
 label{display:inline-block;font-size:14px;}
