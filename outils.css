@@ -96,35 +96,14 @@ select {
   border-color:#111 #888 #888 #111;
 }
 select:hover{background:#444;}
-.container {
-  display:table;
-  width:100%;
-  table-layout:fixed;
-}
-.card {
-  display:table-cell;
-  width:50%;
-  padding:10px;
-  box-sizing:border-box;
-  background:#000;
-  border:2px solid;
-  border-color:#888 #111 #111 #888;
-  vertical-align:top;
-}
-@media (max-width:700px) {
-  .container,.card {
-    display:block;
-    width:100%;
-  }
-}
 @supports (display:grid) {
-  .little-container {
+  .container {
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
     gap:12px;
   }
 }
-.little-card {
+.card {
   background:#000;
   border:2px solid;
   border-color:#888 #111 #111 #888;
@@ -133,7 +112,7 @@ select:hover{background:#444;}
   display:inline-block;
 }
 @supports not (display:grid) {
-  .little-card {
+  .card {
     vertical-align:top;
     width:320px;
   }
