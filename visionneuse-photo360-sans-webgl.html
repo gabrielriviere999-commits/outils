@@ -661,10 +661,17 @@ function chargerGpsFichier(f) {
   gps360 = null;
   afficherGps();
   if (!f) return;
-  var lecteur = new FileReader();
-  lecteur.onload = function(e) { analyserGpsOctets(e.target.result); };
-  lecteur.onerror = function() {};
-  lecteur.readAsArrayBuffer(f);
+  // Vieux moteurs : FileReader ou readAsArrayBuffer peuvent manquer.
+  // Le GPS est optionnel : on abandonne silencieusement.
+  try {
+    if (typeof FileReader !== "function" || !FileReader.prototype.readAsArrayBuffer) {
+      return;
+    }
+    var lecteur = new FileReader();
+    lecteur.onload = function(e) { analyserGpsOctets(e.target.result); };
+    lecteur.onerror = function() {};
+    lecteur.readAsArrayBuffer(f);
+  } catch (e) {}
 }
 /* Lecture GPS depuis une URL (same-origin ; XHR, pas d'API moderne). */
 function chargerGpsUrl(src) {
@@ -688,7 +695,9 @@ function chargerFichier(f) {
   if (!f) {
     return;
   }
-  chargerGpsFichier(f);
+  try {
+    chargerGpsFichier(f);
+  } catch (e) {}
   var lecteur = new FileReader();
   lecteur.onload =
     function(e) {
