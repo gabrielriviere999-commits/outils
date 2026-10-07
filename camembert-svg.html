@@ -15,10 +15,6 @@ td,th {
   font-size:13px;
 }
 input[type=text],input[type=number]{width:100%;}
-.card-camembert {
-  padding:10px;
-  display:block;
-}
 </style>
 </head>
 <body>
@@ -308,14 +304,14 @@ function renderPie() {
     URL.revokeObjectURL(currentSvgUrl);
     currentSvgUrl = null;
   }
-  // Créer un vrai fichier SVG
-  var blob = new Blob([svg], {
-    type: "image/svg+xml"
-  });
-  currentSvgUrl = URL.createObjectURL(blob);
-  // Créer une vraie image
   var img = document.createElement("img");
-  img.src = currentSvgUrl;
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  img.alt = "Diagramme circulaire SVG";
+  img.style.display = "block";
+  img.style.maxWidth = "100%";
+  img.style.height = "auto";
+  preview.innerHTML = "";
+  preview.appendChild(img);
   img.alt = "Diagramme circulaire SVG";
   img.style.display = "block";
   img.style.maxWidth = "100%";
