@@ -487,8 +487,13 @@ document.getElementById("filter").onkeyup = function () {
     var cards = getByClass("little-card");
     var i, title, txt;
     for (i = 0; i < cards.length; i++) {
-        title = cards[i].getElementsByTagName("div")[0];
-        txt = sansAccents(title.innerHTML.toLowerCase());
+        title = cards[i].getElementsByTagName("h4")[0];
+        if (title) {
+            txt = sansAccents(title.innerHTML.toLowerCase());
+            txt = txt.replace(/\s+/g, " ");
+        } else {
+            txt = "";
+        }
         cards[i].style.display = (txt.indexOf(filter) !== -1) ? "" : "none";
     }
 };
