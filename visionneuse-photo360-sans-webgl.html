@@ -661,8 +661,7 @@ function chargerGpsFichier(f) {
   gps360 = null;
   afficherGps();
   if (!f) return;
-  // Vieux moteurs : FileReader ou readAsArrayBuffer peuvent manquer.
-  // Le GPS est optionnel : on abandonne silencieusement.
+  // Vieux moteurs : FileReader ou readAsArrayBuffer peuvent manquer. Le GPS est optionnel : on abandonne silencieusement.
   try {
     if (typeof FileReader !== "function" || !FileReader.prototype.readAsArrayBuffer) {
       return;
