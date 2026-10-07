@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR & Code-barres</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="outils.css">
+<link rel="stylesheet" href="color-palette.css">
+<style>
+#input,#pastefileinput {
+  width:100%;
+  box-sizing:border-box;
+}
+#code,#result,#decode-file {
+  margin-top:1rem;
+  padding:10px;
+  border:2px inset #888;
+  overflow-x:auto;
+}
+#video {
+  width:100%;
+  max-width:320px;
+  background:#000000;
+  border:2px inset #888;
+}
+#barcodeCanvas{display:none;}
+.err{color:#f00;font-weight:bold;}
+</style>
+</head>
+<body>
+<h2>Générateur & Lecteur de Codes (QR & Code-barres)</h2>
+<div class="overlayColorPicker">
+  <div class="overlayColorPicker-cell">
+    <div class="mini-picker" id="miniPicker">
+      <div class="sv-box" id="svBox">
+        <div class="sv-cursor" id="svCursor"></div>
+      </div>
+      <div class="hue-slider" id="hueSlider">
+        <div class="hue-cursor" id="hueCursor"></div>
+      </div>
+      <div class="alpha-slider" id="alphaSlider">
+        <div class="alpha-cursor" id="alphaCursor"></div>
+      </div>
+      <div class="quick-colors">
+        <button class="qc" data-col="#000000" style="background:#000000"></button>
+        <button class="qc" data-col="#ffffff" style="background:#ffffff"></button>
+        <button class="qc" data-col="#ff0000" style="background:#ff0000"></button>
+        <button class="qc" data-col="#ff9900" style="background:#ff9900"></button>
+        <button class="qc" data-col="#ffff00" style="background:#ffff00"></button>
+        <button class="qc" data-col="#00ff00" style="background:#00ff00"></button>
+        <button class="qc" data-col="#00ffff" style="background:#00ffff"></button>
+        <button class="qc" data-col="#0000ff" style="background:#0000ff"></button>
+        <button class="qc" data-col="#ff00ff" style="background:#ff00ff"></button>
+      </div>
+      <button id="closePickerBtn" onclick="closePicker()">Fermer</button>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <h3>Générer un code</h3>
+  <select id="codeFormat">
+    <option value="QR">QR Code</option>
+    <option value="CODE128">Code 128</option>
+    <option value="EAN13">EAN-13</option>
+    <option value="EAN8">EAN-8</option>
+    <option value="UPC">UPC-A</option>
+    <option value="CODE39">Code 39</option>
+    <option value="ITF14">ITF-14</option>
+  </select>
+  <textarea id="input" wrap="off" rows="3"></textarea><br>
+  <input type="file" id="textareaFiletext">
+  <div class="color-picker">
+    <label>Couleur du code :</label><br>
+    <input id="fgHex" class="hex-input" value="#000000"><button class="previewColorPicker"></button>
+  </div><br>
+  <div class="color-picker">
+    <label>Couleur du fond :</label><br>
+    <input id="bgHex" class="hex-input" value="#ffffff"><button class="previewColorPicker"></button>
+  </div><br>
+  <input type="hidden" id="fgColor" value="#000000">
+  <input type="hidden" id="bgColor" value="#ffffff">
+  <button id="btn-generate">Générer</button>
+  <div id="code" class="border-interne"></div>
+  <canvas id="barcodeCanvas"></canvas>
+  <button id="export-png">Exporter PNG</button>
+  <button id="export-jpg">Exporter JPG</button>
+  <button id="export-svg">Exporter SVG</button>
+</div>
+<br>
+<div class="section">
+  <h3>Décoder un code (fichier) — QR ou code-barres</h3>
+  <input type="file" id="fileinput" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
+  <canvas id="canvas-file" style="display:none;"></canvas>
+  <input id="pastefileinput" placeholder="Ou cliquer ici puis faire Ctrl+V" maxlength="0">
+  <pre id="decode-file"></pre>
+  <button onclick="copyText('decode-file', this)">Copier</button>
+</div>
+<br>
+<div class="section">
+  <h3>Décoder un code (caméra) — QR ou code-barres</h3>
+  <video id="video" autoplay playsinline muted style="width:300px;"></video>
+  <pre id="result"></pre>
+  <button onclick="copyText('result', this)">Copier</button>
+  <button id="startScan">Scanner</button>
+  <button id="switchCam">Changer de caméra</button>
+  <button id="toggleTorch">Torche</button>
+  <button id="stopScan">Stop</button>
+</div>
+<details><summary>Bibliothèques utilisées</summary>
+<a href="https://kazuhikoarase.github.io/qrcode-generator/js/dist/qrcode.js">https://kazuhikoarase.github.io/qrcode-generator/js/dist/qrcode.js</a> - MIT - Kazuhiko Arase<br>
+<a href="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js">https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js</a> - MIT - lindell.me<br>
+<a href="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js">https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js</a> - Apache 2.0 - ZXing Team<br>
+<a href="https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js">https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js</a> - Apache 2.0 - ZXing Team<br>
+</details>
+<script src="outils.js"></script>
+<script src="color-palette.js"></script>
+<script src="libs/qrcode.js"></script>
+<script src="libs/JsBarcode.all.min.js"></script>
+<script src="libs/zxing-es5.min.js"></script>
+<script src="libs/zxing-browser.min.js"></script>
+<script>
+/* RÉFÉRENCES DE BASE */
+var input = document.getElementById("input");
+var codeDiv = document.getElementById("code");
+var btnGen = document.getElementById("btn-generate");
+btnGen.onclick = generateCode;
+/* COLOR PICKER */
+document.getElementById("fgHex").onchange = function () {
+    document.getElementById("fgColor").value = this.value;
+    generateCode();
+};
+document.getElementById("bgHex").onchange = function () {
+    document.getElementById("bgColor").value = this.value;
+    generateCode();
+};
+document.onmouseup = function () {
+    draggingHue = false;
+    draggingSV  = false;
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
+document.ontouchend = function () {
+    draggingHue = false;
+    draggingSV  = false;
+    if (activeInput) {
+        activeInput.dispatchEvent(new Event("change"));
+    }
+};
+attachColorPickerTo(document.getElementById("fgHex"));
+updatePickerFromInput(fgHex, fgHex.nextElementSibling);
+attachColorPickerTo(document.getElementById("bgHex"));
+updatePickerFromInput(bgHex, bgHex.nextElementSibling);
+/* HELPERS CHECKSUM (EAN/UPC/ITF) */
+function computeMod10Check(digits) {
+  var len = digits.length;
+  var sum = 0;
+  var i, d;
+  var weight = 3;
+  for (i = len - 1; i >= 0; i--) {
+    d = parseInt(digits.charAt(i), 10);
+    if (isNaN(d)) return null;
+    sum += d * weight;
+    weight = (weight === 3) ? 1 : 3;
+  }
+  var mod = sum % 10;
+  return (mod === 0) ? 0 : (10 - mod);
+}
+function makeValidator(regex, bodyLen) {
+  return function (value) {
+    if (!regex.test(value)) return false;
+    if (value.length === bodyLen) return true; // JsBarcode calculera la clé
+    var check = parseInt(value.charAt(bodyLen), 10);
+    return computeMod10Check(value.slice(0, bodyLen)) === check;
+  };
+}
+var validators = {
+  EAN13:  { test: makeValidator(/^[0-9]{12,13}$/, 12),  label: "EAN-13 : checksum ou longueur invalide (12 ou 13 chiffres)" },
+  EAN8:   { test: makeValidator(/^[0-9]{7,8}$/, 7),     label: "EAN-8 : checksum ou longueur invalide (7 ou 8 chiffres)" },
+  UPC:    { test: makeValidator(/^[0-9]{11,12}$/, 11),  label: "UPC-A : checksum ou longueur invalide (11 ou 12 chiffres)" },
+  ITF14:  { test: makeValidator(/^[0-9]{13,14}$/, 13),  label: "ITF-14 : checksum ou longueur invalide (13 ou 14 chiffres)" }
+};
+/* GÉNÉRATION */
+var qr = null;          // objet QR courant (pour export PNG/JPG)
+var currentSvg = null;  // SVG affiché courant
+function generateSVG_QR(qrObj) {
+    var count = qrObj.getModuleCount();
+    var cell = 10;
+    var size = count * cell;
+    var fg = document.getElementById("fgColor").value;
+    var bg = document.getElementById("bgColor").value;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">';
+    svg += '<rect width="100%" height="100%" fill="' + bg + '"/>';
+    for (var y = 0; y < count; y++) {
+        for (var x = 0; x < count; x++) {
+            if (qrObj.isDark(y, x)) {
+                svg += '<rect x="' + (x * cell) + '" y="' + (y * cell) + '" width="' + cell + '" height="' + cell + '" fill="' + fg + '"/>';
+            }
+        }
+    }
+    svg += '</svg>';
+    return svg;
+}
+/* Affiche le code dans un <img> (data URL) pour que le clic droit
+   du navigateur propose "Enregistrer l'image sous…" / "Copier l'image" */
+function showAsImage(dataUrl) {
+  var img = document.createElement("img");
+  img.src = dataUrl;
+  img.alt = "Code généré";
+  img.style.display = "block";
+  img.style.maxWidth = "100%";
+  codeDiv.innerHTML = "";
+  codeDiv.appendChild(img);
+}
+function generateCode() {
+  var value = input.value.trim();
+  codeDiv.innerHTML = "";
+  qr = null;
+  currentSvg = null;
+  if (!value) return;
+  var format = document.getElementById("codeFormat").value;
+  var fg = document.getElementById("fgColor").value || "#000000";
+  var bg = document.getElementById("bgColor").value || "#ffffff";
+  if (format === "QR") {
+    qr = qrcode(0, 'H');
+    qr.addData(value, 'Byte');
+    qr.make();
+    var svgStr = generateSVG_QR(qr);
+    // Affichage en <img> : le clic droit du navigateur fonctionne
+    showAsImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr));
+    return;
+  }
+  // Vérifications checksum pour les formats numériques
+  if (validators[format]) {
+    if (!validators[format].test(value)) {
+      codeDiv.innerHTML = "<div class='err'>" + validators[format].label + "</div>";
+      return;
+    }
+  }
+  // SVG d'affichage
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  JsBarcode(svg, value, {
+    format: format,
+    lineColor: fg,
+    background: bg,
+    width: 2,
+    height: 80,
+    displayValue: true
+  });
+  // Canvas pour export PNG/JPG
+  JsBarcode("#barcodeCanvas", value, {
+    format: format,
+    lineColor: fg,
+    background: bg,
+    width: 2,
+    height: 80,
+    displayValue: true
+  });
+  // Nettoyage du SVG
+  svg.removeAttribute("viewBox");
+  svg.removeAttribute("version");
+  svg.style.display = "block";
+  var s = svg.getAttribute("style");
+  if (s) {
+      s = s.replace(/display\s*:\s*block\s*;?/i, "");
+      s = s.replace(/transform\s*:\s*translate\(0px\)\s*;?/i, "");
+      s = s.replace(/\s+/g, " ").replace(/;+/g, ";").trim();
+      if (s === "" || s === ";") {
+          svg.removeAttribute("style");
+      } else {
+          svg.setAttribute("style", s);
+      }
+  }
+  codeDiv.appendChild(svg);
+  currentSvg = svg;
+  // Affichage en <img> (PNG depuis le canvas) : clic droit → "Enregistrer l'image sous…"
+  showAsImage(document.getElementById("barcodeCanvas").toDataURL("image/png"));
+}
+document.getElementById("codeFormat").onchange = generateCode;
+/* EXPORT PNG / JPG / SVG */
+function download(filename, dataUrl) {
+  var a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+function exportCanvas(type) {
+  var format = document.getElementById("codeFormat").value;
+  var mime = "image/" + type;
+  var ext = (type === "jpeg" ? "jpg" : type);
+  var filename = getTimestampName(format === "QR" ? "qr-code" : "barcode", ext);
+  if (format === "QR") {
+    if (!qr) return;
+    var count = qr.getModuleCount();
+    var cell = 10;
+    var size = count * cell;
+    var fg = document.getElementById("fgColor").value;
+    var bg = document.getElementById("bgColor").value;
+    var canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = bg || "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = fg || "#000000";
+    for (var y = 0; y < count; y++) {
+      for (var x = 0; x < count; x++) {
+        if (qr.isDark(y, x)) {
+          ctx.fillRect(x * cell, y * cell, cell, cell);
+        }
+      }
+    }
+    download(filename, canvas.toDataURL(mime));
+  } else {
+    var canvasB = document.getElementById("barcodeCanvas");
+    if (!canvasB) return;
+    download(filename, canvasB.toDataURL(mime));
+  }
+}
+document.getElementById("export-png").onclick = function () {
+  exportCanvas("png");
+};
+document.getElementById("export-jpg").onclick = function () {
+  exportCanvas("jpeg");
+};
+document.getElementById("export-svg").onclick = function () {
+  var format = document.getElementById("codeFormat").value;
+  var svg;
+  if (format === "QR") {
+    if (!qr) return;
+    svg = { outerHTML: generateSVG_QR(qr) };
+  } else {
+    svg = currentSvg || codeDiv.querySelector("svg");
+  }
+  if (!svg) return;
+  var blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = (format === "QR" ? "qr-code.svg" : "barcode.svg");
+  a.click();
+  URL.revokeObjectURL(url);
+};
+/* DÉCODAGE FICHIER (QR + codes-barres) */
+var fileInput = document.getElementById("fileinput");
+var canvasFile = document.getElementById("canvas-file");
+var ctxFile = canvasFile.getContext("2d");
+var decodeFile = document.getElementById("decode-file");
+// Un seul lecteur multi-format : QR codes ET codes-barres
+var readerZX = new ZXing.BrowserMultiFormatReader();
+function decodeFromCanvas() {
+  var tempImg = new Image();
+  tempImg.onload = function () {
+    readerZX.decodeFromImageElement(tempImg)
+      .then(function (result) { decodeFile.innerText = result.text; })
+      .catch(function () { decodeFile.innerText = "Aucun code détecté."; });
+  };
+  tempImg.onerror = function () {
+    decodeFile.innerText = "Impossible de préparer l'image.";
+  };
+  try {
+    tempImg.src = canvasFile.toDataURL("image/png");
+  } catch (e) {
+    // Canvas contaminé (image d'une autre origine sans en-têtes CORS)
+    decodeFile.innerText = "Erreur : image d'une autre origine (CORS), lecture du canvas bloquée.";
+  }
+}
+function loadImageToCanvas(src, onErrorMsg) {
+  var img = new Image();
+  // Nécessaire pour que le canvas reste lisible si l'image est distante (CORS)
+  if (/^https?:\/\//i.test(src)) {
+    img.crossOrigin = "anonymous";
+  }
+  img.onload = function () {
+    var maxSize = 1000;
+    var scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+    canvasFile.width = Math.round(img.width * scale);
+    canvasFile.height = Math.round(img.height * scale);
+    ctxFile.clearRect(0, 0, canvasFile.width, canvasFile.height);
+    ctxFile.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvasFile.width, canvasFile.height);
+    decodeFromCanvas();
+  };
+  img.onerror = function () {
+    decodeFile.innerText = (onErrorMsg || "Impossible de charger l'image : ") + src;
+  };
+  img.src = src;
+}
+/* PARAMÈTRE URL : ?file=image.png */
+var fichierURL = null;
+try {
+  var matchFile = window.location.search.match(/[?&](?:file|image)=([^&]+)/);
+  if (matchFile) {
+    fichierURL = decodeURIComponent(matchFile[1]);
+  }
+} catch (e) {
+  fichierURL = null;
+}
+if (fichierURL) {
+  loadImageToCanvas(fichierURL);
+}
+fileInput.onchange = function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  loadImageToCanvas(URL.createObjectURL(file));
+};
+// Coller une image depuis le presse-papier (appelé par outils.js)
+function loadFile(file) {
+  loadImageToCanvas(URL.createObjectURL(file));
+}
+/* DÉCODAGE CAMÉRA (QR + codes-barres) */
+var camList = [];
+var currentCam = 0;
+var torchOn = false;
+var camReader = null;
+navigator.mediaDevices.enumerateDevices()
+  .then(function (devices) {
+    camList = devices.filter(function (d) {
+      return d.kind === "videoinput";
+    });
+  });
+function flashHighlight(el) {
+  el.style.background = "yellow";
+  el.style.color = "black";
+  setTimeout(function () {
+    el.style.background = "";
+    el.style.color = "";
+  }, 300);
+}
+function stopCamera() {
+  var video = document.getElementById("video");
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(function (t) { t.stop(); });
+    video.srcObject = null;
+  }
+  if (camReader) {
+    camReader.reset();
+    camReader = null;
+  }
+  document.getElementById("result").innerText = "";
+}
+function toggleTorch() {
+  var video = document.getElementById("video");
+  if (!video.srcObject) return;
+  var track = video.srcObject.getVideoTracks()[0];
+  if (!track) return;
+  torchOn = !torchOn;
+  track.applyConstraints({
+    advanced: [{ torch: torchOn }]
+  }).catch(function (e) {
+    console.log("Torch error:", e);
+  });
+}
+function startCamera() {
+  var video = document.getElementById("video");
+  var resultBox = document.getElementById("result");
+  if (camList.length === 0) {
+    resultBox.innerHTML = "Aucune caméra détectée.";
+    return;
+  }
+  stopCamera();
+  camReader = new ZXing.BrowserMultiFormatReader();
+  camReader.decodeFromVideoDevice(
+    camList[currentCam].deviceId,
+    video,
+    function (result, err) {
+      if (result) {
+        resultBox.innerHTML = result.getText();
+        flashHighlight(resultBox);
+      }
+    }
+  );
+}
+document.getElementById("startScan").onclick = startCamera;
+document.getElementById("switchCam").onclick = function () {
+  if (camList.length < 2) return;
+  currentCam = (currentCam + 1) % camList.length;
+  startCamera();
+};
+document.getElementById("toggleTorch").onclick = function () {
+  var video = document.getElementById("video");
+  if (!video.srcObject) return;
+  var track = video.srcObject.getVideoTracks()[0];
+  if (!track) return;
+  var caps = track.getCapabilities();
+  if (!caps.torch) {
+    alert("Allumez la torche via les réglages rapides pour cette caméra.");
+    return;
+  }
+  toggleTorch();
+};
+document.getElementById("stopScan").onclick = function () {
+  torchOn = false;
+  stopCamera();
+};
+</script>
+</body>
+</html>
