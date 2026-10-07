@@ -135,7 +135,7 @@ Bas :
   <div id="result">
     <div id="resultInfo"></div>
     <canvas id="resultCanvas"></canvas>
-    <a id="downloadLink" href="#" download="minecraft-360.png">Télécharger la photo 360°</a>
+    <a id="downloadLink" href="#" download="minecraft-360.png">Télécharger la photo 360°</a> | <a id="openLink" href="#" target="_blank">Ouvrir dans un nouvel onglet</a>
   </div>
 </div>
 <script src="outils.js"></script>
@@ -452,6 +452,7 @@ function exporterPanorama(canvas, format, qualite, callback) {
                 // Repli improbable mais sûr.
                 dataURL = canvas.toDataURL(mime, qualite);
                 downloadLink.href = dataURL;
+                openLink.href = dataURL;
                 callback(dataURL.length, "dataurl");
             } else {
                 if (panoramaBlobURL) {
@@ -462,12 +463,14 @@ function exporterPanorama(canvas, format, qualite, callback) {
                 }
                 panoramaBlobURL = URL.createObjectURL(blob);
                 downloadLink.href = panoramaBlobURL;
+                openLink.href = panoramaBlobURL;
                 callback(blob.size, "blob");
             }
         }, mime, qualite);
     } else {
         dataURL = canvas.toDataURL(mime, qualite);
         downloadLink.href = dataURL;
+        openLink.href = dataURL;
         callback(dataURL.length, "dataurl");
     }
     return extension;
@@ -659,6 +662,7 @@ resetButton.onclick =
             panoramaBlobURL = null;
         }
         downloadLink.href = "#";
+        openLink.href = "#";
         sourcePixels = {};
         result.style.display = "none";
         progressZone.style.display = "none";
