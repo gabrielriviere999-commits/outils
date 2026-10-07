@@ -135,7 +135,7 @@ Bas :
   <div id="result">
     <div id="resultInfo"></div>
     <canvas id="resultCanvas"></canvas>
-    <a id="downloadLink" href="#" download="minecraft-360.png">Télécharger le panorama</a>
+    <a id="downloadLink" href="#" download="minecraft-360.png">Télécharger la photo 360°</a>
   </div>
 </div>
 <script src="outils.js"></script>
@@ -147,7 +147,8 @@ Méthode :
 2. Extraire le carré central.
 3. Chaque carré représente une face 90° x 90°.
 4. Transformer les six faces en panorama équirectangulaire.
-5. Exporter PNG/JPEG.
+5. Exporter PNG/JPEG via Blob (compatible K-Meleon),
+   avec repli sur data URL si toBlob est absent.
 */
 var images = {
     north: null,
@@ -191,6 +192,8 @@ var formatSelect = document.getElementById("format");
 var qualitySelect = document.getElementById("quality");
 var topRotationSelect = document.getElementById("topRotation");
 var bottomRotationSelect = document.getElementById("bottomRotation");
+/* URL de blob du panorama, pour libérer la mémoire au reset. */
+var panoramaBlobURL = null;
 /* CHARGEMENT */
 function chargerImage(file, direction) {
     var reader;
@@ -425,7 +428,7 @@ function verifierImages() {
     // Les images n'ont pas forcément besoin d'avoir exactement la même résolution. Le crop central sera redimensionné par la projection.
     return true;
 }
-/* CONSTRUCTION */
+/* FORMATER LA TAILLE */
 function formaterTaille(octets) {
     if (octets < 1024) {
         return octets + " octets";
@@ -435,21 +438,41 @@ function formaterTaille(octets) {
     }
     return (octets / (1024 * 1024)).toFixed(2) + " Mo";
 }
-function tailleDataURL(dataURL) {
-    var base64;
-    var longueur;
-    var padding;
-    base64 = dataURL.split(",")[1];
-    longueur = base64.length;
-    padding = 0;
-    if (base64.charAt(longueur - 1) === "=") {
-        padding++;
+/* EXPORT VIA BLOB (compatible K-Meleon)
+   toBlob produit un fichier binaire : pas de méga-chaîne base64 dans href,
+   c'est ce qui faisait planter le navigateur au téléchargement.
+   Repli sur data URL uniquement si toBlob n'existe pas. */
+function exporterPanorama(canvas, format, qualite, callback) {
+    var mime = (format === "jpeg") ? "image/jpeg" : "image/png";
+    var extension = (format === "jpeg") ? "jpg" : "png";
+    var dataURL;
+    if (canvas.toBlob) {
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                // Repli improbable mais sûr.
+                dataURL = canvas.toDataURL(mime, qualite);
+                downloadLink.href = dataURL;
+                callback(dataURL.length, "dataurl");
+            } else {
+                if (panoramaBlobURL) {
+                    try {
+                        URL.revokeObjectURL(panoramaBlobURL);
+                    } catch (e) {
+                    }
+                }
+                panoramaBlobURL = URL.createObjectURL(blob);
+                downloadLink.href = panoramaBlobURL;
+                callback(blob.size, "blob");
+            }
+        }, mime, qualite);
+    } else {
+        dataURL = canvas.toDataURL(mime, qualite);
+        downloadLink.href = dataURL;
+        callback(dataURL.length, "dataurl");
     }
-    if (base64.charAt(longueur - 2) === "=") {
-        padding++;
-    }
-    return Math.floor(longueur * 3 / 4) - padding;
+    return extension;
 }
+/* CONSTRUCTION */
 function construire() {
     var largeur;
     var hauteur;
@@ -473,10 +496,9 @@ function construire() {
     var pixel;
     var index;
     var progression;
-    var rotation;
     var format;
     var qualite;
-    var dataURL;
+    var extension;
     if (!verifierImages()) {
         return;
     }
@@ -574,35 +596,28 @@ function construire() {
     // Affichage.
     statusBox.innerHTML = "Finalisation...";
     ctx.putImageData(output, 0, 0);
-    // Export.
-    format = formatSelect.value;
-    qualite = parseFloat(qualitySelect.value);
-    try {
-        if (format === "jpeg") {
-            dataURL = canvas.toDataURL("image/jpeg", qualite);
-            downloadLink.download = "minecraft-360.jpg";
-        } else {
-            dataURL = canvas.toDataURL("image/png");
-            downloadLink.download = "minecraft-360.png";
-        }
-    } catch (e3) {
-        alert("Impossible d'exporter l'image.\n\n" + "Essaie une résolution plus faible.");
-        return;
-    }
     // Copie dans le canvas visible.
     resultCanvas.width = largeur;
     resultCanvas.height = hauteur;
-    resultCanvas .getContext("2d") .drawImage(canvas, 0, 0);
-    downloadLink.href = dataURL;
-    resultInfo.innerHTML =
-        "Résolution : " + largeur + " x " + hauteur + "<br>" +
-        "Poids : " + formaterTaille(tailleDataURL(dataURL)) + "<br>" + 
-        "Projection : équirectangulaire 360° × 180°" + "<br>" +
-        "Face source utilisée : " + sourceWidth + " x " + sourceHeight + "<br>" +
-        "FOV Minecraft : 90° vertical";
-    result.style.display = "block";
-    progressBar.value = 100;
-    statusBox.innerHTML = "Terminé.";
+    resultCanvas.getContext("2d").drawImage(canvas, 0, 0);
+    format = formatSelect.value;
+    qualite = parseFloat(qualitySelect.value);
+    // Export via Blob : le lien est rempli ici,
+    // le poids est affiché dans le callback quand le blob est prêt.
+    statusBox.innerHTML = "Encodage de l'image...";
+    extension = exporterPanorama(canvas, format, qualite, function (taille, mode) {
+        downloadLink.download = "minecraft-360." + extension;
+        resultInfo.innerHTML =
+            "Résolution : " + largeur + " x " + hauteur + "<br>" +
+            "Poids : " + formaterTaille(taille) + "<br>" +
+            "Projection : équirectangulaire 360° × 180°" + "<br>" +
+            "Face source utilisée : " + sourceWidth + " x " + sourceHeight + "<br>" +
+            "FOV Minecraft : 90° vertical<br>" +
+            "Export : " + mode;
+        result.style.display = "block";
+        progressBar.value = 100;
+        statusBox.innerHTML = "Terminé.";
+    });
 }
 /* BOUTON */
 buildButton.onclick =
@@ -626,7 +641,7 @@ resetButton.onclick =
             nom = noms[i];
             images[nom] = null;
             files[nom].value = "";
-            previews[nom] .removeAttribute("src");
+            previews[nom].removeAttribute("src");
             if (previewURLs[nom]) {
                 try {
                     URL.revokeObjectURL(previewURLs[nom]);
@@ -635,6 +650,15 @@ resetButton.onclick =
                 previewURLs[nom] = null;
             }
         }
+        // Libérer le blob du panorama précédent.
+        if (panoramaBlobURL) {
+            try {
+                URL.revokeObjectURL(panoramaBlobURL);
+            } catch (e) {
+            }
+            panoramaBlobURL = null;
+        }
+        downloadLink.href = "#";
         sourcePixels = {};
         result.style.display = "none";
         progressZone.style.display = "none";
