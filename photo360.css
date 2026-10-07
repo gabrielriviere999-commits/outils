@@ -82,6 +82,6 @@
 #depot span{color:#fff;}
 #erreur{color:#ef4444}
 #statut{display:block;word-break:overflow-wrap:anywhere;word-break:break-word;}
-.photos360Tree ul{padding-left:22px;list-style-type:disc;}
+.photos360Tree ul{padding-left:32px;list-style-type:disc;}
 .photo360Toggle{display:inline-block;width:18px;}
 .photo360Fichier{margin:3px 0;}
