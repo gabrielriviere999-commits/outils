@@ -15,31 +15,6 @@ td,th {
   font-size:13px;
 }
 input[type=text],input[type=number]{width:100%;}
-#preview svg {
-  max-width:100%;
-  height:auto;
-}
-.pie-legend {
-  list-style:none;
-  padding:0;
-  margin-top:10px;
-  font-size:14px;
-}
-.pie-legend li {
-  margin:3px 0;
-  display:block;
-}
-.pie-legend span {
-  width:12px;
-  height:12px;
-  display:inline-block;
-  margin-right:6px;
-  border-radius:50%;
-}
-.container-camembert {
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
-}
 .card-camembert {
   padding:10px;
   display:block;
@@ -75,33 +50,33 @@ input[type=text],input[type=number]{width:100%;}
     </div>
   </div>
 </div>
-<div class="container-camembert">
-<div class="card-camembert border-externe">
-<h3>Parts</h3>
-<div class="scrollZone">
-<table id="tbl">
-  <thead>
-    <tr><th style="width:60px;">Libellé</th><th style="width:60px;">Val %</th><th style="width:94px">Couleur</th><th></th></tr>
-  </thead>
-  <tbody></tbody>
-</table>
-</div>
-<button id="addBtn">Ajouter une part</button>
-<button id="validateBtn">Valider</button>
-<p></p>
-<label>Taille du camembert : <input type="number" id="pieSize" value="200" style="width:60px;"></label>
-</div>
-<div class="card-camembert border-externe">
-  <h3>Aperçu</h3>
-  <div id="preview" class="scrollZone"></div>
-</div>
-<div class="card-camembert border-externe">
-  <h3>Code SVG</h3>
-  <textarea id="output"></textarea><br>
-  <button id="importBtn">Mettre à jour</button>
-  <button id="copyoutput">Copier</button>
-  <input type="file" id="textareaFileoutput">
-</div>
+<div class="little-container">
+  <div class="little-card border-externe">
+    <h3>Parts</h3>
+    <div class="scrollZone">
+      <table id="tbl">
+        <thead>
+          <tr><th style="width:60px;">Libellé</th><th style="width:60px;">Val %</th><th style="width:94px">Couleur</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button id="addBtn">Ajouter une part</button>
+    <button id="validateBtn">Valider</button>
+    <p></p>
+    <label>Taille du camembert : <input type="number" id="pieSize" value="200" style="width:60px;"></label>
+  </div>
+  <div class="little-card border-externe">
+    <h3>Aperçu</h3>
+    <div id="preview" class="scrollZone"></div>
+  </div>
+  <div class="little-card border-externe">
+    <h3>Code SVG</h3>
+    <textarea id="output"></textarea><br>
+    <button id="importBtn">Mettre à jour</button>
+    <button id="copyoutput">Copier</button>
+    <input type="file" id="textareaFileoutput">
+  </div>
 </div>
 <script src="outils.js"></script>
 <script src="color-palette.js"></script>
@@ -268,6 +243,7 @@ document.getElementById("pieSize").oninput = function() {
   pieSize = v;
 };
 /* Génération du SVG + LÉGENDE  */
+var currentSvgUrl = null;
 function renderPie() {
   var total = 0;
   for (var i = 0; i < slices.length; i++) total += slices[i].value;
@@ -276,19 +252,15 @@ function renderPie() {
     outputArea.value = "";
     return;
   }
-  // Taille dynamique
   var size = pieSize;
   var cx = size / 2;
   var cy = size / 2;
   var r  = (size / 2) - 10;
   var angle = -Math.PI / 2;
-  // SVG début
-  var svg = '<svg width="'+size+'" height="'+(size+ (slices.length*20)+20)+'" '+
-            'viewBox="0 0 '+size+' '+(size+ (slices.length*20)+20)+'" '+
+  var svg = '<svg width="'+size+'" height="'+(size+(slices.length*20)+20)+'" '+
+            'viewBox="0 0 '+size+' '+(size+(slices.length*20)+20)+'" '+
             'xmlns="http://www.w3.org/2000/svg">';
-  // PARTIES DU CAMEMBERT
   if (slices.length === 1) {
-    // Cas spécial : cercle complet
     svg += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+slices[0].color+'">' +
            '<title>'+escapeHtml(slices[0].label)+' (100%)</title>' +
            '</circle>';
@@ -313,25 +285,43 @@ function renderPie() {
       angle += a;
     }
   }
-  // LÉGENDE DANS LE SVG
+  // LÉGENDE
   var legendY = size + 15;
   for (var i = 0; i < slices.length; i++) {
     var s = slices[i];
     var pct = (s.value / total) * 100;
     pct = Math.round(pct * 10) / 10;
-    // Point coloré
     svg += '<circle cx="10" cy="'+legendY+'" r="6" fill="'+s.color+'"></circle>';
-    // Fond derrière le texte
-    svg += '<rect x="20" y="'+(legendY-8)+'" width="200" height="18" fill="rgba(0,0,0,0.8)"></rect>';
-    // Texte
-    svg += '<text x="25" y="'+(legendY+4)+'" font-size="12" font-family="sans-serif" fill="#ccc">'+
+    svg += '<rect x="20" y="'+(legendY-8)+
+           '" width="200" height="18" fill="rgba(0,0,0,0.8)"></rect>';
+    svg += '<text x="25" y="'+(legendY+4)+
+           '" font-size="12" font-family="sans-serif" fill="#ccc">'+
            escapeHtml(s.label)+' - '+pct+'%'+
            '</text>';
     legendY += 20;
   }
   svg += "</svg>";
-  preview.innerHTML = svg;
+  // Garder le code SVG dans la zone de texte
   outputArea.value = svg;
+  // Supprimer l'ancien Blob
+  if (currentSvgUrl) {
+    URL.revokeObjectURL(currentSvgUrl);
+    currentSvgUrl = null;
+  }
+  // Créer un vrai fichier SVG
+  var blob = new Blob([svg], {
+    type: "image/svg+xml"
+  });
+  currentSvgUrl = URL.createObjectURL(blob);
+  // Créer une vraie image
+  var img = document.createElement("img");
+  img.src = currentSvgUrl;
+  img.alt = "Diagramme circulaire SVG";
+  img.style.display = "block";
+  img.style.maxWidth = "100%";
+  img.style.height = "auto";
+  preview.innerHTML = "";
+  preview.appendChild(img);
 }
 function escapeHtml(t) {
   return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
