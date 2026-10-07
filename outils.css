@@ -111,6 +111,19 @@ select:hover{background:#444;}
   border-color:#888 #111 #111 #888;
   vertical-align:top;
 }
+.little-container {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
+  gap:12px;
+}
+.little-card {
+  background:#000;
+  border:2px solid;
+  border-color:#888 #111 #111 #888;
+  padding:10px;
+  text-decoration:none;
+  display:block;
+}
 @media (max-width:700px) {
   .container,.card {
     display:block;
