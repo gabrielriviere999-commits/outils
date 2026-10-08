@@ -42,7 +42,7 @@ les 6 captures Minecraft (faites avec F2) sont transformées en faces d'un cube,
 puis le cube est converti en panorama équirectangulaire 360°.<br>
 Pour chaque capture, le programme utilise automatiquement
 le <b>carré central</b> de l'image.<br>
-Exemple avec une capture 1920 × 1080 : seule la zone centrale 1080 × 1080 est utilisée.
+Exemple avec une capture 1920 x 1080 : seule la zone centrale 1080 x 1080 est utilisée.
 <b>Instructions :</b>
 le FOV Minecraft doit être réglé à <b>90°</b> et l'interface Minecraft doit être cachée avec <b>F1</b>.<br>
 Le plus simple est de capturer dans l'ordre (Nord, Est, Sud, Ouest, haut, bas), avant de capturer le haut et le bas, il faut se tourner vers le Nord car sinon, l'orientation sera inversée et il faudra changer <b>Orientation des captures</b>. 
@@ -88,10 +88,10 @@ Le plus simple est de capturer dans l'ordre (Nord, Est, Sud, Ouest, haut, bas), 
 <hr>
 Résolution : 
 <select id="resolution">
-  <option value="1024">1024 × 512</option>
-  <option value="2048" selected="selected">2048 × 1024</option>
-  <option value="4096">4096 × 2048</option>
-  <option value="8192">8192 × 4096</option>
+  <option value="1024">1024 x 512</option>
+  <option value="2048" selected="selected">2048 x 1024</option>
+  <option value="4096">4096 x 2048</option>
+  <option value="8192">8192 x 4096</option>
 </select>
 Format :
 <select id="format">
@@ -216,7 +216,7 @@ function chargerImage(file, direction) {
             } catch (e) {
                 previews[direction].src = event.target.result;
             }
-            statusBox.innerHTML = direction + " : " + img.width + " × " + img.height;
+            statusBox.innerHTML = direction + " : " + img.width + " x " + img.height;
         };
         img.onerror = function () {
             images[direction] = null;
@@ -531,7 +531,7 @@ function construire() {
         alert("Impossible de préparer les images.\n\n" + e.message);
         return;
     }
-    statusBox.innerHTML = "Faces préparées : " + sourceWidth + " × " + sourceHeight;
+    statusBox.innerHTML = "Faces préparées : " + sourceWidth + " x " + sourceHeight;
     // Création du panorama.
     try {
         canvas = document.createElement("canvas");
@@ -625,7 +625,7 @@ function construire() {
         resultInfo.innerHTML =
             "Résolution : " + largeur + " x " + hauteur + "<br>" +
             "Poids : " + formaterTaille(taille) + "<br>" +
-            "Projection : équirectangulaire 360° × 180°" + "<br>" +
+            "Projection : équirectangulaire 360° x 180°" + "<br>" +
             "Face source utilisée : " + sourceWidth + " x " + sourceHeight + "<br>" +
             "FOV Minecraft : 90° vertical<br>" +
             "Export : " + mode;
