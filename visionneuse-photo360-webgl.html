@@ -36,6 +36,7 @@
   </div>
   <hr>
   <span id="statut">Texture de démonstration</span>
+  <span id="telechargement"></span>
   <span id="gps"></span>
   <span id="erreur"></span>
   <hr>
@@ -496,6 +497,26 @@ function afficherGps() {
   a.appendChild(document.createTextNode("📍 " + txt + " (OpenStreetMap)"));
   gps.appendChild(a);
 }
+/* Lien de téléchargement de l'image chargée. */
+function majLienTelechargement() {
+  var cont = document.getElementById("telechargement");
+  cont.innerHTML = "";
+  if (!imageSourceOriginale || !imageSourceOriginale.src) {
+    return;
+  }
+  var src = imageSourceOriginale.src;
+  // Nom de fichier : depuis le nom affiché, ou déduit de l'URL, ou générique.
+  var nom = "photo360";
+  if (src.indexOf("data:") !== 0) {
+    var m = src.match(/([^\/?#]+)\.[a-z0-9]+(\?|#|$)/i);
+    if (m) nom = m[1];
+  }
+  var a = document.createElement("a");
+  a.href = src;
+  a.download = nom;
+  a.appendChild(document.createTextNode("Télécharger l'image"));
+  cont.appendChild(a);
+}
 /* Analyse les octets d'un JPEG et met à jour l'affichage GPS. */
 function analyserGpsOctets(octets) {
   gps360 = null;
@@ -550,6 +571,7 @@ function chargerFichier(f) {
     img.onload = function () {
       imageSourceOriginale = img;
       chargerTexture(img, f.name);
+      majLienTelechargement();
       masquerErreur();
     };
     img.onerror = function () {
@@ -578,6 +600,7 @@ function chargerPhoto(src) {
     pitch = 0;
     vitesse.x = 0;
     vitesse.y = 0;
+    majLienTelechargement();
     sale = true;
   };
   img.onerror = function() {
