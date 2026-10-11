@@ -422,6 +422,38 @@ function lireRationnel(b, base, o, petit) {
 }
 /* DESCRIPTION : XMP (gThumb, GIMP...) puis EXIF ImageDescription en secours. */
 var description360 = "";
+function decoderUtf8(b, debut, fin) {
+  var s = "";
+  var i = debut;
+  var c, c2, c3, c4;
+  while (i < fin) {
+    c = b[i];
+    if (c < 0x80) {
+      s += String.fromCharCode(c);
+      i++;
+    } else if ((c & 0xE0) === 0xC0 && i + 1 < fin) {
+      c2 = b[i + 1];
+      s += String.fromCharCode(((c & 0x1F) << 6) | (c2 & 0x3F));
+      i += 2;
+    } else if ((c & 0xF0) === 0xE0 && i + 2 < fin) {
+      c2 = b[i + 1]; c3 = b[i + 2];
+      s += String.fromCharCode(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F));
+      i += 3;
+    } else if ((c & 0xF8) === 0xF0 && i + 3 < fin) {
+      // Emoji etc. : au-delà de BMP, on décode en paire et on rend le caractère.
+      c2 = b[i + 1]; c3 = b[i + 2]; c4 = b[i + 3];
+      var cp = ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+      cp -= 0x10000;
+      s += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+      i += 4;
+    } else {
+      // Séquence incomplète ou invalide : octet brut.
+      s += String.fromCharCode(c);
+      i++;
+    }
+  }
+  return s;
+}
 function extraireDescription(octets) {
   var n = octets.length;
   if (n < 12) return "";
@@ -450,9 +482,7 @@ function extraireDescription(octets) {
         d += 1; // \0
         var fin = Math.min(n, p + 8 + lg);
         if (motcle === "XML:com.adobe.xmp" || motcle === "Raw profile type xmp") {
-          for (var i = d; i < fin; i++) {
-            xml += String.fromCharCode(octets[i]);
-          }
+          xml = decoderUtf8(octets, d, fin);
         }
       }
       if (type === "IEND") break;
@@ -492,9 +522,7 @@ function extraireDescription(octets) {
         octets[pos + 7] === 0x70) {  // p
       var debut = pos + 4 + 29; // 29 = signature + \0
       var fin = Math.min(n, pos + 2 + longueur);
-      for (var i = debut; i < fin; i++) {
-        xml += String.fromCharCode(octets[i]);
-      }
+      xml = decoderUtf8(octets, debut, fin);
     }
     // EXIF : APP1 avec signature "Exif\0"
     if (marqueur === 0xE1 &&
@@ -526,9 +554,13 @@ function extraireDescription(octets) {
           var off = lire32(octets, e + 8, petit);
           var s = "";
           for (var k = 0; k < nb; k++) {
-            var c = octets[tiff + off + k];
-            if (c === 0) break;
-            s += String.fromCharCode(c);
+            if (octets[tiff + off + k] === 0) {
+              s = decoderUtf8(octets, tiff + off, tiff + off + k);
+              break;
+            }
+          }
+          if (!s && nb > 0 && octets[tiff + off] !== 0) {
+            s = decoderUtf8(octets, tiff + off, Math.min(n, tiff + off + nb));
           }
           if (s) return s;
         }
