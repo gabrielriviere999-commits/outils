@@ -186,6 +186,8 @@ select:hover{background:#444;}
 .popup-window-menu input[type=range]{width:calc(100% - 60px);}
 .titleb{color:#f44;}
 .titlehr{border:1px inset #f44;}
+.popupgrid button,.popupgrid input{width:100%;box-sizing:border-box;}
+.popupgrid {display:table;table-layout:fixed;width:100%;}
 #textBox {
   display:none;
   position:fixed;

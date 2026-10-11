@@ -103,13 +103,13 @@ body.block-touch{touch-action:none;}
     <b class="titleb">Fichier</b><hr class="titlehr">
     <input type="file" id="textareaFileview">
     <button id="copyview">Copier</button>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button onclick="shareDrawing()">Partager</button>
         </div>
         <div style="display:table-cell;">
-          <input id="shareTitle" value="dessin" placeholder="Nom du fichier" style="width:100%;box-sizing:border-box;">
+          <input id="shareTitle" value="dessin" placeholder="Nom du fichier">
         </div>
       </div>
     </div><hr>
@@ -123,7 +123,7 @@ body.block-touch{touch-action:none;}
     <button class="rangebtn" data-action="zoomRangeMinus">−</button>
     <input id="zoomRange" type="range" min="6" max="40" value="12" oninput="applyZoomRange()">
     <button class="rangebtn" data-action="zoomRangePlus">+</button>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button data-action="resetZoom">Reset</button>
@@ -136,13 +136,13 @@ body.block-touch{touch-action:none;}
     <label><input type="checkbox" id="autoScrollCheckbox" checked>Scroll auto</label>
     <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><hr>
     <b>Calque</b><br>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <input type="file" id="imageFile" onchange="loadImageFile(this)">
         </div>
         <div style="display:table-cell;">
-          <input id="pasteimageFile" placeholder="Ou cliquer et Ctrl+V" maxlength="0" style="width:100%;box-sizing:border-box;">
+          <input id="pasteimageFile" placeholder="Ou cliquer et Ctrl+V" maxlength="0">
         </div>
         <div style="display:table-cell;">
           <button data-action="clearImage">Retirer</button>
@@ -150,7 +150,7 @@ body.block-touch{touch-action:none;}
       </div>
     </div>
     <label>Position</label><br>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button data-action="moveImgLeft">←</button>
@@ -200,7 +200,7 @@ body.block-touch{touch-action:none;}
   <button data-action="openFormePopup" class="multitouchbtn">Forme</button>
   <div id="popupFormeContent" style="display:none">
     <b class="titleb">Forme</b><hr class="titlehr">
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;width:85%;">
           <button id="btnLine" data-action="setToolLine">Ligne</button>
@@ -211,7 +211,7 @@ body.block-touch{touch-action:none;}
       </div>
     </div>
     <button id="btnArrow" data-action="setToolArrow">Flèche</button><hr>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;width:85%;">
           <button id="btnRect" data-action="setToolRect">Rectangle</button>
@@ -226,7 +226,7 @@ body.block-touch{touch-action:none;}
     <label><input type="radio" name="rectModeRadio" value="rounded">.-|:+ Arrondi</label>
     <label><input type="radio" name="rectModeRadio" value="wavy">¤~¦ Ondulé</label>
     <label><input type="radio" name="rectModeRadio" value="fancy">/=\| Fancy</label><hr>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;width:85%;">
           <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
@@ -241,7 +241,7 @@ body.block-touch{touch-action:none;}
   <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
 	<b class="titleb">Sélection</b><hr class="titlehr">
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell">
           <button id="btnMove" data-action="setToolMove">Déplacer</button>
@@ -256,7 +256,7 @@ body.block-touch{touch-action:none;}
     </div><hr>
     <label><input type="checkbox" id="flipSymmetry">Miroir</label>
     <label><input type="checkbox" id="flipSide">Gauche / haut</label>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell">
           <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
