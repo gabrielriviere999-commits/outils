@@ -6,6 +6,10 @@
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="photo360.css">
+<style>
+.info span{display:block;}
+#description360{white-space:pre-wrap;word-wrap:break-word;}
+</style>
 <title>Photo 360°</title>
 </head>
 <body>
@@ -13,18 +17,18 @@
 <button onclick="openMenuPopup()" class="menu">≡</button>
 <div id="popupMenuContent" style="display:none">
   <b class="titleb">Menu</b><hr class="titlehr">
-  <div style="display:table;table-layout:fixed;width:100%;">
+  <div class="popupgrid">
     <div style="display:table-row;">
       <div style="display:table-cell;">
         <input type="file" id="fileinput">
       </div>
       <div style="display:table-cell;">
-        <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0" style="width:100%;box-sizing:border-box;">
+        <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0">
       </div>
     </div>
   </div>
   <hr>
-  <div style="display:table;table-layout:fixed;width:100%;">
+  <div class="popupgrid">
     <div style="display:table-row;">
       <div style="display:table-cell;">
         <button id="btnReset" onclick="resetPhoto360()">Reset</button>
@@ -35,12 +39,14 @@
     </div>
   </div>
   <hr>
-  <span id="statut">Texture de démonstration</span>
-  <span id="telechargement"></span>
-  <span id="gps"></span>
-  <span id="erreur"></span>
-  <hr>
-  <button onclick="closePopup()">Fermer</button>
+  <div class="info">
+    <b>Informations</b>
+    <span id="statut">Texture de démonstration</span>
+    <span id="telechargement"></span>
+    <span id="description360"></span>
+    <span id="gps"></span>
+    <span id="erreur"></span>
+  </div>
 </div>
 <button onclick="openPhotos360Popup()" class="photos360">Photos 360°</button>
 <div id="popupPhotos360Content" style="display:none"></div>
@@ -60,9 +66,10 @@
 <script src="popup.js"></script>
 <script src="../photos360/photos360.js"></script>
 <script>
+/* MENU */
 function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
-  openPopupMenu(container);
+  openPopup(container);
 }
 function openPhotos360Popup() {
   var container = document.getElementById("popupPhotos360Content");
@@ -413,6 +420,142 @@ function lireRationnel(b, base, o, petit) {
   if (!den) return 0;
   return num / den;
 }
+/* DESCRIPTION : XMP (gThumb, GIMP...) puis EXIF ImageDescription en secours. */
+var description360 = "";
+function extraireDescription(octets) {
+  var n = octets.length;
+  if (n < 12) return "";
+  var xml = "";
+  var tiff = -1;
+  /* PNG : le XMP est dans un chunk iTXt avec le mot-clé
+   * "XML:com.adobe.xmp". Signature PNG = 8 octets fixes. */
+  if (octets[0] === 0x89 && octets[1] === 0x50 && octets[2] === 0x4E && octets[3] === 0x47) {
+    var p = 8; // après la signature
+    while (p + 8 < n) {
+      var lg = ((octets[p] * 16777216) + (octets[p + 1] << 16) +
+                (octets[p + 2] << 8)) + octets[p + 3];
+      var type = String.fromCharCode(octets[p + 4], octets[p + 5],
+                                     octets[p + 6], octets[p + 7]);
+      if (type === "iTXt") {
+        // iTXt : mot-clé\0 drapeau-comp\0 drapeau-lang\0 langue\0 texte
+        var d = p + 8;
+        var motcle = "";
+        while (d < n && octets[d] !== 0) { motcle += String.fromCharCode(octets[d]); d++; }
+        d += 5; // saute \0 + drapeau compression + \0 + drapeau langue + \0
+        // (le vrai décompte : 1er \0, 1 octet comp, 2e \0, langue..., 3e \0 ; ci-dessous on gère correctement)
+        d = p + 8 + motcle.length + 1; // reprise propre après le mot-clé\0
+        d += 1; // drapeau de compression
+        d += 1; // \0
+        while (d < n && octets[d] !== 0) d++; // langue
+        d += 1; // \0
+        var fin = Math.min(n, p + 8 + lg);
+        if (motcle === "XML:com.adobe.xmp" || motcle === "Raw profile type xmp") {
+          for (var i = d; i < fin; i++) {
+            xml += String.fromCharCode(octets[i]);
+          }
+        }
+      }
+      if (type === "IEND") break;
+      p += 12 + lg; // données + CRC (4 octets)
+      if (lg < 0 || p > n) break;
+    }
+    // Même extraction que le JPEG ensuite.
+    if (xml) {
+      var m = xml.match(/<dc:(description|title)[^>]*>\s*<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/i);
+      if (!m) m = xml.match(/<dc:(description|title)[^>]*>([\s\S]*?)<\/dc:\1>/i);
+      if (m) {
+        var txt = nettoyerXml(m[2]);
+        if (txt) return txt;
+      }
+    }
+    return "";
+  }
+  // JPEG : comportement inchangé.
+  if (octets[0] !== 0xFF || octets[1] !== 0xD8) return "";
+  var pos = 2;
+  // Parcours des segments JPEG : on collecte le XMP et on repère l'EXIF.
+  while (pos + 4 < n) {
+    if (octets[pos] !== 0xFF) break;
+    var marqueur = octets[pos + 1];
+    if (marqueur === 0xD8 || marqueur === 0x01 || (marqueur >= 0xD0 && marqueur <= 0xD7)) {
+      pos += 2;
+      continue;
+    }
+    if (marqueur === 0xD9 || marqueur === 0xDA) break; // fin des en-têtes
+    var longueur = lire16(octets, pos + 2, false);
+    if (longueur < 2) break;
+    // XMP : APP1 avec signature "http://ns.adobe.com/xap/1.0/\0"
+    if (marqueur === 0xE1 && pos + 33 < n &&
+        octets[pos + 4] === 0x68 &&  // h
+        octets[pos + 5] === 0x74 &&  // t
+        octets[pos + 6] === 0x74 &&  // t
+        octets[pos + 7] === 0x70) {  // p
+      var debut = pos + 4 + 29; // 29 = signature + \0
+      var fin = Math.min(n, pos + 2 + longueur);
+      for (var i = debut; i < fin; i++) {
+        xml += String.fromCharCode(octets[i]);
+      }
+    }
+    // EXIF : APP1 avec signature "Exif\0"
+    if (marqueur === 0xE1 &&
+        octets[pos + 4] === 0x45 && octets[pos + 5] === 0x78 &&
+        octets[pos + 6] === 0x69 && octets[pos + 7] === 0x66 &&
+        octets[pos + 8] === 0x00) {
+      tiff = pos + 10;
+    }
+    pos += 2 + longueur;
+  }
+  // 1) XMP : dc:description / dc:title dans un rdf:li.
+  if (xml) {
+    var m = xml.match(/<dc:(description|title)[^>]*>[\s\S]*?<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/i);
+    if (m) {
+      var txt = nettoyerXml(m[2]);
+      if (txt) return txt;
+    }
+  }
+  // 2) EXIF ImageDescription (tag 0x010E) en secours.
+  if (tiff >= 0 && tiff + 8 < n) {
+    var petit = octets[tiff] === 0x49 && octets[tiff + 1] === 0x49;
+    if (lire16(octets, tiff + 2, petit) === 0x2A) {
+      var ifd0 = tiff + lire32(octets, tiff + 4, petit);
+      var nb0 = lire16(octets, ifd0, petit);
+      for (var j = 0; j < nb0 && ifd0 + 2 + j * 12 + 12 <= n; j++) {
+        var e = ifd0 + 2 + j * 12;
+        if (lire16(octets, e, petit) === 0x010E) {
+          var nb = lire32(octets, e + 4, petit);
+          var off = lire32(octets, e + 8, petit);
+          var s = "";
+          for (var k = 0; k < nb; k++) {
+            var c = octets[tiff + off + k];
+            if (c === 0) break;
+            s += String.fromCharCode(c);
+          }
+          if (s) return s;
+        }
+      }
+    }
+  }
+  return "";
+}
+/* Nettoyage du texte extrait du XML XMP. */
+function nettoyerXml(t) {
+  t = t.replace(/<[^>]+>/g, "");
+  t = t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  t = t.replace(/&#xA;/g, "\n").replace(/&#xA;/g, "\n").replace(/&#10;/g, "\n");
+  t = t.replace(/&amp;/g, "&");
+  t = t.replace(/^\s+|\s+$/g, "");
+  return t;
+}
+/* Affichage de la description dans le menu. */
+function afficherDescription() {
+  var cont = document.getElementById("description360");
+  cont.innerHTML = "";
+  if (!description360) {
+    cont.appendChild(document.createTextNode("Description : Aucune description."));
+    return;
+  }
+  cont.appendChild(document.createTextNode("Description :\n" + description360));
+}
 /* Retourne {lat, lon} en degrés décimaux, ou null si pas de GPS. */
 function extraireGpsExif(octets) {
   var n = octets.length;
@@ -485,7 +628,7 @@ function extraireGpsExif(octets) {
 function afficherGps() {
   var gps = document.getElementById("gps");
   if (!gps360) {
-    gps.innerHTML = "Aucune donnée GPS.";
+    gps.innerHTML = "GPS : Aucune données GPS.";
     return;
   }
   var txt = gps360.lat.toFixed(6) + ", " + gps360.lon.toFixed(6);
@@ -494,7 +637,7 @@ function afficherGps() {
   var a = document.createElement("a");
   a.href = url;
   a.target = "_blank";
-  a.appendChild(document.createTextNode("📍 " + txt + " (OpenStreetMap)"));
+  a.appendChild(document.createTextNode("GPS : " + txt + " (OpenStreetMap)"));
   gps.appendChild(a);
 }
 /* Lien de téléchargement de l'image chargée. */
@@ -525,12 +668,20 @@ function analyserGpsOctets(octets) {
   } catch (e) {
     gps360 = null;
   }
+  try {
+    description360 = extraireDescription(new Uint8Array(octets));
+  } catch (e) {
+    description360 = "";
+  }
   afficherGps();
+  afficherDescription();
 }
 /* Lecture GPS depuis un File (input / drag-drop). */
 function chargerGpsFichier(f) {
   gps360 = null;
+  description360 = "";
   afficherGps();
+  afficherDescription();
   if (!f) return;
   // Vieux moteurs : FileReader ou readAsArrayBuffer peuvent manquer. Le GPS est optionnel : on abandonne silencieusement.
   try {
@@ -546,7 +697,9 @@ function chargerGpsFichier(f) {
 /* Lecture GPS depuis une URL (same-origin ; XHR, pas d'API moderne). */
 function chargerGpsUrl(src) {
   gps360 = null;
+  description360 = "";
   afficherGps();
+  afficherDescription();
   try {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", src, true);
