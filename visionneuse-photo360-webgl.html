@@ -533,11 +533,17 @@ function extraireDescription(octets) {
     }
     pos += 2 + longueur;
   }
-  // 1) XMP : dc:description / dc:title dans un rdf:li.
+  // 1) XMP : description ou titre dans un rdf:li.
   if (xml) {
-    var m = xml.match(/<dc:(description|title)[^>]*>[\s\S]*?<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/i);
+    var m = xml.match(/<dc:(description|title)\b[^>]*>[\s\S]*?<rdf:li\b[^>]*>([\s\S]*?)<\/rdf:li>/i);
     if (m) {
       var txt = nettoyerXml(m[2]);
+      if (txt) return txt;
+    }
+    // 2) XMP : description ou titre directement dans l'élément XML, sans rdf:li.
+    m = xml.match(/<dc:(description|title)\b[^>]*>([\s\S]*?)<\/dc:\1\s*>/i);
+    if (m) {
+      txt = nettoyerXml(m[2]);
       if (txt) return txt;
     }
   }
