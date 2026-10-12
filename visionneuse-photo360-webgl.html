@@ -682,11 +682,14 @@ function majLienTelechargement() {
     return;
   }
   var src = imageSourceOriginale.src;
-  // Nom de fichier : depuis le nom affiché, ou déduit de l'URL, ou générique.
-  var nom = "photo360";
+  // Nom de fichier : déduit de l'URL (extension comprise), ou générique.
+  var nom = "photo360.png";
   if (src.indexOf("data:") !== 0) {
-    var m = src.match(/([^\/?#]+)\.[a-z0-9]+(\?|#|$)/i);
-    if (m) nom = m[1];
+    // Dernier segment de chemin, nettoyé de la query et du fragment.
+    var m = src.match(/([^\/?#]+?)(\.([a-z0-9]+))?(\?|#|$)/i);
+    if (m && m[1]) {
+      nom = m[1] + (m[3] ? "." + m[3] : "");
+    }
   }
   var a = document.createElement("a");
   a.href = src;
