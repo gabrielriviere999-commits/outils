@@ -114,7 +114,16 @@ body.block-touch{touch-action:none;}
         </div>
       </div>
     </div>
-    <button data-action="shareDrawing">Partager</button>
+    <div class="popupgrid">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <button data-action="sharePNG">Partager PNG</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="shareJPG">Partager JPG</button>
+        </div>
+      </div>
+    </div>
     <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
@@ -4005,19 +4014,30 @@ function majLiensTelechargement(){
     aJpg.href = jpgCanvas.toDataURL("image/jpeg", 0.92);
     aJpg.download = getTimestampName("dessin", "jpg");
 }
-function shareDrawing() {
+function partagerImage(mime, extension){
     if (!navigator.share) {
         alert("Le partage n'est pas disponible sur ce navigateur.");
         return;
     }
-    canvas.toBlob(function (blob) {
+    var sourceCanvas = canvas;
+    if (mime === "image/jpeg") {
+        // Le JPG n'a pas de transparence : on plaque un fond blanc.
+        sourceCanvas = document.createElement("canvas");
+        sourceCanvas.width = canvas.width;
+        sourceCanvas.height = canvas.height;
+        var c = sourceCanvas.getContext("2d");
+        c.fillStyle = "#ffffff";
+        c.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+        c.drawImage(canvas, 0, 0);
+    }
+    sourceCanvas.toBlob(function (blob) {
         if (!blob) {
             alert("Impossible de créer l'image.");
             return;
         }
         var file;
         try {
-            file = new File([blob], "dessin.png", { type: "image/png" });
+            file = new File([blob], "dessin." + extension, { type: mime });
         } catch (e) {
             file = null;
         }
@@ -4033,7 +4053,13 @@ function shareDrawing() {
                 text: ""
             });
         }
-    }, "image/png");
+    }, mime);
+}
+function sharePNG(){
+    partagerImage("image/png", "png");
+}
+function shareJPG(){
+    partagerImage("image/jpeg", "jpg");
 }
 /* Au chargement */
 window.onload = function() {
