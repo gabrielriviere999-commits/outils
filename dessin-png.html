@@ -105,9 +105,15 @@ body.block-touch{touch-action:none;}
           <button data-action="importPNG">Importer PNG base64</button>
         </div>
       </div>
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <button data-action="downloadPNG">Télécharger PNG</button>
+        </div>
+        <div style="display:table-cell;">
+          <button data-action="downloadJPG">Télécharger JPG</button>
+        </div>
+      </div>
     </div>
-    <a href="#" id="downloadPngLink" download>Télécharger PNG</a> |
-    <a href="#" id="downloadJpgLink" download>Télécharger JPG</a>
     <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
@@ -360,7 +366,6 @@ function setToolPipette(){ setTool("pipette"); }
 function openFichierPopup() {
   var container = document.getElementById("popupFichierContent");
   openPopupMenu(container);
-  majLiensTelechargement();
 }
 function openPinceauPopup() {
   var container = document.getElementById("popupPinceauContent");
@@ -3993,20 +3998,32 @@ function importPNG(){
     };
     img.src = base64;
 }
-function majLiensTelechargement(){
-    var aPng = document.getElementById("downloadPngLink");
-    aPng.href = canvas.toDataURL("image/png");
-    aPng.download = getTimestampName("dessin", "png");
+function downloadPNG(){
+    var filename = getTimestampName("dessin", "png");
+    var link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+function downloadJPG(){
+	var filename = getTimestampName("dessin", "jpg");
     var jpgCanvas = document.createElement("canvas");
     jpgCanvas.width = canvas.width;
     jpgCanvas.height = canvas.height;
     var jpgCtx = jpgCanvas.getContext("2d");
+    // Fond blanc
     jpgCtx.fillStyle = "#ffffff";
     jpgCtx.fillRect(0, 0, jpgCanvas.width, jpgCanvas.height);
+    // Copier le dessin
     jpgCtx.drawImage(canvas, 0, 0);
-    var aJpg = document.getElementById("downloadJpgLink");
-    aJpg.href = jpgCanvas.toDataURL("image/jpeg", 0.92);
-    aJpg.download = getTimestampName("dessin", "jpg");
+    var link = document.createElement("a");
+    link.href = jpgCanvas.toDataURL("image/jpeg", 0.92);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 function partagerImage(mime, extension){
     if (!navigator.share) {
