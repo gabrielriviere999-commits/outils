@@ -96,7 +96,7 @@ body.block-touch{touch-action:none;}
     <b class="titleb">Fichier</b><hr class="titlehr">
     <b>Image globale</b>
     <textarea id="ioArea" style="width:100%;height:160px;"></textarea>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button data-action="exportPNG">Exporter PNG base64</button>
@@ -149,7 +149,7 @@ body.block-touch{touch-action:none;}
 	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
 	<button class="rangebtn" data-action="sizeInputPlus">+</button><hr>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnEraser" data-action="toggleEraser">Gomme</button>
@@ -197,7 +197,7 @@ body.block-touch{touch-action:none;}
     <label><input type="radio" name="pixelSelectionType" value="ellipse">Ovale</label>
     <label><input type="radio" name="pixelSelectionType" value="circle">Rond</label>
     <label><input type="radio" name="pixelSelectionType" value="free">Libre</label><hr>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnMove" data-action="setToolMove">Déplacer</button>
@@ -210,7 +210,7 @@ body.block-touch{touch-action:none;}
     <label><input type="checkbox" id="rotateCopy">Copier / miroir</label>
     <label><input type="checkbox" id="flipOtherSide">Gauche / haut</label>
     <button id="btnRotate" data-action="setToolRotate">Pivoter</button>
-    <div style="display:table;table-layout:fixed;width:100%;">
+    <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
           <button id="btnFlipH" data-action="setToolFlipH">Invers H</button>
