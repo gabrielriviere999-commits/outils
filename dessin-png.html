@@ -3998,32 +3998,32 @@ function importPNG(){
     };
     img.src = base64;
 }
-function downloadPNG(){
-    var filename = getTimestampName("dessin", "png");
+function declencherExport(url){
     var link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    link.href = url;
+    if("download" in link){
+        // Navigateur moderne : enregistrement direct.
+        link.download = getTimestampName("dessin", "png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        // 3DS / vieux navigateurs : ouvrir dans la visionneuse. Une data URL se comporte comme une page : NetFront l'affiche.
+        window.location.href = url;
+    }
+}
+function downloadPNG(){
+    declencherExport(canvas.toDataURL("image/png"));
 }
 function downloadJPG(){
-	var filename = getTimestampName("dessin", "jpg");
     var jpgCanvas = document.createElement("canvas");
     jpgCanvas.width = canvas.width;
     jpgCanvas.height = canvas.height;
     var jpgCtx = jpgCanvas.getContext("2d");
-    // Fond blanc
     jpgCtx.fillStyle = "#ffffff";
     jpgCtx.fillRect(0, 0, jpgCanvas.width, jpgCanvas.height);
-    // Copier le dessin
     jpgCtx.drawImage(canvas, 0, 0);
-    var link = document.createElement("a");
-    link.href = jpgCanvas.toDataURL("image/jpeg", 0.92);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    declencherExport(jpgCanvas.toDataURL("image/jpeg", 0.92));
 }
 function partagerImage(mime, extension){
     if (!navigator.share) {
