@@ -288,36 +288,79 @@ function download(filename, dataUrl) {
   document.body.removeChild(a);
 }
 function exportCanvas(type) {
-  var format = document.getElementById("codeFormat").value;
-  var mime = "image/" + type;
-  var ext = (type === "jpeg" ? "jpg" : type);
-  var filename = getTimestampName(format === "QR" ? "qr-code" : "barcode", ext);
-  if (format === "QR") {
-    if (!qr) return;
-    var count = qr.getModuleCount();
-    var cell = 10;
-    var size = count * cell;
-    var fg = document.getElementById("fgColor").value;
-    var bg = document.getElementById("bgColor").value;
-    var canvas = document.createElement("canvas");
+  var format;
+  var canvas;
+  var ctx;
+  var count;
+  var cell;
+  var size;
+  var x;
+  var y;
+  var fg;
+  var bg;
+  var mime;
+  var data;
+  var filename;
+  format = document.getElementById("codeFormat").value;
+  fg = document.getElementById("fgColor").value || "#000000";
+  bg = document.getElementById("bgColor").value || "#ffffff";
+  if (type == "jpeg" || type == "jpg") {
+    mime = "image/jpeg";
+    filename = "jpg";
+  } else {
+    mime = "image/png";
+    filename = "png";
+  }
+  // QR CODE
+  if (format == "QR") {
+    if (!qr) {
+      alert("Générez d'abord un QR Code.");
+      return;
+    }
+    count = qr.getModuleCount();
+    cell = 10;
+    size = count * cell;
+    canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = bg || "#ffffff";
+    ctx = canvas.getContext("2d");
+    if (!ctx) {
+      alert("Canvas 2D indisponible.");
+      return;
+    }
+    // Fond opaque : plus compatible avec les anciens navigateurs
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = fg || "#000000";
-    for (var y = 0; y < count; y++) {
-      for (var x = 0; x < count; x++) {
+    ctx.fillStyle = fg;
+    for (y = 0; y < count; y++) {
+      for (x = 0; x < count; x++) {
         if (qr.isDark(y, x)) {
           ctx.fillRect(x * cell, y * cell, cell, cell);
         }
       }
     }
-    download(filename, canvas.toDataURL(mime));
   } else {
-    var canvasB = document.getElementById("barcodeCanvas");
-    if (!canvasB) return;
-    download(filename, canvasB.toDataURL(mime));
+    // CODE-BARRES : récupérer le canvas déjà généré par JsBarcode
+    canvas = document.getElementById("barcodeCanvas");
+    if (!canvas || canvas.width <= 0 || canvas.height <= 0) {
+      alert("Générez d'abord le code-barres.");
+      return;
+    }
+  }
+  try {
+    data = canvas.toDataURL(mime);
+    if (!data || data.indexOf("data:image/") != 0) {
+      alert("Impossible de créer l'image.");
+      return;
+    }
+    if (format == "QR") {
+      filename = "qr-code." + filename;
+    } else {
+      filename = "barcode." + filename;
+    }
+    download(filename, data);
+  } catch (e) {
+    alert("Erreur pendant l'export : " + e.message);
   }
 }
 document.getElementById("export-png").onclick = function () {
