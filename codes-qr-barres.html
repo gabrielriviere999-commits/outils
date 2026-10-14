@@ -245,11 +245,11 @@ function majLiensTelechargement(){
             }
         }
         aPng.href = canvas.toDataURL("image/png");
-        aPng.download = prefixe + ".png";
+        aPng.download = getTimestampName(prefixe, "png");
         aJpg.href = canvas.toDataURL("image/jpeg");
-        aJpg.download = prefixe + ".jpg";
+        aJpg.download = getTimestampName(prefixe, "jpg");
         aSvg.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(generateSVG_QR(qr));
-        aSvg.download = prefixe + ".svg";
+        aSvg.download = getTimestampName(prefixe, "svg");
     } else {
         var canvasB = document.getElementById("barcodeCanvas");
         var svg = currentSvg || codeDiv.querySelector("svg");
@@ -260,11 +260,11 @@ function majLiensTelechargement(){
             return;
         }
         aPng.href = canvasB.toDataURL("image/png");
-        aPng.download = prefixe + ".png";
+        aPng.download = getTimestampName(prefixe, "png");
         aJpg.href = canvasB.toDataURL("image/jpeg");
-        aJpg.download = prefixe + ".jpg";
+        aJpg.download = getTimestampName(prefixe, "jpg");
         aSvg.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
-        aSvg.download = prefixe + ".svg";
+        aSvg.download = getTimestampName(prefixe, "svg");
     }
 }
 function generateCode() {
