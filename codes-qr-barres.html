@@ -353,11 +353,11 @@ function exportCanvas(type) {
       alert("Impossible de créer l'image.");
       return;
     }
-    if (format == "QR") {
-      filename = "qr-code." + filename;
-    } else {
-      filename = "barcode." + filename;
-    }
+if (format == "QR") {
+  filename = getTimestampName("qr-code", filename);
+} else {
+  filename = getTimestampName("barcode", filename);
+}
     download(filename, data);
   } catch (e) {
     alert("Erreur pendant l'export : " + e.message);
