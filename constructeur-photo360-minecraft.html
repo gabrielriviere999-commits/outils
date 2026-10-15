@@ -132,7 +132,7 @@ Bas :
   <div id="result">
     <div id="resultInfo"></div>
     <canvas id="resultCanvas"></canvas>
-    <a id="downloadLink" href="#" download="minecraft-360.png">Télécharger la photo 360°</a> | <a id="openLinkSansWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (sans WebGL)</a> |  <a id="openLinkWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (WebGL)</a>
+    <a id="downloadLink" href="#" download>Télécharger la photo 360°</a> | <a id="openLinkSansWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (sans WebGL)</a> |  <a id="openLinkWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (WebGL)</a>
   </div>
 </div>
 <script src="outils.js"></script>
@@ -621,7 +621,7 @@ function construire() {
     // le poids est affiché dans le callback quand le blob est prêt.
     statusBox.innerHTML = "Encodage de l'image...";
     extension = exporterPanorama(canvas, format, qualite, function (taille, mode) {
-        downloadLink.download = "minecraft-360." + extension;
+        downloadLink.download = getTimestampName("minecraft360", extension)
         resultInfo.innerHTML =
             "Résolution : " + largeur + " x " + hauteur + "<br>" +
             "Poids : " + formaterTaille(taille) + "<br>" +
