@@ -35,7 +35,7 @@
   <div class="card">
     <label>Catégorie :</label>
     <div class="dropdown border-interne" id="catDrop">
-      <div class="dropdown-selected" id="catSelected" tabindex="0">—</div>
+      <div class="dropdown-selected" id="catSelected" tabindex="0">-</div>
       <div class="dropdown-list" id="catList"></div>
     </div>
   </div>
@@ -52,7 +52,7 @@
     <!-- MENU DE RECHERCHE SÉPARÉ -->
     <div class="dropdown-list border-interne" id="fromSearchList" style="display:none;"></div>
     <div class="dropdown border-interne" id="fromDrop">
-      <div class="dropdown-selected" id="fromSelected" tabindex="0">—</div>
+      <div class="dropdown-selected" id="fromSelected" tabindex="0">-</div>
       <div class="dropdown-list" id="fromList"></div>
     </div>
   </div>
@@ -63,7 +63,7 @@
     <!-- MENU DE RECHERCHE SÉPARÉ -->
     <div class="dropdown-list border-interne" id="toSearchList" style="display:none;"></div>
     <div class="dropdown border-interne" id="toDrop">
-      <div class="dropdown-selected" id="toSelected" tabindex="0">—</div>
+      <div class="dropdown-selected" id="toSelected" tabindex="0">-</div>
       <div class="dropdown-list" id="toList"></div>
     </div>
   </div>
@@ -72,7 +72,7 @@
   <button id="swapBtn">Inverser De ↔ Vers</button>
 </div>
 <p>
-  Résultat : <strong id="result">—</strong>
+  Résultat : <strong id="result">-</strong>
   <button onclick="copyText('result', this)">Copier</button>
 </p>
 <script src="outils.js"></script>
@@ -620,7 +620,7 @@ function highlight() {
         var div = document.createElement("div");
         var label = opt;
         if (unitNames[opt]) {
-          label = opt + " — " + unitNames[opt];
+          label = opt + " - " + unitNames[opt];
         }
         div.appendChild(document.createTextNode(label));
         div.onclick = function () {
@@ -682,9 +682,9 @@ function updateUnits() {
   fillTo(units);
   selectedFrom = null;
   selectedTo = null;
-  document.getElementById("fromSelected").innerHTML = "—";
-  document.getElementById("toSelected").innerHTML = "—";
-  document.getElementById("result").innerHTML = "—";
+  document.getElementById("fromSelected").innerHTML = "-";
+  document.getElementById("toSelected").innerHTML = "-";
+  document.getElementById("result").innerHTML = "-";
 }
 /* 8. Recherche globale (De + Vers)  */
 // Recherche "De" avec noms + clavier + scroll
@@ -710,7 +710,7 @@ document.getElementById("searchFrom").oninput = function () {
       var div = document.createElement("div");
       var label = unit;
       if (unitNames[unit]) {
-        label = unit + " — " + unitNames[unit];
+        label = unit + " - " + unitNames[unit];
       }
       div.appendChild(document.createTextNode(label));
       div.onclick = function () {
@@ -808,7 +808,7 @@ document.getElementById("searchTo").oninput = function () {
       var div = document.createElement("div");
       var label = unit;
       if (unitNames[unit]) {
-        label = unit + " — " + unitNames[unit];
+        label = unit + " - " + unitNames[unit];
       }
       div.appendChild(document.createTextNode(label));
       div.onclick = function () {
@@ -895,7 +895,7 @@ function convert() {
   raw = raw.replace(",", ".");
   var val = parseFloat(raw);
   if (isNaN(val)) {
-    document.getElementById("result").innerHTML = "—";
+    document.getElementById("result").innerHTML = "-";
     return;
   }
   // CAS SPÉCIAL : TEMPÉRATURE
@@ -945,11 +945,11 @@ document.getElementById("swapBtn").onclick = function () {
   // On met à jour l'affichage (avec noms si disponibles)
   var labelFrom = selectedFrom;
   if (unitNames[selectedFrom]) {
-    labelFrom = selectedFrom + " — " + unitNames[selectedFrom];
+    labelFrom = selectedFrom + " - " + unitNames[selectedFrom];
   }
   var labelTo = selectedTo;
   if (unitNames[selectedTo]) {
-    labelTo = selectedTo + " — " + unitNames[selectedTo];
+    labelTo = selectedTo + " - " + unitNames[selectedTo];
   }
   document.getElementById("fromSelected").innerHTML = labelFrom;
   document.getElementById("toSelected").innerHTML   = labelTo;
