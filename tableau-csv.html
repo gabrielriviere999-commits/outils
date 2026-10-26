@@ -1408,13 +1408,14 @@ window.onload = function() {
   }
   updateOptionsVisibility();
 };
-/* Sélectionner le modèle depuis l'URL : ?model=unicode */
-function selectModelFromURL() {
+/* Lire tous les paramètres de l'URL */
+function getURLParams() {
+    var result = {};
     var search = window.location.search;
-    if (!search) return;
+    if (!search) return result;
     var params = search.substring(1).split("&");
-    var model = "";
     for (var i = 0; i < params.length; i++) {
+        if (!params[i]) continue;
         var parts = params[i].split("=");
         var key;
         var value;
@@ -1428,80 +1429,81 @@ function selectModelFromURL() {
         } catch (e) {
             continue;
         }
-        if (key === "model") {
-            model = value;
-            break;
+        result[key] = value;
+    }
+    return result;
+}
+/* Appliquer les paramètres URL aux champs */
+function applyURLParams() {
+    var params = getURLParams();
+    var el;
+    var model = document.getElementById("model");
+    // Modèle
+    if (params.model !== undefined) {
+        for (var i = 0; i < model.options.length; i++) {
+            if (model.options[i].value === params.model) {
+                model.value = params.model;
+                break;
+            }
         }
     }
-    if (!model) return;
-    var select = document.getElementById("model");
-    if (!select) return;
-    /* Vérifier que le modèle existe réellement dans la liste */
-    var found = false;
-    for (var i = 0; i < select.options.length; i++) {
-        if (select.options[i].value === model) {
-            found = true;
-            break;
+    // Séparateur
+    if (params.sep !== undefined) {
+        document.getElementById("sep").value = params.sep;
+    }
+    // Largeur maximale
+    if (params.maxwidth !== undefined) {
+        document.getElementById("maxwidth").value = params.maxwidth;
+    }
+    // Caractère du modèle Custom
+    if (params.custom_char !== undefined) {
+        el = document.getElementById("custom_char");
+        el.value = params.custom_char;
+        applyCustomChar(el.value);
+    }
+    // Custom Plus et Fancy Custom Plus
+    for (var s = 0; s < styleSystems.length; s++) {
+        var system = styleSystems[s];
+        for (var j = 0; j < system.config.length; j++) {
+            var cfg = system.config[j];
+            // Les noms des paramètres URL sont les identifiants HTML : cp_TL, cp_V, fcp_SEP, etc.
+            if (params[cfg.id] !== undefined) {
+                system.style[cfg.key] = params[cfg.id];
+                el = document.getElementById(cfg.id);
+                if (el) {
+                    el.value = params[cfg.id];
+                }
+            }
         }
     }
-    if (!found) return;
-    select.value = model;
+    // Actualiser les panneaux visibles
     updateOptionsVisibility();
 }
-/* Exécution automatique selon le paramètre URL */
+/* Exécution automatique selon textareafile */
 function executeTextareaFileParam() {
-    var search = window.location.search;
-    if (!search) return;
-    var params = search.substring(1).split("&");
-    var action = "";
-    for (var i = 0; i < params.length; i++) {
-        var parts = params[i].split("=");
-        var key;
-        var value;
-        try {
-            key = decodeURIComponent(
-                parts[0].replace(/\+/g, " ")
-            );
-            value = decodeURIComponent(
-                parts.slice(1).join("=").replace(/\+/g, " ")
-            );
-        } catch (e) {
-            continue;
-        }
-        if (key === "textareafile") {
-            action = value;
-            break;
-        }
-    }
+    var params = getURLParams();
+    var action = params.textareafile;
     if (!action) return;
-    /* Laisser le temps aux autres scripts de charger les données */
+    if (action.indexOf("input|") === 0) {
+        convertir();
+    } else if (action.indexOf("output|") === 0) {
+        importFromOutput();
+    }
+}
+/* Initialisation :
+ * 1. Restaurer les paramètres sauvegardés.
+ * 2. Appliquer les paramètres de l'URL, prioritaires.
+ * 3. Exécuter la conversion automatique. */
+var ancienOnload = window.onload;
+window.onload = function() {
+    if (ancienOnload) {
+        ancienOnload();
+    }
+    applyURLParams();
     setTimeout(function() {
-        if (action.indexOf("input|") === 0) {
-            convertir();
-        } else if (action.indexOf("output|") === 0) {
-            importFromOutput();
-        }
+        executeTextareaFileParam();
     }, 100);
-}
-/* Initialisation sans écraser les autres événements onload */
-if (window.addEventListener) {
-    window.addEventListener("load", function() {
-        selectModelFromURL();
-        executeTextareaFileParam();
-    }, false);
-} else if (window.attachEvent) {
-    window.attachEvent("onload", function() {
-        selectModelFromURL();
-        executeTextareaFileParam();
-    });
-} else {
-    var ancienOnload = window.onload;
-    window.onload = function() {
-        if (ancienOnload) ancienOnload();
-        selectModelFromURL();
-        executeTextareaFileParam();
-    };
-}
+};
 </script>
 </body>
 </html>
