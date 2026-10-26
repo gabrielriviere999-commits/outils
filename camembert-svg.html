@@ -365,8 +365,12 @@ document.getElementById("importBtn").onclick = function() {
   rebuildTable();
   renderPie();
 };
-rebuildTable();
-renderPie();
+/* Au chargement de la page */
+window.onload = function() {
+    setTimeout(function() {
+        document.getElementById("importBtn").onclick();
+    }, 50);
+};
 </script>
 </body>
 </html>
