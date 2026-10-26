@@ -78,11 +78,7 @@ input[type=text],input[type=number]{width:100%;}
 <script src="color-palette.js"></script>
 <script>
 /* Données  */
-var slices = [
-  { label: "A", value: 40, color: "#e74c3c" },
-  { label: "B", value: 30, color: "#3498db" },
-  { label: "C", value: 20, color: "#2ecc71" }
-];
+var slices = [];
 var tblBody = document.getElementById("tbl").getElementsByTagName("tbody")[0];
 var preview = document.getElementById("preview");
 var outputArea = document.getElementById("output");
@@ -244,7 +240,7 @@ function renderPie() {
   var total = 0;
   for (var i = 0; i < slices.length; i++) total += slices[i].value;
   if (total <= 0) {
-    preview.innerHTML = "<em>Aucune donnée</em>";
+    preview.innerHTML = "<i>Aucune donnée</i>";
     outputArea.value = "";
     return;
   }
