@@ -824,6 +824,52 @@ function finishColorPicker() {
 }
 document.addEventListener("mouseup", finishColorPicker);
 document.addEventListener("touchend", finishColorPicker);
+/* Paramètres de couleurs depuis l'URL */
+function getURLParams() {
+    var result = {};
+    var search = window.location.search;
+    if (!search) return result;
+    var params = search.substring(1).split("&");
+    var i, parts, key, value;
+    for (i = 0; i < params.length; i++) {
+        if (!params[i]) continue;
+        parts = params[i].split("=");
+        try {
+            key = decodeURIComponent(
+                parts[0].replace(/\+/g, " ")
+            );
+            value = decodeURIComponent(
+                parts.slice(1).join("=").replace(/\+/g, " ")
+            );
+        } catch (e) {
+            continue;
+        }
+        result[key] = value;
+    }
+    return result;
+}
+function applyURLColors() {
+    var params = getURLParams();
+    var fields = [
+        { param: "background", id: "colorBackground" },
+        { param: "folder", id: "colorFolder" },
+        { param: "file", id: "colorFile" },
+        { param: "ascii", id: "colorAscii" },
+        { param: "comment", id: "colorComment" }
+    ];
+    var i, field, input;
+    for (i = 0; i < fields.length; i++) {
+        field = fields[i];
+        if (params[field.param] === undefined) continue;
+        input = document.getElementById(field.id);
+        input.value = params[field.param];
+        updatePickerFromInput(input, input.nextElementSibling);
+    }
+    /* Appliquer les cinq couleurs et actualiser l'affichage */
+    updateColors();
+}
+/* Appliquer les paramètres après le chargement de la page */
+applyURLColors();
 </script>
 </body>
 </html>
