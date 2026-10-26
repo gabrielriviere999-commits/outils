@@ -1054,6 +1054,15 @@ function openHelpPopup() {
   var container = document.getElementById("popupHelpContent");
   openPopup(container);
 }
+/* Au chargement de la page */
+window.onload = function() {
+    setTimeout(function () {
+        var code = document.getElementById('output').value;
+        if (code.replace(/^\s+|\s+$/g, "")) {
+            importTableFromHTML(code);
+        }
+    }, 10);
+};
 </script>
 </body>
 </html>
