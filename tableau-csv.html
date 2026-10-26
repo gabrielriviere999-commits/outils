@@ -1408,6 +1408,100 @@ window.onload = function() {
   }
   updateOptionsVisibility();
 };
+/* Sélectionner le modèle depuis l'URL : ?model=unicode */
+function selectModelFromURL() {
+    var search = window.location.search;
+    if (!search) return;
+    var params = search.substring(1).split("&");
+    var model = "";
+    for (var i = 0; i < params.length; i++) {
+        var parts = params[i].split("=");
+        var key;
+        var value;
+        try {
+            key = decodeURIComponent(
+                parts[0].replace(/\+/g, " ")
+            );
+            value = decodeURIComponent(
+                parts.slice(1).join("=").replace(/\+/g, " ")
+            );
+        } catch (e) {
+            continue;
+        }
+        if (key === "model") {
+            model = value;
+            break;
+        }
+    }
+    if (!model) return;
+    var select = document.getElementById("model");
+    if (!select) return;
+    /* Vérifier que le modèle existe réellement dans la liste */
+    var found = false;
+    for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === model) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) return;
+    select.value = model;
+    updateOptionsVisibility();
+}
+/* Exécution automatique selon le paramètre URL */
+function executeTextareaFileParam() {
+    var search = window.location.search;
+    if (!search) return;
+    var params = search.substring(1).split("&");
+    var action = "";
+    for (var i = 0; i < params.length; i++) {
+        var parts = params[i].split("=");
+        var key;
+        var value;
+        try {
+            key = decodeURIComponent(
+                parts[0].replace(/\+/g, " ")
+            );
+            value = decodeURIComponent(
+                parts.slice(1).join("=").replace(/\+/g, " ")
+            );
+        } catch (e) {
+            continue;
+        }
+        if (key === "textareafile") {
+            action = value;
+            break;
+        }
+    }
+    if (!action) return;
+    /* Laisser le temps aux autres scripts de charger les données */
+    setTimeout(function() {
+        if (action.indexOf("input|") === 0) {
+            convertir();
+        } else if (action.indexOf("output|") === 0) {
+            importFromOutput();
+        }
+    }, 100);
+}
+/* Initialisation sans écraser les autres événements onload */
+if (window.addEventListener) {
+    window.addEventListener("load", function() {
+        selectModelFromURL();
+        executeTextareaFileParam();
+    }, false);
+} else if (window.attachEvent) {
+    window.attachEvent("onload", function() {
+        selectModelFromURL();
+        executeTextareaFileParam();
+    });
+} else {
+    var ancienOnload = window.onload;
+    window.onload = function() {
+        if (ancienOnload) ancienOnload();
+        selectModelFromURL();
+        executeTextareaFileParam();
+    };
+}
 </script>
 </body>
 </html>
