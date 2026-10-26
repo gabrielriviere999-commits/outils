@@ -386,11 +386,109 @@ function applyImport() {
     document.getElementById("importBox").style.display =
         "none";
 }
+/* PARAMETRES URL */
+function getURLParams() {
+    var params = {};
+    var search = window.location.search;
+    var parts;
+    var pair;
+    var key;
+    var value;
+    var i;
+    if (!search || search.length < 2) {
+        return params;
+    }
+    parts = search.substring(1).split("&");
+    for (i = 0; i < parts.length; i++) {
+        if (!parts[i]) {
+            continue;
+        }
+        pair = parts[i].split("=");
+        try {
+            key = decodeURIComponent(
+                pair[0].replace(/\+/g, " ")
+            );
+            value = decodeURIComponent(
+                pair.slice(1).join("=").replace(/\+/g, " ")
+            );
+        } catch (e) {
+            continue;
+        }
+        params[key] = value;
+    }
+    return params;
+}
+/* APPLICATION DES PARAMETRES URL */
+function applyURLParams() {
+    var params = getURLParams();
+    var el;
+    var value;
+    var action = "";
+    var key;
+    var i;
+    // Largeur maximale des barres
+    if (params.maxWidth !== undefined) {
+        value = params.maxWidth;
+        if (/^\d+$/.test(value) &&
+            parseInt(value, 10) >= 1) {
+            document.getElementById("maxWidth").value = value;
+        }
+    }
+    // Caractère de remplissage
+    if (params.barChar !== undefined &&
+        params.barChar.length > 0) {
+        document.getElementById("barChar").value =
+            params.barChar.charAt(0);
+    }
+    // Caractère de fond
+    if (params.bgChar !== undefined &&
+        params.bgChar.length > 0) {
+        document.getElementById("bgChar").value =
+            params.bgChar.charAt(0);
+    }
+    // Séparateur du libellé
+    if (params.sep !== undefined) {
+        document.getElementById("sep").value = params.sep;
+    }
+    // Normalisation
+    if (params.normalize !== undefined) {
+        value = params.normalize.toLowerCase();
+        if (value === "1" ||
+            value === "true" ||
+            value === "on") {
+            document.getElementById("normalize").checked = true;
+        } else if (value === "0" ||
+                   value === "false" ||
+                   value === "off") {
+            document.getElementById("normalize").checked = false;
+        }
+    }
+    // Action à exécuter selon textareafile
+    if (params.textareafile !== undefined) {
+        value = params.textareafile.split("|");
+        action = value[0].toLowerCase();
+    }
+    return action;
+}
 /* INITIALISATION */
 function init() {
+    var action;
+    // Charger d'abord les options sauvegardées
     loadState();
+    // Les paramètres URL sont prioritaires
+    action = applyURLParams();
+    // Activer la sauvegarde automatique
     bindOptions();
-    updateChart();
+    // Exécuter l'action demandée
+    setTimeout(function () {
+        if (action === "input") {
+            updateChart();
+        } else if (action === "output") {
+            importFromOutput();
+        } else {
+            updateChart();
+        }
+    }, 50);
 }
 if (window.attachEvent) {
     window.attachEvent('onload', init);
