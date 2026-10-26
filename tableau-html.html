@@ -1056,12 +1056,14 @@ function openHelpPopup() {
 }
 /* Au chargement de la page */
 window.onload = function() {
-  setTimeout(function () {
-    var code = document.getElementById('output').value;
-    if (code.replace(/^\s+|\s+$/g, "")) {
-        importTableFromHTML(code);
-    }
-  }, 50);
+    setTimeout(function() {
+        var output = document.getElementById('output');
+        if (!output) return;
+        var code = output.value;
+        if (code.replace(/^\s+|\s+$/g, "")) {
+            importTableFromHTML(code);
+        }
+    }, 50);
 };
 </script>
 </body>
