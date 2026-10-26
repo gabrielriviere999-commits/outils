@@ -260,12 +260,7 @@ function trim(s) {
 /* Au chargement de la page */
 window.onload = function() {
     setTimeout(function() {
-        var output = document.getElementById('output');
-        if (!output) return;
-        var code = output.value;
-        if (code.replace(/^\s+|\s+$/g, "")) {
-            importAscii();
-        }
+        importAscii();
     }, 50);
 };
 </script>
