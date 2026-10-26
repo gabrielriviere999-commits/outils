@@ -307,6 +307,12 @@ function removeAlignmentStyles(doc) {
     }
   }
 }
+/* Au chargement de la page */
+window.onload = function() {
+    setTimeout(function() {
+        updatePreview();
+    }, 50);
+};
 </script>
 </body>
 </html>
