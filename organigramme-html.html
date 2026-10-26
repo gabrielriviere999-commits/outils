@@ -635,9 +635,24 @@ function importData(text) {
   selectedId = null;
 }
 function doImport() {
-  var txt = document.getElementById("output").value;
-  importData(txt);
+    var txt = document.getElementById("output").value;
+    // Champ vide : ne rien importer
+    if (!txt || !txt.replace(/^\s+|\s+$/g, "")) {
+        return;
+    }
+    importData(txt);
 }
+/* Au chargement de la page */
+window.onload = function() {
+    setTimeout(function() {
+        var output = document.getElementById('output');
+        var code = output.value;
+        if (code.replace(/^\s+|\s+$/g, "")) {
+            doImport();
+        }
+        renderOrgTree(orgRoot);
+    }, 50);
+};
 </script>
 </body>
 </html>
