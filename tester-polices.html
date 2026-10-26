@@ -7,20 +7,6 @@
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <style>
-p{margin-top:10px;line-height:0;}
-.container-tpolices{display:grid;}
-.card-tpolices {
-  padding:10px;
-  display:block;
-  max-width:100%;
-  overflow:hidden;
-}
-@media (min-width:0px) {
-  .container-tpolices { grid-template-columns:1fr; }
-}
-@media (min-width:1100px) {
-  .container-tpolices { grid-template-columns:1fr 1fr; }
-}
 .preview {
   padding:2px;
   margin-top:10px;
@@ -30,7 +16,6 @@ p{margin-top:10px;line-height:0;}
   overflow:auto;
   font-size:12px
 }
-/* Chaque bloc a sa propre police */
 #preview1,.p1{font-family:Courier New;}
 #preview2,.p2{font-family:Lucida Console;}
 #preview3,.p3{font-family:Consolas;}
@@ -43,6 +28,7 @@ p{margin-top:10px;line-height:0;}
 #preview10,.p10{font-family:Comic Sans MS;}
 #preview11,.p11{font-family:Impact;}
 #preview12,.p12{font-family:Trebuchet MS;}
+h4{font-weight:normal;}
 </style>
 </head>
 <body>
@@ -51,55 +37,55 @@ p{margin-top:10px;line-height:0;}
 <textarea wrap="off" id="input" onkeyup="updateText();"></textarea><br>
 <input type="file" id="textareaFileinput"><p></p>
 <h3>Affichage des polices</h3>
-<div class="container-tpolices">
-<div class="card-tpolices border-externe">
-<p class="p1">Courier New</p>
-<div id="preview1" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p2">Lucida Console</p>
-<div id="preview2" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p3">Consolas</p>
-<div id="preview3" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p4">monospace</p>
-<div id="preview4" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p5">Arial</p>
-<div id="preview5" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p6">Verdana</p>
-<div id="preview6" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p7">Times New Roman</p>
-<div id="preview7" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p8">Georgia</p>
-<div id="preview8" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p9">sans-serif</p>
-<div id="preview9" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p10">Comic Sans MS</p>
-<div id="preview10" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p11">Impact</p>
-<div id="preview11" class="preview border-interne"></div>
-</div>
-<div class="card-tpolices border-externe">
-<p class="p12">Trebuchet MS</p>
-<div id="preview12" class="preview border-interne"></div>
-</div>
+<div class="container">
+  <div class="card">
+    <h4 class="p1">Courier New</h4>
+    <div id="preview1" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p2">Lucida Console</h4>
+    <div id="preview2" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p3">Consolas</h4>
+    <div id="preview3" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p4">monospace</h4>
+    <div id="preview4" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p5">Arial</h4>
+    <div id="preview5" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p6">Verdana</h4>
+    <div id="preview6" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p7">Times New Roman</h4>
+    <div id="preview7" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p8">Georgia</h4>
+    <div id="preview8" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p9">sans-serif</h4>
+    <div id="preview9" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p10">Comic Sans MS</h4>
+    <div id="preview10" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p11">Impact</h4>
+    <div id="preview11" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p12">Trebuchet MS</h4>
+    <div id="preview12" class="preview border-interne"></div>
+  </div>
 </div>
 <script src="outils.js"></script>
 <script>
