@@ -862,6 +862,10 @@ function importTableFromHTML(code) {
   container.innerHTML = code;
   var newTable = container.querySelector('table');
   var importedStyle = container.querySelector("style");
+  // Mettre à jour l'input avec l'ID du tableau importé
+  if (newTable && newTable.id) {
+    document.getElementById("importTableId").value = newTable.id;
+  }
   // 1. Remplacer la table AVANT de mettre à jour les variables CSS
   if (newTable) {
     newTable.id = "editorTable";
