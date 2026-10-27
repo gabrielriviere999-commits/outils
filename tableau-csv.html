@@ -127,7 +127,7 @@
   </div>
 </div>
 <textarea wrap="off" id="input"></textarea><br>
-<button onclick="convertir()">Convertir en tableau</button>
+<button onclick="exportBtn()">Convertir en tableau</button>
 <button id="copyinput">Copier</button>
 <button id="transposeBtn">Inverser lignes et colonnes</button>
 <button onclick="effacerTout()">Effacer tout</button>
@@ -137,7 +137,7 @@
 <p></p><div id="downloadLinkContainer"></div>
 <p></p><h3>Tableau</h3>
 <textarea wrap="off" id="output"></textarea><br>
-<button onclick="importFromOutput()">Convertir en CSV</button>
+<button onclick="importBtn()">Convertir en CSV</button>
 <button id="copyoutput">Copier</button>
 <input id="zoomRangeOutput" type="range" min="6" max="40" value="12" oninput="applyZoom('zoomRangeOutput', 'output')">
 <button onclick="resetZoom('zoomRangeOutput', 'output')">12px</button>
@@ -683,7 +683,7 @@ function csvToRows(lignes, sep) {
     }
     return rows;
 }
-function convertir() {
+function exportBtn() {
     var texte = document.getElementById("input").value;
     if (!texte) return;
     var sep = document.getElementById("sep").value || ";";
@@ -915,7 +915,7 @@ function tableToCSV(rows) {
     }
     return csv;
 }
-function importFromOutput() {
+function importBtn() {
     var out = document.getElementById("output").value;
     var rows = parseAnyTable(out);
     var csv = tableToCSV(rows);
@@ -1485,9 +1485,9 @@ function executeTextareaFileParam() {
     var action = params.textareafile;
     if (!action) return;
     if (action.indexOf("input|") === 0) {
-        convertir();
+        exportBtn();
     } else if (action.indexOf("output|") === 0) {
-        importFromOutput();
+        importBtn();
     }
 }
 /* Initialisation :
