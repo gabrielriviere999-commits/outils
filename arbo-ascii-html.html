@@ -36,6 +36,7 @@
 <h2>Arborescence ASCII & HTML</h2>
 <div class="container">
 <div class="card">
+  <h3>Arborescence</h3>
   <button onclick="renameRoot()">Renommer racine</button>
   <button onclick="addFolder()">+ Dossier</button>
   <button onclick="addFile()">+ Fichier</button>
@@ -59,10 +60,10 @@
     • Afficher HTML couleur : Afficher le code HTML avec couleurs de l'arborescence en dessous du bouton.
     <p><hr></p>
     <b>Champ</b><br>
-    • Mettre à jour à partir du texte : Afficher l'arborescence à partir du texte obtenu avec cet outil ou <a href="make-arbo.py" download>le script Python make-arbo.py</a>, <a href="../portfolio/astuces/android/applications/arbo.apk" download>l'application Android Arbo</a>, <a href="arbo-zip.html">la page Arborescence ZIP</a>.<br>
+    • Importer l'arborescence : Afficher l'arborescence à partir du texte obtenu avec cet outil ou <a href="make-arbo.py" download>le script Python make-arbo.py</a>, <a href="../portfolio/astuces/android/applications/arbo.apk" download>l'application Android Arbo</a>, <a href="arbo-zip.html">la page Arborescence ZIP</a>.<br>
     • Importer (commande tree) : Afficher l'arborescence à partir du texte obtenu avec la commande tree.<br>
     • Sélecteur de fichiers : Choisir un fichier depuis l'appareil à mettre dans le champ de texte.<br><br>
-    Note : En important l'arborescence de tree, les fichiers sans extensions (sans .txt, .jpg etc...) sont reconnus comme des dossiers.
+    Note : En important l'arborescence de la commande tree, les fichiers sans extensions (sans .txt, .jpg etc...) sont reconnus comme des dossiers.
   </div>
   <p>Dossier courant : <span id="currentPath"></span></p>
   <pre id="ascii"></pre>
@@ -98,26 +99,27 @@
       </div>
     </div>
   </div>
-<fieldset><legend>Couleurs</legend>
-  <label>Fond : <input type="text" id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
-  <label>Dossiers : <input type="text" id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
-  <label>Fichiers : <input type="text" id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
-  <label>ASCII : <input type="text" id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label>
-  <label>Commentaires : <input type="text" id="colorComment" value="#888888"><button class="previewColorPicker"></button></label><hr>
-  <button onclick="exportColors()">Exporter</button>
-  <button onclick="showImportColors()">Importer</button>
-  <button onclick="resetColors()">Valeurs par défaut</button>
-  <div id="importBox" style="display:none;">
-    <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
-    <button onclick="applyImport()">Valider l'import</button>
-    <button id="copyjson">Copier</button>
-  </div>
-</fieldset>
+  <fieldset><legend>Couleurs</legend>
+    <label>Fond : <input type="text" id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
+    <label>Dossiers : <input type="text" id="colorFolder" value="#44aaff"><button class="previewColorPicker"></button></label>
+    <label>Fichiers : <input type="text" id="colorFile" value="#00ff00"><button class="previewColorPicker"></button></label>
+    <label>ASCII : <input type="text" id="colorAscii" value="#00ff00"><button class="previewColorPicker"></button></label>
+    <label>Commentaires : <input type="text" id="colorComment" value="#888888"><button class="previewColorPicker"></button></label><hr>
+    <button onclick="exportColors()">Exporter</button>
+    <button onclick="showImportColors()">Importer</button>
+    <button onclick="resetColors()">Valeurs par défaut</button>
+    <div id="importBox" style="display:none;">
+      <textarea wrap="off" id="json" style="height:100px;"></textarea><br>
+      <button onclick="applyImport()">Valider l'import</button>
+      <button id="copyjson">Copier</button>
+    </div>
+  </fieldset>
 </div>
 <div class="card">
+  <h3>Texte</h3>
   <textarea wrap="off" id="input"></textarea><br>
-  <button onclick="restoreTree()">Mettre à jour à partir du texte</button>
-  <button onclick="importTreeFromText()">Importer (commande tree)</button>
+  <button onclick="importTree()">Importer l'arborescence</button>
+  <button onclick="importTreeCmd()">Importer (commande tree)</button>
   <input type="file" id="textareaFileinput">
 </div>
 </div>
@@ -239,12 +241,8 @@ function showTreeHtml() {
     box.style.display = "block";
     box.value = finalHtml;
 }
-function restoreTree() {
+function importTree() {
     var text = document.getElementById("input").value;
-    if (!text) {
-        alert("Le champ de texte est vide.");
-        return;
-    }
     var lines = text.split("\n");
     var stack = [];
     var i;
@@ -619,12 +617,8 @@ function hasFileLikeExtension(name) {
     // on considère que quelque chose comme "README.md" ou "index.html" est un fichier
     return true;
 }
-function importTreeFromText() {
+function importTreeCmd() {
     var txt = document.getElementById("input").value;
-    if (!txt) {
-        alert("Le champ de texte est vide.");
-        return;
-    }
     var newRoot = importTreeUniversal(txt);
     root = newRoot;
     currentPath = [];
@@ -870,6 +864,20 @@ function applyURLColors() {
 }
 /* Appliquer les paramètres après le chargement de la page */
 applyURLColors();
+/* Exécuter une fonction d'import selon les paramètres URL */
+function applyURLImport() {
+    var params = getURLParams();
+    if (params.importTree === "1") {
+      setTimeout(function() {
+        importTree();
+        }, 300);
+    } else if (params.importTreeCmd === "1") {
+      setTimeout(function() {
+        importTreeCmd();
+        }, 300);
+    }
+}
+applyURLImport();
 </script>
 </body>
 </html>
