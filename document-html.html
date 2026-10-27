@@ -53,7 +53,7 @@ iframe{background:#fff!important;}
   <div class="card">
     <h3>Code HTML</h3>
     <textarea wrap="off" id="output"></textarea><br>
-    <button onclick="updatePreview()">Mettre à jour</button>
+    <button onclick="importBtn()">Mettre à jour</button>
     <button id="copyoutput">Copier le code</button>
     <input type="file" id="textareaFileoutput">
     <div id="status">Prêt.</div>
@@ -101,7 +101,7 @@ iframe{background:#fff!important;}
   var statusEl = document.getElementById('status');
   // Initialisation
   output.value = baseTemplate;
-  updatePreview();
+  importBtn();
   function setStatus(msg) {
     statusEl.innerHTML = msg;
   }
@@ -155,7 +155,7 @@ function insertTemplate(type) {
     insertAtCursor(snippet);
   }
 }
-function updatePreview() {
+function importBtn() {
   var doc = preview.contentDocument || preview.contentWindow.document;
   doc.open();
   doc.write(output.value);
@@ -233,7 +233,7 @@ function insertListTextarea(type) {
   output.selectionStart = start;
   output.selectionEnd = start + list.length;
   setStatus("Liste " + " insérée dans le code.");
-  updatePreview();
+  importBtn();
 }
 function prettyHTML(html) {
   return html.replace(/></g, ">\n<");
@@ -310,7 +310,7 @@ function removeAlignmentStyles(doc) {
 /* Au chargement de la page */
 window.onload = function() {
     setTimeout(function() {
-        updatePreview();
+        importBtn();
     }, 300);
 };
 </script>
