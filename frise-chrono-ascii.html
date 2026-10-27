@@ -19,7 +19,7 @@
 <div class="card">
   <h3>Aperçu / texte</h3>
   <textarea wrap="off" id="output" style="width:100%;height:200px;box-sizing:border-box;"></textarea><br>
-  <button onclick="importAscii()">Mettre à jour</button>
+  <button onclick="importBtn()">Mettre à jour</button>
   <button id="copyoutput">Copier</button>
   <input type="file" id="textareaFileoutput">
 </div>
@@ -165,7 +165,7 @@ function repeat(s, n) {
   return r;
 }
 /* IMPORT TEXTE Format : date | titre | desc  */
-function importAscii() {
+function importBtn() {
   var raw = document.getElementById("output").value;
   var lines = raw.split("\n");
   var i;
@@ -260,7 +260,7 @@ function trim(s) {
 /* Au chargement de la page */
 window.onload = function() {
     setTimeout(function() {
-        importAscii();
+        importBtn();
     }, 300);
 };
 </script>
