@@ -16,15 +16,15 @@
   overflow:auto;
   font-size:12px
 }
-#preview1,.p1{font-family:Courier New;}
-#preview2,.p2{font-family:Lucida Console;}
-#preview3,.p3{font-family:Consolas;}
-#preview4,.p4{font-family:monospace;}
-#preview5,.p5{font-family:Arial;}
-#preview6,.p6{font-family:Verdana;}
-#preview7,.p7{font-family:Times New Roman;}
-#preview8,.p8{font-family:Georgia;}
-#preview9,.p9{font-family:sans-serif;}
+#preview1,.p1{font-family:sans-serif;}
+#preview2,.p2{font-family:monospace;}
+#preview3,.p3{font-family:Arial;}
+#preview4,.p4{font-family:Verdana;}
+#preview5,.p5{font-family:Times New Roman;}
+#preview6,.p6{font-family:Georgia;}
+#preview7,.p7{font-family:Courier New;}
+#preview8,.p8{font-family:Lucida Console;}
+#preview9,.p9{font-family:Consolas;}
 #preview10,.p10{font-family:Comic Sans MS;}
 #preview11,.p11{font-family:Impact;}
 #preview12,.p12{font-family:Trebuchet MS;}
@@ -34,21 +34,29 @@ h4{font-weight:normal;}
 <body>
 <h2>Tester polices</h2>
 <h3>Texte</h3>
+<label">Police du texte :</label>
+<select id="textareaFont" data-target="input" onchange="changeTextareaFont(this);">
+  <option value="sans-serif">sans-serif</option>
+  <option value="monospace">monospace</option>
+  <option value="Arial">Arial</option>
+  <option value="Verdana">Verdana</option>
+  <option value="Times New Roman">Times New Roman</option>
+  <option value="Georgia">Georgia</option>
+  <option value="Courier New">Courier New</option>
+  <option value="Lucida Console">Lucida Console</option>
+  <option value="Consolas">Consolas</option>
+  <option value="Comic Sans MS">Comic Sans MS</option>
+  <option value="Impact">Impact</option>
+  <option value="Trebuchet MS">Trebuchet MS</option>
+</select>
+<br>
 <textarea wrap="off" id="input" onkeyup="updateText();"></textarea><br>
 <input type="file" id="textareaFileinput"><p></p>
 <h3>Affichage des polices</h3>
 <div class="container">
   <div class="card">
-    <h4 class="p1">Courier New</h4>
-    <div id="preview1" class="preview border-interne"></div>
-  </div>
-  <div class="card">
-    <h4 class="p2">Lucida Console</h4>
-    <div id="preview2" class="preview border-interne"></div>
-  </div>
-  <div class="card">
-    <h4 class="p3">Consolas</h4>
-    <div id="preview3" class="preview border-interne"></div>
+    <h4 class="p9">sans-serif</h4>
+    <div id="preview9" class="preview border-interne"></div>
   </div>
   <div class="card">
     <h4 class="p4">monospace</h4>
@@ -71,8 +79,16 @@ h4{font-weight:normal;}
     <div id="preview8" class="preview border-interne"></div>
   </div>
   <div class="card">
-    <h4 class="p9">sans-serif</h4>
-    <div id="preview9" class="preview border-interne"></div>
+    <h4 class="p1">Courier New</h4>
+    <div id="preview1" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p2">Lucida Console</h4>
+    <div id="preview2" class="preview border-interne"></div>
+  </div>
+  <div class="card">
+    <h4 class="p3">Consolas</h4>
+    <div id="preview3" class="preview border-interne"></div>
   </div>
   <div class="card">
     <h4 class="p10">Comic Sans MS</h4>
@@ -104,6 +120,28 @@ function updateText() {
     document.getElementById("preview11").innerHTML = txt;
     document.getElementById("preview12").innerHTML = txt;
 }
+function changeTextareaFont(select) {
+    var targets, i, textarea;
+    if (!select) return;
+    targets = select.getAttribute("data-target").split(",");
+    for (i = 0; i < targets.length; i++) {
+        textarea = document.getElementById(
+            targets[i].replace(/^\s+|\s+$/g, "")
+        );
+        if (textarea) {
+            textarea.style.fontFamily = select.value;
+        }
+    }
+}
+window.onload = function() {
+    var selects = document.getElementsByTagName("select");
+    var i;
+    for (i = 0; i < selects.length; i++) {
+        if (selects[i].getAttribute("data-target")) {
+            changeTextareaFont(selects[i]);
+        }
+    }
+};
 </script>
 </body>
 </html>
