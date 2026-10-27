@@ -138,11 +138,11 @@ td.selected {
 </div>
 <!-- CODE HTML -->
 <br><h3>Code du tableau</h3>
-<button id="exportTable">Générer le code</button>
+<button id="exportBtn">Générer le code</button>
 <button id="copyoutput">Copier le code</button>
 <label>ID tableau :</label> <input id="importTableId" value="tableau1">
 <br><textarea wrap="off" id="output"></textarea><br>
-<button id="importTable">Mettre à jour le tableau</button>
+<button id="importBtn">Mettre à jour le tableau</button>
 <button id="cleanLibreOffice">Nettoyer LibreOffice</button>
 <input type="file" id="textareaFileoutput">
 <script src="outils.js"></script>
@@ -852,9 +852,9 @@ function repeat(str, count) {
   for (var i = 0; i < count; i++) out += str;
   return out;
 }
-document.getElementById('exportTable').onclick = updateoutput;
+document.getElementById('exportBtn').onclick = updateoutput;
 /* IMPORT HTML */
-document.getElementById('importTable').onclick = function() {
+document.getElementById('importBtn').onclick = function() {
     importTableFromHTML(document.getElementById('output').value);
 };
 function importTableFromHTML(code) {
