@@ -80,7 +80,7 @@
   </div><br>
   <input type="hidden" id="fgColor" value="#000000">
   <input type="hidden" id="bgColor" value="#ffffff">
-  <button id="btn-generate">Générer</button>
+  <button id="exportBtn">Générer</button>
   <div id="code" class="border-interne"></div>
   <canvas id="barcodeCanvas"></canvas>
   <button id="export-png">Télécharger PNG</button>
@@ -121,7 +121,7 @@
 /* RÉFÉRENCES DE BASE */
 var input = document.getElementById("input");
 var codeDiv = document.getElementById("code");
-var btnGen = document.getElementById("btn-generate");
+var btnGen = document.getElementById("exportBtn");
 btnGen.onclick = generateCode;
 /* COLOR PICKER */
 document.getElementById("fgHex").onchange = function () {
