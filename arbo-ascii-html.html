@@ -867,17 +867,13 @@ applyURLColors();
 /* Exécuter une fonction d'import selon les paramètres URL */
 function applyURLImport() {
     var params = getURLParams();
-    if (params.importTree === "1") {
-      setTimeout(function() {
-        importTree();
-        }, 300);
-    } else if (params.importTreeCmd === "1") {
-      setTimeout(function() {
-        importTreeCmd();
-        }, 300);
-    }
+        if (params.importTree === "1") {
+            importTree();
+        } else if (params.importTreeCmd === "1") {
+            importTreeCmd();
+        }
 }
-applyURLImport();
+setTimeout(function(){applyURLImport();},300);
 </script>
 </body>
 </html>
