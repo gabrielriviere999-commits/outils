@@ -65,8 +65,8 @@ pre.tree{
     </div>
   </div>
 </div>
-<textarea wrap="off" id="asciiTextArea"></textarea><br>
-<button id="copyasciiTextArea">Copier</button>
+<textarea wrap="off" id="arbo"></textarea><br>
+<button id="copyarbo">Copier</button>
 <fieldset><legend>Couleurs</legend>
 <label>Fond : <input type="text" id="colorBackground" value="#000000"><button class="previewColorPicker"></button></label>
 <label>Texte : <input type="text" id="colorBody" value="#00ff00"><button class="previewColorPicker"></button></label>
@@ -194,7 +194,7 @@ document.getElementById("zipInput").onchange = function (e) {
             document.getElementById("tree").innerHTML = html;
             // Affichage ASCII dans textarea
             var asciiText = buildAsciiText(tree, "", true);
-            document.getElementById("asciiTextArea").value = asciiText;
+            document.getElementById("arbo").value = asciiText;
             // Réapplique les couleurs aux nouveaux éléments de l'arborescence
             updateColors();
         });
