@@ -100,7 +100,7 @@
   <h3>Source</h3>
   <textarea wrap="off" id="input" class="texte"></textarea><br>
   <button onclick="appliquerTransformations()">Appliquer</button>
-  <button onclick="effacerTout()">Effacer tout</button>
+  <button onclick="effacerTextareas('input,output');updateStats('');">Effacer tout</button>
   <input type="file" id="textareaFileinput">
 </div>
 <div class="section">
@@ -380,11 +380,6 @@ function sansAccents(str) {
     return out;
 }
 /* EFFACEMENT */
-function effacerTout() {
-    document.getElementById("input").value = "";
-    document.getElementById("output").value = "";
-    updateStats("");
-}
 function effacerRemplacements() {
     document.getElementById("repl_container").innerHTML = "";
     document.getElementById("repl_ignore_case").checked = false;

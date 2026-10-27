@@ -130,7 +130,7 @@
 <button onclick="exportBtn()">Convertir en tableau</button>
 <button id="copyinput">Copier</button>
 <button id="transposeBtn">Inverser lignes et colonnes</button>
-<button onclick="effacerTout()">Effacer tout</button>
+<button onclick="effacerTextareas('input,output')">Effacer tout</button>
 <input id="zoomRangeInput" type="range" min="6" max="40" value="12" oninput="applyZoom('zoomRangeInput', 'input')">
 <button onclick="resetZoom('zoomRangeInput', 'input')">12px</button>
 <input type="file" id="csvFileInput">
@@ -1326,11 +1326,6 @@ function resetZoom(idSlider, idTextarea) {
   var slider = document.getElementById(idSlider);
   slider.value = defaultSize;
   document.getElementById(idTextarea).style.fontSize = defaultSize + "px";
-}
-// Bouton Effacer tout
-function effacerTout() {
-  document.getElementById("input").value = "";
-  setText(document.getElementById("output"), "");
 }
 function resetParams() {
   // Supprimer la sauvegarde

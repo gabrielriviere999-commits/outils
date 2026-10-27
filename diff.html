@@ -29,13 +29,13 @@
   <div class="card">
     <h3>Texte A (original)</h3>
     <textarea wrap="off" id="textA"></textarea>
-    <button onclick="deleteA()">Effacer tout</button>
+    <button onclick="effacerTextareas('textA')">Effacer tout</button>
     <input type="file" id="textareaFiletextA">
   </div>
   <div class="card">
     <h3>Texte B (modifié)</h3>
     <textarea wrap="off" id="textB"></textarea>
-    <button onclick="deleteB()">Effacer tout</button>
+    <button onclick="effacerTextareas('textB')">Effacer tout</button>
     <input type="file" id="textareaFiletextB">
   </div>
 </div>
@@ -46,13 +46,6 @@
 </div>
 <script src="outils.js"></script>
 <script>
-/* Effacer */
-function deleteA() {
-  document.getElementById("textA").value = "";
-}
-function deleteB() {
-  document.getElementById("textB").value = "";
-}
 /* Diff ES3 ligne par ligne  */
 function simpleLineDiff(aLines, bLines) {
   var result = [];

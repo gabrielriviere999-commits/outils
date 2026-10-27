@@ -51,6 +51,18 @@ Object.keys(mapTextarea).forEach(function(btnId) {
         copyTextarea(mapTextarea[btnId], e.target);
     };
 });
+/* Effacer textarea */
+function effacerTextareas(ids) {
+    var liste = ids.split(",");
+    var i;
+    var textarea;
+    for (i = 0; i < liste.length; i++) {
+        textarea = document.getElementById(liste[i]);
+        if (textarea) {
+            textarea.value = "";
+        }
+    }
+}
 /* Glisser-déposer textarea */
 function setupDragDrop(textareaId) {
     var area = document.getElementById(textareaId);
