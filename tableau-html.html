@@ -1061,11 +1061,30 @@ function openHelpPopup() {
 /* Au chargement de la page */
 window.onload = function() {
     setTimeout(function() {
-        var output = document.getElementById('output');
-        if (!output) return;
-        var code = output.value;
-        if (code.replace(/^\s+|\s+$/g, "")) {
-            importTableFromHTML(code);
+        var search = window.location.search;
+        var params = {};
+        var pairs;
+        var parts;
+        var key;
+        var value;
+        var i;
+        if (search.charAt(0) === "?") {
+            search = search.substring(1);
+        }
+        pairs = search.split("&");
+        for (i = 0; i < pairs.length; i++) {
+            parts = pairs[i].split("=");
+            key = decodeURIComponent(parts[0].replace(/\+/g, " "));
+            value = parts.length > 1 ? decodeURIComponent(parts.slice(1).join("=").replace(/\+/g, " ")) : "";
+            params[key] = value;
+        }
+        // Importer le tableau au chargement
+        if (params.importBtn === "1") {
+            document.getElementById("importBtn").onclick();
+        }
+        // Nettoyer LibreOffice au chargement
+        else if (params.cleanLibreOffice === "1") {
+            document.getElementById("cleanLibreOffice").onclick();
         }
     }, 300);
 };
