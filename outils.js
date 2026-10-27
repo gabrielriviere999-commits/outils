@@ -42,7 +42,7 @@ var mapTextarea = {
     copyFancyCustomPlus: 'importFancyCustomPlusText',
     copyjson: 'json',
     copyview: 'view',
-    copyasciiTextArea: 'asciiTextArea'
+    copyarbo: 'arbo'
 };
 Object.keys(mapTextarea).forEach(function(btnId) {
     var el = document.getElementById(btnId);
