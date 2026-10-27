@@ -89,10 +89,10 @@
   </div>
 </div>
 <br><h3>Code de l'organigramme</h3>
-<button onclick="generateCode(buildHtml())">Générer le code</button>
+<button onclick="exportOrganigramme(buildHtml())">Générer le code</button>
 <button id="copyoutput">Copier le code</button>
 <br><textarea wrap="off" id="output" style="width:100%;height:200px;"></textarea><br>
-<button onclick="doImport()">Mettre à jour</button>
+<button onclick="importOrganigramme()">Mettre à jour</button>
 <input type="file" id="textareaFileoutput">
 <script src="outils.js"></script>
 <script src="color-palette.js"></script>
@@ -432,7 +432,7 @@ function escapeHtml(str) {
     })[m];
   });
 }
-function generateCode(text) {
+function exportOrganigramme(text) {
   var ta = document.getElementById("output");
   ta.value = text;
 }
@@ -634,7 +634,7 @@ function importData(text) {
   renderOrgTree(orgRoot);
   selectedId = null;
 }
-function doImport() {
+function importOrganigramme() {
     var txt = document.getElementById("output").value;
     // Champ vide : ne rien importer
     if (!txt || !txt.replace(/^\s+|\s+$/g, "")) {
@@ -648,7 +648,7 @@ window.onload = function() {
         var output = document.getElementById('output');
         var code = output.value;
         if (code.replace(/^\s+|\s+$/g, "")) {
-            doImport();
+            importOrganigramme();
         }
         renderOrgTree(orgRoot);
     }, 300);
