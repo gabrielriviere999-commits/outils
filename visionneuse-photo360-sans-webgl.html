@@ -1262,11 +1262,15 @@ lierEntreeRendu(renduReposInput, function(v) {
 });
 /* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
+  /* Chaque bouton garde son propre état "enfoncé" : un mouseup/touchend ailleurs (par exemple en relâchant un AUTRE bouton) ne le relâche pas. */
+  var enfonce = false;
   function activer() {
+    enfonce = true;
     touches[cle] = true;
     activerInteractionTemporaire360();
   }
   function relacher() {
+    enfonce = false;
     touches[cle] = false;
   }
   btn.addEventListener("mousedown", activer, false);
@@ -1279,10 +1283,11 @@ function boutonMaintenir(btn, cle) {
       passive:false
     }
   );
-  btn.addEventListener("mouseleave", relacher, false);
-  window.addEventListener("mouseup", relacher, false);
-  window.addEventListener("touchend", relacher, false);
-  window.addEventListener("touchcancel", relacher, false);
+  btn.addEventListener("mouseleave", function() { if (enfonce) relacher(); }, false);
+  window.addEventListener("mouseup", function() { if (enfonce) relacher(); }, false);
+  /* touchend part de l'élément où le doigt a commencé : attaché au bouton lui-même, pas à window, pour ne pas relâcher les autres boutons. */
+  btn.addEventListener("touchend", relacher, false);
+  btn.addEventListener("touchcancel", relacher, false);
 }
 boutonMaintenir(btnGauche, "gauche");
 boutonMaintenir(btnDroite, "droite");

@@ -913,24 +913,39 @@ fovSlider.addEventListener("input", function () {
   fov = Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
   sale = true;
 }, false);
-/* Boutons directionnels : maintenir enfoncé pour tourner en continu. Ils partagent le même état que les flèches du clavier. */
+/* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
-  function activer() { touches[cle] = true; }
-  function relacher() { touches[cle] = false; }
+  /* Chaque bouton garde son propre état "enfoncé" : un mouseup/touchend ailleurs (par exemple en relâchant un AUTRE bouton) ne le relâche pas. */
+  var enfonce = false;
+  function activer() {
+    enfonce = true;
+    touches[cle] = true;
+    activerInteractionTemporaire360();
+  }
+  function relacher() {
+    enfonce = false;
+    touches[cle] = false;
+  }
   btn.addEventListener("mousedown", activer, false);
-  btn.addEventListener("touchstart", function (e) {
-    if (e.preventDefault) e.preventDefault();
-    activer();
-  }, false);
-  btn.addEventListener("mouseleave", relacher, false);
-  window.addEventListener("mouseup", relacher, false);
-  window.addEventListener("touchend", relacher, false);
-  window.addEventListener("touchcancel", relacher, false);
+  btn.addEventListener("touchstart",
+    function(e) {
+      e.preventDefault();
+      activer();
+    },
+    {
+      passive:false
+    }
+  );
+  btn.addEventListener("mouseleave", function() { if (enfonce) relacher(); }, false);
+  window.addEventListener("mouseup", function() { if (enfonce) relacher(); }, false);
+  /* touchend part de l'élément où le doigt a commencé : attaché au bouton lui-même, pas à window, pour ne pas relâcher les autres boutons. */
+  btn.addEventListener("touchend", relacher, false);
+  btn.addEventListener("touchcancel", relacher, false);
 }
 boutonMaintenir(btnGauche, "gauche");
+boutonMaintenir(btnDroite, "droite");
 boutonMaintenir(btnHaut, "haut");
 boutonMaintenir(btnBas, "bas");
-boutonMaintenir(btnDroit, "droite");
 // Sélection via le bouton
 fileinput.addEventListener("change", function () {
   if (fileinput.files && fileinput.files[0]) chargerFichier(fileinput.files[0]);
