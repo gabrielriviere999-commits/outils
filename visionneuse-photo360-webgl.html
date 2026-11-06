@@ -823,6 +823,9 @@ function deplacer(x, y) {
 function terminer() {
   saisie = false;
   canvas.className = "";
+  // Désactiver inertie d'après clic
+  vitesse.x = 0;
+  vitesse.y = 0;
 }
 canvas.addEventListener("mousedown", function (e) {
   if (e.preventDefault) e.preventDefault();
@@ -1061,7 +1064,7 @@ function boucle(ts) {
     }
   }
   // Affichage FOV (uniquement si la valeur affichée change)
-  var fovTxt = "FOV " + Math.round(fov) + "°";
+  var fovTxt = Math.round(fov) + "°";
   if (fovAff.textContent !== fovTxt) fovAff.textContent = fovTxt;
   // Synchronise le slider quand le FOV change (molette, pincement)
   if (parseInt(fovSlider.value, 10) !== Math.round(fov)) {
