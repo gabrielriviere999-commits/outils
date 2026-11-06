@@ -6,9 +6,37 @@
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <link rel="stylesheet" href="photo360.css">
+<link rel="stylesheet" href="color-palette.css">
 <title>Visionneuse 3D - GLTF, GLB, OBJ, STL</title>
 </head>
 <body>
+  <div class="overlayColorPicker">
+    <div class="overlayColorPicker-cell">
+      <div class="mini-picker" id="miniPicker">
+        <div class="sv-box" id="svBox">
+          <div class="sv-cursor" id="svCursor"></div>
+        </div>
+        <div class="hue-slider" id="hueSlider">
+          <div class="hue-cursor" id="hueCursor"></div>
+        </div>
+        <div class="alpha-slider" id="alphaSlider">
+          <div class="alpha-cursor" id="alphaCursor"></div>
+        </div>
+        <div class="quick-colors">
+          <button class="qc" data-col="#000000" style="background:#000000"></button>
+          <button class="qc" data-col="#ffffff" style="background:#ffffff"></button>
+          <button class="qc" data-col="#ff0000" style="background:#ff0000"></button>
+          <button class="qc" data-col="#ff9900" style="background:#ff9900"></button>
+          <button class="qc" data-col="#ffff00" style="background:#ffff00"></button>
+          <button class="qc" data-col="#00ff00" style="background:#00ff00"></button>
+          <button class="qc" data-col="#00ffff" style="background:#00ffff"></button>
+          <button class="qc" data-col="#0000ff" style="background:#0000ff"></button>
+          <button class="qc" data-col="#ff00ff" style="background:#ff00ff"></button>
+        </div>
+        <button id="closePickerBtn" data-action="closePicker">Fermer</button>
+      </div>
+    </div>
+  </div>
 <button onclick="openMenuPopup()" class="menu">≡</button>
 <div id="popupMenuContent" style="display:none">
   <b class="titleb">Menu</b><hr class="titlehr">
@@ -28,8 +56,8 @@
     <option value="wire">Filaire</option>
     <option value="both">Solide + contours</option>
   </select><br>
-  <span class="control">Objet : <input type="color" id="modelColor" value="#b7c9df"></span>
-  <span class="control">Fond : <input type="color" id="bgColor" value="#202020"></span>
+  <input type="text" id="modelColor" value="#b7c9df" size="8"><button class="previewColorPicker"></button><br>
+  <input type="text" id="bgColor" value="#202020" size="8"><button class="previewColorPicker"></button>
   <br><label class="control"><input type="checkbox" id="grid" checked> Grille</label>
   <label class="control"><input type="checkbox" id="axes" checked> Axes</label>
   <details><summary>Bibliothèques 3d</summary>
@@ -64,12 +92,39 @@
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 <script src="popup.js"></script>
+<script src="color-palette.js"></script>
 <script>
-/* MENU */
 function openMenuPopup() {
   var container = document.getElementById("popupMenuContent");
   openPopupMenu(container);
 }
+var modelColor = byId("modelColor");
+var bgColor = byId("bgColor");
+attachColorPickerTo(modelColor);
+attachColorPickerTo(bgColor);
+updatePickerFromInput(modelColor, modelColor.nextElementSibling);
+updatePickerFromInput(bgColor, bgColor.nextElementSibling);
+function validateColorInput(input) {
+    var preview = input.nextElementSibling;
+    updatePickerFromInput(input, preview);
+    if (input.id === "bgColor") {
+        applyColors();
+    } else if (input.id === "modelColor") {
+        applyModelColor();
+    }
+}
+modelColor.onchange = function() {
+    validateColorInput(this);
+};
+bgColor.onchange = function() {
+    validateColorInput(this);
+};
+modelColor.oninput = function() {
+    applyModelColor();
+};
+bgColor.oninput = function() {
+    applyColors();
+};
 var info=document.getElementById("info"),mode=document.getElementById("mode");
 var modelColor=document.getElementById("modelColor"),bgColor=document.getElementById("bgColor");
 var gridBox=document.getElementById("grid"),axesBox=document.getElementById("axes");
