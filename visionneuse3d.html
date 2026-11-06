@@ -410,7 +410,11 @@ fovSlider.addEventListener("input",function(){
 },false);
 /* Fleches du clavier : memorisees pendant l'appui (permet les diagonales,
    lues a chaque image dans animate), comme la visionneuse 360 */
+function menuOuvert() {
+  return !!document.querySelector('.popup-overlay');
+}
 window.addEventListener("keydown",function(e){
+ if(menuOuvert())return;
  /* Ctrl + / Ctrl - : zoom FOV (comme la visionneuse 360) */
  if(e.ctrlKey){
   if(e.key==="+"||e.key==="="){

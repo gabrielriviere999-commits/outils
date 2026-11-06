@@ -1085,8 +1085,11 @@ canvas.addEventListener("wheel", molette,
   }
 );
 /* CLAVIER */
-window.addEventListener("keydown",
-  function(e) {
+function menuOuvert() {
+  return !!document.querySelector('.popup-overlay');
+}
+window.addEventListener("keydown",  function(e) {
+    if(menuOuvert())return;   
     // Ctrl + / Ctrl -
     if (e.ctrlKey) {
       if (
