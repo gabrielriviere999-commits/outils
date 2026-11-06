@@ -13,8 +13,16 @@
 <div id="popupMenuContent" style="display:none">
   <b class="titleb">Menu</b><hr class="titlehr">
   <input type="file" id="fileinput" accept=".obj,.stl,.gltf,.glb,.bin,.png,.jpg,.jpeg,.webp" multiple>
-  <button type="button" id="reset">Recentrer</button>
-  <button type="button" id="auto">Rotation</button>
+  <div class="popupgrid">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">
+        <button type="button" id="reset">Recentrer</button>
+      </div>
+      <div style="display:table-cell;">
+        <button type="button" id="auto">Rotation</button>
+      </div>
+    </div>
+  </div>
   <select id="mode">
     <option value="solid">Solide</option>
     <option value="wire">Filaire</option>
