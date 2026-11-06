@@ -91,8 +91,6 @@
   <span id="fov">50°</span> <input type="range" id="fovSlider" min="10" max="100" step="1" value="50">
 </div>
 <div id="info"></div>
-<!-- three.js r128 en scripts globaux (ES5, compatibles IE11).
-     Hébergez ces 5 fichiers en local pour fonctionner sans CDN. -->
 <script src="libs/visionneuse3d/three.min.js"></script>
 <script src="libs/visionneuse3d/OrbitControls.js"></script>
 <script src="libs/visionneuse3d/GLTFLoader.js"></script>
@@ -153,15 +151,13 @@ function init(){
  vp.appendChild(renderer.domElement);
  renderer.domElement.id="scene";
  scene=new THREE.Scene();
- /* Eclairage simple (pas de RoomEnvironment en r128 UMD) */
+ // Eclairage simple (pas de RoomEnvironment en r128 UMD)
  scene.add(new THREE.HemisphereLight(0xffffff,0x445566,0.9));
  var sun=new THREE.DirectionalLight(0xffffff,0.9);
  sun.position.set(3,5,4);scene.add(sun);
  camera=new THREE.PerspectiveCamera(50,1,0.01,1000);
  camera.position.set(2.2,1.4,3);
-  /* Molette = FOV (comme la visionneuse 360).
-     Enregistre AVANT OrbitControls pour capter l'evenement en premier :
-     stopImmediatePropagation empeche OrbitControls de dollyer. */
+ // Molette = FOV Enregistre AVANT OrbitControls pour capter l'evenement en premier : stopImmediatePropagation empeche OrbitControls de dollyer.
  renderer.domElement.addEventListener("wheel",function(e){
   if(e.preventDefault)e.preventDefault();
   if(e.stopImmediatePropagation)e.stopImmediatePropagation();
@@ -170,7 +166,7 @@ function init(){
   camera.fov=f;
   camera.updateProjectionMatrix();
   fovSlider.value=f;
-  fovAff.textContent=Math.round(f)+"\u00B0";
+  fovAff.textContent=Math.round(f)+"°";
  },{passive:false});
  controls=new THREE.OrbitControls(camera,renderer.domElement);
  controls.enableDamping=false;
@@ -180,7 +176,7 @@ function init(){
  scene.add(grid);
  axes = new THREE.AxesHelper(1.5);
  scene.add(axes);
- /* Etiquettes des axes */
+ // Etiquettes des axes
  creerEtiquetteAxe("X", "#ff3333", [1.7, 0, 0]);
  creerEtiquetteAxe("Y", "#33ff33", [0, 1.7, 0]);
  creerEtiquetteAxe("Z", "#3388ff", [0, 0, 1.7]);
@@ -226,7 +222,7 @@ function animate(ts){
  var dt=dernierTemps?(ts-dernierTemps)/1000:0;
  if(dt>0.1)dt=0.1;
  dernierTemps=ts;
- /* Fleches : diagonales normalisees, meme vitesse en biais */
+ // Fleches : diagonales normalisees, meme vitesse en biais
  var mx=(touches.droite?1:0)-(touches.gauche?1:0);
  var my=(touches.haut?1:0)-(touches.bas?1:0);
  if((mx!==0||my!==0)&&camera&&controls){
@@ -255,7 +251,7 @@ function showModel(obj,name){
  if(wireOverlay){scene.remove(wireOverlay);wireOverlay=null;}
  root=obj;
  scene.add(root);
- /* Cadrage automatique */
+ // Cadrage automatique
  var box=new THREE.Box3().setFromObject(root);
  var size=box.getSize(new THREE.Vector3()).length()||1;
  var center=box.getCenter(new THREE.Vector3());
@@ -276,7 +272,7 @@ function showModel(obj,name){
   }
  });
  fovSlider.value=camera.fov;
- fovAff.textContent=Math.round(camera.fov)+"\u00B0";
+ fovAff.textContent=Math.round(camera.fov)+"°";
 }
 function updateDisplayMode(){
  if(!root)return;
@@ -324,7 +320,7 @@ function loadFiles(fileList){
  ext=main.name.toLowerCase().split(".").pop();
  manager=new THREE.LoadingManager();
  if(ext==="gltf"||ext==="glb"){
-  /* Fichiers annexes (.bin, textures) mis a disposition via des blob URLs */
+  // Fichiers annexes (.bin, textures) mis a disposition via des blob URLs
   for(i=0;i<files.length;i++){
    f=files[i];
    if(f===main&&ext==="glb")continue;
@@ -363,9 +359,7 @@ function loadFiles(fileList){
  if(/\.obj$/i.test(main.name)||/\.gltf$/i.test(main.name))reader.readAsText(main);
  else reader.readAsArrayBuffer(main);
 }
-/* Chargement via l'URL : ?file=https://...
-   Les loaders resolvant eux-memes les URI relatives, pas de fetch ni d'URLModifier
-   (intercepter les blob:/data: casserait les textures integrees du GLB). */
+/* Chargement via l'URL : ?file=https://... Les loaders resolvant eux-memes les URI relatives, pas de fetch ni d'URLModifier (intercepter les blob:/data: casserait les textures integrees du GLB). */
 function loadFromURL(url){
  var name=decodeURIComponent(url.substring(url.lastIndexOf("/")+1).split("?")[0].split("#")[0])||"fichier";
  var ext=(name.match(/\.([a-z0-9]+)$/i)||["",""])[1].toLowerCase();
@@ -406,23 +400,22 @@ fovSlider.addEventListener("input",function(){
   f=Math.max(10,Math.min(100,f));
   camera.fov=f;
   camera.updateProjectionMatrix();
-  fovAff.textContent=f+"\u00B0";
+  fovAff.textContent=f+"°";
 },false);
-/* Fleches du clavier : memorisees pendant l'appui (permet les diagonales,
-   lues a chaque image dans animate), comme la visionneuse 360 */
+/* Fleches du clavier */
 function menuOuvert() {
   return !!document.querySelector('.popup-overlay');
 }
 window.addEventListener("keydown",function(e){
  if(menuOuvert())return;
- /* Ctrl + / Ctrl - : zoom FOV (comme la visionneuse 360) */
+ // Ctrl + / Ctrl - : zoom FOV
  if(e.ctrlKey){
   if(e.key==="+"||e.key==="="){
    if(camera){
     camera.fov=Math.max(10,camera.fov-5);
     camera.updateProjectionMatrix();
     fovSlider.value=camera.fov;
-    fovAff.textContent=Math.round(camera.fov)+"\u00B0";
+    fovAff.textContent=Math.round(camera.fov)+"°";
    }
    if(e.preventDefault)e.preventDefault();
    return;
@@ -432,7 +425,7 @@ window.addEventListener("keydown",function(e){
     camera.fov=Math.min(100,camera.fov+5);
     camera.updateProjectionMatrix();
     fovSlider.value=camera.fov;
-    fovAff.textContent=Math.round(camera.fov)+"\u00B0";
+    fovAff.textContent=Math.round(camera.fov)+"°";
    }
    if(e.preventDefault)e.preventDefault();
    return;
@@ -444,7 +437,7 @@ window.addEventListener("keydown",function(e){
  else if(k===38)touches.haut=true;
  else if(k===40)touches.bas=true;
  else return;
- if(e.preventDefault)e.preventDefault(); /* evite le defilement de la page */
+ if(e.preventDefault)e.preventDefault(); // evite le defilement de la page
 },false);
 window.addEventListener("keyup",function(e){
  var k=e.keyCode||e.which;
@@ -455,7 +448,7 @@ window.addEventListener("keyup",function(e){
 },false);
 /* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
-  /* Chaque bouton garde son propre état "enfoncé" : un mouseup/touchend ailleurs (par exemple en relâchant un AUTRE bouton) ne le relâche pas. */
+  // Chaque bouton garde son propre état "enfoncé" : un mouseup/touchend ailleurs (par exemple en relâchant un AUTRE bouton) ne le relâche pas.
   var enfonce = false;
   function activer() {
     enfonce = true;
@@ -477,7 +470,7 @@ function boutonMaintenir(btn, cle) {
   );
   btn.addEventListener("mouseleave", function() { if (enfonce) relacher(); }, false);
   window.addEventListener("mouseup", function() { if (enfonce) relacher(); }, false);
-  /* touchend part de l'élément où le doigt a commencé : attaché au bouton lui-même, pas à window, pour ne pas relâcher les autres boutons. */
+  // touchend part de l'élément où le doigt a commencé : attaché au bouton lui-même, pas à window, pour ne pas relâcher les autres boutons.
   btn.addEventListener("touchend", relacher, false);
   btn.addEventListener("touchcancel", relacher, false);
 }
