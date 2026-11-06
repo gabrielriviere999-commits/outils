@@ -273,7 +273,6 @@ function showModel(obj,name){
    tris+=(g.index?g.index.count:g.attributes.position.count)/3;
   }
  });
- message(name+" — "+Math.round(tris)+" triangles. Glisser pour tourner, molette pour zoomer, fleches pour pivoter.");
  fovSlider.value=camera.fov;
  fovAff.textContent=Math.round(camera.fov)+"\u00B0";
 }
