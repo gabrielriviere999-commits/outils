@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
@@ -111,7 +111,7 @@ function init(){
   fovAff.textContent=Math.round(f)+"\u00B0";
  },{passive:false});
  controls=new THREE.OrbitControls(camera,renderer.domElement);
- controls.enableDamping=true;
+ controls.enableDamping=false;
  controls.autoRotateSpeed=2.5;
  grid=new THREE.GridHelper(10,20,0x999999,0x666666);
  grid.material.transparent=true;grid.material.opacity=0.25;
