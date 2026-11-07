@@ -131,9 +131,9 @@ select:hover{background:#444;}
   margin-bottom:10px;
 }
 .toolbar {
-  background:#222;
+  background:rgba(49,49,49,0.7);
   border:2px solid;
-  border-color:#888 #111 #111 #888;
+  border-color:rgba(180,180,180,0.7) rgba(10,10,10,0.7) rgba(10,10,10,0.7) rgba(180,180,180,0.7);
   padding:4px;
 }
 .popup-overlay {
