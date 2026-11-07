@@ -39,9 +39,9 @@ body{margin-top:45px}
   <button onclick="openFichierPopup()">Fichier</button>
   <div id="popupFichierContent" style="display:none">
     <b class="titleb">Fichier</b><hr class="titlehr"><b>
-    <input type="file" id="fileInput" accept="image/png">
-    <button id="btnDownload">Télécharger PNG</button>
-   <button id="btnClear">Effacer tout</button>
+    <input type="file" id="fileInput">
+    <a id="btnDownload" href="#" download>Télécharger PNG</a>
+    <button id="btnClear">Effacer tout</button>
     <hr><button onclick="closePopup()">Fermer</button>
   </div>
   <button onclick="openPinceauPopup()">Pinceau</button>
@@ -775,12 +775,23 @@ fileInput.onchange = function(){
   };
   reader.readAsDataURL(file);
 };
-document.getElementById("btnDownload").onclick = function(){
-  var a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
-  a.download = "skin.png";
-  a.click();
-};
+/* LIEN DE TELECHARGEMENT : href mis a jour a chaque rendu (64x64, tres rapide),
+   le telechargement est un vrai lien <a download> : clic droit, copier le lien, etc. */
+var downloadLink = document.getElementById("btnDownload");
+function updateDownloadLink(){
+  downloadLink.href = canvas.toDataURL("image/png");
+  downloadLink.download = getTimestampName("skin-minecraft", "png");
+}
+/* CHARGEMENT D'IMAGE PAR PARAMETRE URL : skin.html?file=skin.png */
+(function(){
+  var matchFile = window.location.search.match(/[?&]file=([^&]+)/);
+  if(!matchFile){ return; }
+  var skinURL = decodeURIComponent(matchFile[1]);
+  var imgURL = new Image();
+  imgURL.onload = function(){ importSkinImage(imgURL); };
+  imgURL.onerror = function(){ alert("Impossible de charger cette image : " + skinURL); };
+  imgURL.src = skinURL;
+})();
 document.getElementById("btnClear").onclick = function(){
   saveState();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1034,6 +1045,8 @@ function drawFaceGrid(f){
     f.N = drawTexturedQuad(canvas, f.rect, f.pts[0], f.pts[1], f.pts[2], f.pts[3], f.shade);
     if(showGrid){ drawFaceGrid(f); }
   }
+  // Lien de telechargement : toujours a jour avec le dessin courant
+  updateDownloadLink();
 }
 /* ---============================--- */
 /*            INTERACTION 3D : PEINDRE ET TOURNER LE MODELE             */
