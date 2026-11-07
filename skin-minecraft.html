@@ -127,15 +127,17 @@ body{margin-top:45px}
     </div>
   </div>
 </div>
+<div class="container">
   <div class="card">
     <canvas id="preview" width="400" height="520"></canvas>
     <label><input type="checkbox" id="autoRotate">Rotation automatique</label>
   </div>
-  <div style="position:relative;">
+  <div class="card" style="position:relative;border:none;padding:0;">
     <canvas id="board" width="64" height="64"></canvas>
     <div id="boardGrid" style="position:absolute;top:0;left:0;display:none;pointer-events:none;background-image:linear-gradient(rgba(0,0,0,0.45) 1px, transparent 1px),linear-gradient(90deg, rgba(0,0,0,0.45) 1px, transparent 1px);"></div>
     <div id="selRect" style="position:absolute;display:none;border:1px solid #ffffff;pointer-events:none;box-sizing:border-box;"></div>
   </div>
+</div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
 <script src="color-palette.js"></script>
