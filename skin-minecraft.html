@@ -55,7 +55,7 @@ body{margin-top:45px}
   <div id="popupPinceauContent" style="display:none">
     <b class="titleb">Pinceau</b><hr class="titlehr"><b>
     <b>Couleur</b><br>
-    <input type="text" id="colorInput" value="#a06666" size="8"><button class="previewColorPicker"></button><button id="btnPipette" style="width:60px;">Pipette</button><br>
+    <input type="text" id="colorInput" value="#ff00ff" size="8"><button class="previewColorPicker"></button><button id="btnPipette" style="width:60px;">Pipette</button><br>
     <label><input type="checkbox" id="eraserCheck">Gomme</label>
     <button id="btnPencil" class="active">Crayon</button>
     <button id="btnLine">Ligne</button>
@@ -88,7 +88,7 @@ body{margin-top:45px}
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr"><b>
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
-    <label>Fond : <input type="text" id="bgColorInput" value="#15161a" size="8"><button class="previewColorPicker"></button></label><br>
+    <label>Fond : <input type="text" id="bgColorInput" value="#202020" size="8"><button class="previewColorPicker"></button></label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
     <label>Zoom modèle 2D :
     <button data-zoom="-" class="rangebtn">-</button>
@@ -914,13 +914,11 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
       var sTRx = rx0 + s1 * (rx1 - rx0), sTRy = ry0 + t0 * (ry1 - ry0);
       var sBRx = rx0 + s1 * (rx1 - rx0), sBRy = ry0 + t1 * (ry1 - ry0);
       var sBLx = rx0 + s0 * (rx1 - rx0), sBLy = ry0 + t1 * (ry1 - ry0);
-
-      /* UN SEUL clip par cellule, gonfle autour du centre de la cellule */
+      // UN SEUL clip par cellule, gonfle autour du centre de la cellule
       var cx = (curTL.sx + curTR.sx + curBR.sx + curBL.sx) / 4;
       var cy = (curTL.sy + curTR.sy + curBR.sy + curBL.sy) / 4;
       function gx(x){ return cx + (x - cx) * 1.01; }
       function gy(y){ return cy + (y - cy) * 1.01; }
-
       pctx.save();
       pctx.beginPath();
       pctx.moveTo(gx(curTL.sx), gy(curTL.sy));
