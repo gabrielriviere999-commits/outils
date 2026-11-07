@@ -573,7 +573,6 @@ function pipette(x, y){
   if(x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){ return; }
   var d = ctx.getImageData(x, y, 1, 1).data;
   if(d[3] === 0){
-    alert("Pixel transparent.");
     return;
   }
   var hex = "#" +
@@ -697,7 +696,6 @@ function onDown(e){
   downOnBoard = true;
   lastX = p.x; lastY = p.y;
   if(currentTool === "pipette"){
-    pipette(p.x, p.y);
     return;
   }
   if(currentTool === "move"){
@@ -791,9 +789,23 @@ function onMove(e){
   }
   if(e.touches){ e.preventDefault(); }
 }
-function onUp(){
+function onUp(e){
   var moveRearm = false;
   if(!downOnBoard){ return; }
+  // Pipette : validation au relâchement
+  if(currentTool === "pipette"){
+    var p;
+    if(e && e.changedTouches && e.changedTouches.length){
+      p = getPos(e.changedTouches[0]);
+    } else if(e && typeof e.clientX === "number"){
+      p = getPos(e);
+    } else {
+      p = {x:lastX, y:lastY};
+    }
+    downOnBoard = false;
+    pipette(p.x, p.y);
+    return;
+  }
   downOnBoard = false;
   /* --- on réinitialise l'état AVANT renderPreview --- */
   var wasDrawing = drawing;
