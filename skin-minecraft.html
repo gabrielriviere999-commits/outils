@@ -56,9 +56,9 @@ body{margin-top:45px}
     <b class="titleb">Pinceau</b><hr class="titlehr"><b>
     <b>Couleur</b><br>
     <input type="text" id="colorInput" value="#ff00ff" size="8"><button class="previewColorPicker"></button><button id="btnPipette" style="width:60px;">Pipette</button><br>
-    <label><input type="radio" name="brushMode" id="normalMode" checked>Couleur</label>
-    <label><input type="radio" name="brushMode" id="eraserCheck">Gomme</label>
-    <label><input type="radio" name="brushMode" id="rainbowCheck">Arc-en-ciel</label>
+    <label><input type="radio" name="brushMode" id="normalMode" checked> Couleur</label>
+    <label><input type="radio" name="brushMode" id="eraserCheck"> Gomme</label>
+    <label><input type="radio" name="brushMode" id="rainbowCheck"> Arc-en-ciel</label>
     <button id="btnPencil" class="active">Crayon</button>
     <button id="btnLine">Ligne</button>
     <button id="btnFill">Remplir</button>
@@ -90,7 +90,7 @@ body{margin-top:45px}
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr"><b>
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
-    <label>Fond : <input type="text" id="bgColorInput" value="#222222" size="8"><button class="previewColorPicker"></button></label><br>
+    <label>Fond : <input type="text" id="bgColorInput" value="#202020" size="8"><button class="previewColorPicker"></button></label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
     <label>Zoom modèle 2D :
     <button data-zoom="-" class="rangebtn">-</button>
@@ -417,12 +417,17 @@ function getPos(e){
 }
 /* --- DESSIN PIXEL --- */
 /* Mode pinceau : Couleur / Gomme / Arc-en-ciel (boutons radio).
-   Comportement identique au dessin-png :
-   - Crayon : la teinte part de 0 et avance de 1.5 par pixel peint,
-     remise a zero au relachement du clic.
+   Comportement identique au "Tracer" arc-en-ciel du dessin-png :
+   - Crayon : compteur CONTINU. La teinte part de 0, avance d'un pas par
+     pixel reellement peint le long du segment (drawPixelRainbowLine,
+     comme drawPixelRainbowLine du dessin-png), et repart de zero au
+     relachement du clic. Si le pointeur n'a pas change de pixel, rien
+     n'est repeint et le compteur ne bouge pas (comme le "distance < 0.1"
+     de drawFree) : un tracé lent ne s'écrase plus en rouge.
    - Ligne : chaque trait deroule le spectre de 0 a 300 du debut a la fin,
      independamment du compteur. */
 var rainbowHue = 0;
+var RAINBOW_STEP = 12; /* pas de teinte par pixel peint : 1.5 = dessin-png exact, 12 = visible en 64x64 */
 function rainbowColor(h){
   var i = Math.floor(h / 60);
   var f = h - i * 60;
@@ -457,9 +462,11 @@ function paintPixel(x, y){
   if(eraserCheck.checked){
     ctx.clearRect(x, y, 1, 1);
   } else if(rainbowCheck.checked){
-    /* Crayon arc-en-ciel : compteur continu, +1.5 par pixel (comme dessin-png) */
+    /* Premier pixel du trait : on peint avec la teinte courante et on
+       avance le compteur (comme le onpointerdown du dessin-png). La suite
+       du tracé passe par drawPixelRainbowLine, jamais par ici. */
     ctx.fillStyle = rainbowColor(rainbowHue);
-    rainbowHue += 1.5;
+    rainbowHue += RAINBOW_STEP;
     if(rainbowHue >= 360){
       rainbowHue %= 360;
     }
@@ -480,6 +487,26 @@ function drawPixelLineRainbow(x1, y1, x2, y2){
     var t = i / steps;
     var hue = t * 300;
     paintPixelWithColor(Math.round(x1 + dx * t), Math.round(y1 + dy * t), rainbowColor(hue));
+  }
+}
+/* TRACÉ LIBRE ARC-EN-CIEL (comme drawPixelRainbowLine du dessin-png) :
+   compteur continu, la teinte avance d'un pas par pixel reellement peint.
+   Si le depart et l'arrivee sont le meme pixel, on ne repeint rien et le
+   compteur ne bouge pas : un tracé lent ne consomme pas le spectre. */
+function drawPixelRainbowLine(x1, y1, x2, y2){
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+  var distance = Math.sqrt(dx * dx + dy * dy);
+  if(distance < 0.1){ return; } /* meme pixel : rien (comme drawFree du dessin-png) */
+  var steps = Math.max(1, Math.floor(distance));
+  var i;
+  for(i = 0; i <= steps; i++){
+    var t = i / steps;
+    paintPixelWithColor(Math.round(x1 + dx * t), Math.round(y1 + dy * t), rainbowColor(rainbowHue));
+    rainbowHue += RAINBOW_STEP;
+    if(rainbowHue >= 360){
+      rainbowHue %= 360;
+    }
   }
 }
 /* Ligne de Bresenham pour dessiner vite sans trous */
@@ -747,8 +774,17 @@ function onMove(e){
     return;
   }
   if(drawing){
-    drawPixelLine(lastX, lastY, p.x, p.y);
-    lastX = p.x; lastY = p.y;
+    /* Crayon arc-en-ciel : compteur continu par pixel peint (comme le
+       "Tracer" du dessin-png). Si le pointeur reste sur le meme pixel,
+       on ne repeint rien et le compteur ne bouge pas. */
+    if(p.x !== lastX || p.y !== lastY){
+      if(rainbowCheck.checked && !eraserCheck.checked){
+        drawPixelRainbowLine(lastX, lastY, p.x, p.y);
+      } else {
+        drawPixelLine(lastX, lastY, p.x, p.y);
+      }
+      lastX = p.x; lastY = p.y;
+    }
   } else if(selStart){
     selection = normalizeRect(selStart.x, selStart.y, p.x, p.y);
     updateSelRect();
@@ -780,7 +816,9 @@ function onUp(){
   lineStart = null;
   lineBase = null;
   /* Crayon arc-en-ciel : le compteur de teinte repart de zero au prochain trait (comme dessin-png) */
-  if(wasDrawing && rainbowCheck.checked){ rainbowHue = 0; }
+  if(wasDrawing && rainbowCheck.checked){
+    rainbowHue = 0;
+  }
   /* --- seulement ensuite, le rendu --- */
   if(wasDrawing || moving || wasLine){ renderPreview(); }
   if(pendingAction && selection && selection.w > 0 && selection.h > 0){
@@ -1222,7 +1260,13 @@ function paintHit(hit){
   }
   // Crayon / gomme : tracer une ligne si on reste sur la meme face
   if(lastPaint && lastPaint.rect === hit.face.rect){
-    drawPixelLine(lastPaint.u, lastPaint.v, u, v);
+    /* Arc-en-ciel crayon : compteur continu par pixel peint (comme dessin-png).
+       Le meme pixel n'est jamais repeint deux fois : la teinte ne brule pas. */
+    if(rainbowCheck.checked && !eraserCheck.checked){
+      drawPixelRainbowLine(lastPaint.u, lastPaint.v, u, v);
+    } else {
+      drawPixelLine(lastPaint.u, lastPaint.v, u, v);
+    }
   } else {
     paintPixel(u, v);
   }
