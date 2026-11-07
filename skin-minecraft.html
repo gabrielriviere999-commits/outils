@@ -1167,7 +1167,7 @@ function drawFaceGrid(f){
 /* Peintre : dessiner les faces les plus lointaines en premier */
   faces.sort(function(a, b){ return b.depth - a.depth; });
   RENDERED_FACES = faces;
-  var showGrid = gridCheck.checked && !rotating && !(autoRotate && autoRotate.checked); /* pas de grille en rotation (perf) */
+  var showGrid = gridCheck.checked // && !rotating && !(autoRotate && autoRotate.checked); // pas de grille en rotation (perf)
   var fi;
   for(fi = 0; fi < faces.length; fi++){
     var f = faces[fi];
