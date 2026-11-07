@@ -37,7 +37,16 @@ body{margin-top:45px}
   <button onclick="openFichierPopup()">Fichier</button>
   <div id="popupFichierContent" style="display:none">
     <b class="titleb">Fichier</b><hr class="titlehr"><b>
-    <input type="file" id="fileInput">
+    <div class="popupgrid">
+      <div style="display:table-row;">
+        <div style="display:table-cell;">
+          <input type="file" id="fileinput">
+        </div>
+        <div style="display:table-cell;">
+          <input id="pastefileinput" placeholder="Ou cliquer et Ctrl+V" maxlength="0">
+        </div>
+      </div>
+    </div>
     <button id="btnDownload">Télécharger PNG</button>
     <button id="btnClear">Effacer tout</button>
     <hr><button onclick="closePopup()">Fermer</button>
@@ -759,17 +768,17 @@ function importSkinImage(img){
   }
   renderPreview();
 }
-var fileInput = document.getElementById("fileInput");
-fileInput.onchange = function(){
-  if(!fileInput.files || !fileInput.files.length){ return; }
-  var file = fileInput.files[0];
+var fileinput = document.getElementById("fileinput");
+fileinput.onchange = function(){
+  if(!fileinput.files || !fileinput.files.length){ return; }
+  var file = fileinput.files[0];
   var reader = new FileReader();
   reader.onload = function(e){
     var img = new Image();
     img.onload = function(){ importSkinImage(img); };
     img.onerror = function(){ alert("Impossible de charger cette image."); };
     img.src = e.target.result;
-    fileInput.value = "";
+    fileinput.value = "";
   };
   reader.readAsDataURL(file);
 };
@@ -859,7 +868,8 @@ function project(p){
   return { sx: CX + x1 * k, sy: CY - y2 * k, z: z2, depth: depth };
 }
 /* Dessin affine d'un triangle texturé (clip + setTransform + drawImage) */
-function drawTriangle(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, dx2, dy2){
+/* Triangle texturé SANS clip ni expansion (le clip est fait par la cellule) */
+function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, dx2, dy2){
   var ux = sx1 - sx0, uy = sy1 - sy0;
   var vx = sx2 - sx0, vy = sy2 - sy0;
   var det = ux * vy - vx * uy;
@@ -872,20 +882,8 @@ function drawTriangle(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, dx2
   var d = (d02y * ux - d01y * vx) / det;
   var e = dx0 - a * sx0 - c * sy0;
   var f = dy0 - b * sx0 - d * sy0;
-  // Leger gonflage du triangle destination pour eviter les coutures
-  var gx = (dx0 + dx1 + dx2) / 3, gy = (dy0 + dy1 + dy2) / 3;
-  function ex(x){ return gx + (x - gx) * 1.02; }
-  function ey(y){ return gy + (y - gy) * 1.02; }
-  pctx.save();
-  pctx.beginPath();
-  pctx.moveTo(ex(dx0), ey(dy0));
-  pctx.lineTo(ex(dx1), ey(dy1));
-  pctx.lineTo(ex(dx2), ey(dy2));
-  pctx.closePath();
-  pctx.clip();
   pctx.setTransform(a, b, c, d, e, f);
   pctx.drawImage(img, 0, 0);
-  pctx.restore();
 }
 /* Face texturale complete : quadrilatere projete subdivise en triangles */
 function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
@@ -916,10 +914,27 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
       var sTRx = rx0 + s1 * (rx1 - rx0), sTRy = ry0 + t0 * (ry1 - ry0);
       var sBRx = rx0 + s1 * (rx1 - rx0), sBRy = ry0 + t1 * (ry1 - ry0);
       var sBLx = rx0 + s0 * (rx1 - rx0), sBLy = ry0 + t1 * (ry1 - ry0);
-      drawTriangle(img, sTLx, sTLy, sTRx, sTRy, sBRx, sBRy,
-                       curTL.sx, curTL.sy, curTR.sx, curTR.sy, curBR.sx, curBR.sy);
-      drawTriangle(img, sTLx, sTLy, sBRx, sBRy, sBLx, sBLy,
-                       curTL.sx, curTL.sy, curBR.sx, curBR.sy, curBL.sx, curBL.sy);
+
+      /* UN SEUL clip par cellule, gonfle autour du centre de la cellule */
+      var cx = (curTL.sx + curTR.sx + curBR.sx + curBL.sx) / 4;
+      var cy = (curTL.sy + curTR.sy + curBR.sy + curBL.sy) / 4;
+      function gx(x){ return cx + (x - cx) * 1.01; }
+      function gy(y){ return cy + (y - cy) * 1.01; }
+
+      pctx.save();
+      pctx.beginPath();
+      pctx.moveTo(gx(curTL.sx), gy(curTL.sy));
+      pctx.lineTo(gx(curTR.sx), gy(curTR.sy));
+      pctx.lineTo(gx(curBR.sx), gy(curBR.sy));
+      pctx.lineTo(gx(curBL.sx), gy(curBL.sy));
+      pctx.closePath();
+      pctx.clip();
+      drawTriangleNC(img, sTLx, sTLy, sTRx, sTRy, sBRx, sBRy,
+                          curTL.sx, curTL.sy, curTR.sx, curTR.sy, curBR.sx, curBR.sy);
+      drawTriangleNC(img, sTLx, sTLy, sBRx, sBRy, sBLx, sBLy,
+                          curTL.sx, curTL.sy, curBR.sx, curBR.sy, curBL.sx, curBL.sy);
+      pctx.setTransform(1, 0, 0, 1, 0, 0);   // important : reset apres drawImage
+      pctx.restore();
     }
   }
   if(shade > 0){
