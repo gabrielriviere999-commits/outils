@@ -248,6 +248,12 @@ function setColor(hex){
   inp.addEventListener("input", function(){
     applyInputColor(this);
   });
+  try{
+    if(inp.nextElementSibling){
+      inp.nextElementSibling.style.background = inp.value;
+    }
+    applyInputColor(inp);
+  }catch(err){ /* on ne casse jamais le chargement pour un apercu */ }
 });
 /* --- OUTILS --- */
 var toolButtons = {
