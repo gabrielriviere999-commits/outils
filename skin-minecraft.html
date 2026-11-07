@@ -914,9 +914,7 @@ document.getElementById("btnClear").onclick = function(){
   selection = null;
   renderPreview();
 };
-/* ---============================--- */
-/*                      APERCU 3D (canvas 2D pur)                       */
-/* ---============================--- */
+/* === APERCU 3D (canvas 2D pur) === */
 var preview = document.getElementById("preview");
 var pctx = preview.getContext("2d");
 var yaw = 0.55;
@@ -1175,9 +1173,7 @@ function drawFaceGrid(f){
     if(showGrid){ drawFaceGrid(f); }
   }
 }
-/* ---============================--- */
-/*            INTERACTION 3D : PEINDRE ET TOURNER LE MODELE             */
-/* ---============================--- */
+/* === INTERACTION 3D : PEINDRE ET TOURNER LE MODELE === */
 var RENDERED_FACES = [];
 var autoRotate = document.getElementById("autoRotate");
 var previewDirty = false;
