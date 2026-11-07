@@ -38,7 +38,7 @@ body{margin-top:45px}
   <div id="popupFichierContent" style="display:none">
     <b class="titleb">Fichier</b><hr class="titlehr"><b>
     <input type="file" id="fileInput">
-    <a id="btnDownload" href="#" download>Télécharger PNG</a>
+    <button id="btnDownload">Télécharger PNG</button>
     <button id="btnClear">Effacer tout</button>
     <hr><button onclick="closePopup()">Fermer</button>
   </div>
@@ -682,43 +682,37 @@ function onUp(){
   var moveRearm = false;
   if(!downOnBoard){ return; }
   downOnBoard = false;
-  if(drawing){ renderPreview(); }
+  /* --- on réinitialise l'état AVANT renderPreview --- */
+  var wasDrawing = drawing;
+  drawing = false;
+  selStart = null;
   if(moving){
-    // VALIDATION : base + bloc a sa position finale, une seule fois
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(moveBase, 0, 0);
     ctx.drawImage(moveTemp, selection.x, selection.y);
     moving = false;
     moveTemp = null;
     moveBase = null;
-    renderPreview();
-    // on ne rend PAS l'outil : on re-areme le deplacement apres le declencheur
     moveMode = false;
     btnMove.className = "";
     moveRearm = true;
     currentTool = "select";
-    selection = null;   /* nouveau tracé obligatoire */
+    selection = null;
   }
-  if(lineStart){
-    lineStart = null;
-    lineBase = null;
-    renderPreview(); // le segment provisoire devient definitif
-  }
-  drawing = false;
-  selStart = null;
+  var wasLine = !!lineStart;
+  lineStart = null;
+  lineBase = null;
+  /* --- seulement ensuite, le rendu --- */
+  if(wasDrawing || moving || wasLine){ renderPreview(); }
   if(pendingAction && selection && selection.w > 0 && selection.h > 0){
     startAction(pendingAction);
   } else if(pendingAction){
-    // tracé raté (selection vide) : on annule proprement
     pendingAction = null;
     for(var ka in actionButtons){ actionButtons[ka].className = ""; }
     currentTool = actionReturnTool;
     setTool(actionReturnTool);
   }
-  if(moveRearm){
-    moveRearm = false;
-    rearmAction("move");
-  }
+  if(moveRearm){ rearmAction("move"); }
   updateSelRect();
 }
 canvas.addEventListener("mousedown", onDown);
@@ -781,11 +775,12 @@ fileInput.onchange = function(){
 };
 /* LIEN DE TELECHARGEMENT : href mis a jour a chaque rendu (64x64, tres rapide),
    le telechargement est un vrai lien <a download> : clic droit, copier le lien, etc. */
-var downloadLink = document.getElementById("btnDownload");
-function updateDownloadLink(){
-  downloadLink.href = canvas.toDataURL("image/png");
-  downloadLink.download = getTimestampName("skin-minecraft", "png");
-}
+document.getElementById("btnDownload").onclick = function(){
+  var a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = getTimestampName("skin-minecraft", "png");
+  a.click();
+};
 /* CHARGEMENT D'IMAGE PAR PARAMETRE URL : skin.html?file=skin.png */
 (function(){
   var matchFile = window.location.search.match(/[?&]file=([^&]+)/);
@@ -1049,8 +1044,6 @@ function drawFaceGrid(f){
     f.N = drawTexturedQuad(canvas, f.rect, f.pts[0], f.pts[1], f.pts[2], f.pts[3], f.shade);
     if(showGrid){ drawFaceGrid(f); }
   }
-  // Lien de telechargement : toujours a jour avec le dessin courant
-  updateDownloadLink();
 }
 /* ---============================--- */
 /*            INTERACTION 3D : PEINDRE ET TOURNER LE MODELE             */
@@ -1231,15 +1224,14 @@ function previewMove(e){
   if(e.preventDefault){ e.preventDefault(); }
 }
 function previewUp(){
-  if(line3D){
-    line3D = false;
-    lineStart = null;
-    lineBase = null;
-    renderPreview(); // le segment devient definitif
-  }
+  var wasLine = line3D;
+  line3D = false;
+  lineStart = null;
+  lineBase = null;
   rotating = false;
   painting3D = false;
   lastPaint = null;
+  if(wasLine){ renderPreview(); }
 }
 preview.addEventListener("mousedown", previewDown);
 document.addEventListener("mousemove", previewMove);
