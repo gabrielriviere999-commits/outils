@@ -993,6 +993,14 @@ function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, d
   pctx.setTransform(a, b, c, d, e, f);
   pctx.drawImage(img, 0, 0);
 }
+/* --- PERFORMANCE 3D --- */
+/* Plafond de subdivision des faces : moins de cellules = moins de clip/drawImage.
+   NORMAL_CAP 6 suffit en 400x520 (8 n'apporte presque rien visuellement).
+   Pendant une rotation (glisser pour tourner, rotation auto), on passe en
+   mode brouillon : cap 3, grille 3D coupee. Au relachement, le rendu complet
+   repasse tout seul en haute qualite au prochain previewDirty. */
+var NORMAL_CAP = 6;
+var DRAFT_CAP = 3;
 /* Face texturale complete : quadrilatere projete subdivise en triangles */
 function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
   var rx0 = rect[0], ry0 = rect[1], rx1 = rect[2], ry1 = rect[3];
@@ -1001,7 +1009,8 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
     Math.abs(p1.sx - p0.sx) + Math.abs(p2.sx - p3.sx),
     Math.abs(p3.sy - p0.sy) + Math.abs(p2.sy - p1.sy)
   );
-  var N = Math.max(2, Math.min(8, Math.ceil(maxEdge / 18)));
+  var cap = (rotating || (autoRotate && autoRotate.checked)) ? DRAFT_CAP : NORMAL_CAP;
+  var N = Math.max(2, Math.min(cap, Math.ceil(maxEdge / 18)));
   var i, j;
   function interp(pA, pB, pC, pD, s, t){
     // Bilineaire : pA=TL pB=TR pC=BR pD=BL
@@ -1158,7 +1167,7 @@ function drawFaceGrid(f){
 /* Peintre : dessiner les faces les plus lointaines en premier */
   faces.sort(function(a, b){ return b.depth - a.depth; });
   RENDERED_FACES = faces;
-  var showGrid = gridCheck.checked;
+  var showGrid = gridCheck.checked && !rotating && !(autoRotate && autoRotate.checked); /* pas de grille en rotation (perf) */
   var fi;
   for(fi = 0; fi < faces.length; fi++){
     var f = faces[fi];
