@@ -136,6 +136,7 @@ body{margin-top:45px}
   <div class="card">
     <canvas id="preview" width="400" height="520" tabindex="0"></canvas>
     <label><input type="checkbox" id="autoRotate">Rotation auto</label>
+    <button id="btnResetView">Recentrer</button>
     <label><input type="checkbox" id="spreadCheck" checked>Membres écartés</label>
   </div>
   <div class="card" style="position:relative;border:none;padding:0;">
@@ -943,6 +944,18 @@ var CAM_D = 55; // distance camera
 var F = 440; // focale
 var CX = 200;
 var CY = 488;
+/* Remet la vue a zero : position, rotation et zoom */
+function resetView(){
+  yaw = 0.55;   /* valeurs de depart du fichier */
+  pitch = 0.32;
+  panX = 0;
+  panY = 0;
+  setViewZoom(1);
+  rotating = false;
+  panning = false;
+  previewDirty = true;
+}
+document.getElementById("btnResetView").onclick = resetView;
 /* UV d'une boite Minecraft : u,v coin, w,h,d dimensions */
 function boxUV(u, v, w, h, d){
   return {
@@ -1459,8 +1472,7 @@ preview.addEventListener("mousedown", previewDown);
 preview.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 /* double-clic sur l'apercu : recentre la vue */
 preview.addEventListener("dblclick", function(){
-  panX = 0; panY = 0;
-  previewDirty = true;
+  resetView();
 });
 /* Ignore les événements qui viennent des contrôles de la toolbar */
 function isUiEvent(e){
