@@ -22,6 +22,7 @@
   display:block;
 }
 #preview{border:2px solid #000;background:#222;cursor:crosshair;touch-action:none;display:block;}
+#preview:focus{outline:2px solid #4caf50;}
 .toolbar {
   position:fixed;
   top:0;
@@ -136,7 +137,7 @@ label,span{font-weight:normal}
 </div>
 <div class="container">
   <div class="card">
-    <canvas id="preview" width="400" height="520"></canvas>
+    <canvas id="preview" width="400" height="520" tabindex="0"></canvas>
     <label><input type="checkbox" id="autoRotate">Rotation automatique</label>
   </div>
   <div class="card" style="position:relative;border:none;padding:0;">
@@ -760,13 +761,13 @@ function onDown(e){
 function onMove(e){
   var p = getPos(e);
   document.getElementById("status").innerHTML = "x : " + p.x + ", y : " + p.y + (selection ? " | s&eacute;lection : " + selection.w + "x" + selection.h : "");
-  if(lineStart){
-    // APERCU : on rejoue la base puis on trace le segment provisoire
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(lineBase, 0, 0);
-    drawPixelLine(lineStart.x, lineStart.y, p.x, p.y);
-    return;
-  }
+if(lineStart && !line3D){
+  // APERCU : on rejoue la base puis on trace le segment provisoire
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(lineBase, 0, 0);
+  drawPixelLine(lineStart.x, lineStart.y, p.x, p.y);
+  return;
+}
   if(moving){
     // nouvelle position, clampee
     var nx = Math.max(0, Math.min(canvas.width - selection.w,  p.x - moveOffset.dx));
@@ -1432,6 +1433,14 @@ preview.addEventListener("wheel", function(e){
   setViewZoom(viewZoom * factor);
 }, false);
 setInterval(function(){
+  /* Rotation clavier : chaque fleche maintenue tourne a sa boucle */
+  var kb = false;
+  if(arrowKeys.ArrowLeft){  yaw -= ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowRight){ yaw += ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowUp){    pitch = Math.min(1.2, pitch + ARROW_STEP); kb = true; }
+  if(arrowKeys.ArrowDown){  pitch = Math.max(-0.9, pitch - ARROW_STEP); kb = true; }
+  if(kb){ previewDirty = true; }
+
   if(autoRotate.checked && !rotating && !painting3D){
     yaw += 0.035;
     previewDirty = true;
@@ -1441,6 +1450,31 @@ setInterval(function(){
     renderPreview();
   }
 }, 30);
+/* Fleches du clavier : rotation continue et combinable (diagonales),
+   uniquement quand le modele a le focus */
+var arrowKeys = {}; /* fleches actuellement maintenues */
+var ARROW_STEP = 0.06; /* vitesse par image (tous les 30 ms) */
+
+preview.addEventListener("mousedown", function(){
+  preview.focus(); /* donne le focus au clic (Safari ne le fait pas seul) */
+});
+
+preview.addEventListener("keydown", function(e){
+  if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
+     e.key === "ArrowUp" || e.key === "ArrowDown"){
+    arrowKeys[e.key] = true;
+    e.preventDefault(); /* empeche le scroll de la page */
+  }
+});
+
+preview.addEventListener("keyup", function(e){
+  delete arrowKeys[e.key];
+});
+
+/* si le modele perd le focus (clic ailleurs, Tab), on relache tout */
+preview.addEventListener("blur", function(){
+  arrowKeys = {};
+});
 /* --- INIT --- */
 applyZoom();
 renderPreview();
