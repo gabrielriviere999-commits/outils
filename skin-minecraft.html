@@ -995,8 +995,12 @@ function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, d
   var d = (d02y * ux - d01y * vx) / det;
   var e = dx0 - a * sx0 - c * sy0;
   var f = dy0 - b * sx0 - d * sy0;
-  pctx.setTransform(a, b, c, d, e, f);
-  pctx.drawImage(img, 0, 0);
+  if(typeof pctx.setTransform === "function"){
+    pctx.save();
+    pctx.setTransform(a, b, c, d, e, f);
+    pctx.drawImage(img, 0, 0);
+    pctx.restore();
+  }
 }
 /* --- PERFORMANCE 3D --- */
 /* Plafond de subdivision des faces : moins de cellules = moins de clip/drawImage.
@@ -1004,8 +1008,9 @@ function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, d
    Pendant une rotation (glisser pour tourner, rotation auto), on passe en
    mode brouillon : cap 3, grille 3D coupee. Au relachement, le rendu complet
    repasse tout seul en haute qualite au prochain previewDirty. */
-var NORMAL_CAP = 6;
-var DRAFT_CAP = 3;
+var LEGACY_3DS = /Nintendo 3DS|New Nintendo 3DS/i.test(navigator.userAgent || "");
+var NORMAL_CAP = LEGACY_3DS ? 2 : 6;
+var DRAFT_CAP = LEGACY_3DS ? 1 : 3;
 /* Face texturale complete : quadrilatere projete subdivise en triangles */
 function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
   var rx0 = rect[0], ry0 = rect[1], rx1 = rect[2], ry1 = rect[3];
@@ -1053,7 +1058,9 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
                           curTL.sx, curTL.sy, curTR.sx, curTR.sy, curBR.sx, curBR.sy);
       drawTriangleNC(img, sTLx, sTLy, sBRx, sBRy, sBLx, sBLy,
                           curTL.sx, curTL.sy, curBR.sx, curBR.sy, curBL.sx, curBL.sy);
-      pctx.setTransform(1, 0, 0, 1, 0, 0);   // important : reset apres drawImage
+      if(typeof pctx.setTransform === "function"){
+    pctx.setTransform(1, 0, 0, 1, 0, 0);
+  }   // important : reset apres drawImage
       pctx.restore();
     }
   }
@@ -1088,14 +1095,14 @@ function rectHasPixels(d, rect){
 function renderPreview(){
   cosY = Math.cos(yaw); sinY = Math.sin(yaw);
   cosP = Math.cos(pitch); sinP = Math.sin(pitch);
-  pctx.setTransform(1, 0, 0, 1, 0, 0);
+  if(typeof pctx.setTransform === "function"){
+    pctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
   pctx.imageSmoothingEnabled = false;
   pctx.clearRect(0, 0, preview.width, preview.height);
-  // Ombre au sol
-  pctx.fillStyle = "rgba(0,0,0,0.35)";
-  pctx.beginPath();
-  pctx.ellipse(CX, CY + 6, 46, 13, 0, 0, Math.PI * 2);
-  pctx.fill();
+  // Ombre simple : pas de ellipse(), absent de certains anciens Canvas 2D.
+  pctx.fillStyle = "rgba(0,0,0,0.25)";
+  pctx.fillRect(CX - 34, CY + 3, 68, 5);
   var skinData = ctx.getImageData(0, 0, 64, 64).data;
   // Construire la liste des faces (base + overlay)
   var faces = [];
@@ -1172,17 +1179,34 @@ function drawFaceGrid(f){
 /* Peintre : dessiner les faces les plus lointaines en premier */
   faces.sort(function(a, b){ return b.depth - a.depth; });
   RENDERED_FACES = faces;
-  var showGrid = gridCheck.checked // && !rotating && !(autoRotate && autoRotate.checked); // pas de grille en rotation (perf)
+  var showGrid = gridCheck.checked;
   var fi;
   for(fi = 0; fi < faces.length; fi++){
     var f = faces[fi];
-    f.N = drawTexturedQuad(canvas, f.rect, f.pts[0], f.pts[1], f.pts[2], f.pts[3], f.shade);
+    if(typeof pctx.setTransform === "function"){
+      f.N = drawTexturedQuad(canvas, f.rect, f.pts[0], f.pts[1], f.pts[2], f.pts[3], f.shade);
+    } else {
+      var tx = Math.floor((f.rect[0] + f.rect[2]) / 2);
+      var ty = Math.floor((f.rect[1] + f.rect[3]) / 2);
+      var td = skinData;
+      var ti = (ty * 64 + tx) * 4;
+      pctx.beginPath();
+      pctx.moveTo(f.pts[0].sx, f.pts[0].sy);
+      pctx.lineTo(f.pts[1].sx, f.pts[1].sy);
+      pctx.lineTo(f.pts[2].sx, f.pts[2].sy);
+      pctx.lineTo(f.pts[3].sx, f.pts[3].sy);
+      pctx.closePath();
+      pctx.fillStyle = "rgb(" + td[ti] + "," + td[ti+1] + "," + td[ti+2] + ")";
+      pctx.fill();
+      f.N = 1;
+    }
     if(showGrid){ drawFaceGrid(f); }
   }
 }
 /* === INTERACTION 3D : PEINDRE ET TOURNER LE MODELE === */
 var RENDERED_FACES = [];
 var autoRotate = document.getElementById("autoRotate");
+if(LEGACY_3DS){ autoRotate.checked = false; }
 var previewDirty = false;
 var painting3D = false;
 var lastPaint = null; /* { u, v, rect } dernier pixel peint */
@@ -1456,7 +1480,7 @@ setInterval(function(){
     previewDirty = false;
     renderPreview();
   }
-}, 30);
+}, LEGACY_3DS ? 100 : 30);
 /* Fleches du clavier : rotation continue et combinable (diagonales), uniquement quand le modele a le focus */
 var arrowKeys = {}; // fleches actuellement maintenues
 var ARROW_STEP = 0.06; // vitesse par image (tous les 30 ms)
@@ -1479,7 +1503,15 @@ preview.addEventListener("blur", function(){
 });
 /* --- INIT --- */
 applyZoom();
-renderPreview();
+try{
+  renderPreview();
+}catch(renderError){
+  /* Le canevas 2D reste utilisable même si une fonction de rendu 3D manque. */
+  pctx.clearRect(0, 0, preview.width, preview.height);
+  pctx.fillStyle = "#ffffff";
+  pctx.font = "14px sans-serif";
+  pctx.fillText("Rendu 3D simplifie indisponible", 10, 24);
+}
 </script>
 </body>
 </html>
