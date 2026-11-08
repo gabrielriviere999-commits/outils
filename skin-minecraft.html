@@ -1390,7 +1390,17 @@ function previewUp(){
   if(wasLine){ renderPreview(); }
 }
 preview.addEventListener("mousedown", previewDown);
-document.addEventListener("mousemove", previewMove);
+/* Ignore les événements qui viennent des contrôles de la toolbar */
+function isUiEvent(e){
+  var t = e.target;
+  return t && (t.tagName === "INPUT" || t.tagName === "BUTTON" ||
+              t.tagName === "LABEL" || t.tagName === "SELECT");
+}
+
+document.addEventListener("mousemove", function(e){
+  if(isUiEvent(e)){ return; }   // le slider glisse librement
+  previewMove(e);
+});
 document.addEventListener("mouseup", previewUp);
 /* Pincer pour zoomer (deux doigts sur l'apercu 3D) */
 var pinchStartDist = 0;
