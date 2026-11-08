@@ -1432,14 +1432,13 @@ preview.addEventListener("wheel", function(e){
   setViewZoom(viewZoom * factor);
 }, false);
 setInterval(function(){
-  /* Rotation clavier : chaque fleche maintenue tourne a sa boucle */
+  // Rotation clavier : chaque fleche maintenue tourne a sa boucle
   var kb = false;
-  if(arrowKeys.ArrowLeft){  yaw -= ARROW_STEP; kb = true; }
-  if(arrowKeys.ArrowRight){ yaw += ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowLeft){  yaw += ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowRight){ yaw -= ARROW_STEP; kb = true; }
   if(arrowKeys.ArrowUp){    pitch = Math.min(1.2, pitch + ARROW_STEP); kb = true; }
   if(arrowKeys.ArrowDown){  pitch = Math.max(-0.9, pitch - ARROW_STEP); kb = true; }
   if(kb){ previewDirty = true; }
-
   if(autoRotate.checked && !rotating && !painting3D){
     yaw += 0.035;
     previewDirty = true;
@@ -1450,10 +1449,10 @@ setInterval(function(){
   }
 }, 30);
 /* Fleches du clavier : rotation continue et combinable (diagonales), uniquement quand le modele a le focus */
-var arrowKeys = {}; /* fleches actuellement maintenues */
-var ARROW_STEP = 0.06; /* vitesse par image (tous les 30 ms) */
+var arrowKeys = {}; // fleches actuellement maintenues
+var ARROW_STEP = 0.06; // vitesse par image (tous les 30 ms)
 preview.addEventListener("mousedown", function(){
-  preview.focus(); /* donne le focus au clic (Safari ne le fait pas seul) */
+  preview.focus(); // donne le focus au clic (Safari ne le fait pas seul)
 });
 preview.addEventListener("keydown", function(e){
   if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
