@@ -31,14 +31,13 @@
   z-index:999;
 }
 body{margin-top:45px}
-label,span{font-weight:normal}
 </style>
 </head>
 <body>
 <div class="toolbar">
   <button onclick="openFichierPopup()">Fichier</button>
   <div id="popupFichierContent" style="display:none">
-    <b class="titleb">Fichier</b><hr class="titlehr"><b>
+    <b class="titleb">Fichier</b><hr class="titlehr">
     <div class="popupgrid">
       <div style="display:table-row;">
         <div style="display:table-cell;">
@@ -55,7 +54,7 @@ label,span{font-weight:normal}
   </div>
   <button onclick="openPinceauPopup()">Pinceau</button>
   <div id="popupPinceauContent" style="display:none">
-    <b class="titleb">Pinceau</b><hr class="titlehr"><b>
+    <b class="titleb">Pinceau</b><hr class="titlehr">
     <b>Couleur</b><br>
     <input type="text" id="colorInput" value="#ff00ff" size="8"><button class="previewColorPicker"></button><button id="btnPipette" style="width:60px;">Pipette</button><br>
     <label><input type="radio" name="brushMode" id="normalMode" checked>Couleur</label>
@@ -68,7 +67,7 @@ label,span{font-weight:normal}
   </div>
   <button onclick="openSelectionPopup()">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
-    <b class="titleb">Sélection</b><hr class="titlehr"><b>
+    <b class="titleb">Sélection</b><hr class="titlehr">
     <label><input type="checkbox" id="copyCheck">Copier / miroir</label>
     <label><input type="checkbox" id="flipOtherSide">Gauche / haut</label>
     <button id="btnMove">Déplacer</button>
@@ -90,7 +89,7 @@ label,span{font-weight:normal}
   <button id="btnHand">Tourner</button> 
   <button onclick="openOptionsPopup()">Options</button>
   <div id="popupOptionsContent" style="display:none">
-    <b class="titleb">Options</b><hr class="titlehr"><b>
+    <b class="titleb">Options</b><hr class="titlehr">
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
     <label>Fond : <input type="text" id="bgColorInput" value="#202020" size="8"><button class="previewColorPicker"></button></label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
@@ -1397,7 +1396,6 @@ function isUiEvent(e){
   return t && (t.tagName === "INPUT" || t.tagName === "BUTTON" ||
               t.tagName === "LABEL" || t.tagName === "SELECT");
 }
-
 document.addEventListener("mousemove", function(e){
   if(isUiEvent(e)){ return; }   // le slider glisse librement
   previewMove(e);
