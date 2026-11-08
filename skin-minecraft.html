@@ -827,7 +827,7 @@ function onUp(){
     rainbowHue = 0;
   }
   /* --- seulement ensuite, le rendu --- */
-  if(wasDrawing || moving || wasLine){ renderPreview(); }
+  if(wasDrawing || moveRearm || wasLine){ renderPreview(); }
   if(pendingAction && selection && selection.w > 0 && selection.h > 0){
     startAction(pendingAction);
   } else if(pendingAction){
