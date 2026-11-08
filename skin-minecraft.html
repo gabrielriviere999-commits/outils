@@ -103,17 +103,6 @@ label,span{font-weight:normal}
   <span id="status">x : -, y : -</span>
 </div>
 <h2>Skin Minecraft (canvas 2D, sans WebGL)</h2>
-<div id="rotatePad" style="display:inline-grid;grid-template-columns:34px 34px 34px;grid-gap:4px;vertical-align:top;margin-left:10px;">
-  <span></span>
-  <button class="rbtn" data-dir="up">▲</button>
-  <span></span>
-  <button class="rbtn" data-dir="left">◀</button>
-  <button class="rbtn" data-stop="stop" title="Stop">●</button>
-  <button class="rbtn" data-dir="right">▶</button>
-  <span></span>
-  <button class="rbtn" data-dir="down">▼</button>
-  <span></span>
-</div>
 <style>
 .rbtn{padding:4px 0;font-size:14px;line-height:1;user-select:none;touch-action:none;}
 .rbtn.active{background:#4caf50;color:#fff;}
@@ -1442,9 +1431,7 @@ preview.addEventListener("wheel", function(e){
   var factor = (e.deltaY < 0) ? 1.1 : (1 / 1.1);
   setViewZoom(viewZoom * factor);
 }, false);
-/* Affichage retarde : evite de relancer un rendu 3D complet a chaque pixel */
 setInterval(function(){
-  applyDirs();
   if(autoRotate.checked && !rotating && !painting3D){
     yaw += 0.035;
     previewDirty = true;
@@ -1454,81 +1441,6 @@ setInterval(function(){
     renderPreview();
   }
 }, 30);
-/* === BOUTONS FLECHES DE ROTATION (diagonales = plusieurs boutons a la fois) === */
-var PITCH_MIN = -0.9, PITCH_MAX = 1.2;
-var activeDirs = new Set(); /* "up","down","left","right" */
-
-function applyDirs(){
-  if(activeDirs.size === 0){ return; }
-  var speedYaw = 0.03, speedPitch = 0.025;
-  if(activeDirs.has("left"))  { yaw   -= speedYaw; }
-  if(activeDirs.has("right")) { yaw   += speedYaw; }
-  if(activeDirs.has("up"))    { pitch += speedPitch; }
-  if(activeDirs.has("down"))  { pitch -= speedPitch; }
-  /* normalisation + bornes identiques au glisser */
-  if(pitch > PITCH_MAX){ pitch = PITCH_MAX; }
-  if(pitch < PITCH_MIN){ pitch = PITCH_MIN; }
-  previewDirty = true;
-}
-
-var padButtons = document.querySelectorAll("#rotatePad .rbtn");
-function padStart(dir, btn){
-  activeDirs.add(dir);
-  if(btn){ btn.classList.add("active"); }
-}
-function padStop(btn){
-  if(btn){
-    btn.classList.remove("active");
-    if(btn.getAttribute("data-dir")){ activeDirs.delete(btn.getAttribute("data-dir")); }
-  }
-}
-padButtons.forEach(function(btn){
-  var dir = btn.getAttribute("data-dir");
-  /* souris */
-  btn.addEventListener("mousedown", function(e){ padStart(dir, btn); e.preventDefault(); });
-  /* tactile : chaque doigt garde son bouton presse */
-  btn.addEventListener("touchstart", function(e){ padStart(dir, btn); e.preventDefault(); }, {passive:false});
-  btn.addEventListener("touchend",   function(){ padStop(btn); });
-  btn.addEventListener("touchcancel", function(){ padStop(btn); });
-  /* si le doigt glisse hors du bouton */
-  btn.addEventListener("touchmove", function(e){
-    var t = e.touches[0], r = btn.getBoundingClientRect();
-    if(t.clientX < r.left || t.clientX > r.right || t.clientY < r.top || t.clientY > r.bottom){
-      padStop(btn);
-    }
-  }, {passive:false});
-});
-document.addEventListener("mouseup", function(){
-  padButtons.forEach(function(b){ padStop(b); });
-});
-
-/* le bouton central stoppe tout et remet une vue neutre (optionnel) */
-document.querySelector('#rotatePad [data-stop]').onclick = function(){
-  activeDirs.clear();
-  yaw = 0.55; pitch = 0.32;
-  previewDirty = true;
-};
-
-/* Bonus : fleches du clavier aussi (Echap pour tout liberer) */
-document.addEventListener("keydown", function(e){
-  var map = { ArrowLeft:"left", ArrowRight:"right", ArrowUp:"up", ArrowDown:"down" };
-  if(map[e.key]){
-    e.preventDefault();
-    if(!activeDirs.has(map[e.key])){
-      activeDirs.add(map[e.key]);
-      var b = document.querySelector('#rotatePad [data-dir="' + map[e.key] + '"]');
-      if(b){ b.classList.add("active"); }
-    }
-  }
-});
-document.addEventListener("keyup", function(e){
-  var map = { ArrowLeft:"left", ArrowRight:"right", ArrowUp:"up", ArrowDown:"down" };
-  if(map[e.key]){
-    activeDirs.delete(map[e.key]);
-    var b = document.querySelector('#rotatePad [data-dir="' + map[e.key] + '"]');
-    if(b){ b.classList.remove("active"); }
-  }
-});
 /* --- INIT --- */
 applyZoom();
 renderPreview();
