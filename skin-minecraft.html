@@ -22,7 +22,6 @@
   display:block;
 }
 #preview{border:2px solid #000;background:#222;cursor:crosshair;touch-action:none;display:block;}
-#preview:focus{outline:2px solid #4caf50;}
 .toolbar {
   position:fixed;
   top:0;
@@ -761,13 +760,13 @@ function onDown(e){
 function onMove(e){
   var p = getPos(e);
   document.getElementById("status").innerHTML = "x : " + p.x + ", y : " + p.y + (selection ? " | s&eacute;lection : " + selection.w + "x" + selection.h : "");
-if(lineStart && !line3D){
-  // APERCU : on rejoue la base puis on trace le segment provisoire
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(lineBase, 0, 0);
-  drawPixelLine(lineStart.x, lineStart.y, p.x, p.y);
-  return;
-}
+  if(lineStart && !line3D){
+    // APERCU : on rejoue la base puis on trace le segment provisoire
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(lineBase, 0, 0);
+    drawPixelLine(lineStart.x, lineStart.y, p.x, p.y);
+    return;
+  }
   if(moving){
     // nouvelle position, clampee
     var nx = Math.max(0, Math.min(canvas.width - selection.w,  p.x - moveOffset.dx));
@@ -1450,15 +1449,12 @@ setInterval(function(){
     renderPreview();
   }
 }, 30);
-/* Fleches du clavier : rotation continue et combinable (diagonales),
-   uniquement quand le modele a le focus */
+/* Fleches du clavier : rotation continue et combinable (diagonales), uniquement quand le modele a le focus */
 var arrowKeys = {}; /* fleches actuellement maintenues */
 var ARROW_STEP = 0.06; /* vitesse par image (tous les 30 ms) */
-
 preview.addEventListener("mousedown", function(){
   preview.focus(); /* donne le focus au clic (Safari ne le fait pas seul) */
 });
-
 preview.addEventListener("keydown", function(e){
   if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
      e.key === "ArrowUp" || e.key === "ArrowDown"){
@@ -1466,11 +1462,9 @@ preview.addEventListener("keydown", function(e){
     e.preventDefault(); /* empeche le scroll de la page */
   }
 });
-
 preview.addEventListener("keyup", function(e){
   delete arrowKeys[e.key];
 });
-
 /* si le modele perd le focus (clic ailleurs, Tab), on relache tout */
 preview.addEventListener("blur", function(){
   arrowKeys = {};
