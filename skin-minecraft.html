@@ -173,6 +173,7 @@ var ctx = canvas.getContext("2d");
 var colorInput = document.getElementById("colorInput");
 var zoom = 10;
 var currentTool = "pencil";
+var toolBeforePipette = "pencil"; // outil à restituer apres la pipette
 var drawing = false;
 var lastX = 0, lastY = 0;
 var selStart = null;
@@ -283,6 +284,9 @@ var toolButtons = {
 var eraserCheck = document.getElementById("eraserCheck");
 var rainbowCheck = document.getElementById("rainbowCheck");
 function setTool(t){
+  if(t === "pipette" && currentTool !== "pipette"){
+    toolBeforePipette = currentTool;
+  }
   if(t !== "move" && moveMode){ moveMode = false; btnMove.className = ""; }
   if(pendingAction){
     pendingAction = null;
@@ -589,7 +593,7 @@ function pipette(x, y){
     ("0" + d[1].toString(16)).slice(-2) +
     ("0" + d[2].toString(16)).slice(-2);
   setColor(hex);
-  setTool("pencil");
+  setTool(toolBeforePipette);
 }
 /* --- SELECTION --- */
 function normalizeRect(x1, y1, x2, y2){
