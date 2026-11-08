@@ -86,8 +86,6 @@ body{margin-top:45px}
   </div>
   <button id="btnUndo">Annuler</button>
   <button id="btnRedo">Rétablir</button>
-  <button id="btnHand">Tourner</button> 
-  <button id="btnPan">Glisser</button>
   <button onclick="openOptionsPopup()">Options</button>
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr">
@@ -136,6 +134,8 @@ body{margin-top:45px}
   <div class="card">
     <canvas id="preview" width="400" height="520" tabindex="0"></canvas>
     <label><input type="checkbox" id="autoRotate">Rotation auto</label>
+    <button id="btnHand">Tourner</button> 
+    <button id="btnPan">Glisser</button>
     <button id="btnResetView">Recentrer</button>
     <label><input type="checkbox" id="spreadCheck" checked>Membres écartés</label>
   </div>
