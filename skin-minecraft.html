@@ -139,6 +139,7 @@ body{margin-top:45px}
   <div class="card">
     <canvas id="preview" width="400" height="520" tabindex="0"></canvas>
     <label><input type="checkbox" id="autoRotate">Rotation automatique</label>
+    <label><input type="checkbox" id="spreadCheck" checked>Membres écartés</label>
   </div>
   <div class="card" style="position:relative;border:none;padding:0;">
     <canvas id="board" width="64" height="64"></canvas>
@@ -951,18 +952,34 @@ function boxUV(u, v, w, h, d){
     back:   [u + d + w + d, v + d, u + 2 * d + w + w, v + d + h]
   };
 }
-/* Modele : tete, corps, bras, jambes + couches externes (overlay).
-   c = centre, h = demi-dimensions, inf = gonflage overlay, uv/ouv = UV. */
-var CUBOIDS = [
-  { name: "head",      c: [0, 28, 0],  h: [4, 4, 4], uv: boxUV(0, 0, 8, 8, 8),     ouv: boxUV(32, 0, 8, 8, 8),  inf: 0.5 },
-  { name: "body",      c: [0, 18, 0],  h: [4, 6, 2], uv: boxUV(16, 16, 8, 12, 4),  ouv: boxUV(16, 32, 8, 12, 4), inf: 0.25 },
-  { name: "rightArm",  c: [-6, 18, 0], h: [2, 6, 2], uv: boxUV(40, 16, 4, 12, 4),  ouv: boxUV(40, 32, 4, 12, 4), inf: 0.25 },
-  { name: "leftArm",   c: [6, 18, 0],  h: [2, 6, 2], uv: boxUV(32, 48, 4, 12, 4),  ouv: boxUV(48, 48, 4, 12, 4), inf: 0.25 },
-  { name: "rightLeg",  c: [-2, 6, 0],  h: [2, 6, 2], uv: boxUV(0, 16, 4, 12, 4),   ouv: boxUV(0, 32, 4, 12, 4),  inf: 0.25 },
-  { name: "leftLeg",   c: [2, 6, 0],   h: [2, 6, 2], uv: boxUV(16, 48, 4, 12, 4),  ouv: boxUV(0, 48, 4, 12, 4),  inf: 0.25 }
-];
-/* Ordre des 4 coins d'une face (haut-gauche, haut-droit, bas-droit, bas-gauche UV),
-   en fonction de la face et des demi-dimensions. */
+/* Modele : tete, corps, bras, jambes + couches externes (overlay). c = centre, h = demi-dimensions, inf = gonflage overlay, uv/ouv = UV. */
+/* Ecart des membres par rapport au corps (0 = pose normale) */
+var SPREAD_GAP = 5;
+/* Construit le modele selon l'ecart demande */
+function buildCuboids(gap){
+  return [
+    /* tete montee : jour entre le haut du corps et la tete */
+    { name: "head",      c: [0, 28 + gap / 2, 0], h: [4, 4, 4], uv: boxUV(0, 0, 8, 8, 8),     ouv: boxUV(32, 0, 8, 8, 8),  inf: 0.5 },
+    { name: "body",      c: [0, 18, 0],  h: [4, 6, 2], uv: boxUV(16, 16, 8, 12, 4),  ouv: boxUV(16, 32, 8, 12, 4), inf: 0.25 },
+    /* bras decales vers l'exterieur : faces internes et cotes du corps visibles */
+    { name: "rightArm",  c: [-6 - gap, 18, 0], h: [2, 6, 2], uv: boxUV(40, 16, 4, 12, 4),  ouv: boxUV(40, 32, 4, 12, 4), inf: 0.25 },
+    { name: "leftArm",   c: [ 6 + gap, 18, 0], h: [2, 6, 2], uv: boxUV(32, 48, 4, 12, 4),  ouv: boxUV(48, 48, 4, 12, 4), inf: 0.25 },
+    /* jambes ecartees vers l'exterieur ET baissees : jour au-dessus, dessous du corps visible */
+    { name: "rightLeg",  c: [-2 - gap / 2, 6 - gap / 2, 0], h: [2, 6, 2], uv: boxUV(0, 16, 4, 12, 4), ouv: boxUV(0, 32, 4, 12, 4),  inf: 0.25 },
+    { name: "leftLeg",   c: [ 2 + gap / 2, 6 - gap / 2, 0], h: [2, 6, 2], uv: boxUV(16, 48, 4, 12, 4), ouv: boxUV(0, 48, 4, 12, 4),  inf: 0.25 }
+  ];
+}
+/* Modele initial : pose normale (case non cochee) */
+var CUBOIDS = buildCuboids(0);
+/* La case a cocher bascule entre pose normale et membres ecartes */
+var spreadCheck = document.getElementById("spreadCheck");
+/* Modele initial : suit l'attribut checked du HTML */
+var CUBOIDS = buildCuboids(spreadCheck.checked ? SPREAD_GAP : 0);
+spreadCheck.onchange = function(){
+  CUBOIDS = buildCuboids(this.checked ? SPREAD_GAP : 0);
+  previewDirty = true; /* reaffiche le modele a la prochaine boucle */
+};
+/* Ordre des 4 coins d'une face (haut-gauche, haut-droit, bas-droit, bas-gauche UV), en fonction de la face et des demi-dimensions. */
 var FACE_CORNERS = {
   front:  function(hx, hy, hz){ return [[-hx, hy, hz], [hx, hy, hz], [hx, -hy, hz], [-hx, -hy, hz]]; },
   back:   function(hx, hy, hz){ return [[hx, hy, -hz], [-hx, hy, -hz], [-hx, -hy, -hz], [hx, -hy, -hz]]; },
@@ -1110,9 +1127,6 @@ function renderPreview(){
   }
   pctx.imageSmoothingEnabled = false;
   pctx.clearRect(0, 0, preview.width, preview.height);
-  // Ombre simple : pas de ellipse(), absent de certains anciens Canvas 2D.
-  pctx.fillStyle = "rgba(0,0,0,0.25)";
-  pctx.fillRect(CX - 34, CY + 3, 68, 5);
   var skinData = ctx.getImageData(0, 0, 64, 64).data;
   // Construire la liste des faces (base + overlay)
   var faces = [];
