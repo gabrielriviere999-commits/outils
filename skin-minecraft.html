@@ -87,6 +87,7 @@ body{margin-top:45px}
   <button id="btnUndo">Annuler</button>
   <button id="btnRedo">Rétablir</button>
   <button id="btnHand">Tourner</button> 
+  <button id="btnPan">Glisser</button>
   <button onclick="openOptionsPopup()">Options</button>
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr">
@@ -280,7 +281,8 @@ var toolButtons = {
   line: document.getElementById("btnLine"),
   fill: document.getElementById("btnFill"),
   pipette: document.getElementById("btnPipette"),
-  hand: document.getElementById("btnHand")
+  hand: document.getElementById("btnHand"),
+  pan: document.getElementById("btnPan")
 };
 var eraserCheck = document.getElementById("eraserCheck");
 var rainbowCheck = document.getElementById("rainbowCheck");
@@ -302,7 +304,7 @@ function setTool(t){
     selStart = null;
   }
   canvas.style.cursor = "crosshair";
-  preview.style.cursor = (t === "hand") ? "grab" : "crosshair";
+  preview.style.cursor = (t === "hand") ? "grab" : ((t === "pan") ? "move" : "crosshair");
   updateSelRect();
   updateToolLabel();
 }
@@ -312,6 +314,7 @@ var toolNames = {
   fill: "Remplir",
   pipette: "Pipette",
   hand: "Tourner",
+  pan: "Glisser la vue",
   select: "Sélection",
   move: "Déplacer"
 };
@@ -937,6 +940,9 @@ var preview = document.getElementById("preview");
 var pctx = preview.getContext("2d");
 var yaw = 0.55;
 var pitch = 0.32;
+var panX = 0, panY = 0;   /* deplacement de la vue (glisser) */
+var panning = false;      /* un glisser vue est en cours */
+var lastPanX = 0, lastPanY = 0;
 var CAM_D = 55; // distance camera
 var F = 440; // focale
 var CX = 200;
@@ -969,8 +975,6 @@ function buildCuboids(gap){
     { name: "leftLeg",   c: [ 2 + gap / 2, 6 - gap / 2, 0], h: [2, 6, 2], uv: boxUV(16, 48, 4, 12, 4), ouv: boxUV(0, 48, 4, 12, 4),  inf: 0.25 }
   ];
 }
-/* Modele initial : pose normale (case non cochee) */
-var CUBOIDS = buildCuboids(0);
 /* La case a cocher bascule entre pose normale et membres ecartes */
 var spreadCheck = document.getElementById("spreadCheck");
 /* Modele initial : suit l'attribut checked du HTML */
@@ -1005,7 +1009,7 @@ function project(p){
   var depth = CAM_D - z2;
   if(depth < 1){ depth = 1; }
   var k = (F * viewZoom) / depth;
-  return { sx: CX + x1 * k, sy: CY - y2 * k, z: z2, depth: depth };
+  return { sx: CX + panX + x1 * k, sy: CY + panY - y2 * k, z: z2, depth: depth };
 }
 /* Dessin affine d'un triangle texturé (clip + setTransform + drawImage) */
 /* Triangle texturé SANS clip ni expansion (le clip est fait par la cellule) */
@@ -1335,6 +1339,13 @@ function paintHit(hit){
 }
 function previewDown(e){
   var p = getPreviewPos(e);
+  /* Glisser la vue : outil dedie, ou clic droit quel que soit l'outil */
+  if(currentTool === "pan" || e.button === 2){
+    panning = true;
+    lastPanX = e.clientX; lastPanY = e.clientY;
+    if(e.preventDefault){ e.preventDefault(); }
+    return;
+  }
   var hit = hitFace(p.x, p.y);
   /* Pipette prioritaire sur tous les modes de pinceau */
   if(currentTool === "pipette"){
@@ -1374,6 +1385,15 @@ eraserCheck.onchange = function(){ previewDirty = true; };
 rainbowCheck.onchange = function(){ previewDirty = true; };
 function previewMove(e){
   var p = getPreviewPos(e);
+  /* glisser de la vue : aucun hit-test pendant le deplacement */
+  if(panning){
+    panX += e.clientX - lastPanX;
+    panY += e.clientY - lastPanY;
+    lastPanX = e.clientX; lastPanY = e.clientY;
+    previewDirty = true;
+    if(e.preventDefault){ e.preventDefault(); }
+    return;
+  }
   // Statut : position texture survolee
   var hit = hitFace(p.x, p.y);
   if(hit){
@@ -1431,6 +1451,7 @@ function previewUp(){
   lineStart = null;
   lineBase = null;
   rotating = false;
+  panning = false;
   painting3D = false;
   lastPaint = null;
   /* Crayon 3D arc-en-ciel : remise a zero du compteur au relachement (comme dessin-png) */
@@ -1438,6 +1459,13 @@ function previewUp(){
   if(wasLine){ renderPreview(); }
 }
 preview.addEventListener("mousedown", previewDown);
+/* le clic droit ne doit pas sortir le menu contextuel sur l'apercu */
+preview.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+/* double-clic sur l'apercu : recentre la vue */
+preview.addEventListener("dblclick", function(){
+  panX = 0; panY = 0;
+  previewDirty = true;
+});
 /* Ignore les événements qui viennent des contrôles de la toolbar */
 function isUiEvent(e){
   var t = e.target;
@@ -1452,6 +1480,7 @@ document.addEventListener("mouseup", previewUp);
 /* Pincer pour zoomer (deux doigts sur l'apercu 3D) */
 var pinchStartDist = 0;
 var pinchStartZoom = 1;
+var pinchStartMid = null;
 function touchDist(t){
   var dx = t[0].clientX - t[1].clientX;
   var dy = t[0].clientY - t[1].clientY;
@@ -1464,6 +1493,10 @@ preview.addEventListener("touchstart", function(e){
     lastPaint = null;
     pinchStartDist = touchDist(e.touches);
     pinchStartZoom = viewZoom;
+    pinchStartMid = {
+      x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+    };
   } else {
     previewDown(e.touches[0]);
   }
@@ -1473,13 +1506,24 @@ preview.addEventListener("touchmove", function(e){
   if(e.touches.length >= 2 && pinchStartDist > 0){
     var d = touchDist(e.touches);
     if(d > 0){ setViewZoom(pinchStartZoom * d / pinchStartDist); }
+    /* le milieu des deux doigts fait glisser la vue */
+    var mid = {
+      x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+    };
+    if(pinchStartMid){
+      panX += mid.x - pinchStartMid.x;
+      panY += mid.y - pinchStartMid.y;
+    }
+    pinchStartMid = mid;
+    previewDirty = true;
   } else {
     previewMove(e.touches[0]);
   }
   e.preventDefault();
 });
 preview.addEventListener("touchend", function(e){
-  if(e.touches.length < 2){ pinchStartDist = 0; }
+  if(e.touches.length < 2){ pinchStartDist = 0; pinchStartMid = null; }
   if(e.touches.length === 0){ previewUp(); }
 });
 /* Molette pour zoomer */
