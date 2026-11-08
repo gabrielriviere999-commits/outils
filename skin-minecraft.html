@@ -667,32 +667,37 @@ function flipSelection(axis){
   tctx.scale(axis === "h" ? -1 : 1, axis === "v" ? -1 : 1);
   tctx.drawImage(canvas, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
   if(copyCheck.checked){
-    // Mode miroir : copie symetrique de l'autre cote du bord (droite/bas par defaut, gauche/haut si la case est cochee).
+    // Copie miroir de l'autre côté
     var px, py;
     if(axis === "h"){
+      py = s.y;
       if(flipOtherSide.checked){
-        px = s.x - s.w; py = s.y;
-        if(px < 0){ px = Math.min(canvas.width - s.w, s.x + s.w); }
+        px = s.x - s.w;
+        if(px < 0){
+          px = Math.min(canvas.width - s.w, s.x + s.w);
+        }
       } else {
-        px = s.x + s.w; py = s.y;
-        if(px + s.w > canvas.width){ px = Math.max(0, canvas.width - s.w); }
+        px = s.x + s.w;
+        if(px + s.w > canvas.width){
+          px = Math.max(0, canvas.width - s.w);
+        }
       }
     } else {
+      px = s.x;
       if(flipOtherSide.checked){
-        px = s.x; py = s.y - s.h;
-        if(py < 0){ py = Math.min(canvas.height - s.h, s.y + s.h); }
+        py = s.y - s.h;
+        if(py < 0){
+          py = Math.min(canvas.height - s.h, s.y + s.h);
+        }
       } else {
-        px = s.x; py = s.y + s.h;
-        if(py + s.h > canvas.height){ py = Math.max(0, canvas.height - s.h); }
+        py = s.y + s.h;
+        if(py + s.h > canvas.height){
+          py = Math.max(0, canvas.height - s.h);
+        }
       }
     }
-    var temp2 = document.createElement("canvas");
-    temp2.width = s.w; temp2.height = s.h;
-    var t2 = temp2.getContext("2d");
-    t2.translate(axis === "h" ? s.w : 0, axis === "v" ? s.h : 0);
-    t2.scale(axis === "h" ? -1 : 1, axis === "v" ? -1 : 1);
-    t2.drawImage(temp, 0, 0);
-    ctx.drawImage(temp2, px, py);
+    // temp est déjà inversé : on le copie directement
+    ctx.drawImage(temp, px, py);
   } else {
     ctx.clearRect(s.x, s.y, s.w, s.h);
     ctx.drawImage(temp, s.x, s.y);
