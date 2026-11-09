@@ -112,8 +112,8 @@ body{margin-top:45px}
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr">
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
-    <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
     <label>Fond : <input type="text" id="bgColorInput" value="#222222" size="8"><button class="previewColorPicker"></button></label><br>
+    <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
     <hr><button onclick="closePopup()">Fermer</button>
   </div>
@@ -1648,6 +1648,7 @@ function sharePNG(){
     partagerImage("image/png", "png");
 }
 /* === LOUPE (modele 2D et 3D) === */
+var IS_TOUCH_DEVICE = (window.matchMedia && window.matchMedia("(pointer:coarse)").matches) || ("ontouchstart" in window);
 var loupeBox = document.getElementById("skinLoupe");
 var loupeCvs = document.getElementById("skinLoupeCanvas");
 var loupeCtx = loupeCvs.getContext("2d");
@@ -1658,7 +1659,7 @@ function loupeZoomFor(srcCanvas){
   return srcCanvas === canvas ? 8 : 4;
 }
 function showLoupe(e, srcCanvas){
-  if(!loupeEnabled.checked || e.clientX === undefined || !srcCanvas){ return; }
+  if(!loupeEnabled.checked || !IS_TOUCH_DEVICE || e.clientX === undefined || !srcCanvas){ return; }
   loupeBox.style.display = "block";
   var lx = e.clientX + 20, ly = e.clientY + 20;
   if(lx + LOUPE_SIZE > window.innerWidth){  lx = e.clientX - LOUPE_SIZE - 20; }
