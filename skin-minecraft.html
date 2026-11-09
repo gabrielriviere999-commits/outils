@@ -30,7 +30,7 @@
   display:none;
   z-index:999;
   pointer-events:none;
-  background:#fff;
+  background:#222;
   border:3px solid #000;
   box-sizing:border-box;
   border-radius:50%;
@@ -1689,7 +1689,7 @@ function showLoupe(e, srcCanvas){
     var y1 = Math.ceil(py + half) + 1;
     var i;
     for(i = x0; i <= x1; i++){
-      var lxg = (i - (px - half)) * z;   /* position ecran de la ligne */
+      var lxg = (i - (px - half)) * z; // position ecran de la ligne
       loupeCtx.moveTo(lxg, 0);
       loupeCtx.lineTo(lxg, LOUPE_SIZE);
     }
