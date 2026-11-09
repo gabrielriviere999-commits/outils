@@ -23,6 +23,27 @@
   cursor:crosshair;
 }
 #preview{border:2px solid #000;background:#222;cursor:crosshair;touch-action:none;display:block;}
+#skinLoupe {
+  position:fixed;
+  width:120px;
+  height:120px;
+  display:none;
+  z-index:999;
+  pointer-events:none;
+  background:#fff;
+  border:3px solid #000;
+  box-sizing:border-box;
+  border-radius:50%;
+  overflow:hidden;
+}
+#skinLoupe canvas {
+  width:120px;
+  height:120px;
+  display:block;
+  image-rendering:pixelated;
+  image-rendering:-moz-crisp-edges;
+  image-rendering:crisp-edges;
+}
 .toolbar {
   position:fixed;
   top:0;
@@ -91,9 +112,10 @@ body{margin-top:45px}
   <div id="popupOptionsContent" style="display:none">
     <b class="titleb">Options</b><hr class="titlehr">
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
+    <label><input type="checkbox" id="loupeEnabled" checked>Loupe</label><br>
     <label>Fond : <input type="text" id="bgColorInput" value="#222222" size="8"><button class="previewColorPicker"></button></label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
-    <hr><button id="closePickerBtn" onclick="closePicker()">Fermer</button>
+    <hr><button onclick="closePopup()">Fermer</button>
   </div>
   <span id="activeTool">Crayon</span> |
   <span id="status">x : -, y : -</span>
@@ -142,6 +164,7 @@ body{margin-top:45px}
     <div id="selRect" style="position:absolute;display:none;border:1px solid #ffffff;pointer-events:none;box-sizing:border-box;"></div>
   </div>
 </div>
+<div id="skinLoupe"><canvas id="skinLoupeCanvas" width="120" height="120"></canvas></div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
 <script src="color-palette.js"></script>
@@ -782,6 +805,7 @@ function onDown(e){
 }
 function onMove(e){
   var p = getPos(e);
+  showLoupe(e, canvas);
   document.getElementById("status").innerHTML = "x : " + p.x + ", y : " + p.y + (selection ? " | s&eacute;lection : " + selection.w + "x" + selection.h : "");
   if(lineStart && !line3D){
     // APERCU : on rejoue la base puis on trace le segment provisoire
@@ -861,6 +885,7 @@ function onUp(){
   }
   if(moveRearm){ rearmAction("move"); }
   updateSelRect();
+  hideLoupe();
 }
 canvas.addEventListener("mousedown", onDown);
 document.addEventListener("mousemove", onMove);
@@ -1406,6 +1431,7 @@ eraserCheck.onchange = function(){ previewDirty = true; };
 rainbowCheck.onchange = function(){ previewDirty = true; };
 function previewMove(e){
   var p = getPreviewPos(e);
+  showLoupe(e, preview);
   /* glisser de la vue : aucun hit-test pendant le deplacement */
   if(panning){
     panX += e.clientX - lastPanX;
@@ -1478,6 +1504,7 @@ function previewUp(){
   /* Crayon 3D arc-en-ciel : remise a zero du compteur au relachement (comme dessin-png) */
   rainbowHue = 0;
   if(wasLine){ renderPreview(); }
+  hideLoupe();
 }
 preview.addEventListener("mousedown", previewDown);
 /* le clic droit ne doit pas sortir le menu contextuel sur l'apercu */
@@ -1620,6 +1647,70 @@ function partagerImage(mime, extension){
 function sharePNG(){
     partagerImage("image/png", "png");
 }
+/* === LOUPE (modele 2D et 3D) === */
+var loupeBox = document.getElementById("skinLoupe");
+var loupeCvs = document.getElementById("skinLoupeCanvas");
+var loupeCtx = loupeCvs.getContext("2d");
+var loupeEnabled = document.getElementById("loupeEnabled");
+var LOUPE_SIZE = 120;
+/* Grossissement : x8 pour la texture 64x64 (comme dessin-png en petit canvas), x4 pour l'apercu 3D (400x520) deja plus fin. */
+function loupeZoomFor(srcCanvas){
+  return srcCanvas === canvas ? 8 : 4;
+}
+function showLoupe(e, srcCanvas){
+  if(!loupeEnabled.checked || e.clientX === undefined || !srcCanvas){ return; }
+  loupeBox.style.display = "block";
+  var lx = e.clientX + 20, ly = e.clientY + 20;
+  if(lx + LOUPE_SIZE > window.innerWidth){  lx = e.clientX - LOUPE_SIZE - 20; }
+  if(ly + LOUPE_SIZE > window.innerHeight){ ly = e.clientY - LOUPE_SIZE - 20; }
+  loupeBox.style.left = lx + "px";
+  loupeBox.style.top  = ly + "px";
+  var r = srcCanvas.getBoundingClientRect();
+  var px = (e.clientX - r.left) * srcCanvas.width / r.width;
+  var py = (e.clientY - r.top) * srcCanvas.height / r.height;
+  var z = loupeZoomFor(srcCanvas);
+  var half = LOUPE_SIZE / (2 * z);
+  loupeCtx.imageSmoothingEnabled = false;
+  loupeCtx.clearRect(0, 0, LOUPE_SIZE, LOUPE_SIZE);
+  loupeCtx.drawImage(srcCanvas,
+    px - half, py - half, half * 2, half * 2,
+    0, 0, LOUPE_SIZE, LOUPE_SIZE);
+  if(srcCanvas === canvas && gridCheck.checked){
+    /* GRILLE DANS LA LOUPE : dessinee a la main, car la vraie grille
+       est une surcouche DOM que drawImage ne copie pas.
+       Un carreau = 1 pixel de texture = z pixels de loupe. */
+    loupeCtx.strokeStyle = gridColorInput.value;
+    loupeCtx.lineWidth = 1;
+    loupeCtx.beginPath();
+    var x0 = Math.floor(px - half) - 1;
+    var x1 = Math.ceil(px + half) + 1;
+    var y0 = Math.floor(py - half) - 1;
+    var y1 = Math.ceil(py + half) + 1;
+    var i;
+    for(i = x0; i <= x1; i++){
+      var lxg = (i - (px - half)) * z;   /* position ecran de la ligne */
+      loupeCtx.moveTo(lxg, 0);
+      loupeCtx.lineTo(lxg, LOUPE_SIZE);
+    }
+    for(i = y0; i <= y1; i++){
+      var lyg = (i - (py - half)) * z;
+      loupeCtx.moveTo(0, lyg);
+      loupeCtx.lineTo(LOUPE_SIZE, lyg);
+    }
+    loupeCtx.stroke();
+  }
+  /* carre reperant le pixel / la zone sous le curseur */
+  loupeCtx.strokeStyle = "#000000";
+  loupeCtx.lineWidth = 1;
+  loupeCtx.strokeRect(
+    LOUPE_SIZE / 2 - z / 2, LOUPE_SIZE / 2 - z / 2, z, z
+  );
+}
+function hideLoupe(){ loupeBox.style.display = "none"; }
+loupeEnabled.onchange = function(){ if(!this.checked){ hideLoupe(); } };
+/* une seule loupe a la fois : quitter un canvas masque l'autre vue */
+canvas.addEventListener("mouseleave", hideLoupe);
+preview.addEventListener("mouseleave", hideLoupe);
 /* --- INIT --- */
 applyZoom();
 try{
