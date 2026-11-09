@@ -1471,10 +1471,6 @@ function previewUp(){
 preview.addEventListener("mousedown", previewDown);
 /* le clic droit ne doit pas sortir le menu contextuel sur l'apercu */
 preview.addEventListener("contextmenu", function(e){ e.preventDefault(); });
-/* double-clic sur l'apercu : recentre la vue */
-preview.addEventListener("dblclick", function(){
-  resetView();
-});
 /* Ignore les événements qui viennent des contrôles de la toolbar */
 function isUiEvent(e){
   var t = e.target;
