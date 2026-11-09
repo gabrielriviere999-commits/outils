@@ -168,38 +168,38 @@ function init(){
   fovSlider.value=f;
   fovAff.textContent=Math.round(f)+"°";
  },{passive:false});
-  /* 2 doigts : pincement = FOV, glissement = deplacement (pan d'OrbitControls) */
-  var pincementDist=null,pincementTol=8; /* tolerance en px avant de considerer un pincement */
-  function dist2Doigts(t){
-   var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;
-   return Math.sqrt(dx*dx+dy*dy);
-  }
-  renderer.domElement.addEventListener("touchstart",function(e){
-   if(e.touches.length===2)pincementDist=dist2Doigts(e.touches);
-  },{passive:false});
-  renderer.domElement.addEventListener("touchmove",function(e){
-   if(e.touches.length===2&&pincementDist){
-    var d=dist2Doigts(e.touches);
-    if(Math.abs(d-pincementDist)>pincementTol){
-     /* vrai pincement : on prend la main et on bloque OrbitControls */
-     if(e.preventDefault)e.preventDefault();
-     if(e.stopImmediatePropagation)e.stopImmediatePropagation();
-     if(d>0){
-      var f=camera.fov*(pincementDist/d);
-      f=Math.max(10,Math.min(100,f));
-      camera.fov=f;
-      camera.updateProjectionMatrix();
-      fovSlider.value=f;
-      fovAff.textContent=Math.round(f)+"°";
-      pincementDist=d;
-     }
+ /* 2 doigts : pincement = FOV, glissement = deplacement (pan d'OrbitControls) */
+ var pincementDist=null,pincementTol=8; /* tolerance en px avant de considerer un pincement */
+ function dist2Doigts(t){
+  var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+ }
+ renderer.domElement.addEventListener("touchstart",function(e){
+  if(e.touches.length===2)pincementDist=dist2Doigts(e.touches);
+ },{passive:false});
+ renderer.domElement.addEventListener("touchmove",function(e){
+  if(e.touches.length===2&&pincementDist){
+   var d=dist2Doigts(e.touches);
+   if(Math.abs(d-pincementDist)>pincementTol){
+    /* vrai pincement : on prend la main et on bloque OrbitControls */
+    if(e.preventDefault)e.preventDefault();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    if(d>0){
+     var f=camera.fov*(pincementDist/d);
+     f=Math.max(10,Math.min(100,f));
+     camera.fov=f;
+     camera.updateProjectionMatrix();
+     fovSlider.value=f;
+     fovAff.textContent=Math.round(f)+"°";
+     pincementDist=d;
     }
-    /* sinon : ecartement stable = glissement 2 doigts, on laisse OrbitControls panser */
    }
-  },{passive:false});
-  function finPincement(e){if(e.touches.length<2)pincementDist=null;}
-  renderer.domElement.addEventListener("touchend",finPincement,false);
-  renderer.domElement.addEventListener("touchcancel",finPincement,false);
+   /* sinon : ecartement stable = glissement 2 doigts, on laisse OrbitControls panser */
+  }
+ },{passive:false});
+ function finPincement(e){if(e.touches.length<2)pincementDist=null;}
+ renderer.domElement.addEventListener("touchend",finPincement,false);
+ renderer.domElement.addEventListener("touchcancel",finPincement,false);
  controls=new THREE.OrbitControls(camera,renderer.domElement);
  controls.enableZoom=false; 
  controls.enableDamping=false;
