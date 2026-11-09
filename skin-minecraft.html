@@ -49,6 +49,7 @@ body{margin-top:45px}
       </div>
     </div>
     <button id="btnDownload">Télécharger PNG</button>
+    <button onclick="sharePNG()">Partager PNG</button>
     <button id="btnClear">Effacer tout</button>
     <hr><button onclick="closePopup()">Fermer</button>
   </div>
@@ -1577,6 +1578,41 @@ preview.addEventListener("keyup", function(e){
 preview.addEventListener("blur", function(){
   arrowKeys = {};
 });
+/* Bouton Partager PNG */
+function partagerImage(mime, extension){
+    if (!navigator.share) {
+        alert("Le partage n'est pas disponible sur ce navigateur.");
+        return;
+    }
+    var sourceCanvas = canvas;
+    sourceCanvas.toBlob(function (blob) {
+        if (!blob) {
+            alert("Impossible de créer l'image.");
+            return;
+        }
+        var file;
+        try {
+            file = new File([blob], "dessin." + extension, { type: mime });
+        } catch (e) {
+            file = null;
+        }
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({
+                title: "",
+                text: "",
+                files: [file]
+            });
+        } else {
+            navigator.share({
+                title: "",
+                text: ""
+            });
+        }
+    }, mime);
+}
+function sharePNG(){
+    partagerImage("image/png", "png");
+}
 /* --- INIT --- */
 applyZoom();
 try{
