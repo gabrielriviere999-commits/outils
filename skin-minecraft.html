@@ -93,11 +93,7 @@ body{margin-top:45px}
     <label><input type="checkbox" id="gridCheck" checked>Grille</label> <input type="text" id="gridColorInput" value="#cccccc" size="8"><button class="previewColorPicker"></button><br>
     <label>Fond : <input type="text" id="bgColorInput" value="#222222" size="8"><button class="previewColorPicker"></button></label><br>
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
-    <label>Zoom modèle 2D :
-    <button data-zoom="-" class="rangebtn">-</button>
-    <span id="zoomLabel">10</span>
-    <button data-zoom="+" class="rangebtn">+</button></label>
-    <hr><button onclick="closePopup()">Fermer</button>
+    <hr><button id="closePickerBtn" onclick="closePicker()">Fermer</button>
   </div>
   <span id="activeTool">Crayon</span> |
   <span id="status">x : -, y : -</span>
@@ -202,13 +198,28 @@ var undoStack = [];
 var redoStack = [];
 var MAX_UNDO = 100;
 /* --- AFFICHAGE --- */
+function availableBoardWidth(){
+  /* position reelle de la carte 2D dans la page :
+     elle est soit a droite de l'apercu 3D, soit en dessous */
+  var left = canvas.parentElement.getBoundingClientRect().left;
+  /* espace restant jusqu'au bord droit de la fenêtre (marge incluse) */
+  var avail = window.innerWidth - left - 12;
+  /* si la carte est empilée sous l'aperçu (left ≈ 0), on retombe
+     sur la limite pleine page */
+  return Math.max(64, Math.min(availableFullWidth(), avail));
+}
+function availableFullWidth(){
+  return Math.max(64, window.innerWidth - 20);
+}
 function applyZoom(){
+  zoom = Math.max(1, Math.floor(availableBoardWidth() / canvas.width));
   canvas.style.width = (canvas.width * zoom) + "px";
   canvas.style.height = (canvas.height * zoom) + "px";
-  document.getElementById("zoomLabel").innerHTML = "x" + zoom;
   updateBoardGrid();
   updateSelRect();
 }
+/* Recalcul quand la fenêtre change de taille (rotation mobile, redimensionnement) */
+window.addEventListener("resize", applyZoom);
 /* Grille et contour de selection sur la texture 2D */
 function updateBoardGrid(){
   var g = document.getElementById("boardGrid");
