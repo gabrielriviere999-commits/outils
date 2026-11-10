@@ -589,32 +589,101 @@ function sameColor(a, b){
   return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
 }
 function floodFill(sx, sy){
-  if(sx < 0 || sy < 0 || sx >= canvas.width || sy >= canvas.height){ return; }
-  var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  var d = img.data;
-  var W = canvas.width;
-  function idx(x, y){ return (y * W + x) * 4; }
-  var i0 = idx(sx, sy);
-  var target = { r: d[i0], g: d[i0+1], b: d[i0+2], a: d[i0+3] };
-  var fill;
-  if(eraserCheck.checked){
-    fill = { r: 0, g: 0, b: 0, a: 0 };
-  } else {
-    fill = hexToRgb(colorInput.value);
-  }
-  if(sameColor(target, fill)){ return; }
-  var stack = [[sx, sy]];
-  while(stack.length){
-    var p = stack.pop();
-    var x = p[0], y = p[1];
-    if(x < 0 || y < 0 || x >= W || y >= canvas.height){ continue; }
-    var i = idx(x, y);
-    if(!sameColor({r:d[i],g:d[i+1],b:d[i+2],a:d[i+3]}, target)){ continue; }
-    d[i] = fill.r; d[i+1] = fill.g; d[i+2] = fill.b; d[i+3] = fill.a;
-    stack.push([x+1, y]); stack.push([x-1, y]);
-    stack.push([x, y+1]); stack.push([x, y-1]);
-  }
-  ctx.putImageData(img, 0, 0);
+    if(sx < 0 || sy < 0 || sx >= canvas.width || sy >= canvas.height){
+        return;
+    }
+    var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var d = img.data;
+    var W = canvas.width;
+    var H = canvas.height;
+    function idx(x, y){
+        return (y * W + x) * 4;
+    }
+    var i0 = idx(sx, sy);
+    var tr = d[i0];
+    var tg = d[i0 + 1];
+    var tb = d[i0 + 2];
+    var ta = d[i0 + 3];
+    var fr, fg, fb, fa;
+    if(eraserCheck.checked){
+        fr = 0;
+        fg = 0;
+        fb = 0;
+        fa = 0;
+    } else {
+        var fill = hexToRgb(colorInput.value);
+        fr = fill.r;
+        fg = fill.g;
+        fb = fill.b;
+        fa = fill.a;
+    }
+    // Ne rien faire si la couleur est déjà identique
+    if(tr === fr && tg === fg && tb === fb && ta === fa){
+        return;
+    }
+    if(ta === 0 && fa === 0){
+        return;
+    }
+    // Vérifie si un pixel appartient à la zone
+    function isTarget(i){
+        if(ta === 0){
+            return d[i + 3] === 0;
+        }
+        return d[i] === tr &&
+               d[i + 1] === tg &&
+               d[i + 2] === tb &&
+               d[i + 3] === ta;
+    }
+    // Colore immédiatement le pixel
+    function paint(i){
+        d[i] = fr;
+        d[i + 1] = fg;
+        d[i + 2] = fb;
+        d[i + 3] = fa;
+    }
+    var stack = [];
+    var start = i0;
+    paint(start);
+    stack.push(start);
+    while(stack.length){
+        var p = stack.pop();
+        var x = (p / 4) % W;
+        var y = Math.floor(p / 4 / W);
+        var n;
+        // Gauche
+        if(x > 0){
+            n = p - 4;
+            if(isTarget(n)){
+                paint(n);
+                stack.push(n);
+            }
+        }
+        // Droite
+        if(x < W - 1){
+            n = p + 4;
+            if(isTarget(n)){
+                paint(n);
+                stack.push(n);
+            }
+        }
+        // Haut
+        if(y > 0){
+            n = p - W * 4;
+            if(isTarget(n)){
+                paint(n);
+                stack.push(n);
+            }
+        }
+        // Bas
+        if(y < H - 1){
+            n = p + W * 4;
+            if(isTarget(n)){
+                paint(n);
+                stack.push(n);
+            }
+        }
+    }
+    ctx.putImageData(img, 0, 0);
 }
 /* --- PIPETTE --- */
 function pipette(x, y){
