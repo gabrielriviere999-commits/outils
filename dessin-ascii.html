@@ -200,43 +200,19 @@ body.block-touch{touch-action:none;}
   <button data-action="openFormePopup" class="multitouchbtn">Forme</button>
   <div id="popupFormeContent" style="display:none">
     <b class="titleb">Forme</b><hr class="titlehr">
-    <div class="popupgrid">
-      <div style="display:table-row;">
-        <div style="display:table-cell;width:85%;">
-          <button id="btnLine" data-action="setToolLine">Ligne</button>
-        </div>
-        <div style="display:table-cell;width:15%;">
-		  <input type="text" id="lineChar" value="*" maxlength="1">
-        </div>
-      </div>
-    </div>
+    <button id="btnLine" data-action="setToolLine" style="width:85%">Ligne</button>
+    <input type="text" id="lineChar" value="*" maxlength="1">
     <button id="btnArrow" data-action="setToolArrow">Flèche</button><hr>
-    <div class="popupgrid">
-      <div style="display:table-row;">
-        <div style="display:table-cell;width:85%;">
-          <button id="btnRect" data-action="setToolRect">Rectangle</button>
-        </div>
-        <div style="display:table-cell;width:15%;">
-		  <input type="text" id="rectChar" maxlength="1">
-        </div>
-      </div>
-    </div>
+    <button id="btnRect" data-action="setToolRect" style="width:85%">Rectangle</button>
+    <input type="text" id="rectChar" maxlength="1">
     <label><input type="radio" name="rectModeRadio" value="classic" checked>+-| Classique</label>
     <label><input type="radio" name="rectModeRadio" value="dotted">.: Pointillé</label>
     <label><input type="radio" name="rectModeRadio" value="rounded">.-|:+ Arrondi</label>
     <label><input type="radio" name="rectModeRadio" value="wavy">¤~¦ Ondulé</label>
     <label><input type="radio" name="rectModeRadio" value="fancy">/=\| Fancy</label><hr>
-    <div class="popupgrid">
-      <div style="display:table-row;">
-        <div style="display:table-cell;width:85%;">
-          <button id="btnEllipse" data-action="setToolEllipse">Ellipse</button>
-        </div>
-        <div style="display:table-cell;width:15%;">
-		  <input type="text" id="ellipseChar" value="o" maxlength="1">
-        </div>
-      </div>
-    </div><hr>
-    <button data-action="closePopup">Fermer</button>
+    <button id="btnEllipse" data-action="setToolEllipse" style="width:85%">Ellipse</button>
+    <input type="text" id="ellipseChar" value="o" maxlength="1">
+    <hr><button data-action="closePopup">Fermer</button>
   </div>
   <button data-action="openSelectionPopup" class="multitouchbtn">Sélection</button>
   <div id="popupSelectionContent" style="display:none">
