@@ -812,9 +812,9 @@ function commencer(x, y) {
 function deplacer(x, y) {
   var dx = x - dernier.x, dy = y - dernier.y;
   dernier.x = x; dernier.y = y;
-  // Sensibilité "naturelle" : un mouvement d'une largeur d'écran ≈ un demi-tour visuel.
-  // On relie l'angle à la largeur de la fenêtre, pas à un chiffre fixe.
+  var sensibiliteRotation = 3;
   var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
+  k *= sensibiliteRotation;
   yaw   -= dx * k;
   pitch = bornerPitch(pitch + dy * k);
   vitesse.x = -dx * k; vitesse.y = dy * k;
