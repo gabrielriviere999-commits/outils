@@ -192,7 +192,7 @@ var ctx = canvas.getContext("2d");
 var colorInput = document.getElementById("colorInput");
 var zoom = 10;
 var currentTool = "pencil";
-var toolBeforePipette = "pencil"; /* outil à restituer apres la pipette */
+var toolBeforePipette = "pencil"; // outil à restituer apres la pipette
 var drawing = false;
 var lastX = 0, lastY = 0;
 var selStart = null;
@@ -220,19 +220,15 @@ var line3D = false;  /* ligne en cours sur le modele 3D */
 var undoStack = [];
 var redoStack = [];
 var MAX_UNDO = 100;
-/* --- STATUT (sans reflow inutile) --- */
-var statusEl = document.getElementById("status");
-var lastStatus = "";
-function setStatus(txt){
-  if(txt !== lastStatus){
-    lastStatus = txt;
-    statusEl.textContent = txt;
-  }
-}
 /* --- AFFICHAGE --- */
 function availableBoardWidth(){
+  /* position reelle de la carte 2D dans la page :
+     elle est soit a droite de l'apercu 3D, soit en dessous */
   var left = canvas.parentElement.getBoundingClientRect().left;
+  /* espace restant jusqu'au bord droit de la fenêtre (marge incluse) */
   var avail = window.innerWidth - left - 12;
+  /* si la carte est empilée sous l'aperçu (left ≈ 0), on retombe
+     sur la limite pleine page */
   return Math.max(64, Math.min(availableFullWidth(), avail));
 }
 function availableFullWidth(){
@@ -245,6 +241,7 @@ function applyZoom(){
   updateBoardGrid();
   updateSelRect();
 }
+/* Recalcul quand la fenêtre change de taille (rotation mobile, redimensionnement) */
 window.addEventListener("resize", applyZoom);
 /* Grille et contour de selection sur la texture 2D */
 function updateBoardGrid(){
@@ -278,15 +275,17 @@ function updateSelRect(){
   }
 }
 /* --- COULEUR --- */
+var colorInput = document.getElementById("colorInput");
 var gridColorInput = document.getElementById("gridColorInput");
 var bgColorInput = document.getElementById("bgColorInput");
 var preview = document.getElementById("preview");
+/* Applique la couleur du champ a l'editeur (appele a chaque evenement input, y compris ceux emis par le color picker via dispatchEvent) */
 function applyInputColor(input){
   if(input.id === "colorInput"){
-    updateSelRect();
+    updateSelRect(); // contour de la selection
   } else if(input.id === "gridColorInput"){
-    previewDirty = true;
-    updateBoardGrid();
+    previewDirty = true; // reaffiche la grille 3D
+    updateBoardGrid(); // grille de la texture 2D
   } else if(input.id === "bgColorInput"){
     preview.style.background = input.value;
   }
@@ -297,7 +296,7 @@ function setColor(hex){
   applyInputColor(colorInput);
 }
 [colorInput, gridColorInput, bgColorInput].forEach(function(inp){
-  attachColorPickerTo(inp); /* branche bouton + picker + couleurs rapides */
+  attachColorPickerTo(inp); // branche bouton + picker + couleurs rapides */
   inp.addEventListener("input", function(){
     applyInputColor(this);
   });
@@ -359,6 +358,7 @@ var actionNames = {
 };
 function updateToolLabel(){
   var txt = toolNames[currentTool] || currentTool;
+  /* si une action attend sa selection, on le dit explicitement */
   if(pendingAction){
     txt = "Sélection (" + actionNames[pendingAction] + ")";
   }
@@ -371,26 +371,31 @@ for(var key in toolButtons){
 }
 function requestAction(a){
   if(pendingAction === a){
+    /* recliquer sur le meme bouton : on desarme */
     pendingAction = null;
     for(var kc in actionButtons){ actionButtons[kc].className = ""; }
     setTool(actionReturnTool);
     return;
   }
+  // on arme TOUJOURS : la selection precedente est oubliee, un nouveau tracé est obligatoire avant l'execution
   pendingAction = a;
+  // outil a restituer : on ne l'ecrase pas si on etait deja en tracé (currentTool vaut alors "select") ni en attente de deplacement
   if(currentTool !== "select" && currentTool !== "move"){
     actionReturnTool = currentTool;
   }
-  if(moveMode){ moveMode = false; }
-  selection = null;
+  if(moveMode){ moveMode = false; } // on desarme un eventuel mode deplacement
+  selection = null; // on repart de zero : nouvelle selection obligatoire
   selStart = null;
   updateSelRect();
   currentTool = "select";
+  // un seul bouton actif a la fois : on nettoie TOUT avant d'allumer
   for(var k in toolButtons){ toolButtons[k].className = ""; }
   for(var ab in actionButtons){ actionButtons[ab].className = ""; }
   actionButtons[a].className = "active";
-  setStatus("Tracez une sélection sur la texture 2D : l'action s'appliquera au relâchement.");
+  document.getElementById("status").innerHTML = "Tracez une sélection sur la texture 2D : l'action s'appliquera au relâchement.";
   updateToolLabel();
 }
+/* Re-areme la meme action : le prochain tracé relancera encore cette action */
 function rearmAction(a){
   pendingAction = a;
   currentTool = "select";
@@ -400,23 +405,26 @@ function rearmAction(a){
   for(var k in toolButtons){ toolButtons[k].className = ""; }
   for(var ab in actionButtons){ actionButtons[ab].className = ""; }
   actionButtons[a].className = "active";
-  setStatus(actionNames[a] + " : tracez une nouvelle sélection pour recommencer.");
+  document.getElementById("status").innerHTML = actionNames[a] + " : tracez une nouvelle sélection pour recommencer.";
   updateToolLabel();
 }
 function startAction(a){
   pendingAction = null;
   if(a === "move"){
+    // on arme le mode deplacement existant : glissez le bloc, validation au relachement
     moveReturnTool = actionReturnTool;
     currentTool = "move";
     moveMode = true;
     for(var k in toolButtons){ toolButtons[k].className = ""; }
     actionButtons.move.className = "active";
-    setStatus("Déplacer : glissez le bloc, relâchez pour valider.");
+    document.getElementById("status").innerHTML = "Déplacer : glissez le bloc, relâchez pour valider.";
     return;
   }
+  // on execute l'action...
   if(a === "rotate"){ rotateSelection(); }
   else if(a === "fliph"){ flipSelection("h"); }
   else if(a === "flipv"){ flipSelection("v"); }
+  // ...puis on re-areme la meme action pour un nouveau tracé
   rearmAction(a);
 }
 actionButtons.move.onclick   = function(){ requestAction("move"); };
@@ -428,13 +436,11 @@ function saveState(){
   undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
   if(undoStack.length > MAX_UNDO){ undoStack.shift(); }
   redoStack = [];
-  skinDataDirty = true; /* la texture a change : cache ImageData invalide */
 }
 function undo(){
   if(undoStack.length){
     redoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     ctx.putImageData(undoStack.pop(), 0, 0);
-    skinDataDirty = true;
     renderPreview();
   }
 }
@@ -442,7 +448,6 @@ function redo(){
   if(redoStack.length){
     undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     ctx.putImageData(redoStack.pop(), 0, 0);
-    skinDataDirty = true;
     renderPreview();
   }
 }
@@ -457,8 +462,18 @@ function getPos(e){
   };
 }
 /* --- DESSIN PIXEL --- */
+/* Mode pinceau : Couleur / Gomme / Arc-en-ciel (boutons radio).
+   Comportement identique au "Tracer" arc-en-ciel du dessin-png :
+   - Crayon : compteur CONTINU. La teinte part de 0, avance d'un pas par
+     pixel reellement peint le long du segment (drawPixelRainbowLine,
+     comme drawPixelRainbowLine du dessin-png), et repart de zero au
+     relachement du clic. Si le pointeur n'a pas change de pixel, rien
+     n'est repeint et le compteur ne bouge pas (comme le "distance < 0.1"
+     de drawFree) : un tracé lent ne s'écrase plus en rouge.
+   - Ligne : chaque trait deroule le spectre de 0 a 300 du debut a la fin,
+     independamment du compteur. */
 var rainbowHue = 0;
-var RAINBOW_STEP = 12;
+var RAINBOW_STEP = 12; /* pas de teinte par pixel peint : 1.5 = dessin-png exact, 12 = visible en 64x64 */
 function rainbowColor(h){
   var i = Math.floor(h / 60);
   var f = h - i * 60;
@@ -495,6 +510,9 @@ function paintPixel(x, y){
   } else if(eraserCheck.checked){
     ctx.clearRect(x, y, 1, 1);
   } else if(rainbowCheck.checked){
+    /* Premier pixel du trait : on peint avec la teinte courante et on
+       avance le compteur (comme le onpointerdown du dessin-png). La suite
+       du tracé passe par drawPixelRainbowLine, jamais par ici. */
     ctx.fillStyle = rainbowColor(rainbowHue);
     rainbowHue += RAINBOW_STEP;
     if(rainbowHue >= 360){
@@ -506,6 +524,7 @@ function paintPixel(x, y){
     ctx.fillRect(x, y, 1, 1);
   }
 }
+/* LIGNE ARC-EN-CIEL : le spectre deroule de 0 a 300 le long du segment (comme dessin-png) */
 function drawPixelLineRainbow(x1, y1, x2, y2){
   var dx = x2 - x1;
   var dy = y2 - y1;
@@ -518,11 +537,15 @@ function drawPixelLineRainbow(x1, y1, x2, y2){
     paintPixelWithColor(Math.round(x1 + dx * t), Math.round(y1 + dy * t), rainbowColor(hue));
   }
 }
+/* TRACÉ LIBRE ARC-EN-CIEL (comme drawPixelRainbowLine du dessin-png) :
+   compteur continu, la teinte avance d'un pas par pixel reellement peint.
+   Si le depart et l'arrivee sont le meme pixel, on ne repeint rien et le
+   compteur ne bouge pas : un tracé lent ne consomme pas le spectre. */
 function drawPixelRainbowLine(x1, y1, x2, y2){
   var dx = x2 - x1;
   var dy = y2 - y1;
   var distance = Math.sqrt(dx * dx + dy * dy);
-  if(distance < 0.1){ return; }
+  if(distance < 0.1){ return; } /* meme pixel : rien (comme drawFree du dessin-png) */
   var steps = Math.max(1, Math.floor(distance));
   var i;
   for(i = 0; i <= steps; i++){
@@ -534,6 +557,7 @@ function drawPixelRainbowLine(x1, y1, x2, y2){
     }
   }
 }
+/* Ligne de Bresenham pour dessiner vite sans trous */
 function drawPixelLine(x1, y1, x2, y2){
   if(eraserCheck.checked){
     /* gomme : Bresenham normal, paintPixel effacera */
@@ -593,12 +617,14 @@ function floodFill(sx, sy){
         fb = fill.b;
         fa = fill.a;
     }
+    // Ne rien faire si la couleur est déjà identique
     if(tr === fr && tg === fg && tb === fb && ta === fa){
         return;
     }
     if(ta === 0 && fa === 0){
         return;
     }
+    // Vérifie si un pixel appartient à la zone
     function isTarget(i){
         if(ta === 0){
             return d[i + 3] === 0;
@@ -608,6 +634,7 @@ function floodFill(sx, sy){
                d[i + 2] === tb &&
                d[i + 3] === ta;
     }
+    // Colore immédiatement le pixel
     function paint(i){
         d[i] = fr;
         d[i + 1] = fg;
@@ -623,6 +650,7 @@ function floodFill(sx, sy){
         var x = (p / 4) % W;
         var y = Math.floor(p / 4 / W);
         var n;
+        // Gauche
         if(x > 0){
             n = p - 4;
             if(isTarget(n)){
@@ -630,6 +658,7 @@ function floodFill(sx, sy){
                 stack.push(n);
             }
         }
+        // Droite
         if(x < W - 1){
             n = p + 4;
             if(isTarget(n)){
@@ -637,6 +666,7 @@ function floodFill(sx, sy){
                 stack.push(n);
             }
         }
+        // Haut
         if(y > 0){
             n = p - W * 4;
             if(isTarget(n)){
@@ -644,6 +674,7 @@ function floodFill(sx, sy){
                 stack.push(n);
             }
         }
+        // Bas
         if(y < H - 1){
             n = p + W * 4;
             if(isTarget(n)){
@@ -653,7 +684,6 @@ function floodFill(sx, sy){
         }
     }
     ctx.putImageData(img, 0, 0);
-    skinDataDirty = true;
 }
 /* --- PIPETTE --- */
 function pipette(x, y){
@@ -684,10 +714,12 @@ function normalizeRect(x1, y1, x2, y2){
 var copyCheck = document.getElementById("copyCheck");
 var flipOtherSide = document.getElementById("flipOtherSide");
 var gridCheck = document.getElementById("gridCheck");
+var gridColorInput = document.getElementById("gridColorInput");
+var bgColorInput = document.getElementById("bgColorInput");
 var modelZoomInput = document.getElementById("modelZoom");
-var viewZoom = 1;
+var viewZoom = 1; /* zoom du modele 3D */
 gridCheck.onchange = function(){
-  previewDirty = true;
+  previewDirty = true;   /* reaffiche la grille 3D */
   updateBoardGrid();
 };
 function clampViewZoom(v){
@@ -727,7 +759,6 @@ function rotateSelection(){
   ctx.rotate(Math.PI / 2);
   ctx.drawImage(temp, -s.w / 2, -s.h / 2);
   ctx.restore();
-  skinDataDirty = true;
   if(selection){
     selection = normalizeRect(rx, ry, rx + s.h, ry + s.w);
     updateSelRect();
@@ -745,6 +776,7 @@ function flipSelection(axis){
   tctx.scale(axis === "h" ? -1 : 1, axis === "v" ? -1 : 1);
   tctx.drawImage(canvas, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
   if(copyCheck.checked){
+    // Copie miroir de l'autre côté
     var px, py;
     if(axis === "h"){
       py = s.y;
@@ -773,12 +805,12 @@ function flipSelection(axis){
         }
       }
     }
+    // temp est déjà inversé : on le copie directement
     ctx.drawImage(temp, px, py);
   } else {
     ctx.clearRect(s.x, s.y, s.w, s.h);
     ctx.drawImage(temp, s.x, s.y);
   }
-  skinDataDirty = true;
   renderPreview();
 }
 /* --- SOURIS / TACTILE --- */
@@ -794,10 +826,12 @@ function onDown(e){
     if(selection && selection.w > 0 && selection.h > 0 &&
        p.x >= selection.x && p.x < selection.x + selection.w &&
        p.y >= selection.y && p.y < selection.y + selection.h){
-      saveState();
+      saveState();   /* undo prend l'etat AVANT le deplacement */
+      // 1. bloc flottant
       moveTemp = document.createElement("canvas");
       moveTemp.width = selection.w; moveTemp.height = selection.h;
       moveTemp.getContext("2d").drawImage(canvas, selection.x, selection.y, selection.w, selection.h, 0, 0, selection.w, selection.h);
+      // 2. base intacte : le canvas AVANT toute modification. En mode deplacement (pas copier), l'original est efface DANS la base.
       moveBase = document.createElement("canvas");
       moveBase.width = canvas.width; moveBase.height = canvas.height;
       var bctx = moveBase.getContext("2d");
@@ -807,6 +841,7 @@ function onDown(e){
       }
       moveOffset = { dx: p.x - selection.x, dy: p.y - selection.y };
       moving = true;
+      // on ne touche PAS encore au vrai canvas : simple apercu ensuite
     } else {
       selStart = { x: p.x, y: p.y };
       selection = null;
@@ -819,7 +854,7 @@ function onDown(e){
     return;
   }
   if(currentTool === "line"){
-    saveState();
+    saveState(); // etat AVANT la ligne, pour l'undo
     lineStart = { x: p.x, y: p.y };
     lineBase = document.createElement("canvas");
     lineBase.width = canvas.width; lineBase.height = canvas.height;
@@ -839,20 +874,21 @@ function onDown(e){
 }
 function onMove(e){
   var p = getPos(e);
-  /* Loupe uniquement pendant un geste actif (perf sur appareils faibles) */
-  if(drawing || lineStart || moving || selStart || currentTool === "pipette"){
-    showLoupe(e, canvas);
-  }
-  setStatus("x : " + p.x + ", y : " + p.y + (selection ? " | sélection : " + selection.w + "x" + selection.h : ""));
+  showLoupe(e, canvas);
+  document.getElementById("status").innerHTML = "x : " + p.x + ", y : " + p.y + (selection ? " | s&eacute;lection : " + selection.w + "x" + selection.h : "");
   if(lineStart && !line3D){
+    // APERCU : on rejoue la base puis on trace le segment provisoire
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(lineBase, 0, 0);
     drawPixelLine(lineStart.x, lineStart.y, p.x, p.y);
     return;
   }
   if(moving){
+    // nouvelle position, clampee
     var nx = Math.max(0, Math.min(canvas.width - selection.w,  p.x - moveOffset.dx));
     var ny = Math.max(0, Math.min(canvas.height - selection.h, p.y - moveOffset.dy));
+    /* APERCU : on rejoue la base intacte, puis on affiche le bloc flottant.
+       Resultat : rien n'est detruit, le bloc peut survoler n'importe quoi. */
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(moveBase, 0, 0);
     ctx.drawImage(moveTemp, nx, ny);
@@ -861,6 +897,9 @@ function onMove(e){
     return;
   }
   if(drawing){
+    /* Crayon arc-en-ciel : compteur continu par pixel peint (comme le
+       "Tracer" du dessin-png). Si le pointeur reste sur le meme pixel,
+       on ne repeint rien et le compteur ne bouge pas. */
     if(p.x !== lastX || p.y !== lastY){
       if(rainbowCheck.checked && !eraserCheck.checked){
         drawPixelRainbowLine(lastX, lastY, p.x, p.y);
@@ -879,6 +918,7 @@ function onUp(){
   var moveRearm = false;
   if(!downOnBoard){ return; }
   downOnBoard = false;
+  /* --- on réinitialise l'état AVANT renderPreview --- */
   var wasDrawing = drawing;
   drawing = false;
   selStart = null;
@@ -894,14 +934,15 @@ function onUp(){
     moveRearm = true;
     currentTool = "select";
     selection = null;
-    skinDataDirty = true;
   }
   var wasLine = !!lineStart;
   lineStart = null;
   lineBase = null;
+  /* Crayon arc-en-ciel : le compteur de teinte repart de zero au prochain trait (comme dessin-png) */
   if(wasDrawing && rainbowCheck.checked){
     rainbowHue = 0;
   }
+  /* --- seulement ensuite, le rendu --- */
   if(wasDrawing || moveRearm || wasLine){ renderPreview(); }
   if(pendingAction && selection && selection.w > 0 && selection.h > 0){
     startAction(pendingAction);
@@ -946,17 +987,17 @@ function importSkinImage(img){
   saveState();
   ctx.clearRect(0, 0, 64, 64);
   if(img.height <= 32 && img.width >= 64){
+    // Conversion ancien skin 64x32 vers 64x64 : bras gauche = miroir du bras droit, jambe gauche = miroir de la jambe droite.
     var t = document.createElement("canvas");
     t.width = 64; t.height = 32;
     var tc = t.getContext("2d");
     tc.drawImage(img, 0, 0, 64, 32);
     ctx.drawImage(t, 0, 0);
-    copyMirror(t, 40, 16, 16, 16, 32, 48);
-    copyMirror(t, 0, 16, 16, 16, 16, 48);
+    copyMirror(t, 40, 16, 16, 16, 32, 48); /* bras gauche  (32,48) */
+    copyMirror(t, 0, 16, 16, 16, 16, 48);  /* jambe gauche (16,48) */
   } else {
     ctx.drawImage(img, 0, 0);
   }
-  skinDataDirty = true;
   renderPreview();
 }
 var fileinput = document.getElementById("fileinput");
@@ -973,6 +1014,8 @@ fileinput.onchange = function(){
   };
   reader.readAsDataURL(file);
 };
+/* LIEN DE TELECHARGEMENT : href mis a jour a chaque rendu (64x64, tres rapide),
+   le telechargement est un vrai lien <a download> : clic droit, copier le lien, etc. */
 document.getElementById("btnDownload").onclick = function(){
   var a = document.createElement("a");
   a.href = canvas.toDataURL("image/png");
@@ -993,22 +1036,23 @@ document.getElementById("btnClear").onclick = function(){
   saveState();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   selection = null;
-  skinDataDirty = true;
   renderPreview();
 };
 /* === APERCU 3D (canvas 2D pur) === */
+var preview = document.getElementById("preview");
 var pctx = preview.getContext("2d");
 var yaw = 0.55;
 var pitch = 0.32;
-var panX = 0, panY = 0;
-var panning = false;
+var panX = 0, panY = 0;   /* deplacement de la vue (glisser) */
+var panning = false;      /* un glisser vue est en cours */
 var lastPanX = 0, lastPanY = 0;
-var CAM_D = 55;
-var F = 440;
+var CAM_D = 55; // distance camera
+var F = 440; // focale
 var CX = 200;
 var CY = 488;
+/* Remet la vue a zero : position, rotation et zoom */
 function resetView(){
-  yaw = 0.55;
+  yaw = 0.55;   /* valeurs de depart du fichier */
   pitch = 0.32;
   panX = 0;
   panY = 0;
@@ -1018,6 +1062,7 @@ function resetView(){
   previewDirty = true;
 }
 document.getElementById("btnResetView").onclick = resetView;
+/* UV d'une boite Minecraft : u,v coin, w,h,d dimensions */
 function boxUV(u, v, w, h, d){
   return {
     top:    [u + d,       v,     u + d + w,     v + d],
@@ -1028,37 +1073,48 @@ function boxUV(u, v, w, h, d){
     back:   [u + d + w + d, v + d, u + 2 * d + w + w, v + d + h]
   };
 }
+/* Modele : tete, corps, bras, jambes + couches externes (overlay). c = centre, h = demi-dimensions, inf = gonflage overlay, uv/ouv = UV. */
+/* Ecart des membres par rapport au corps (0 = pose normale) */
 var SPREAD_GAP = 5;
+/* Construit le modele selon l'ecart demande */
 function buildCuboids(gap){
   return [
+    /* tete montee : jour entre le haut du corps et la tete */
     { name: "head",      c: [0, 28 + gap, 0], h: [4, 4, 4], uv: boxUV(0, 0, 8, 8, 8),     ouv: boxUV(32, 0, 8, 8, 8),  inf: 0.5 },
     { name: "body",      c: [0, 18, 0],  h: [4, 6, 2], uv: boxUV(16, 16, 8, 12, 4),  ouv: boxUV(16, 32, 8, 12, 4), inf: 0.25 },
+    /* bras decales vers l'exterieur : faces internes et cotes du corps visibles */
     { name: "rightArm",  c: [-6 - gap, 18, 0], h: [2, 6, 2], uv: boxUV(40, 16, 4, 12, 4),  ouv: boxUV(40, 32, 4, 12, 4), inf: 0.25 },
     { name: "leftArm",   c: [ 6 + gap, 18, 0], h: [2, 6, 2], uv: boxUV(32, 48, 4, 12, 4),  ouv: boxUV(48, 48, 4, 12, 4), inf: 0.25 },
+    /* jambes ecartees vers l'exterieur ET baissees : jour au-dessus, dessous du corps visible */
     { name: "rightLeg",  c: [-2 - gap, 6 - gap / 2, 0], h: [2, 6, 2], uv: boxUV(0, 16, 4, 12, 4), ouv: boxUV(0, 32, 4, 12, 4),  inf: 0.25 },
     { name: "leftLeg",   c: [ 2 + gap, 6 - gap / 2, 0], h: [2, 6, 2], uv: boxUV(16, 48, 4, 12, 4), ouv: boxUV(0, 48, 4, 12, 4),  inf: 0.25 }
   ];
 }
+/* La case a cocher bascule entre pose normale et membres ecartes */
 var spreadCheck = document.getElementById("spreadCheck");
+/* Modele initial : suit l'attribut checked du HTML */
 var CUBOIDS = buildCuboids(spreadCheck.checked ? SPREAD_GAP : 0);
 spreadCheck.onchange = function(){
   CUBOIDS = buildCuboids(this.checked ? SPREAD_GAP : 0);
-  previewDirty = true;
+  previewDirty = true; /* reaffiche le modele a la prochaine boucle */
 };
+/* Ordre des 4 coins d'une face (haut-gauche, haut-droit, bas-droit, bas-gauche UV), en fonction de la face et des demi-dimensions. */
 var FACE_CORNERS = {
   front:  function(hx, hy, hz){ return [[-hx, hy, hz], [hx, hy, hz], [hx, -hy, hz], [-hx, -hy, hz]]; },
   back:   function(hx, hy, hz){ return [[hx, hy, -hz], [-hx, hy, -hz], [-hx, -hy, -hz], [hx, -hy, -hz]]; },
   right:  function(hx, hy, hz){ return [[-hx, hy, -hz], [-hx, hy, hz], [-hx, -hy, hz], [-hx, -hy, -hz]]; },
   left:   function(hx, hy, hz){ return [[hx, hy, hz], [hx, hy, -hz], [hx, -hy, -hz], [hx, -hy, hz]]; },
   top:    function(hx, hy, hz){ return [[-hx, hy, -hz], [hx, hy, -hz], [hx, hy, hz], [-hx, hy, hz]]; },
-  bottom: function(hx, hy, hz){ return [[-hx, -hy, hz], [hx, -hy, hz], [hx, -hy, -hz], [-hx, -hy, hz]]; }
+  bottom: function(hx, hy, hz){ return [[-hx, -hy, hz], [hx, -hy, hz], [hx, -hy, -hz], [-hx, -hy, -hz]]; }
 };
 var FACE_NORMALS = {
   front:  [0, 0, 1],  back: [0, 0, -1],
   right:  [-1, 0, 0], left: [1, 0, 0],
   top:    [0, 1, 0],  bottom: [0, -1, 0]
 };
+/* Ombrage style Minecraft (multiplie la texture) */
 var FACE_SHADE = { top: 0, bottom: 0.45, right: 0.32, left: 0.32, front: 0.12, back: 0.22 };
+/* Rotation + projection d'un point */
 var cosY, sinY, cosP, sinP;
 function project(p){
   var x1 = p[0] * cosY + p[2] * sinY;
@@ -1070,6 +1126,8 @@ function project(p){
   var k = (F * viewZoom) / depth;
   return { sx: CX + panX + x1 * k, sy: CY + panY - y2 * k, z: z2, depth: depth };
 }
+/* Dessin affine d'un triangle texturé (clip + setTransform + drawImage) */
+/* Triangle texturé SANS clip ni expansion (le clip est fait par la cellule) */
 function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, dx2, dy2){
   var ux = sx1 - sx0, uy = sy1 - sy0;
   var vx = sx2 - sx0, vy = sy2 - sy0;
@@ -1091,20 +1149,27 @@ function drawTriangleNC(img, sx0, sy0, sx1, sy1, sx2, sy2, dx0, dy0, dx1, dy1, d
   }
 }
 /* --- PERFORMANCE 3D --- */
+/* Plafond de subdivision des faces : moins de cellules = moins de clip/drawImage.
+   NORMAL_CAP 6 suffit en 400x520 (8 n'apporte presque rien visuellement).
+   Pendant une rotation (glisser pour tourner, rotation auto), on passe en
+   mode brouillon : cap 3, grille 3D coupee. Au relachement, le rendu complet
+   repasse tout seul en haute qualite au prochain previewDirty. */
 var LEGACY_3DS = /Nintendo 3DS|New Nintendo 3DS/i.test(navigator.userAgent || "");
 var NORMAL_CAP = LEGACY_3DS ? 2 : 6;
 var DRAFT_CAP = LEGACY_3DS ? 1 : 3;
+/* Face texturale complete : quadrilatere projete subdivise en triangles */
 function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
   var rx0 = rect[0], ry0 = rect[1], rx1 = rect[2], ry1 = rect[3];
+  // Subdivision adaptee a la taille a l'ecran
   var maxEdge = Math.max(
     Math.abs(p1.sx - p0.sx) + Math.abs(p2.sx - p3.sx),
     Math.abs(p3.sy - p0.sy) + Math.abs(p2.sy - p1.sy)
   );
-  /* Mode brouillon aussi pendant la peinture 3D */
-  var cap = (rotating || painting3D || (autoRotate && autoRotate.checked)) ? DRAFT_CAP : NORMAL_CAP;
+  var cap = (rotating || (autoRotate && autoRotate.checked)) ? DRAFT_CAP : NORMAL_CAP;
   var N = Math.max(2, Math.min(cap, Math.ceil(maxEdge / 18)));
   var i, j;
   function interp(pA, pB, pC, pD, s, t){
+    // Bilineaire : pA=TL pB=TR pC=BR pD=BL
     return {
       sx: pA.sx * (1 - s) * (1 - t) + pB.sx * s * (1 - t) + pC.sx * s * t + pD.sx * (1 - s) * t,
       sy: pA.sy * (1 - s) * (1 - t) + pB.sy * s * (1 - t) + pC.sy * s * t + pD.sy * (1 - s) * t
@@ -1122,6 +1187,7 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
       var sTRx = rx0 + s1 * (rx1 - rx0), sTRy = ry0 + t0 * (ry1 - ry0);
       var sBRx = rx0 + s1 * (rx1 - rx0), sBRy = ry0 + t1 * (ry1 - ry0);
       var sBLx = rx0 + s0 * (rx1 - rx0), sBLy = ry0 + t1 * (ry1 - ry0);
+      // UN SEUL clip par cellule, gonfle autour du centre de la cellule
       var cx = (curTL.sx + curTR.sx + curBR.sx + curBL.sx) / 4;
       var cy = (curTL.sy + curTR.sy + curBR.sy + curBL.sy) / 4;
       function gx(x){ return cx + (x - cx) * 1.01; }
@@ -1139,8 +1205,8 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
       drawTriangleNC(img, sTLx, sTLy, sBRx, sBRy, sBLx, sBLy,
                           curTL.sx, curTL.sy, curBR.sx, curBR.sy, curBL.sx, curBL.sy);
       if(typeof pctx.setTransform === "function"){
-        pctx.setTransform(1, 0, 0, 1, 0, 0);
-      }
+    pctx.setTransform(1, 0, 0, 1, 0, 0);
+  }   // important : reset apres drawImage
       pctx.restore();
     }
   }
@@ -1158,6 +1224,7 @@ function drawTexturedQuad(img, rect, p0, p1, p2, p3, shade){
   }
   return N;
 }
+/* Verifie si une zone UV de l'overlay contient des pixels opaques */
 function rectHasPixels(d, rect){
   var x0 = Math.floor(rect[0]), y0 = Math.floor(rect[1]);
   var x1 = Math.ceil(rect[2]), y1 = Math.ceil(rect[3]);
@@ -1170,15 +1237,7 @@ function rectHasPixels(d, rect){
   }
   return false;
 }
-/* Cache des pixels de la texture : evite un getImageData complet a chaque rendu */
-var skinDataCache = null, skinDataDirty = true;
-function getSkinData(){
-  if(skinDataDirty){
-    skinDataCache = ctx.getImageData(0, 0, 64, 64).data;
-    skinDataDirty = false;
-  }
-  return skinDataCache;
-}
+/* Rendu complet de l'apercu 3D */
 function renderPreview(){
   cosY = Math.cos(yaw); sinY = Math.sin(yaw);
   cosP = Math.cos(pitch); sinP = Math.sin(pitch);
@@ -1187,7 +1246,8 @@ function renderPreview(){
   }
   pctx.imageSmoothingEnabled = false;
   pctx.clearRect(0, 0, preview.width, preview.height);
-  var skinData = getSkinData();
+  var skinData = ctx.getImageData(0, 0, 64, 64).data;
+  // Construire la liste des faces (base + overlay)
   var faces = [];
   var ci, fn;
   for(ci = 0; ci < CUBOIDS.length; ci++){
@@ -1195,9 +1255,11 @@ function renderPreview(){
     for(fn in FACE_CORNERS){
       var rect = cub.uv[fn];
       var hx = cub.h[0], hy = cub.h[1], hz = cub.h[2];
+      // Face de base
       var corners = FACE_CORNERS[fn](hx, hy, hz);
       var pts = [], vis = true, k;
       var nrm = FACE_NORMALS[fn];
+      // Normale apres rotation Y puis X : visible si composante z > 0 (camera en +z)
       var nYawZ = -nrm[0] * sinY + nrm[2] * cosY;
       var nZ = nrm[1] * sinP + nYawZ * cosP;
       if(nZ <= 0){ vis = false; }
@@ -1211,6 +1273,7 @@ function renderPreview(){
       if(vis){
         faces.push({ depth: CAM_D - centerZ, pts: pts, rect: rect, shade: FACE_SHADE[fn], cub: cub.name, fn: fn });
       }
+      // Face overlay
       if(cub.ouv && rectHasPixels(skinData, cub.ouv[fn])){
         var o = cub.inf;
         var oc = FACE_CORNERS[fn](hx + o, hy + o, hz + o);
@@ -1228,33 +1291,35 @@ function renderPreview(){
       }
     }
   }
-  function drawFaceGrid(f){
-    var p0 = f.pts[0], p1 = f.pts[1], p2 = f.pts[2], p3 = f.pts[3];
-    var rx0 = f.rect[0], ry0 = f.rect[1], rx1 = f.rect[2], ry1 = f.rect[3];
-    var w = Math.round(rx1 - rx0), h = Math.round(ry1 - ry0);
-    if(w < 1 || h < 1){ return; }
-    function interp(s, t){
-      return {
-        sx: p0.sx * (1 - s) * (1 - t) + p1.sx * s * (1 - t) + p2.sx * s * t + p3.sx * (1 - s) * t,
-        sy: p0.sy * (1 - s) * (1 - t) + p1.sy * s * (1 - t) + p2.sy * s * t + p3.sy * (1 - s) * t
-      };
-    }
-    pctx.strokeStyle = hexToRgbaString(gridColorInput.value, 0.55);
-    pctx.lineWidth = 1;
-    pctx.beginPath();
-    var i;
-    for(i = 0; i <= w; i++){
-      var A = interp(i / w, 0), B = interp(i / w, 1);
-      pctx.moveTo(A.sx, A.sy);
-      pctx.lineTo(B.sx, B.sy);
-    }
-    for(i = 0; i <= h; i++){
-      var C = interp(0, i / h), D = interp(1, i / h);
-      pctx.moveTo(C.sx, C.sy);
-      pctx.lineTo(D.sx, D.sy);
-    }
-    pctx.stroke();
+/* Grille pixel projettee sur une face 3D (case Grille) */
+function drawFaceGrid(f){
+  var p0 = f.pts[0], p1 = f.pts[1], p2 = f.pts[2], p3 = f.pts[3];
+  var rx0 = f.rect[0], ry0 = f.rect[1], rx1 = f.rect[2], ry1 = f.rect[3];
+  var w = Math.round(rx1 - rx0), h = Math.round(ry1 - ry0);
+  if(w < 1 || h < 1){ return; }
+  function interp(s, t){
+    return {
+      sx: p0.sx * (1 - s) * (1 - t) + p1.sx * s * (1 - t) + p2.sx * s * t + p3.sx * (1 - s) * t,
+      sy: p0.sy * (1 - s) * (1 - t) + p1.sy * s * (1 - t) + p2.sy * s * t + p3.sy * (1 - s) * t
+    };
   }
+  pctx.strokeStyle = hexToRgbaString(gridColorInput.value, 0.55);
+  pctx.lineWidth = 1;
+  pctx.beginPath();
+  var i;
+  for(i = 0; i <= w; i++){
+    var A = interp(i / w, 0), B = interp(i / w, 1);
+    pctx.moveTo(A.sx, A.sy);
+    pctx.lineTo(B.sx, B.sy);
+  }
+  for(i = 0; i <= h; i++){
+    var C = interp(0, i / h), D = interp(1, i / h);
+    pctx.moveTo(C.sx, C.sy);
+    pctx.lineTo(D.sx, D.sy);
+  }
+  pctx.stroke();
+}
+/* Peintre : dessiner les faces les plus lointaines en premier */
   faces.sort(function(a, b){ return b.depth - a.depth; });
   RENDERED_FACES = faces;
   var showGrid = gridCheck.checked;
@@ -1287,7 +1352,7 @@ var autoRotate = document.getElementById("autoRotate");
 if(LEGACY_3DS){ autoRotate.checked = false; }
 var previewDirty = false;
 var painting3D = false;
-var lastPaint = null;
+var lastPaint = null; /* { u, v, rect } dernier pixel peint */
 var rotating = false;
 var lastRX = 0, lastRY = 0;
 function getPreviewPos(e){
@@ -1297,15 +1362,10 @@ function getPreviewPos(e){
     y: (e.clientY - rect.top) * preview.height / rect.height
   };
 }
+/* Trouve les coordonnees texture (u,v) du point ecran sur une face,
+   en parcourant la meme subdivision que le rendu. */
 function uvAt(f, px, py){
   var p0 = f.pts[0], p1 = f.pts[1], p2 = f.pts[2], p3 = f.pts[3];
-  /* Rejet rapide par rectangle englobant : evite les calculs
-     barycentriques quand le curseur est loin de la face */
-  var minX = Math.min(p0.sx, p1.sx, p2.sx, p3.sx) - 2;
-  var maxX = Math.max(p0.sx, p1.sx, p2.sx, p3.sx) + 2;
-  var minY = Math.min(p0.sy, p1.sy, p2.sy, p3.sy) - 2;
-  var maxY = Math.max(p0.sy, p1.sy, p2.sy, p3.sy) + 2;
-  if(px < minX || px > maxX || py < minY || py > maxY){ return null; }
   var rx0 = f.rect[0], ry0 = f.rect[1], rx1 = f.rect[2], ry1 = f.rect[3];
   var N = f.N || 6;
   function interp(s, t){
@@ -1321,11 +1381,13 @@ function uvAt(f, px, py){
     for(j = 0; j < N; j++){
       var t0 = j / N, t1 = (j + 1) / N;
       var TL = interp(s0, t0), TR = interp(s1, t0), BR = interp(s1, t1), BL = interp(s0, t1);
+      // Triangle TL-TR-BR
       var r = uvInTri(TL, TR, BR, px, py,
         [rx0 + s0 * (rx1 - rx0), ry0 + t0 * (ry1 - ry0)],
         [rx0 + s1 * (rx1 - rx0), ry0 + t0 * (ry1 - ry0)],
         [rx0 + s1 * (rx1 - rx0), ry0 + t1 * (ry1 - ry0)], EPS);
       if(r){ return r; }
+      // Triangle TL-BR-BL
       r = uvInTri(TL, BR, BL, px, py,
         [rx0 + s0 * (rx1 - rx0), ry0 + t0 * (ry1 - ry0)],
         [rx0 + s1 * (rx1 - rx0), ry0 + t1 * (ry1 - ry0)],
@@ -1335,6 +1397,7 @@ function uvAt(f, px, py){
   }
   return null;
 }
+/* Coordonnees barycentriques inversees : renvoie l'UV si le point est dans le triangle. */
 function uvInTri(d0, d1, d2, px, py, s0, s1, s2, EPS){
   var d10x = d1.sx - d0.sx, d10y = d1.sy - d0.sy;
   var d20x = d2.sx - d0.sx, d20y = d2.sy - d0.sy;
@@ -1349,6 +1412,7 @@ function uvInTri(d0, d1, d2, px, py, s0, s1, s2, EPS){
     s0[1] + alpha * (s1[1] - s0[1]) + beta * (s2[1] - s0[1])
   ];
 }
+/* Face visible la plus proche sous le curseur. */
 function hitFace(px, py){
   var i;
   for(i = RENDERED_FACES.length - 1; i >= 0; i--){
@@ -1359,6 +1423,7 @@ function hitFace(px, py){
   }
   return null;
 }
+/* Peindre un pixel texture obtenu par hit-test */
 function paintHit(hit){
   var u = Math.floor(hit.u), v = Math.floor(hit.v);
   if(u < 0 || v < 0 || u >= 64 || v >= 64){ return; }
@@ -1372,7 +1437,10 @@ function paintHit(hit){
     previewDirty = true;
     return;
   }
+  // Crayon / gomme : tracer une ligne si on reste sur la meme face
   if(lastPaint && lastPaint.rect === hit.face.rect){
+    /* Arc-en-ciel crayon : compteur continu par pixel peint (comme dessin-png).
+       Le meme pixel n'est jamais repeint deux fois : la teinte ne brule pas. */
     if(rainbowCheck.checked && !eraserCheck.checked){
       drawPixelRainbowLine(lastPaint.u, lastPaint.v, u, v);
     } else {
@@ -1386,6 +1454,7 @@ function paintHit(hit){
 }
 function previewDown(e){
   var p = getPreviewPos(e);
+  /* Glisser la vue : outil dedie, ou clic droit quel que soit l'outil */
   if(currentTool === "pan" || e.button === 2){
     panning = true;
     lastPanX = e.clientX; lastPanY = e.clientY;
@@ -1393,6 +1462,7 @@ function previewDown(e){
     return;
   }
   var hit = hitFace(p.x, p.y);
+  /* Pipette prioritaire sur tous les modes de pinceau */
   if(currentTool === "pipette"){
     if(hit){
       pipette(Math.floor(hit.u), Math.floor(hit.v));
@@ -1404,6 +1474,7 @@ function previewDown(e){
     var hit0 = hit;
     if(hit0){
       saveState();
+      /* depart en COORDONNEES ECRAN de l'apercu : la ligne suivra la surface */
       lineStart = { px: p.x, py: p.y };
       lineBase = document.createElement("canvas");
       lineBase.width = canvas.width; lineBase.height = canvas.height;
@@ -1413,6 +1484,7 @@ function previewDown(e){
       return;
     }
   }
+  /* Rotation : outil Tourner, ou glisser sur le fond (hors du personnage) */
   if(currentTool === "hand" || currentTool === "pipette" || !hit){
     rotating = true;
     lastRX = e.clientX; lastRY = e.clientY;
@@ -1427,11 +1499,9 @@ function previewDown(e){
 eraserCheck.onchange = function(){ previewDirty = true; };
 rainbowCheck.onchange = function(){ previewDirty = true; };
 function previewMove(e){
-  /* Ignore tout mouvement hors de l'apercu 3D (aucun hit-test inutile) */
-  var r = preview.getBoundingClientRect();
-  if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){ return; }
   var p = getPreviewPos(e);
   showLoupe(e, preview);
+  /* glisser de la vue : aucun hit-test pendant le deplacement */
   if(panning){
     panX += e.clientX - lastPanX;
     panY += e.clientY - lastPanY;
@@ -1440,14 +1510,20 @@ function previewMove(e){
     if(e.preventDefault){ e.preventDefault(); }
     return;
   }
+  // Statut : position texture survolee
   var hit = hitFace(p.x, p.y);
   if(hit){
-    setStatus("texture : " + Math.floor(hit.u) + ", " + Math.floor(hit.v) +
-      " (" + hit.face.cub + " " + hit.face.fn + (hit.face.overlay ? " overlay" : "") + ")");
+    document.getElementById("status").innerHTML =
+      "texture : " + Math.floor(hit.u) + ", " + Math.floor(hit.v) +
+      " (" + hit.face.cub + " " + hit.face.fn + (hit.face.overlay ? " overlay" : "") + ")";
   }
   if(line3D){
+    // APERCU : base rejouee
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(lineBase, 0, 0);
+    /* On echantillonne le segment ECRAN entre le depart et le curseur.
+       Chaque point est projete sur le modele : la ligne suit le personnage,
+       meme si elle traverse plusieurs faces. */
     var dxs = p.x - lineStart.px, dys = p.y - lineStart.py;
     var steps = Math.max(1, Math.ceil(Math.max(Math.abs(dxs), Math.abs(dys))));
     var i3, lastU = -1, lastV = -1;
@@ -1457,8 +1533,10 @@ function previewMove(e){
       var h = hitFace(sx, sy);
       if(h){
         var uu = Math.floor(h.u), vv = Math.floor(h.v);
+        // on ne repeint pas le meme pixel deux fois
         if(uu !== lastU || vv !== lastV){
           if(rainbowCheck.checked){
+            /* Ligne 3D arc-en-ciel : spectre 0-300 le long du segment ecran (comme dessin-png) */
             paintPixelWithColor(uu, vv, rainbowColor((i3 / steps) * 300));
           } else {
             paintPixel(uu, vv);
@@ -1469,7 +1547,7 @@ function previewMove(e){
     }
     previewDirty = true;
     if(e.preventDefault){ e.preventDefault(); }
-    return;
+    return; // ni rotation ni peinture pendant la ligne
   }
   if(rotating){
     yaw += (e.clientX - lastRX) * 0.012;
@@ -1492,23 +1570,26 @@ function previewUp(){
   panning = false;
   painting3D = false;
   lastPaint = null;
+  /* Crayon 3D arc-en-ciel : remise a zero du compteur au relachement (comme dessin-png) */
   rainbowHue = 0;
   if(wasLine){ renderPreview(); }
   hideLoupe();
 }
 preview.addEventListener("mousedown", previewDown);
+/* le clic droit ne doit pas sortir le menu contextuel sur l'apercu */
 preview.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+/* Ignore les événements qui viennent des contrôles de la toolbar */
 function isUiEvent(e){
   var t = e.target;
   return t && (t.tagName === "INPUT" || t.tagName === "BUTTON" ||
               t.tagName === "LABEL" || t.tagName === "SELECT");
 }
 document.addEventListener("mousemove", function(e){
-  if(isUiEvent(e)){ return; }
+  if(isUiEvent(e)){ return; }   // le slider glisse librement
   previewMove(e);
 });
 document.addEventListener("mouseup", previewUp);
-/* Pincer pour zoomer */
+/* Pincer pour zoomer (deux doigts sur l'apercu 3D) */
 var pinchStartDist = 0;
 var pinchStartZoom = 1;
 var pinchStartMid = null;
@@ -1537,6 +1618,7 @@ preview.addEventListener("touchmove", function(e){
   if(e.touches.length >= 2 && pinchStartDist > 0){
     var d = touchDist(e.touches);
     if(d > 0){ setViewZoom(pinchStartZoom * d / pinchStartDist); }
+    /* le milieu des deux doigts fait glisser la vue */
     var mid = {
       x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
       y: (e.touches[0].clientY + e.touches[1].clientY) / 2
@@ -1556,34 +1638,14 @@ preview.addEventListener("touchend", function(e){
   if(e.touches.length < 2){ pinchStartDist = 0; pinchStartMid = null; }
   if(e.touches.length === 0){ previewUp(); }
 });
+/* Molette pour zoomer */
 preview.addEventListener("wheel", function(e){
   e.preventDefault();
   var factor = (e.deltaY < 0) ? 1.1 : (1 / 1.1);
   setViewZoom(viewZoom * factor);
 }, false);
-/* Fleches du clavier */
-var arrowKeys = {};
-var ARROW_STEP = 0.06;
-preview.addEventListener("mousedown", function(){
-  preview.focus();
-});
-preview.addEventListener("keydown", function(e){
-  if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
-     e.key === "ArrowUp" || e.key === "ArrowDown"){
-    arrowKeys[e.key] = true;
-    e.preventDefault();
-  }
-});
-preview.addEventListener("keyup", function(e){
-  delete arrowKeys[e.key];
-});
-preview.addEventListener("blur", function(){
-  arrowKeys = {};
-});
-/* Boucle de rendu : requestAnimationFrame si disponible, sinon setInterval
-   (le navigateur de la vieille 3DS ne connait pas requestAnimationFrame) */
-var HAS_RAF = typeof requestAnimationFrame === "function";
-function renderLoop(){
+setInterval(function(){
+  // Rotation clavier : chaque fleche maintenue tourne a sa boucle
   var kb = false;
   if(arrowKeys.ArrowLeft){  yaw += ARROW_STEP; kb = true; }
   if(arrowKeys.ArrowRight){ yaw -= ARROW_STEP; kb = true; }
@@ -1598,15 +1660,27 @@ function renderLoop(){
     previewDirty = false;
     renderPreview();
   }
-  if(HAS_RAF){
-    requestAnimationFrame(renderLoop);
+}, LEGACY_3DS ? 100 : 30);
+/* Fleches du clavier : rotation continue et combinable (diagonales), uniquement quand le modele a le focus */
+var arrowKeys = {}; // fleches actuellement maintenues
+var ARROW_STEP = 0.06; // vitesse par image (tous les 30 ms)
+preview.addEventListener("mousedown", function(){
+  preview.focus(); // donne le focus au clic (Safari ne le fait pas seul)
+});
+preview.addEventListener("keydown", function(e){
+  if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
+     e.key === "ArrowUp" || e.key === "ArrowDown"){
+    arrowKeys[e.key] = true;
+    e.preventDefault(); /* empeche le scroll de la page */
   }
-}
-if(HAS_RAF){
-  requestAnimationFrame(renderLoop);
-} else {
-  setInterval(renderLoop, LEGACY_3DS ? 100 : 30);
-}
+});
+preview.addEventListener("keyup", function(e){
+  delete arrowKeys[e.key];
+});
+/* si le modele perd le focus (clic ailleurs, Tab), on relache tout */
+preview.addEventListener("blur", function(){
+  arrowKeys = {};
+});
 /* Bouton Partager PNG */
 function partagerImage(mime, extension){
     if (!navigator.share) {
@@ -1649,6 +1723,7 @@ var loupeCvs = document.getElementById("skinLoupeCanvas");
 var loupeCtx = loupeCvs.getContext("2d");
 var loupeEnabled = document.getElementById("loupeEnabled");
 var LOUPE_SIZE = 120;
+/* Grossissement : x8 pour la texture 64x64 (comme dessin-png en petit canvas), x4 pour l'apercu 3D (400x520) deja plus fin. */
 function loupeZoomFor(srcCanvas){
   return srcCanvas === canvas ? 8 : 4;
 }
@@ -1671,6 +1746,9 @@ function showLoupe(e, srcCanvas){
     px - half, py - half, half * 2, half * 2,
     0, 0, LOUPE_SIZE, LOUPE_SIZE);
   if(srcCanvas === canvas && gridCheck.checked){
+    /* GRILLE DANS LA LOUPE : dessinee a la main, car la vraie grille
+       est une surcouche DOM que drawImage ne copie pas.
+       Un carreau = 1 pixel de texture = z pixels de loupe. */
     loupeCtx.strokeStyle = gridColorInput.value;
     loupeCtx.lineWidth = 1;
     loupeCtx.beginPath();
@@ -1680,7 +1758,7 @@ function showLoupe(e, srcCanvas){
     var y1 = Math.ceil(py + half) + 1;
     var i;
     for(i = x0; i <= x1; i++){
-      var lxg = (i - (px - half)) * z;
+      var lxg = (i - (px - half)) * z; // position ecran de la ligne
       loupeCtx.moveTo(lxg, 0);
       loupeCtx.lineTo(lxg, LOUPE_SIZE);
     }
@@ -1691,6 +1769,7 @@ function showLoupe(e, srcCanvas){
     }
     loupeCtx.stroke();
   }
+  /* carre reperant le pixel / la zone sous le curseur */
   loupeCtx.strokeStyle = "#000000";
   loupeCtx.lineWidth = 1;
   loupeCtx.strokeRect(
@@ -1699,6 +1778,7 @@ function showLoupe(e, srcCanvas){
 }
 function hideLoupe(){ loupeBox.style.display = "none"; }
 loupeEnabled.onchange = function(){ if(!this.checked){ hideLoupe(); } };
+/* une seule loupe a la fois : quitter un canvas masque l'autre vue */
 canvas.addEventListener("mouseleave", hideLoupe);
 preview.addEventListener("mouseleave", hideLoupe);
 /* --- INIT --- */
@@ -1706,6 +1786,7 @@ applyZoom();
 try{
   renderPreview();
 }catch(renderError){
+  /* Le canevas 2D reste utilisable même si une fonction de rendu 3D manque. */
   pctx.clearRect(0, 0, preview.width, preview.height);
   pctx.fillStyle = "#ffffff";
   pctx.font = "14px sans-serif";
