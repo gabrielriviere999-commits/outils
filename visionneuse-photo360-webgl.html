@@ -812,7 +812,7 @@ function commencer(x, y) {
 function deplacer(x, y) {
   var dx = x - dernier.x, dy = y - dernier.y;
   dernier.x = x; dernier.y = y;
-  var sensibiliteRotation = 3;
+  var sensibiliteRotation = 2;
   var k = (fov * Math.PI / 180) / Math.max(1, canvas.clientWidth);
   k *= sensibiliteRotation;
   yaw   -= dx * k;
