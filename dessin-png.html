@@ -332,7 +332,7 @@ body.block-touch{touch-action:none;}
 <button class="scroll-btn" data-dir="down" data-target="canvasScroll">↓</button>
 <button data-action="zoomInputMinus">−</button>
 <button data-action="zoomInputPlus">+</button>
-<span id="dimensions">l : 0, h : 0</span> | <span id="activeTool">Outil actif : Édition</span>
+<span id="dimensions">l : 0, h : 0</span> | <span id="activeTool">Édition</span>
 <div id="canvasLoupe">
   <canvas id="loupeCanvas" width="120" height="120"></canvas>
 </div>
@@ -1023,7 +1023,7 @@ function setTool(t){
     if(t === "pipette"){
         document.getElementById("activeTool").textContent = "Pipette";
     } else {
-        document.getElementById("activeTool").textContent = "Outil actif : " + (toolNames[t] || t);
+        document.getElementById("activeTool").textContent = (toolNames[t] || t);
     }
     // Si une image est en cours de manipulation, on la valide avant de changer d'outil.
     if(
