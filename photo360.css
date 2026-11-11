@@ -9,7 +9,7 @@
   touch-action:none;
 }
 #scene.saisie{cursor:grabbing;}
-.menu,.photos360 {
+.menu,.photos {
   top:0;
   position:absolute;
   z-index:10;
