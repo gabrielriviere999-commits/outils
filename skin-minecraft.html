@@ -296,8 +296,11 @@ function setColor(hex){
   applyInputColor(colorInput);
 }
 [colorInput, gridColorInput, bgColorInput].forEach(function(inp){
-  attachColorPickerTo(inp); // branche bouton + picker + couleurs rapides */
+  attachColorPickerTo(inp);
   inp.addEventListener("input", function(){
+    applyInputColor(this);
+  });
+  inp.addEventListener("change", function(){
     applyInputColor(this);
   });
   try{
@@ -305,7 +308,7 @@ function setColor(hex){
       inp.nextElementSibling.style.background = inp.value;
     }
     applyInputColor(inp);
-  }catch(err){ /* on ne casse jamais le chargement pour un apercu */ }
+  }catch(err){}
 });
 /* --- OUTILS --- */
 var toolButtons = {
