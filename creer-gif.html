@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="outils.css">
 <style>
 #preview {
-    display: block; width: 100%; max-height: 360px; object-fit: contain;
-    background: #888;
+    display:block;width:100%;max-height:360px;object-fit:contain;
+    background:#888;
     background-image: linear-gradient(45deg,#444 25%,transparent 25%),
       linear-gradient(-45deg,#444 25%,transparent 25%),
       linear-gradient(45deg,transparent 75%,#444 75%),
@@ -29,6 +29,7 @@
   min-height:140px;
 }
 .thumbnail {
+  position:relative;
   display:inline-block;
   vertical-align:top;
   width:80px;
@@ -49,6 +50,18 @@
   width:100%;
   height:100%;
   object-fit:contain;
+}
+.thumbnail-number {
+  position:absolute;
+  top:2px;
+  left:2px;
+  z-index:2;
+  padding:2px 5px;
+  background:rgba(0,0,0,0.7);
+  font-weight:bold;
+  font-size:12px;
+  line-height:16px;
+  pointer-events:none;
 }
 .thumbnail-buttons {
   display:block;
@@ -133,8 +146,8 @@ function afficherListe() {
         img = creerMiniature(frames[i].canvas);
         item.appendChild(img);
         title = document.createElement("div");
-        title.className = "number";
-        title.innerHTML = (i + 1);
+        title.className = "thumbnail-number";
+        title.innerHTML = i + 1;
         item.appendChild(title);
         buttons = document.createElement("div");
         buttons.className = "thumbnail-buttons";
@@ -212,13 +225,25 @@ function viderImages() {
 function dessinerApercu() {
     var c, w, h, scale, x, y;
     previewContext.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    if (!frames.length) return;
+    if (!frames.length) {
+        document.getElementById("previewInfo").innerHTML =
+            "Aucune image chargée.";
+        return;
+    }
     c = frames[currentFrame].canvas;
-    w = c.width; h = c.height;
-    scale = Math.min(previewCanvas.width / w, previewCanvas.height / h);
+    w = c.width;
+    h = c.height;
+    scale = Math.min(
+        previewCanvas.width / w,
+        previewCanvas.height / h
+    );
     x = (previewCanvas.width - w * scale) / 2;
     y = (previewCanvas.height - h * scale) / 2;
     previewContext.drawImage(c, x, y, w * scale, h * scale);
+    document.getElementById("previewInfo").innerHTML =
+        "Image " + (currentFrame + 1) +
+        " / " + frames.length +
+        " - " + w + " × " + h + " pixels";
 }
 function demarrerApercu() {
     arreterApercu();
