@@ -125,6 +125,24 @@ function getDelay() {
     document.getElementById("delay").value = n;
     return n;
 }
+function actualiserVitesseApercu() {
+    if (previewTimer !== null) {
+        arreterApercu();
+        previewTimer = window.setInterval(function() {
+            if (!frames.length) {
+                arreterApercu();
+                return;
+            }            
+            currentFrame++;
+            if (currentFrame >= frames.length) currentFrame = 0;
+            dessinerApercu();
+        }, getDelay());
+    }
+}
+document.getElementById("delay").onchange = function() {
+    getDelay();
+    actualiserVitesseApercu();
+};
 function creerMiniature(canvas) {
     var img = document.createElement("img");
     try { img.src = canvas.toDataURL("image/png"); } catch (e) {}
