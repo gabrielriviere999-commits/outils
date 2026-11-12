@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Créer GIF</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="outils.css">
+<style>
+#preview {
+    display: block; width: 100%; max-height: 360px; object-fit: contain;
+    background: #fff;
+    background-image: linear-gradient(45deg,#ddd 25%,transparent 25%),
+      linear-gradient(-45deg,#ddd 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#ddd 75%),
+      linear-gradient(-45deg,transparent 75%,#ddd 75%);
+    background-size: 20px 20px;
+    background-position: 0 0,0 10px,10px -10px,-10px 0;
+    border: 1px inset #808080;
+}
+.thumbnail-row {
+  display:block;
+  white-space:nowrap;
+  overflow-x:auto;
+  padding:4px;
+  box-sizing:border-box;
+  margin-top:10px;
+  font-size:0;
+  min-height:140px;
+}
+.thumbnail {
+  display:inline-block;
+  vertical-align:top;
+  width:80px;
+  height:60px;
+  margin:2px;
+  border:2px solid #888;
+  cursor:pointer;
+  word-break:break-all;
+  white-space:normal;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+  position:relative;
+}
+.thumbnail img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.thumbnail-buttons {
+  display:block;
+  text-align:center;
+  white-space:normal;
+}
+.thumbnail-buttons button {
+  padding:3px 5px;
+  margin:2px 1px;
+  width:24px;
+  height:24px;
+  vertical-align:middle;
+}
+</style>
+<script src="libs/creer-gif/omggif.js"></script>
+</head>
+<body>
+<h2>Créer GIF</h2>
+<div class="toolbar">
+  <button type="button" onclick="viderImages();">Effacer tout</button>
+  <label>Ajouter des images : <input type="file" id="imageFiles" multiple="multiple"></label> |
+  <label>Ouvrir un GIF : <input type="file" id="gifFile"></label>
+</div>
+<div class="section">
+  <h3>Prévisualisation</h3>
+  <canvas id="preview" width="320" height="240"></canvas>
+  <button onclick="demarrerApercu();">▶ Lire</button>
+  <button onclick="arreterApercu();">■ Arrêter</button>
+  <div id="previewInfo">Aucune image chargée.</div>
+</div>
+<div class="section">
+  <h3>Images de l'animation</h3>
+  <div id="frames" class="thumbnail-row"><span>Ajoute des images pour commencer.</span></div>
+</div>
+<div class="section">
+  <h3>Paramètres du GIF</h3>
+  <label for="delay">Durée de chaque image :</label>
+  <input type="number" id="delay" value="500" step="10">ms</input>
+  <br>
+  <button id="exportButton" onclick="exporterGif();">Créer et télécharger le GIF</button>
+  <div id="status">En attente.</div>
+  L'export utilise une palette de 256 couleurs (format GIF). Selon les images, certaines nuances peuvent être simplifiées.
+</div>
+<script>
+var frames = [];
+var currentFrame = 0;
+var previewTimer = null;
+var previewCanvas = document.getElementById("preview");
+var previewContext = previewCanvas.getContext("2d");
+function message(txt) {
+    document.getElementById("status").innerHTML = txt;
+}
+function getDelay() {
+    var n = parseInt(document.getElementById("delay").value, 10);
+    if (isNaN(n)) n = 100;
+    if (n > 10000) n = 10000;
+    document.getElementById("delay").value = n;
+    return n;
+}
+function creerMiniature(canvas) {
+    var img = document.createElement("img");
+    try { img.src = canvas.toDataURL("image/png"); } catch (e) {}
+    return img;
+}
+function afficherListe() {
+    var box = document.getElementById("frames");
+    var i, item, img, buttons, title, up, down, del;
+    box.innerHTML = "";
+    if (!frames.length) {
+        box.innerHTML = '<span>Ajoute des images pour commencer.</span>';
+        document.getElementById("previewInfo").innerHTML = "Aucune image chargée.";
+        dessinerApercu();
+        return;
+    }
+    for (i = 0; i < frames.length; i++) {
+        item = document.createElement("div");
+        item.className = "thumbnail";
+        img = creerMiniature(frames[i].canvas);
+        item.appendChild(img);
+        title = document.createElement("div");
+        title.className = "number";
+        title.innerHTML = (i + 1);
+        item.appendChild(title);
+        buttons = document.createElement("div");
+        buttons.className = "thumbnail-buttons";
+        up = document.createElement("button");
+        up.type = "button";
+        up.innerHTML = "←";
+        up.disabled = (i === 0);
+        up.onclick = (function(index) {
+            return function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                deplacerImage(index, index - 1);
+            };
+        })(i);
+        buttons.appendChild(up);
+        down = document.createElement("button");
+        down.type = "button";
+        down.innerHTML = "→";
+        down.disabled = (i === frames.length - 1);
+        down.onclick = (function(index) {
+            return function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                deplacerImage(index, index + 1);
+            };
+        })(i);
+        buttons.appendChild(down);
+        del = document.createElement("button");
+        del.type = "button";
+        del.innerHTML = "x";
+        del.title = "Supprimer";
+        del.onclick = (function(index) {
+            return function(e) {
+                if (e && e.stopPropagation) e.stopPropagation();
+                supprimerImage(index);
+            };
+        })(i);
+        buttons.appendChild(del);
+        item.appendChild(buttons);
+        item.onclick = (function(index) {
+            return function() {
+                currentFrame = index;
+                dessinerApercu();
+            };
+        })(i);
+        box.appendChild(item);
+    }
+    if (currentFrame >= frames.length) {
+        currentFrame = frames.length - 1;
+    }
+    document.getElementById("previewInfo").innerHTML =
+        frames.length + " image(s) - " +
+        frames[0].canvas.width + " × " +
+        frames[0].canvas.height + " pixels";
+    dessinerApercu();
+}
+function deplacerImage(from, to) {
+    if (to < 0 || to >= frames.length) return;
+    var temp = frames[from];
+    frames[from] = frames[to];
+    frames[to] = temp;
+    currentFrame = to;
+    afficherListe();
+}
+function supprimerImage(index) {
+    frames.splice(index, 1);
+    if (currentFrame >= frames.length) currentFrame = frames.length - 1;
+    afficherListe();
+}
+function viderImages() {
+    arreterApercu();
+    frames = [];
+    currentFrame = 0;
+    afficherListe();
+    message("Liste vidée.");
+}
+function dessinerApercu() {
+    var c, w, h, scale, x, y;
+    previewContext.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    if (!frames.length) return;
+    c = frames[currentFrame].canvas;
+    w = c.width; h = c.height;
+    scale = Math.min(previewCanvas.width / w, previewCanvas.height / h);
+    x = (previewCanvas.width - w * scale) / 2;
+    y = (previewCanvas.height - h * scale) / 2;
+    previewContext.drawImage(c, x, y, w * scale, h * scale);
+}
+function demarrerApercu() {
+    arreterApercu();
+    if (!frames.length) return;
+    dessinerApercu();
+    previewTimer = window.setInterval(function() {
+        if (!frames.length) { arreterApercu(); return; }
+        currentFrame++;
+        if (currentFrame >= frames.length) currentFrame = 0;
+        dessinerApercu();
+    }, getDelay());
+}
+function arreterApercu() {
+    if (previewTimer !== null) {
+        window.clearInterval(previewTimer);
+        previewTimer = null;
+    }
+}
+function chargerImageFile(file) {
+    var reader = new FileReader();
+    reader.onload = function() {
+        var img = new Image();
+        img.onload = function() {
+            var c = document.createElement("canvas");
+            var ctx = c.getContext("2d");
+            c.width = img.naturalWidth || img.width;
+            c.height = img.naturalHeight || img.height;
+            if (!c.width || !c.height) return;
+            ctx.drawImage(img, 0, 0);
+            frames.push({canvas:c});
+            afficherListe();
+            message("Image ajoutée : " + file.name);
+        };
+        img.onerror = function() { message("Impossible de lire " + file.name); };
+        img.src = reader.result;
+    };
+    reader.onerror = function() { message("Erreur de lecture du fichier."); };
+    reader.readAsDataURL(file);
+}
+document.getElementById("imageFiles").onchange = function() {
+    var list = this.files, i;
+    if (!list) return;
+    for (i = 0; i < list.length; i++) chargerImageFile(list[i]);
+    this.value = "";
+};
+/* Lecture d'un GIF existant avec omggif. Les images sont recomposées
+   sur le canevas complet pour conserver leur position dans l'animation. */
+function ouvrirGif(file) {
+    if (typeof GifReader === "undefined") {
+        message("Bibliothèque omggif.js introuvable. Place omggif.js à côté de cette page.");
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function() {
+        try {
+            var bytes = new Uint8Array(reader.result);
+            var gif = new GifReader(bytes);
+            var w = gif.width, h = gif.height;
+            var rgba = new Uint8ClampedArray(w * h * 4);
+            var i, info, saved, c, ctx, imageData, f;
+            var disposal, previousInfo = null, previousSaved = null;
+            var decoded = [];
+            for (i = 0; i < gif.numFrames(); i++) {
+                info = gif.frameInfo(i);
+                if (previousInfo) {
+                    disposal = previousInfo.disposal;
+                    if (disposal === 2) {
+                        effacerRectangle(rgba, w, h, previousInfo);
+                    } else if (disposal === 3 && previousSaved) {
+                        rgba = new Uint8ClampedArray(previousSaved);
+                    }
+                }
+                saved = null;
+                if (info.disposal === 3) saved = new Uint8ClampedArray(rgba);
+                gif.decodeAndBlitFrameRGBA(i, rgba);
+                c = document.createElement("canvas");
+                c.width = w; c.height = h;
+                ctx = c.getContext("2d");
+                imageData = ctx.createImageData(w, h);
+                for (var p = 0; p < rgba.length; p++) imageData.data[p] = rgba[p];
+                ctx.putImageData(imageData, 0, 0);
+                decoded.push({canvas:c});
+                previousInfo = info;
+                previousSaved = saved;
+            }
+            if (!decoded.length) throw new Error("GIF vide");
+            frames = decoded;
+            currentFrame = 0;
+            arreterApercu();
+            afficherListe();
+            message("GIF importé : " + decoded.length + " image(s), " + w + " × " + h + " pixels.");
+        } catch (e) {
+            message("Impossible de lire ce GIF : " + e.message);
+        }
+    };
+    reader.onerror = function() { message("Erreur pendant la lecture du GIF."); };
+    reader.readAsArrayBuffer(file);
+}
+function effacerRectangle(data, w, h, info) {
+    var x, y, p;
+    for (y = info.y; y < info.y + info.height; y++) {
+        for (x = info.x; x < info.x + info.width; x++) {
+            if (x >= 0 && x < w && y >= 0 && y < h) {
+                p = (y * w + x) * 4;
+                data[p] = 0; data[p+1] = 0; data[p+2] = 0; data[p+3] = 0;
+            }
+        }
+    }
+}
+document.getElementById("gifFile").onchange = function() {
+    if (this.files && this.files[0]) ouvrirGif(this.files[0]);
+    this.value = "";
+};
+/* Palette 3-3-2 : 256 couleurs. */
+function creerPalette() {
+    var palette = [], r, g, b;
+    for (r = 0; r < 8; r++) {
+        for (g = 0; g < 8; g++) {
+            for (b = 0; b < 4; b++) {
+                palette.push(((r * 255 / 7) << 16) |
+                    ((g * 255 / 7) << 8) | (b * 255 / 3));
+            }
+        }
+    }
+    return palette;
+}
+function convertirPixels(imageData) {
+    var src = imageData.data;
+    var out = new Uint8Array(imageData.width * imageData.height);
+    var i, r, g, b, a;
+    for (i = 0; i < out.length; i++) {
+        a = src[i * 4 + 3];
+        r = src[i * 4]; g = src[i * 4 + 1]; b = src[i * 4 + 2];
+        /* Le GIF ne gère qu'une transparence simple. Ici, les pixels
+           transparents sont composités sur du blanc. */
+        if (a < 255) {
+            r = (r * a + 255 * (255 - a)) / 255;
+            g = (g * a + 255 * (255 - a)) / 255;
+            b = (b * a + 255 * (255 - a)) / 255;
+        }
+        out[i] = ((r >> 5) << 5) | ((g >> 5) << 2) | (b >> 6);
+    }
+    return out;
+}
+function exporterGif() {
+    if (!frames.length) {
+        message("Ajoute au moins une image.");
+        return;
+    }
+    if (typeof GifWriter === "undefined") {
+        message("Bibliothèque omggif.js introuvable. Place omggif.js à côté de cette page.");
+        return;
+    }
+    arreterApercu();
+    var w = frames[0].canvas.width, h = frames[0].canvas.height;
+    var i, c, ctx, data, palette, buffer, writer, result, delay;
+    if (!w || !h || w * h * frames.length > 30000000) {
+        message("Images trop grandes pour l'export. Réduis leur résolution ou leur nombre.");
+        return;
+    }
+    for (i = 0; i < frames.length; i++) {
+        if (frames[i].canvas.width !== w || frames[i].canvas.height !== h) {
+            message("Toutes les images doivent avoir la même taille. Image " +
+                (i + 1) + " différente : elle sera redimensionnée à l'export.");
+        }
+    }
+    delay = getDelay();
+    palette = creerPalette();
+    /* Réservation large pour éviter un dépassement du tampon GIF. */
+    buffer = new Uint8Array(w * h * frames.length * 2 + frames.length * 2048 + 65536);
+    try {
+        writer = new GifWriter(buffer, w, h, {palette:palette});
+        for (i = 0; i < frames.length; i++) {
+            c = document.createElement("canvas");
+            c.width = w; c.height = h;
+            ctx = c.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(frames[i].canvas, 0, 0, w, h);
+            data = ctx.getImageData(0, 0, w, h);
+            writer.addFrame(0, 0, w, h, convertirPixels(data), {
+                palette:palette, delay:Math.max(1, Math.round(delay / 10)), disposal:2
+            });
+        }
+        result = writer.end();
+        var blob = new Blob([buffer.subarray(0, result)], {type:"image/gif"});
+        var url = (window.URL || window.webkitURL).createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = "animation.gif";
+        document.body.appendChild(link);
+        if (link.click) link.click();
+        else window.location = url;
+        document.body.removeChild(link);
+        window.setTimeout(function() {
+            (window.URL || window.webkitURL).revokeObjectURL(url);
+        }, 10000);
+        message("GIF créé avec succès : " + frames.length + " image(s).");
+    } catch (e) {
+        message("Erreur pendant la création du GIF : " + e.message);
+    }
+}
+</script>
+</body>
+</html>
