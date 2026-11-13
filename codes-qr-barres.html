@@ -83,6 +83,7 @@
   <button id="exportBtn">Générer</button>
   <div id="code" class="border-interne"></div>
   <canvas id="barcodeCanvas"></canvas>
+  <label>Résolution d'export : <input type="number" id="exportResolution" value="1000" min="21" max="10000"></label>px
   <button id="export-png">Télécharger PNG</button>
   <button id="export-jpg">Télécharger JPG</button>
   <button id="export-svg">Télécharger SVG</button>
@@ -286,80 +287,86 @@ function download(filename, dataUrl) {
   document.body.removeChild(a);
 }
 function exportCanvas(type) {
-  var format;
-  var canvas;
-  var ctx;
-  var count;
-  var cell;
-  var size;
-  var x;
-  var y;
-  var fg;
-  var bg;
-  var mime;
-  var data;
-  var filename;
-  format = document.getElementById("codeFormat").value;
-  fg = document.getElementById("fgColor").value || "#000000";
-  bg = document.getElementById("bgColor").value || "#ffffff";
-  if (type == "jpeg" || type == "jpg") {
-    mime = "image/jpeg";
-    filename = "jpg";
-  } else {
-    mime = "image/png";
-    filename = "png";
+  var format = document.getElementById("codeFormat").value;
+  var fg = document.getElementById("fgColor").value || "#000000";
+  var bg = document.getElementById("bgColor").value || "#ffffff";
+  var resolutionInput = document.getElementById("exportResolution");
+  var resolution = parseInt(resolutionInput.value, 10);
+  var mime = (type === "jpeg" || type === "jpg") ? "image/jpeg" : "image/png";
+  var extension = mime === "image/jpeg" ? "jpg" : "png";
+  var svgElement;
+  var svgText;
+  var width;
+  var height;
+  var viewBox;
+  var image;
+  if (!resolutionInput.value || isNaN(resolution) || resolution < 21 || resolution > 10000) {
+    alert("Choisissez une résolution comprise entre 21 et 10 000 pixels.");
+    resolutionInput.focus();
+    return;
   }
-  // QR CODE
-  if (format == "QR") {
+  // Récupérer le SVG vectoriel courant pour produire un export net à la résolution demandée.
+  if (format === "QR") {
     if (!qr) {
       alert("Générez d'abord un QR Code.");
       return;
     }
-    count = qr.getModuleCount();
-    cell = 10;
-    size = count * cell;
-    canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    ctx = canvas.getContext("2d");
+    svgText = generateSVG_QR(qr);
+  } else {
+    if (!currentSvg) {
+      alert("Générez d'abord le code-barres.");
+      return;
+    }
+    svgText = currentSvg.outerHTML;
+  }
+  svgElement = new DOMParser().parseFromString(svgText, "image/svg+xml").documentElement;
+  width = parseFloat(svgElement.getAttribute("width"));
+  height = parseFloat(svgElement.getAttribute("height"));
+  if ((!width || !height) && svgElement.getAttribute("viewBox")) {
+    viewBox = svgElement.getAttribute("viewBox").trim().split(/[ ,]+/);
+    if (viewBox.length === 4) {
+      width = width || parseFloat(viewBox[2]);
+      height = height || parseFloat(viewBox[3]);
+    }
+  }
+  if (!width || !height || !isFinite(width) || !isFinite(height)) {
+    alert("Impossible de déterminer les dimensions du code.");
+    return;
+  }
+  // La résolution désigne le côté du QR ou le plus grand côté du code-barres.
+  var scale = resolution / Math.max(width, height);
+  var outputCanvas = document.createElement("canvas");
+  outputCanvas.width = Math.max(1, Math.round(width * scale));
+  outputCanvas.height = Math.max(1, Math.round(height * scale));
+  image = new Image();
+  image.onload = function () {
+    var ctx = outputCanvas.getContext("2d");
+    var data;
+    var filename;
     if (!ctx) {
       alert("Canvas 2D indisponible.");
       return;
     }
-    // Fond opaque : plus compatible avec les anciens navigateurs
+    // Fond opaque pour garantir la compatibilité du JPG.
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = fg;
-    for (y = 0; y < count; y++) {
-      for (x = 0; x < count; x++) {
-        if (qr.isDark(y, x)) {
-          ctx.fillRect(x * cell, y * cell, cell, cell);
-        }
+    ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+    ctx.drawImage(image, 0, 0, outputCanvas.width, outputCanvas.height);
+    try {
+      data = outputCanvas.toDataURL(mime, 0.92);
+      if (!data || data.indexOf("data:image/") !== 0) {
+        alert("Impossible de créer l'image.");
+        return;
       }
+      filename = getTimestampName(format === "QR" ? "qr-code." + extension : "barcode." + extension);
+      download(filename, data);
+    } catch (e) {
+      alert("Erreur pendant l'export : " + e.message);
     }
-  } else {
-    // CODE-BARRES : récupérer le canvas déjà généré par JsBarcode
-    canvas = document.getElementById("barcodeCanvas");
-    if (!canvas || canvas.width <= 0 || canvas.height <= 0) {
-      alert("Générez d'abord le code-barres.");
-      return;
-    }
-  }
-  try {
-    data = canvas.toDataURL(mime);
-    if (!data || data.indexOf("data:image/") != 0) {
-      alert("Impossible de créer l'image.");
-      return;
-    }
-  if (format == "QR") {
-    filename = getTimestampName("qr-code", filename);
-  } else {
-    filename = getTimestampName("barcode", filename);
-  }
-    download(filename, data);
-  } catch (e) {
-    alert("Erreur pendant l'export : " + e.message);
-  }
+  };
+  image.onerror = function () {
+    alert("Impossible de préparer l'image pour l'export.");
+  };
+  image.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText);
 }
 document.getElementById("export-png").onclick = function () {
   exportCanvas("png");
