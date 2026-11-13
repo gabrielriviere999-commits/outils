@@ -1,6 +1,7 @@
 /* Fonction sansAccents pour filtres */
 function sansAccents(str){return str
         .replace(/[_]/g, " ")
+        .replace(/[&]/g, "et")
         .replace(/[àáâãäå]/g, "a")
         .replace(/[ç]/g, "c")
         .replace(/[èéêë]/g, "e")
