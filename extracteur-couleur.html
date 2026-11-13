@@ -264,8 +264,8 @@ function showLoupe(x, y, e) {
     lctx.imageSmoothingEnabled = false;
     lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 120, 120);
     /* LA LOUPE SUIT TOUJOURS LA SOURIS */
-    var lx = rect.left + window.scrollX + displayX - 40;
-    var ly = rect.top + window.scrollY + displayY - 120;
+    var lx = rect.left + window.scrollX + displayX - 61;
+    var ly = rect.top + window.scrollY + displayY - 140;
     loupe.style.left = lx + "px";
     loupe.style.top = ly + "px";
     loupe.style.display = "block";
