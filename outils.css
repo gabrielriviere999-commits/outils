@@ -207,6 +207,7 @@ select:hover{background:#444;}
   z-index:999;
   opacity:0.8;
 }
+#textBox textarea{width:300px;height:120px;resize:both;}
 .border-interne {
   background:#000;
   border:2px solid;
