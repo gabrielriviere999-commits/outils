@@ -50,10 +50,10 @@
 <fieldset>
   <legend>Options</legend>
   <select id="resizeMode">
-    <option value="custom">Dimensions personnalisées</option>
+    <option value="pixels">Pixels</option>
     <option value="percentage">Pourcentage</option>
   </select>
-  <div id="customOptions">
+  <div id="pixelsOptions">
     <label>Largeur : <input type="number" id="width" min="1" value="800"></label>px<br>
     <label>Hauteur : <input type="number" id="height" min="1" value="600"></label>px<br>
     <label><input type="checkbox" id="keepRatio" checked>Conserver les proportions de l'image</label>
@@ -61,7 +61,7 @@
   <div id="percentageOptions" style="display:none;">
     <label>Pourcentage : <input type="number" id="percentage" min="1" value="50"></label>%
   </div>
-  <label><input type="checkbox" id="keepMetadata" checked> Conserver les métadonnées compatibles</label><br>
+  <label><input type="checkbox" id="keepMetadata" checked>Conserver les métadonnées compatibles</label><br>
   <label>Format de sortie :</label>
   <select id="format">
     <option value="image/jpeg">JPG</option>
@@ -81,7 +81,7 @@ var files = [];
 var fileinput = document.getElementById("fileinput");
 var imageList = document.getElementById("imageList");
 var resizeMode = document.getElementById("resizeMode");
-var customOptions = document.getElementById("customOptions");
+var pixelsOptions = document.getElementById("pixelsOptions");
 var percentageOptions = document.getElementById("percentageOptions");
 var percentageInput = document.getElementById("percentage");
 var widthInput = document.getElementById("width");
@@ -100,11 +100,11 @@ fileinput.onchange = function() {
     fileinput.value = "";
 };
 resizeMode.onchange = function() {
-    if (resizeMode.value == "custom") {
-        customOptions.style.display = "block";
+    if (resizeMode.value == "pixels") {
+        pixelsOptions.style.display = "block";
         percentageOptions.style.display = "none";
     } else {
-        customOptions.style.display = "none";
+        pixelsOptions.style.display = "none";
         percentageOptions.style.display = "block";
     }
 };
@@ -430,7 +430,7 @@ function processImages() {
         status.innerHTML = "Erreur : JSZip n'est pas chargé.";
         return;
     }
-    if (resizeMode.value == "custom") {
+    if (resizeMode.value == "pixels") {
         if (
             parseInt(widthInput.value, 10) <= 0 ||
             parseInt(heightInput.value, 10) <= 0
