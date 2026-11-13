@@ -1752,51 +1752,55 @@ function loupeZoomFor(srcCanvas){
 function showLoupe(e, srcCanvas){
   if(!loupeEnabled.checked || !IS_TOUCH_DEVICE || e.clientX === undefined || !srcCanvas){ return; }
   loupeBox.style.display = "block";
-  var lx = e.clientX + 20, ly = e.clientY + 20;
-  if(lx + LOUPE_SIZE > window.innerWidth){  lx = e.clientX - LOUPE_SIZE - 20; }
+  var lx = e.clientX + 20;
+  var ly = e.clientY + 20;
+  if(lx + LOUPE_SIZE > window.innerWidth){ lx = e.clientX - LOUPE_SIZE - 20; }
   if(ly + LOUPE_SIZE > window.innerHeight){ ly = e.clientY - LOUPE_SIZE - 20; }
   loupeBox.style.left = lx + "px";
-  loupeBox.style.top  = ly + "px";
+  loupeBox.style.top = ly + "px";
   var r = srcCanvas.getBoundingClientRect();
   var px = (e.clientX - r.left) * srcCanvas.width / r.width;
   var py = (e.clientY - r.top) * srcCanvas.height / r.height;
+  /* Sur la texture 2D, on centre la loupe sur le CENTRE du pixel
+     réellement pointé. Ainsi, la croix du curseur correspond exactement
+     au pixel placé au centre de la loupe, même si le doigt tombe entre
+     deux coordonnées de pixels.
+     Sur l'aperçu 3D, on conserve le centrage continu. */
+  if(srcCanvas === canvas){
+    px = Math.floor(px) + 0.8;
+    py = Math.floor(py) + 0.8;
+  }
   var z = loupeZoomFor(srcCanvas);
   var half = LOUPE_SIZE / (2 * z);
+  var sx = px - half;
+  var sy = py - half;
   loupeCtx.imageSmoothingEnabled = false;
   loupeCtx.clearRect(0, 0, LOUPE_SIZE, LOUPE_SIZE);
   loupeCtx.drawImage(srcCanvas,
-    px - half, py - half, half * 2, half * 2,
+    sx, sy, half * 2, half * 2,
     0, 0, LOUPE_SIZE, LOUPE_SIZE);
   if(srcCanvas === canvas && gridCheck.checked){
-    /* GRILLE DANS LA LOUPE : dessinee a la main, car la vraie grille
-       est une surcouche DOM que drawImage ne copie pas.
-       Un carreau = 1 pixel de texture = z pixels de loupe. */
+    /* Grille alignée sur les limites réelles des pixels. */
     loupeCtx.strokeStyle = gridColorInput.value;
     loupeCtx.lineWidth = 1;
     loupeCtx.beginPath();
-    var x0 = Math.floor(px - half) - 1;
-    var x1 = Math.ceil(px + half) + 1;
-    var y0 = Math.floor(py - half) - 1;
-    var y1 = Math.ceil(py + half) + 1;
+    var x0 = Math.floor(sx) - 1;
+    var x1 = Math.ceil(sx + half * 2) + 1;
+    var y0 = Math.floor(sy) - 1;
+    var y1 = Math.ceil(sy + half * 2) + 1;
     var i;
     for(i = x0; i <= x1; i++){
-      var lxg = (i - (px - half)) * z; // position ecran de la ligne
+      var lxg = (i - sx) * z;
       loupeCtx.moveTo(lxg, 0);
       loupeCtx.lineTo(lxg, LOUPE_SIZE);
     }
     for(i = y0; i <= y1; i++){
-      var lyg = (i - (py - half)) * z;
+      var lyg = (i - sy) * z;
       loupeCtx.moveTo(0, lyg);
       loupeCtx.lineTo(LOUPE_SIZE, lyg);
     }
     loupeCtx.stroke();
   }
-  /* carre reperant le pixel / la zone sous le curseur */
-  loupeCtx.strokeStyle = "#000000";
-  loupeCtx.lineWidth = 1;
-  loupeCtx.strokeRect(
-    LOUPE_SIZE / 2 - z / 2, LOUPE_SIZE / 2 - z / 2, z, z
-  );
 }
 function hideLoupe(){ loupeBox.style.display = "none"; }
 loupeEnabled.onchange = function(){ if(!this.checked){ hideLoupe(); } };
