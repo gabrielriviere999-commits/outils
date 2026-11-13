@@ -1748,7 +1748,7 @@ var loupeEnabled = document.getElementById("loupeEnabled");
 var LOUPE_SIZE = 120;
 /* Grossissement : x8 pour la texture 64x64 (comme dessin-png en petit canvas), x4 pour l'apercu 3D (400x520) deja plus fin. */
 function loupeZoomFor(srcCanvas){
-  return srcCanvas === canvas ? 8 : 4;
+  return srcCanvas === canvas ? 8 : 2;
 }
 function showLoupe(e, srcCanvas){
   if(!loupeEnabled.checked || !IS_TOUCH_DEVICE || e.clientX === undefined || !srcCanvas){ return; }
