@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redimensionner images</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="stylesheet" href="outils.css">
+<style>
+#progressZone{display:none;margin-top:10px;}
+#progressBar {
+  width:100%;
+  height:20px;
+  background:#f44;
+  border-radius:10px;
+}
+.image-list {
+  display:table;
+  width:100%;
+  border-collapse:collapse;
+}
+.image-item{display:table-row;}
+.image-item > img,
+.image-item > .image-info,
+.image-item > button {
+  display:table-cell;
+  vertical-align:middle;
+}
+.image-item > .image-info,.image-item > button{border-bottom:1px solid #888;}
+.image-item:last-child > * {border-bottom:0;}
+.image-item img {
+  width:65px;
+  height:65px;
+  object-fit:cover;
+}
+.image-item > .image-info{width:100%;}
+.image-name{font-weight:bold;}
+.image-details{margin-top:5px;}
+.image-error{color:#d33;}
+</style>
+</head>
+<body>
+<h2>Redimensionneur d'images</h2>
+<div class="section">
+  <input type="file" id="fileInput" accept="image/*" multiple></input>
+  <div class="scrollZone"><div class="image-list" id="imageList"></div></div>
+</div>
+<div class="section">
+<fieldset>
+  <legend>Options</legend>
+  <label>Mode de redimensionnement :</label>
+  <select id="resizeMode">
+    <option value="custom">Dimensions personnalisées</option>
+    <option value="percentage">Pourcentage</option>
+  </select>
+  <div id="customOptions">
+    <label>Largeur : <input type="number" id="width" min="1" value="800"></label>px<br>
+    <label>Hauteur : <input type="number" id="height" min="1" value="600"></label>px<br>
+    <label><input type="checkbox" id="keepRatio" checked>Conserver les proportions de l'image</label>
+  </div>
+  <div id="percentageOptions" style="display:none;">
+    <label>Pourcentage : <input type="number" id="percentage" min="1" value="50"></label>%
+  </div>
+  <br>
+  <label>Format de sortie :</label>
+  <select id="format">
+    <option value="image/jpeg">JPG</option>
+    <option value="image/png">PNG</option>
+    <option value="image/webp">WebP</option>
+  </select>
+</fieldset>
+</div>
+<button class="btn-primary" id="downloadBtn" disabled>Redimensionner et télécharger ZIP</button>
+<button class="btn-secondary" id="clearBtn">Tout supprimer</button>
+<div id="progressZone"><div id="progressBar"></div></div>
+<div id="status"></div>
+<script src="libs/jszip.min.js"></script>
+<script>
+/* VARIABLES */
+var files = [];
+var fileInput = document.getElementById("fileInput");
+var imageList = document.getElementById("imageList");
+var resizeMode = document.getElementById("resizeMode");
+var customOptions = document.getElementById("customOptions");
+var percentageOptions = document.getElementById("percentageOptions");
+var percentageInput = document.getElementById("percentage");
+var widthInput = document.getElementById("width");
+var heightInput = document.getElementById("height");
+var formatInput = document.getElementById("format");
+var keepRatioInput = document.getElementById("keepRatio");
+var downloadBtn = document.getElementById("downloadBtn");
+var clearBtn = document.getElementById("clearBtn");
+var progressZone = document.getElementById("progressZone");
+var progressBar = document.getElementById("progressBar");
+var status = document.getElementById("status");
+/* EVENEMENTS */
+fileInput.onchange = function() {
+    addFiles(fileInput.files);
+    fileInput.value = "";
+};
+resizeMode.onchange = function() {
+    if (resizeMode.value == "custom") {
+        customOptions.style.display = "block";
+        percentageOptions.style.display = "none";
+    } else {
+        customOptions.style.display = "none";
+        percentageOptions.style.display = "block";
+    }
+};
+downloadBtn.onclick = function() {
+    processImages();
+};
+clearBtn.onclick = function() {
+    files = [];
+    renderImages();
+    status.innerHTML = "";
+    progressZone.style.display = "none";
+};
+/* AJOUT DES IMAGES */
+function addFiles(selectedFiles) {
+    var i;
+    var file;
+    for (i = 0; i < selectedFiles.length; i++) {
+        file = selectedFiles[i];
+        if (!file.type.match(/^image\//)) {
+            continue;
+        }
+        files.push({
+            file: file,
+            name: file.name,
+            url: null,
+            width: 0,
+            height: 0,
+            error: null
+        });
+    }
+    renderImages();
+}
+/* AFFICHAGE DES IMAGES */
+function renderImages() {
+    var html = "";
+    var i;
+    var item;
+    var url;
+    if (files.length === 0) {
+        imageList.innerHTML =
+            '<div>Aucune image sélectionnée.</div>';
+        downloadBtn.disabled = true;
+        return;
+    }
+    for (i = 0; i < files.length; i++) {
+        item = files[i];
+        url = item.url;
+        if (!url) {
+            url = window.URL.createObjectURL(item.file);
+            item.url = url;
+        }
+        html += '<div class="image-item">';
+        html += '<img src="' + url + '" alt="">';
+        html += '<div class="image-info">';
+        html += '<div class="image-name">' +
+                escapeHTML(item.name) +
+                '</div>';
+        if (item.width > 0) {
+            html += '<div class="image-details">' +
+                    item.width + ' x ' + item.height + ' px' +
+                    '</div>';
+        } else {
+            html += '<div class="image-details">' +
+                    formatSize(item.file.size) +
+                    '</div>';
+        }
+        if (item.error) {
+            html += '<div class="image-details image-error">' +
+                    escapeHTML(item.error) +
+                    '</div>';
+        }
+        html += '</div>';
+        html += '<button ' +
+                'class="remove-btn" ' +
+                'onclick="removeImage(' + i + ')">' +
+                'Supprimer' +
+                '</button>';
+        html += '</div>';
+    }
+    imageList.innerHTML = html;
+    downloadBtn.disabled = false;
+}
+/* SUPPRIMER UNE IMAGE */
+function removeImage(index) {
+    if (files[index] && files[index].url) {
+        window.URL.revokeObjectURL(files[index].url);
+    }
+    files.splice(index, 1);
+    renderImages();
+}
+/* MISE A JOUR DES DIMENSIONS */
+function updateDimensions() {
+    var percentage = parseInt(percentageInput.value, 10);
+    if (isNaN(percentage)) {
+        return;
+    }
+    var i;
+    var item;
+    for (i = 0; i < files.length; i++) {
+        item = files[i];
+        if (!item.width || !item.height) {
+            continue;
+        }
+        if (i === 0) {
+            widthInput.value = Math.round(
+                item.width * percentage / 100
+            );
+            heightInput.value = Math.round(
+                item.height * percentage / 100
+            );
+            break;
+        }
+    }
+}
+/* CHARGEMENT ET DIMENSIONS D'UNE IMAGE */
+function loadImage(file, callback) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+            callback(null, img);
+        };
+        img.onerror = function() {
+            callback("Impossible de lire cette image.");
+        };
+        img.src = e.target.result;
+    };
+    reader.onerror = function() {
+        callback("Erreur lors de la lecture du fichier.");
+    };
+    reader.readAsDataURL(file);
+}
+/* CALCUL DES DIMENSIONS */
+function calculateDimensions(originalWidth, originalHeight) {
+    var width;
+    var height;
+    var result = {};
+    if (resizeMode.value == "percentage") {
+        var percentage = parseFloat(percentageInput.value);
+        width = Math.round(originalWidth * percentage / 100);
+        height = Math.round(originalHeight * percentage / 100);
+    } else {
+        width = parseInt(widthInput.value, 10);
+        height = parseInt(heightInput.value, 10);
+        if (keepRatioInput.checked) {
+            var scale = Math.min(
+                width / originalWidth,
+                height / originalHeight
+            );
+            width = Math.round(originalWidth * scale);
+            height = Math.round(originalHeight * scale);
+        }
+    }
+    result.width = width;
+    result.height = height;
+    return result;
+}
+/* CONVERSION IMAGE VERS BLOB */
+function canvasToBlob(canvas, mimeType, callback) {
+    if (canvas.toBlob) {
+        canvas.toBlob(function(blob) {
+            callback(blob);
+        }, mimeType, 0.92);
+        return;
+    }
+    /*
+       Fallback pour les navigateurs
+       ne disposant pas de canvas.toBlob().
+    */
+    var dataURL = canvas.toDataURL(mimeType, 0.92);
+    var parts = dataURL.split(",");
+    var binary = atob(parts[1]);
+    var array = new Uint8Array(binary.length);
+    var i;
+    for (i = 0; i < binary.length; i++) {
+        array[i] = binary.charCodeAt(i);
+    }
+    var blob = new Blob([array], {
+        type: mimeType
+    });
+    callback(blob);
+}
+/* REDIMENSIONNEMENT D'UNE IMAGE */
+function resizeImage(file, callback) {
+    loadImage(file, function(error, img) {
+        if (error) {
+            callback(error);
+            return;
+        }
+        var dimensions = calculateDimensions(
+            img.naturalWidth || img.width,
+            img.naturalHeight || img.height
+        );
+        var canvas = document.createElement("canvas");
+        canvas.width = dimensions.width;
+        canvas.height = dimensions.height;
+        var context = canvas.getContext("2d");
+        var mimeType = formatInput.value;
+        // Pour le JPG, fond blanc afin d'éviter les transparences noires.
+        if (mimeType == "image/jpeg") {
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        context.drawImage(
+            img,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+        canvasToBlob(canvas, mimeType, function(blob) {
+            if (!blob) {
+                callback("Erreur lors de la conversion.");
+                return;
+            }
+            callback(null, blob, dimensions);
+        });
+    });
+}
+/* TRAITEMENT DES IMAGES */
+function processImages() {
+    if (files.length === 0) {
+        return;
+    }
+    if (!window.JSZip) {
+        status.innerHTML = "Erreur : JSZip n'est pas chargé.";
+        return;
+    }
+    if (resizeMode.value == "custom") {
+        if (
+            parseInt(widthInput.value, 10) <= 0 ||
+            parseInt(heightInput.value, 10) <= 0
+        ) {
+            status.innerHTML = "Veuillez saisir des dimensions valides.";
+            return;
+        }
+    } else {
+        if (
+            isNaN(parseFloat(percentageInput.value)) ||
+            parseFloat(percentageInput.value) <= 0
+        ) {
+            status.innerHTML = "Veuillez saisir un pourcentage valide.";
+            return;
+        }
+    }
+    downloadBtn.disabled = true;
+    clearBtn.disabled = true;
+    progressZone.style.display = "block";
+    progressBar.style.width = "0%";
+    status.innerHTML = "Préparation des images...";
+    var zip = new JSZip();
+    var index = 0;
+    var successCount = 0;
+    var extension = formatInput.value.split("/")[1];
+    // Traitement séquentiel pour éviter de surcharger la mémoire du navigateur.
+    function nextImage() {
+        if (index >= files.length) {
+            generateZip();
+            return;
+        }
+        var item = files[index];
+        status.innerHTML =
+            "Traitement de " + (index + 1) +
+            " / " + files.length +
+            " : " + escapeHTML(item.name);
+        resizeImage(item.file, function(error, blob, dimensions) {
+            if (error) {
+                item.error = error;
+            } else {
+                var filename = getOutputName(
+                    item.name,
+                    extension,
+                    index
+                );
+                zip.file(filename, blob);
+                item.error = null;
+                successCount++;
+            }
+            index++;
+            progressBar.style.width =
+                Math.round(index / files.length * 70) + "%";
+            nextImage();
+        });
+    }
+    // GENERATION DU ZIP
+    function generateZip() {
+        if (successCount === 0) {
+            status.innerHTML =
+                "Aucune image n'a pu être convertie.";
+            downloadBtn.disabled = false;
+            clearBtn.disabled = false;
+            renderImages();
+            return;
+        }
+        status.innerHTML = "Création de l'archive ZIP...";
+        progressBar.style.width = "75%";
+        zip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 5
+            }
+        }, function(metadata) {
+            progressBar.style.width =
+                (75 + metadata.percent * 0.25) + "%";
+        }).then(function(content) {
+            downloadBlob(
+                content,
+                "images_redimensionnees.zip"
+            );
+            progressBar.style.width = "100%";
+            status.innerHTML =
+                successCount + " image(s) traitée(s). " +
+                "Archive ZIP prête au téléchargement.";
+            downloadBtn.disabled = false;
+            clearBtn.disabled = false;
+            renderImages();
+        }, function(error) {
+            status.innerHTML =
+                "Erreur lors de la création du ZIP : " +
+                escapeHTML(error.message || error);
+            downloadBtn.disabled = false;
+            clearBtn.disabled = false;
+        });
+    }
+    nextImage();
+}
+/* NOM DU FICHIER DE SORTIE */
+function getOutputName(originalName, extension, index) {
+    var name = originalName.replace(/\.[^\.]+$/, "");
+    /*
+       Remplace les caractères spéciaux
+       et évite les noms de fichiers identiques.
+    */
+    name = name.replace(/[\\\/:*?"<>|]/g, "_");
+    return name + "_redimensionne." + extension;
+}
+/* TELECHARGEMENT DU ZIP */
+function downloadBlob(blob, filename) {
+    var url = window.URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.setTimeout(function() {
+        window.URL.revokeObjectURL(url);
+    }, 1000);
+}
+/* UTILITAIRES */
+function formatSize(bytes) {
+    if (bytes < 1024) {
+        return bytes + " octets";
+    }
+    if (bytes < 1048576) {
+        return (bytes / 1024).toFixed(1) + " Ko";
+    }
+    return (bytes / 1048576).toFixed(2) + " Mo";
+}
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+/* INITIALISATION */
+renderImages();
+</script>
+</body>
+</html>

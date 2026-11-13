@@ -19,24 +19,12 @@ D;10</textarea><br>
   <button onclick="updateChart()">Mettre à jour texte</button>
   <button id="copyinput">Copier</button>
   <input type="file" id="textareaFileinput">
-  <fieldset>
-  <legend>Options</legend>
-  <label>Largeur max des barres :
-    <input type="number" id="maxWidth" value="25" min="1">
-  </label><br>
-  <label>Caractère de remplissage :
-    <input type="text" id="barChar" value="." maxlength="1">
-  </label><br>
-  <label>Caractère de fond :
-    <input type="text" id="bgChar" value=" " maxlength="1">
-  </label><br>
-  <label>Séparateur libellé :
-    <input type="text" id="sep" value=" ">
-  </label><br>
-  <label>
-    <input type="checkbox" id="normalize" checked="checked">
-    Normaliser
-  </label>
+  <fieldset><legend>Options</legend>
+    <label>Largeur max des barres : <input type="number" id="maxWidth" value="25" min="1"></label><br>
+    <label>Caractère de remplissage : <input type="text" id="barChar" value="." maxlength="1"></label><br>
+    <label>Caractère de fond : <input type="text" id="bgChar" value=" " maxlength="1"></label><br>
+    <label>Séparateur libellé : <input type="text" id="sep" value=" "></label><br>
+  <label><input type="checkbox" id="normalize" checked="checked">Normaliser</label>
   <hr>
   <button onclick="exportOptions()">Exporter</button>
   <button onclick="showImportBox()">Importer</button>
