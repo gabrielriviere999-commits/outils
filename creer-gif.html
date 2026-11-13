@@ -97,13 +97,13 @@
   <div id="frames" class="thumbnail-row"><span>Ajoute des images pour commencer.</span></div>
 </div>
 <div class="section">
-  <h3>Paramètres du GIF</h3>
-  <label for="delay">Durée de chaque image :</label>
-  <input type="number" id="delay" value="500" step="10">ms</input>
-  <br>
-  <button id="exportButton" onclick="exporterGif();">Créer et télécharger le GIF</button>
-  <div id="status">En attente.</div>
-  L'export utilise une palette de 256 couleurs (format GIF). Selon les images, certaines nuances peuvent être simplifiées.
+  <fieldset><legend>Options</legend>
+    <label for="delay">Durée de chaque image :</label>
+    <input type="number" id="delay" value="500" step="10">ms</input><br>
+    <button id="exportButton" onclick="exporterGif();">Créer et télécharger le GIF</button>
+    <div id="status">En attente.</div>
+    L'export utilise une palette de 256 couleurs (format GIF). Selon les images, certaines nuances peuvent être simplifiées.
+  </fieldset>
 </div>
 <details>
 <summary>Bibliothèque GIF</summary>
