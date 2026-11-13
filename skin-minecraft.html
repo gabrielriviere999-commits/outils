@@ -921,6 +921,7 @@ function onMove(e){
   } else if(selStart){
     selection = normalizeRect(selStart.x, selStart.y, p.x, p.y);
     updateSelRect();
+    showLoupe(e, canvas);
   }
   if(e.touches){ e.preventDefault(); }
 }
@@ -1780,7 +1781,7 @@ function showLoupe(e, srcCanvas){
     sx, sy, half * 2, half * 2,
     0, 0, LOUPE_SIZE, LOUPE_SIZE);
   if(srcCanvas === canvas && gridCheck.checked){
-    /* Grille alignée sur les limites réelles des pixels. */
+    // Grille alignée sur les limites réelles des pixels.
     loupeCtx.strokeStyle = gridColorInput.value;
     loupeCtx.lineWidth = 1;
     loupeCtx.beginPath();
@@ -1800,6 +1801,21 @@ function showLoupe(e, srcCanvas){
       loupeCtx.lineTo(LOUPE_SIZE, lyg);
     }
     loupeCtx.stroke();
+  }
+  // Rectangle de sélection dans la loupe (texture 2D uniquement)
+  if(srcCanvas === canvas && selection){
+    var rx = (selection.x - sx) * z;
+    var ry = (selection.y - sy) * z;
+    var rw = selection.w * z;
+    var rh = selection.h * z;
+    loupeCtx.strokeStyle = colorInput.value;
+    loupeCtx.lineWidth = 1;
+    loupeCtx.strokeRect(
+      Math.round(rx) + 0.5,
+      Math.round(ry) + 0.5,
+      Math.round(rw),
+      Math.round(rh)
+    );
   }
 }
 function hideLoupe(){ loupeBox.style.display = "none"; }
