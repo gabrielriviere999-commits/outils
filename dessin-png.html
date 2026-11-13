@@ -24,27 +24,6 @@ body{background:#000;}
 }
 #canvasScroll{height:500px;height:70vh;width:100%;overflow:auto;}
 #fontInput{width:60px;}
-#canvasLoupe {
-  position:fixed;
-  width:120px;
-  height:120px;
-  display:none;
-  z-index:999;
-  pointer-events:none;
-  background:#fff;
-  border:3px solid #000;
-  box-sizing:border-box;
-  border-radius:50%;
-  overflow:hidden;
-}
-#loupeCanvas {
-  width:120px;
-  height:120px;
-  display:block;
-  image-rendering:pixelated;
-  image-rendering:-moz-crisp-edges;
-  image-rendering:crisp-edges;
-}
 #canvasScroll {
   position:relative;
 }
@@ -53,7 +32,6 @@ body{background:#000;}
   top:0;
   left:0;
   pointer-events:none;
-  z-index:10;
   background-image:linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px);
   background-size:10px 10px;
   display:none;
@@ -333,7 +311,7 @@ body.block-touch{touch-action:none;}
 <button data-action="zoomInputMinus">−</button>
 <button data-action="zoomInputPlus">+</button>
 <span id="dimensions">l : 0, h : 0</span> | <span id="activeTool">Édition</span>
-<div id="canvasLoupe">
+<div id="loupe">
   <canvas id="loupeCanvas" width="120" height="120"></canvas>
 </div>
 <script src="outils.js"></script>
@@ -3840,7 +3818,7 @@ function exportPNG(){
     var png = canvas.toDataURL("image/png");
     document.getElementById("ioArea").value = png;
 }
-var canvasLoupe = document.getElementById("canvasLoupe");
+var loupe = document.getElementById("loupe");
 var loupeCanvas = document.getElementById("loupeCanvas");
 var loupeCtx = loupeCanvas.getContext("2d");
 var loupeSize = 120;
@@ -3848,7 +3826,7 @@ var loupeZoom = 2;
 var lastLoupeEvent = null;
 function showLoupe(e){
     if (!document.getElementById("loupeEnabled").checked) {
-        canvasLoupe.style.display = "none";
+        loupe.style.display = "none";
         return;
     }
     if(!e){
@@ -3877,14 +3855,17 @@ function showLoupe(e){
     if(left + loupeSize > window.innerWidth - 5){
         left = window.innerWidth - loupeSize - 5;
     }
-    canvasLoupe.style.left = left + "px";
-    canvasLoupe.style.top = top + "px";
+    loupe.style.left = left + "px";
+    loupe.style.top = top + "px";
     // Nettoyer la loupe.
     loupeCtx.clearRect(0, 0, loupeSize, loupeSize);
     loupeCtx.fillStyle = canvas.style.backgroundColor || "#ffffff";
     loupeCtx.fillRect(0, 0, loupeSize, loupeSize);
     // Agrandir la zone autour du doigt.
     loupeCtx.imageSmoothingEnabled = false;
+    loupeCtx.mozImageSmoothingEnabled = false;
+    loupeCtx.webkitImageSmoothingEnabled = false;
+    loupeCtx.msImageSmoothingEnabled = false;
     loupeCtx.drawImage(canvas, cx - sourceSize / 2, cy - sourceSize / 2, sourceSize, sourceSize, 0, 0, loupeSize, loupeSize);
     // Grille
     if (gridEnabled) {
@@ -3913,19 +3894,8 @@ function showLoupe(e){
             loupeCtx.lineTo(loupeSize, y);
             loupeCtx.stroke();
         }
-    }
-    // Croix centrale.
-    loupeCtx.save();
-    loupeCtx.strokeStyle = "#000";
-    loupeCtx.lineWidth = 1;
-    loupeCtx.beginPath();
-    loupeCtx.moveTo(loupeSize / 2 - 8, loupeSize / 2);
-    loupeCtx.lineTo(loupeSize / 2 + 8, loupeSize / 2);
-    loupeCtx.moveTo(loupeSize / 2, loupeSize / 2 - 8);
-    loupeCtx.lineTo(loupeSize / 2, loupeSize / 2 + 8);
-    loupeCtx.stroke();
-    loupeCtx.restore();
-    canvasLoupe.style.display = "block";
+    } 
+    loupe.style.display = "block";
 }
 document.getElementById("loupeEnabled").onchange = function() {
     if (this.checked) {
@@ -3945,7 +3915,7 @@ function refreshLoupe(){
     }
 }
 function hideLoupe(){
-    canvasLoupe.style.display = "none";
+    loupe.style.display = "none";
 }
 var gridStep = 10;
 document.getElementById("gridStepInput").onchange = function() {

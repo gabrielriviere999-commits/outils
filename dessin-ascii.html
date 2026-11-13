@@ -20,49 +20,10 @@ select{width:55px;}
   background:rgba(0,0,0,0);
   cursor:crosshair;
 }
-#asciiLoupe {
-  position:fixed;
-  z-index:3;
-  width:120px;
-  height:120px;
-  border:3px solid #fff;
-  border-radius:50%;
-  background:#222;
-  color:#ccc;
-  overflow:hidden;
-  pointer-events:none;
-  display:none;
-  box-sizing:border-box;
-}
-#asciiLoupe:after {
-  content:"";
-  position:absolute;
-  left:50%;
-  top:45%;
-  bottom:45%;
-  width:1px;
-  background:#f44;
-}
-#asciiLoupe:before {
-  content:"";
-  position:absolute;
-  top:50%;
-  left:45%;
-  right:45%;
-  height:1px;
-  background:#f44;
-}
-#asciiLoupeText {
+#loupeText {
   position:absolute;
   white-space:pre;
   font-family:monospace;
-}
-#asciiLoupeCanvas {
-  position:absolute;
-  left:0;
-  top:0;
-  width:120px;
-  height:120px;
 }
 #bgImage {
   position:absolute;
@@ -85,9 +46,9 @@ body.block-touch{touch-action:none;}
   <canvas id="bgImage"></canvas>
   <textarea wrap="off" id="view"></textarea>
 </div>
-<div id="asciiLoupe">
-  <canvas id="asciiLoupeCanvas" width="120" height="120"></canvas>
-  <div id="asciiLoupeText"></div>
+<div id="loupe">
+  <canvas id="loupeCanvas" width="120" height="120"></canvas>
+  <div id="loupeText"></div>
 </div>
 <span id="shapeInfo">l : 0, h : 0</span> | <span id="activeTool">Édition</span>
 <div class="toolbar">
@@ -387,7 +348,7 @@ function setTool(t) {
     if (isDown) {
         refreshPreview(lastMoveX, lastMoveY);
         if (touchActive) {
-            showAsciiLoupe(lastTouchX, lastTouchY);
+            showloupe(lastTouchX, lastTouchY);
         }
     }
 }
@@ -1137,7 +1098,7 @@ view.addEventListener("touchstart", function(e) {
     touchActive = true;
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
-    showAsciiLoupe(lastTouchX, lastTouchY);
+    showloupe(lastTouchX, lastTouchY);
     view.onmousedown({ clientX: lastTouchX,  clientY: lastTouchY });
 }, { passive:false });
 view.addEventListener("touchmove", function(e) {
@@ -1154,7 +1115,7 @@ view.addEventListener("touchmove", function(e) {
     if (!t) return;
     lastTouchX = t.clientX;
     lastTouchY = t.clientY;
-    showAsciiLoupe(lastTouchX, lastTouchY);
+    showloupe(lastTouchX, lastTouchY);
     view.onmousemove({ clientX: lastTouchX, clientY: lastTouchY });
 }, { passive:false });
 view.addEventListener("touchend", function(e) {
@@ -1175,7 +1136,7 @@ view.addEventListener("touchend", function(e) {
     view.onmouseup({ clientX: lastTouchX, clientY: lastTouchY });
     drawingTouchId = null;
     touchActive = false;
-    hideAsciiLoupe();
+    hideloupe();
 }, { passive:false });
 /* AFFICHAGE DIMENSIONS */
 function updateShapeInfo(w, h) {
@@ -1202,7 +1163,7 @@ var colors = ["#ccc", "#222", "#f00", "#0f0", "#0af", "#ff0"];
 var colorIndex = 0;
 function toggleTextColor() {
     var t = document.getElementById("view");
-    var loupeText = document.getElementById("asciiLoupeText");
+    var loupeText = document.getElementById("loupeText");
     colorIndex = (colorIndex + 1) % colors.length;
     t.style.color = colors[colorIndex];
     loupeText.style.color = colors[colorIndex];
@@ -1288,16 +1249,16 @@ function clearImage() {
     ctx.clearRect(0, 0, img.width, img.height);
 }
 /* LOUPE */
-var asciiLoupe = document.getElementById("asciiLoupe");
-var asciiLoupeCanvas = document.getElementById("asciiLoupeCanvas");
-var asciiLoupeCtx = asciiLoupeCanvas.getContext("2d");
-function showAsciiLoupe(clientX, clientY) {
+var loupe = document.getElementById("loupe");
+var loupeCanvas = document.getElementById("loupeCanvas");
+var loupeCtx = loupeCanvas.getContext("2d");
+function showloupe(clientX, clientY) {
     if (!document.getElementById("loupeEnabled").checked) {
-        asciiLoupe.style.display = "none";
+        loupe.style.display = "none";
         return;
     }
     if (tool === "edit") {
-        asciiLoupe.style.display = "none";
+        loupe.style.display = "none";
         return;
     }
     var pos = getPos({ clientX: clientX, clientY: clientY });
@@ -1314,7 +1275,7 @@ function showAsciiLoupe(clientX, clientY) {
         }
         if (y < pos.y + radiusY) s += "\n";
     }
-    asciiLoupeText.textContent = s;
+    loupeText.textContent = s;
     /* IMAGE */
     if (img.width && img.height) {
         var rectView = view.getBoundingClientRect();
@@ -1328,20 +1289,24 @@ function showAsciiLoupe(clientX, clientY) {
         var sourceH = 120 * img.height / rect.height;
         var sourceX = ix - sourceW / 2;
         var sourceY = iy - sourceH / 2;
-        asciiLoupeCtx.clearRect(0, 0, 120, 120);
-        asciiLoupeCtx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 120, 120);
+        loupeCtx.imageSmoothingEnabled = false;
+        loupeCtx.mozImageSmoothingEnabled = false;
+        loupeCtx.webkitImageSmoothingEnabled = false;
+        loupeCtx.msImageSmoothingEnabled = false;
+        loupeCtx.clearRect(0, 0, 120, 120);
+        loupeCtx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 120, 120);
     } else {
-        asciiLoupeCtx.clearRect(0, 0, 120, 120);
+        loupeCtx.clearRect(0, 0, 120, 120);
     }
     /* TEXTE DE LA LOUPE */
     var loupeFontSize = 14;
     var loupeLineHeight = 14;
-    asciiLoupeText.style.fontSize = loupeFontSize + "px";
-    asciiLoupeText.style.lineHeight = loupeLineHeight + "px";
+    loupeText.style.fontSize = loupeFontSize + "px";
+    loupeText.style.lineHeight = loupeLineHeight + "px";
     var rows = radiusY * 2 + 1;
-    asciiLoupeText.style.top = (60 - (rows * loupeLineHeight / 2)) + "px";
-    asciiLoupeText.style.left = "-5px";
-    asciiLoupeText.style.width = "124px";
+    loupeText.style.top = (60 - (rows * loupeLineHeight / 2)) + "px";
+    loupeText.style.left = "-5px";
+    loupeText.style.width = "124px";
     /* POSITION DE LA LOUPE */
     var loupeWidth = 120;
     var loupeHeight = 120;
@@ -1356,21 +1321,21 @@ function showAsciiLoupe(clientX, clientY) {
     if (loupeY < 5) {
         loupeY = clientY + 25;
     }
-    asciiLoupe.style.left = loupeX + "px";
-    asciiLoupe.style.top = loupeY + "px";
-    asciiLoupe.style.display = "block";
+    loupe.style.left = loupeX + "px";
+    loupe.style.top = loupeY + "px";
+    loupe.style.display = "block";
 }
 document.getElementById("loupeEnabled").onchange = function() {
     if (this.checked) {
         if (touchActive) {
-            showAsciiLoupe(lastTouchX, lastTouchY);
+            showloupe(lastTouchX, lastTouchY);
         }
     } else {
-        hideAsciiLoupe();
+        hideloupe();
     }
 };
-function hideAsciiLoupe() {
-    asciiLoupe.style.display = "none";
+function hideloupe() {
+    loupe.style.display = "none";
 }
 /* PARTAGER */
 function shareDrawing() {

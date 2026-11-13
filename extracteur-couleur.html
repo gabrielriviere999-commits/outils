@@ -28,42 +28,6 @@
   image-rendering:-moz-crisp-edges;
   image-rendering:crisp-edges;
 }
-#loupe {
-  position:absolute;
-  width:80px;
-  height:80px;
-  border:2px solid #000;
-  background:#222;
-  display:none;
-  pointer-events:none;
-  image-rendering:pixelated;
-  image-rendering:-moz-crisp-edges;
-  image-rendering:crisp-edges;
-  box-shadow:2px 2px 0 #000;
-}
-#loupeCanvas {
-  width:100%;
-  height:100%;
-}
-/* Croix au centre */
-#loupe:after {
-  content:"";
-  position:absolute;
-  left:50%;
-  top:0;
-  bottom:0;
-  width:1px;
-  background:red;
-}
-#loupe:before {
-  content:"";
-  position:absolute;
-  top:50%;
-  left:0;
-  right:0;
-  height:1px;
-  background:red;
-}
 /* Croix sur l'image */
 .cross {
   position:absolute;

@@ -23,7 +23,7 @@
   cursor:crosshair;
 }
 #preview{border:2px solid #000;background:#222;cursor:crosshair;touch-action:none;display:block;}
-#skinLoupe {
+#loupe {
   position:fixed;
   width:120px;
   height:120px;
@@ -36,7 +36,7 @@
   border-radius:50%;
   overflow:hidden;
 }
-#skinLoupe canvas {
+#loupe canvas {
   width:120px;
   height:120px;
   display:block;
@@ -164,7 +164,7 @@ body{margin-top:45px}
     <div id="selRect" style="position:absolute;display:none;border:1px solid #ffffff;pointer-events:none;box-sizing:border-box;"></div>
   </div>
 </div>
-<div id="skinLoupe"><canvas id="skinLoupeCanvas" width="120" height="120"></canvas></div>
+<div id="loupe"><canvas id="loupeCanvas" width="120" height="120"></canvas></div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
 <script src="color-palette.js"></script>
@@ -1740,8 +1740,8 @@ function sharePNG(){
 }
 /* === LOUPE (modele 2D et 3D) === */
 var IS_TOUCH_DEVICE = (window.matchMedia && window.matchMedia("(pointer:coarse)").matches) || ("ontouchstart" in window);
-var loupeBox = document.getElementById("skinLoupe");
-var loupeCvs = document.getElementById("skinLoupeCanvas");
+var loupeBox = document.getElementById("loupe");
+var loupeCvs = document.getElementById("loupeCanvas");
 var loupeCtx = loupeCvs.getContext("2d");
 var loupeEnabled = document.getElementById("loupeEnabled");
 var LOUPE_SIZE = 120;
