@@ -260,9 +260,9 @@ function showLoupe(x, y, e) {
     var sx = realX - sourceSize / 2;
     var sy = realY - sourceSize / 2;
     /* Dessin */
-    lctx.clearRect(0, 0, 120, 120);
+    lctx.clearRect(0, 0, 116, 116);
     lctx.imageSmoothingEnabled = false;
-    lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 120, 120);
+    lctx.drawImage(canvas, sx, sy, sourceSize, sourceSize, 0, 0, 116, 116);
     /* LOUPE SOUS LE DOIGT / LA SOURIS */
     var lx = rect.left + displayX - 61;
     var ly = rect.top + displayY + 25;
