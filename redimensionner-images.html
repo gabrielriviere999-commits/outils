@@ -42,7 +42,8 @@
 <body>
 <h2>Redimensionner images</h2>
 <div class="section">
-  <input type="file" id="fileinput" multiple></input>
+  <input type="file" id="fileinput" style="width:100%;box-sizing:border-box;">
+  <input id="pastefileinput" style="width:100%;box-sizing:border-box;margin-top:10px;margin-bottom:10px" placeholder="Ou cliquer ici puis faire Ctrl+V" maxlength="0">
   <div class="scrollZone"><div class="image-list" id="imageList"></div></div>
   <button class="btn-secondary" id="clearBtn">Effacer tout</button>
 </div>
