@@ -357,7 +357,7 @@ function exportCanvas(type) {
         alert("Impossible de créer l'image.");
         return;
       }
-      filename = getTimestampName(format === "QR" ? "qr-code." + extension : "barcode." + extension);
+      filename = getTimestampName(format === "QR" ? "qr-code" : "barcode", extension);
       download(filename, data);
     } catch (e) {
       alert("Erreur pendant l'export : " + e.message);
@@ -388,7 +388,7 @@ document.getElementById("export-svg").onclick = function () {
   var url = URL.createObjectURL(blob);
   var a = document.createElement("a");
   a.href = url;
-  a.download = getTimestampName(format === "QR" ? "qr-code.svg" : "barcode.svg");
+  a.download = getTimestampName(format === "QR" ? "qr-code" : "barcode", "svg");
   a.click();
   URL.revokeObjectURL(url);
 };
