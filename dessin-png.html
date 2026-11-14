@@ -3834,8 +3834,8 @@ function showLoupe(e){
     }
     lastLoupeEvent = e;
     var rect = canvas.getBoundingClientRect();
-    var cx = (e.clientX - rect.left) * canvas.width / rect.width;
-    var cy = (e.clientY - rect.top) * canvas.height / rect.height;
+    var cx = Math.floor((e.clientX - rect.left) * canvas.width / rect.width) + 0.8;
+    var cy = Math.floor((e.clientY - rect.top) * canvas.height / rect.height) + 0.8;
     // Taille de la zone source.
     var sourceSize = loupeSize / loupeZoom;
     // Position du doigt à l'écran.
