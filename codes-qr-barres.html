@@ -83,7 +83,8 @@
   <button id="exportBtn">Générer</button>
   <div id="code" class="border-interne"></div>
   <canvas id="barcodeCanvas"></canvas>
-  <label>Résolution d'export (PNG et JPG) : <input type="number" id="exportResolution" value="1000" min="21" max="10000"></label>px
+  <label><input type="checkbox" id="customExportResolution">Résolution d'export (PNG et JPG)</label><br>
+  <label id="exportResolutionLabel">Résolution maximale : <input type="number" id="exportResolution" value="1000" min="21" max="10000" disabled>px</label>
   <button id="export-png">Télécharger PNG</button>
   <button id="export-jpg">Télécharger JPG</button>
   <button id="export-svg">Télécharger SVG</button>
@@ -183,9 +184,9 @@ var validators = {
 /* GÉNÉRATION */
 var qr = null;          // objet QR courant (pour export PNG/JPG)
 var currentSvg = null;  // SVG affiché courant
-function generateSVG_QR(qrObj) {
+function generateSVG_QR(qrObj, cellSize) {
     var count = qrObj.getModuleCount();
-    var cell = 10;
+    var cell = (typeof cellSize === "number" && cellSize > 0) ? cellSize : 10;
     var size = count * cell;
     var fg = document.getElementById("fgColor").value;
     var bg = document.getElementById("bgColor").value;
@@ -286,11 +287,20 @@ function download(filename, dataUrl) {
   a.click();
   document.body.removeChild(a);
 }
+var customResolutionCheckbox = document.getElementById("customExportResolution");
+var resolutionInput = document.getElementById("exportResolution");
+var resolutionLabel = document.getElementById("exportResolutionLabel");
+customResolutionCheckbox.onchange = function () {
+  resolutionInput.disabled = !this.checked;
+  resolutionLabel.style.opacity = this.checked ? "1" : "0.5";
+};
+resolutionLabel.style.opacity = "0.5";
+
 function exportCanvas(type) {
   var format = document.getElementById("codeFormat").value;
   var fg = document.getElementById("fgColor").value || "#000000";
   var bg = document.getElementById("bgColor").value || "#ffffff";
-  var resolutionInput = document.getElementById("exportResolution");
+  var useCustomResolution = customResolutionCheckbox.checked;
   var resolution = parseInt(resolutionInput.value, 10);
   var mime = (type === "jpeg" || type === "jpg") ? "image/jpeg" : "image/png";
   var extension = mime === "image/jpeg" ? "jpg" : "png";
@@ -300,24 +310,38 @@ function exportCanvas(type) {
   var height;
   var viewBox;
   var image;
-  if (!resolutionInput.value || isNaN(resolution) || resolution < 21 || resolution > 10000) {
+  if (useCustomResolution &&
+      (!resolutionInput.value || isNaN(resolution) || resolution < 21 || resolution > 10000)) {
     alert("Choisissez une résolution comprise entre 21 et 10 000 pixels.");
     resolutionInput.focus();
     return;
   }
-  // Récupérer le SVG vectoriel courant pour produire un export net à la résolution demandée.
+  // En automatique : 1 px par module du QR, ou largeur de module de 1 px pour le code-barres.
   if (format === "QR") {
     if (!qr) {
       alert("Générez d'abord un QR Code.");
       return;
     }
-    svgText = generateSVG_QR(qr);
+    svgText = generateSVG_QR(qr, useCustomResolution ? 10 : 1);
   } else {
     if (!currentSvg) {
       alert("Générez d'abord le code-barres.");
       return;
     }
-    svgText = currentSvg.outerHTML;
+    if (useCustomResolution) {
+      svgText = currentSvg.outerHTML;
+    } else {
+      var autoBarcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      JsBarcode(autoBarcodeSvg, input.value.trim(), {
+        format: format,
+        lineColor: fg,
+        background: bg,
+        width: 1,
+        height: 80,
+        displayValue: true
+      });
+      svgText = autoBarcodeSvg.outerHTML;
+    }
   }
   svgElement = new DOMParser().parseFromString(svgText, "image/svg+xml").documentElement;
   width = parseFloat(svgElement.getAttribute("width"));
@@ -333,8 +357,9 @@ function exportCanvas(type) {
     alert("Impossible de déterminer les dimensions du code.");
     return;
   }
-  // La résolution désigne le côté du QR ou le plus grand côté du code-barres.
-  var scale = resolution / Math.max(width, height);
+  // En personnalisé, la valeur désigne le côté du QR ou le plus grand côté du code-barres.
+  // En automatique, on conserve les dimensions intrinsèques du SVG.
+  var scale = useCustomResolution ? resolution / Math.max(width, height) : 1;
   var outputCanvas = document.createElement("canvas");
   outputCanvas.width = Math.max(1, Math.round(width * scale));
   outputCanvas.height = Math.max(1, Math.round(height * scale));
