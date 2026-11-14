@@ -277,7 +277,7 @@ function generateCode() {
   // Affichage en <img> (PNG depuis le canvas) : clic droit → "Enregistrer l'image sous…"
   showAsImage(document.getElementById("barcodeCanvas").toDataURL("image/png"));
 }
-document.getElementById("codeFormat").onchange = generateCode;
+// document.getElementById("codeFormat").onchange = generateCode;
 /* EXPORT PNG / JPG / SVG */
 function download(filename, dataUrl) {
   var a = document.createElement("a");
