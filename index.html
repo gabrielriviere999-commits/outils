@@ -53,6 +53,7 @@ pre{margin-top:0;margin-bottom:0;}
   <label><input type="checkbox" class="category-filter" value="html">HTML</label>
   <label><input type="checkbox" class="category-filter" value="texte">Texte</label>
   <label><input type="checkbox" class="category-filter" value="image">Image</label>
+  <label><input type="checkbox" class="category-filter" value="minecraft">Minecraft</label>
 </div>
 <div class="container">
 
@@ -430,7 +431,7 @@ code
   </div>
 </a>
 
-<a href="constructeur-photo360-minecraft.html" class="card" data-category="image">
+<a href="constructeur-photo360-minecraft.html" class="card" data-category="image minecraft">
   <h4>Constructeur photo 360° Minecraft</h4>
   <div class="tool-visual">
    <img width="180" height="180" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABlUlEQVRYR8WXMZLCMAxFw1noqSi5BxU1Z6Km4h5bUtFzFkCZkef7ryTL4ECazQZbepa+JXs1dT6n6/SIphy306rHZGqw51SdtX6PgEIANSyOvHcxnh1ngbgALYccahnPEWHwNAA61xWiQ3SmRvmbB8QQ/yJgGZJJ7wBk5lUAuPLdZROqvUfpMvZvf6t0pPMLAIddAF6TTD+v38zv0XgBYMHK/xUAiuh83wj1MIDD+lbSiGkuVKzY0REQAH3Ul/w1wyIDRwNwClSgVQQw3ksBsA5mZVr1e0kAhCgAXM9FhN7TK06xgxpAu2VvctGI6sA7AKoBXP28DaMUjIwAAqhd8Z0G8FbtQXKxCgFwf+o7p2AkAOotLcJPAUIRetsQw/spAKdAoxAWoqUAsPGFpXgJAMx/1QusZuQBZNoxjwmbkRYHbsejAdC+vocHkpEAzQMJd6mvH8mwPPYeQDmFPbbMe8FPj+VIrx0yOvO3VsuL4d7RdTWzbj6sHUxHy/ncjr1uht+5eFjb1rqoZm7KKQAPxoLPOMV5TwLaxFAhXKmxAAAAAElFTkSuQmCC">
@@ -450,7 +451,7 @@ code
   </div>
 </a>
 
-<a href="skin-minecraft.html" class="card" data-category="image">
+<a href="skin-minecraft.html" class="card" data-category="image minecraft">
   <h4>Skin Minecraft (sans WebGL)</h4>
   <div class="tool-visual">
    <img width="130" height="180" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAECAYAAABLLYUHAAAAAXNSR0IArs4c6QAAAB9JREFUGFdjZGBgYLBZqff/SPglRkYQAyQAAqgcZGUAO78MKSrZHgsAAAAASUVORK5CYII=">
@@ -509,7 +510,7 @@ function appliquerFiltres() {
         var title = cards[i].getElementsByTagName("h4")[0];
         var txt = title ? sansAccents(title.textContent.toLowerCase()).replace(/\\s+/g, " ") : "";
         var matchesSearch = txt.indexOf(filter) !== -1;
-        var cardCategories = (cards[i].getAttribute("data-category") || "").split(/\\s+/);
+        var cardCategories = (cards[i].getAttribute("data-category") || "").split(/\s+/);
         var matchesCategory = allCategories;
         if (!matchesCategory) {
             for (var k = 0; k < selected.length; k++) {
