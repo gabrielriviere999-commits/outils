@@ -81,7 +81,6 @@
 <div id="fovSliderContainer">
   <span id="fov">50°</span> <input type="range" id="fovSlider" min="10" max="100" step="1" value="50">
 </div>
-<div id="info"></div>
 <div id="dropPage"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="libs/visionneuse3d/three.min.js"></script>
 <script src="libs/visionneuse3d/OrbitControls.js"></script>
@@ -122,7 +121,7 @@ modelColor.oninput = function() {
 bgColor.oninput = function() {
     applyColors();
 };
-var info=document.getElementById("info"),mode=document.getElementById("mode");
+var mode=document.getElementById("mode");
 var modelColor=document.getElementById("modelColor"),bgColor=document.getElementById("bgColor");
 var gridBox=document.getElementById("grid"),axesBox=document.getElementById("axes");
 var fovSlider=byId("fovSlider"),fovAff=byId("fov");
@@ -132,7 +131,6 @@ var renderer,scene,camera,controls,grid,axes,root=null,wireOverlay=null,autoRota
 var touches={gauche:false,droite:false,haut:false,bas:false};
 var dernierTemps=0;
 var sphTmp=null,vecTmp=null;
-function message(s){info.innerHTML=s;}
 function byId(i){return document.getElementById(i);}
 /* Scene */
 function init(){
@@ -342,7 +340,7 @@ function loadFiles(fileList){
  for(i=0;i<files.length;i++){
   if(/\.(gltf|glb|obj|stl)$/i.test(files[i].name))main=files[i];
  }
- if(!main){message("Choisis un fichier OBJ, STL, glTF ou GLB.");return;}
+ if(!main){return;}
  ext=main.name.toLowerCase().split(".").pop();
  manager=new THREE.LoadingManager();
  if(ext==="gltf"||ext==="glb"){
@@ -378,9 +376,9 @@ function loadFiles(fileList){
     afterLoad(wrap,nm,true);
    }else{
     new THREE.GLTFLoader(manager).parse(data,"",function(g){afterLoad(g.scene,nm,false);},
-     function(err){message("Erreur GLB/glTF : "+(err&&(err.message||err)||"inconnue"));});
+     function(err){});
    }
-  }catch(ex){message("Erreur : "+ex.message);}
+  }catch(ex){}
  };
  if(/\.obj$/i.test(main.name)||/\.gltf$/i.test(main.name))reader.readAsText(main);
  else reader.readAsArrayBuffer(main);
@@ -389,8 +387,7 @@ function loadFiles(fileList){
 function loadFromURL(url){
  var name=decodeURIComponent(url.substring(url.lastIndexOf("/")+1).split("?")[0].split("#")[0])||"fichier";
  var ext=(name.match(/\.([a-z0-9]+)$/i)||["",""])[1].toLowerCase();
- var fail=function(err){message("Erreur : "+((err&&err.message)||err)+" — v&eacute;rifie que le serveur autorise le CORS.");};
- message("Chargement de "+name+" …");
+ var fail=function(err){};
  if(ext==="obj"){
   new THREE.OBJLoader().load(url,function(o){
    o.traverse(function(m){if(m.isMesh&&m.material)m.material=new THREE.MeshStandardMaterial({color:0xb7c9df,roughness:0.6});});
