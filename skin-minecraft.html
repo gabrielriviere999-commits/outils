@@ -301,6 +301,9 @@ var toolButtons = {
 var eraserCheck = document.getElementById("eraserCheck");
 var rainbowCheck = document.getElementById("rainbowCheck");
 function setTool(t){
+  if(t === "pipette" && currentTool === "pipette"){
+    t = toolBeforePipette;
+  }
   if(t === "pipette" && currentTool !== "pipette"){
     toolBeforePipette = currentTool;
   }
