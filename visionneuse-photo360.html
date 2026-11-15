@@ -635,7 +635,7 @@ function majMoteurWebGL() {
     }
   } finally {
     // Exécuté dans TOUS les cas, même si activerWebGL() a levé une exception.
-    canvas2dOptions.style.display = webglActif ? "none" : "inline";
+    canvas2dOptions.style.display = webglActif ? "none" : "block";
     noteWebGL.style.display = webglActif ? "inline" : "none";
     sauvegarderMoteurWebGL();
   }
