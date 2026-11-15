@@ -1636,7 +1636,7 @@ function majAutoRotation() {
   autoRotation = chkRotation.checked;
   sale = true;
 }
-if(chkRotation.checked === true) { majAutoRotation(); }
+if(chkRotation.checked) { majAutoRotation(); }
 chkRotation.addEventListener("change", majAutoRotation, false);
 function resetPhoto360() {
   yaw = 0;
