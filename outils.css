@@ -327,7 +327,7 @@ select:hover{background:#444;}
   bottom:0px;
   background:rgba(0,0,0,0.7);
 }
-#depot {
+#dropPage {
   position:absolute;
   inset:0;
   z-index:50;
@@ -338,5 +338,5 @@ select:hover{background:#444;}
   background:rgba(20,40,80,0.45);
   border:3px dashed #7aa7ff;
 }
-#depot.actif{display:block;}
-#depot span{color:#fff;}
+#dropPage.actif{display:block;}
+#dropPage span{color:#fff;}

@@ -82,7 +82,7 @@
   <span id="fov">50°</span> <input type="range" id="fovSlider" min="10" max="100" step="1" value="50">
 </div>
 <div id="info"></div>
-<div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
+<div id="dropPage"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="libs/visionneuse3d/three.min.js"></script>
 <script src="libs/visionneuse3d/OrbitControls.js"></script>
 <script src="libs/visionneuse3d/GLTFLoader.js"></script>
@@ -126,7 +126,7 @@ var info=document.getElementById("info"),mode=document.getElementById("mode");
 var modelColor=document.getElementById("modelColor"),bgColor=document.getElementById("bgColor");
 var gridBox=document.getElementById("grid"),axesBox=document.getElementById("axes");
 var fovSlider=byId("fovSlider"),fovAff=byId("fov");
-var depot = document.getElementById("depot");
+var dropPage = document.getElementById("dropPage");
 var renderer,scene,camera,controls,grid,axes,root=null,wireOverlay=null,autoRotate=false;
 /* Etat des directions maintenues (fleches clavier + boutons), comme la visionneuse 360 */
 var touches={gauche:false,droite:false,haut:false,bas:false};
@@ -434,18 +434,18 @@ fileinput.addEventListener("change",
 window.addEventListener("dragover",
   function(e) {
     e.preventDefault();
-    depot.className = "actif";
+    dropPage.className = "actif";
   },
   false
 );
 window.addEventListener("dragleave",
   function() {
-    depot.className = "";
+    dropPage.className = "";
   }, false);
 window.addEventListener("drop",
   function(e) {
     e.preventDefault();
-    depot.className = "";
+    dropPage.className = "";
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
       chargerFichier(e.dataTransfer.files[0]);
     }

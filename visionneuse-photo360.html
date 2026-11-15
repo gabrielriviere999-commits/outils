@@ -64,7 +64,7 @@
 <div id="fovSliderContainer">
   <span id="fov">75°</span> <input type="range" id="fovSlider" min="5" max="100" step="1" value="75">
 </div>
-<div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
+<div id="dropPage"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="outils.js"></script>
 <script src="popup.js"></script>
 <script src="../photos360/photos360.js"></script>
@@ -90,7 +90,7 @@ var ctx = canvas.getContext("2d", {
 ctx.imageSmoothingEnabled = true;
 var statut = document.getElementById("statut");
 var fovAff = document.getElementById("fov");
-var depot = document.getElementById("depot");
+var dropPage = document.getElementById("dropPage");
 var erreur = document.getElementById("erreur");
 var chkRotation = document.getElementById("chkRotation");
 var btnReset = document.getElementById("btnReset");
@@ -1620,18 +1620,18 @@ fileinput.addEventListener("change",
 window.addEventListener("dragover",
   function(e) {
     e.preventDefault();
-    depot.className = "actif";
+    dropPage.className = "actif";
   },
   false
 );
 window.addEventListener("dragleave",
   function() {
-    depot.className = "";
+    dropPage.className = "";
   }, false);
 window.addEventListener("drop",
   function(e) {
     e.preventDefault();
-    depot.className = "";
+    dropPage.className = "";
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
       chargerFichier(e.dataTransfer.files[0]);
     }
