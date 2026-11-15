@@ -326,26 +326,24 @@ function setTool(t){
   updateToolLabel();
 }
 var toolNames = {
-  pencil: "Crayon",
-  line: "Ligne",
-  fill: "Remplir",
-  pipette: "Pipette",
+  pencil: "Pinceau/Crayon",
+  line: "Pinceau/Ligne",
+  fill: "Pinceau/Remplir",
+  pipette: "Pinceau/Pipette",
   hand: "Tourner",
-  pan: "Glisser",
-  select: "Sélection",
-  move: "Déplacer"
+  pan: "Glisser"
 };
 var actionNames = {
-  move: "Déplacer",
-  rotate: "Pivoter 90°",
-  fliph: "Inverser H",
-  flipv: "Inverser V"
+  move: "Sélection/Déplacer",
+  rotate: "Sélection/Pivoter 90°",
+  fliph: "Sélection/Inverser H",
+  flipv: "Sélection/Inverser V"
 };
 function updateToolLabel(){
   var txt = toolNames[currentTool] || currentTool;
   /* si une action attend sa selection, on le dit explicitement */
   if(pendingAction){
-    txt = "Sélection (" + actionNames[pendingAction] + ")";
+    txt = actionNames[pendingAction];
   }
   document.getElementById("activeTool").innerHTML = txt;
 }
