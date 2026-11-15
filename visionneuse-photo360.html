@@ -32,16 +32,8 @@
   </div>
   <label><input type="checkbox" id="chkWebGL">Moteur WebGL</label>
   <hr>
-  <div class="popupgrid">
-    <div style="display:table-row;">
-      <div style="display:table-cell;">
-        <button id="btnReset" onclick="resetPhoto360()">Recentrer</button>
-      </div>
-      <div style="display:table-cell;">
-        <button id="btnRotation" onclick="toggleAutoRotation()">Rotation auto</button>
-      </div>
-    </div>
-  </div>
+  <button id="btnReset" onclick="resetPhoto360()">Recentrer</button>
+  <label><input type="checkbox" id="chkRotation">Rotation auto</label>
   <hr>
   <div class="info">
     <b>Informations</b>
@@ -93,7 +85,7 @@ var statut = document.getElementById("statut");
 var fovAff = document.getElementById("fov");
 var depot = document.getElementById("depot");
 var erreur = document.getElementById("erreur");
-var btnRot = document.getElementById("btnRotation");
+var chkRotation = document.getElementById("chkRotation");
 var btnReset = document.getElementById("btnReset");
 var fileinput = document.getElementById("fileinput");
 var fovSlider = document.getElementById("fovSlider");
@@ -1640,11 +1632,12 @@ window.addEventListener("drop",
   false
 );
 /* BOUTONS */
-function toggleAutoRotation() {
-  autoRotation = !autoRotation;
-  btnRot.className = autoRotation ? "active" : "";
+function majAutoRotation() {
+  autoRotation = chkRotation.checked;
   sale = true;
 }
+if(chkRotation.checked === true) { majAutoRotation(); }
+chkRotation.addEventListener("change", majAutoRotation, false);
 function resetPhoto360() {
   yaw = 0;
   pitch = 0;
