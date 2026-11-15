@@ -42,7 +42,7 @@
   <b class="titleb">Menu</b><hr class="titlehr">
   <input type="file" id="fileinput" multiple>
   <button id="reset">Recentrer</button>
-  <label><input type="checkbox" id="auto">Rotation auto</label><br>
+  <label><input type="checkbox" id="chkRotation">Rotation auto</label><br>
   <select id="mode">
     <option value="solid">Solide</option>
     <option value="wire">Filaire</option>
@@ -410,10 +410,10 @@ byId("fileinput").onchange=function(){if(this.files&&this.files.length)loadFiles
 byId("reset").onclick=function(){if(root)showModel(root,root.name||"mod&egrave;le");};
 function majAutoRotation() {
   autoRotate=!autoRotate;
-  autoRotate=auto.checked;
+  autoRotate=chkRotation.checked;
 }
-if(auto.checked) { majAutoRotation(); }
-auto.addEventListener("change", majAutoRotation, false);
+if(chkRotation.checked) { majAutoRotation(); }
+chkRotation.addEventListener("change", majAutoRotation, false);
 mode.onchange=updateDisplayMode;
 modelColor.onchange=applyModelColor;
 bgColor.onchange=applyColors;
