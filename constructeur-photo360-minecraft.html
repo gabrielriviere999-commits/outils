@@ -15,8 +15,6 @@
   background:#000;
   object-fit:contain;
 }
-#progressZone{display:none;margin-top:10px;}
-#progressBar{width:100%;height:20px;}
 #result {
   display:none;
   margin-top:15px;
@@ -132,7 +130,7 @@ Bas :
   <div id="result">
     <div id="resultInfo"></div>
     <canvas id="resultCanvas"></canvas>
-    <a id="downloadLink" href="#" download>Télécharger la photo 360°</a> | <a id="openLinkSansWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (sans WebGL)</a> |  <a id="openLinkWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360° (WebGL)</a>
+    <a id="downloadLink" href="#" download>Télécharger la photo 360°</a> | <a id="openLinkSansWebGL" href="#" target="_blank">Ouvrir dans visionneuse 360°</a>
   </div>
 </div>
 <script src="outils.js"></script>
@@ -182,8 +180,7 @@ var result = document.getElementById("result");
 var resultCanvas = document.getElementById("resultCanvas");
 var resultInfo = document.getElementById("resultInfo");
 var downloadLink = document.getElementById("downloadLink");
-var openLinkSansWebGL = document.getElementById("openLinkSansWebGL");
-var openLinkWebGL = document.getElementById("openLinkWebGL");
+var openLinkGL = document.getElementById("openLink");
 var buildButton = document.getElementById("buildButton");
 var resetButton = document.getElementById("resetButton");
 var resolutionSelect = document.getElementById("resolution");
@@ -451,8 +448,7 @@ function exporterPanorama(canvas, format, qualite, callback) {
                 // Repli improbable mais sûr.
                 dataURL = canvas.toDataURL(mime, qualite);
                 downloadLink.href = dataURL;
-                openLinkSansWebGL.href = dataURL;
-                openLinkWebGL.href = dataURL;
+                openLink.href = dataURL;
                 callback(dataURL.length, "dataurl");
             } else {
                 if (panoramaBlobURL) {
@@ -463,29 +459,23 @@ function exporterPanorama(canvas, format, qualite, callback) {
                 }
                 panoramaBlobURL = URL.createObjectURL(blob);
                 downloadLink.href = panoramaBlobURL;
-                openLinkSansWebGL.href = construireURLVisionneuseSansWebGL(panoramaBlobURL);
-                openLinkWebGL.href = construireURLVisionneuseWebGL(panoramaBlobURL);
+                openLink.href = construireURLVisionneuse(panoramaBlobURL);
                 callback(blob.size, "blob");
             }
         }, mime, qualite);
     } else {
         dataURL = canvas.toDataURL(mime, qualite);
         downloadLink.href = dataURL;
-        openLinkSansWebGL.href = dataURL;
-        openLinkWebGL.href = dataURL;
+        openLink.href = dataURL;
         callback(dataURL.length, "dataurl");
     }
     return extension;
 }
 /* Construit l'URL de la visionneuse avec le panorama en paramètre.
    Adapte le chemin si la visionneuse est dans un autre dossier. */
-var CHEMIN_VISIONNEUSE_SANS_WEBGL = "visionneuse-photo360-sans-webgl.html";
-function construireURLVisionneuseSansWebGL(urlImage) {
-    return CHEMIN_VISIONNEUSE_SANS_WEBGL + "?file=" + encodeURIComponent(urlImage);
-}
-var CHEMIN_VISIONNEUSE_WEBGL = "visionneuse-photo360-webgl.html";
-function construireURLVisionneuseWebGL(urlImage) {
-    return CHEMIN_VISIONNEUSE_WEBGL + "?file=" + encodeURIComponent(urlImage);
+var CHEMIN_VISIONNEUSE = "visionneuse-photo360.html";
+function construireURLVisionneuse(urlImage) {
+    return CHEMIN_VISIONNEUSE + "?file=" + encodeURIComponent(urlImage);
 }
 /* CONSTRUCTION */
 function construire() {
@@ -674,8 +664,7 @@ resetButton.onclick =
             panoramaBlobURL = null;
         }
         downloadLink.href = "#";
-        openLinkSansWebGL.href = "#";
-        openLinkWebGL.href = "#";
+        openLink.href = "#";
         sourcePixels = {};
         result.style.display = "none";
         progressZone.style.display = "none";
