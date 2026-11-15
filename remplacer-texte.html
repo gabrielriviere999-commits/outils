@@ -11,36 +11,6 @@
   overflow-y:auto;
   max-height:35vh;
 }
-#multiFileInput {
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  opacity:0;
-  cursor:pointer;
-}
-#multiFileList {
-  max-height:70vh;
-  overflow-y:auto;
-}
-#dropzone {
-  position:relative;
-  border:2px dashed #888;
-  background:#222;
-  color:#ccc;
-  padding:10px;
-  text-align:center;
-  cursor:pointer;
-}
-#dropzone:hover {
-  background:#444;
-}
-#dropzone.hover {
-  border-color:#000080;
-  background:#d0e4ff;
-  color:#000;
-}
 </style>
 </head>
 <body>
@@ -81,11 +51,8 @@
   </div>
   <div class="card">
     <h3>Traitement par lots</h3>
-    <div id="dropzone">
-      Cliquer ou glisser-déposer des fichiers texte ici
-      <input type="file" id="multiFileInput" multiple>
-    </div>
-    <div id="multiFileList"></div>
+    <input type="file" id="multiFileInput" multiple>
+    <div id="multiFileList" class="scrollZone"></div>
     <button onclick="telechargerToutZip()">Télécharger tout en ZIP</button>
     <br>
     <label>Suffixe fichiers :</label>
@@ -775,38 +742,8 @@ function traiterTousFichiers() {
         fichiersMultiples[i].resultat = transformerTexte(fichiersMultiples[i].contenu);
     }
 }
-/* DRAG & DROP */
 document.getElementById("multiFileInput").addEventListener("change", function() {
         chargerFichiers(this.files);
-    }
-);
-var dz = document.getElementById("dropzone");
-dz.addEventListener(
-    "dragenter",
-    function(e) {
-        e.preventDefault();
-        dz.classList.add("hover");
-    }
-);
-dz.addEventListener(
-    "dragover",
-    function(e) {
-        e.preventDefault();
-        dz.classList.add("hover");
-    }
-);
-dz.addEventListener(
-    "dragleave",
-    function() {
-        dz.classList.remove("hover");
-    }
-);
-dz.addEventListener(
-    "drop",
-    function(e) {
-        e.preventDefault();
-        dz.classList.remove("hover");
-        chargerFichiers(e.dataTransfer.files);
     }
 );
 /* CHARGEMENT INITIAL */
