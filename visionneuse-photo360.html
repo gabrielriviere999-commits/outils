@@ -24,11 +24,12 @@
     </div>
   </div>
   <hr>
-  <span>Interaction :</span> <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000">
-  <span >Inertie :</span> <input type="number" id="renduInertieInput" min="100" step="1000" value="250000">
-  <span >Repos :</span> <input type="number" id="renduReposInput" min="100" step="1000" value="700000">
-  <button id="btnResetQualite" onclick="resetQualiteRendu()">Valeurs par défaut</button>
-  <hr>
+  <div id="canvas2dOptions">
+    <label>Interaction : <input type="number" id="renduInteractionInput" min="100" step="1000" value="125000"></label>
+    <label>Inertie : <input type="number" id="renduInertieInput" min="100" step="1000" value="250000"></label>
+    <label>Repos : <input type="number" id="renduReposInput" min="100" step="1000" value="700000"></label>
+    <button id="btnResetQualite" onclick="resetQualiteRendu()">Valeurs par défaut</button>
+  </div>
   <label><input type="checkbox" id="chkWebGL">Moteur WebGL <span id="noteWebGL" style="display:none">(qualité Canvas 2D inactive)</span></label>
   <hr>
   <div class="popupgrid">
@@ -634,9 +635,7 @@ function majMoteurWebGL() {
     }
   } finally {
     // Exécuté dans TOUS les cas, même si activerWebGL() a levé une exception.
-    renduInteractionInput.disabled = webglActif;
-    renduInertieInput.disabled = webglActif;
-    renduReposInput.disabled = webglActif;
+    canvas2dOptions.style.display = webglActif ? "none" : "inline";
     noteWebGL.style.display = webglActif ? "inline" : "none";
     sauvegarderMoteurWebGL();
   }
