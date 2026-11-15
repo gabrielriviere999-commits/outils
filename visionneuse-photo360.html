@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="outils.css">
 <title>Photo 360°</title>
 <style>
-#erreur{color:#a00}
 .info span{display:block;margin-bottom:10px;word-break:overflow-wrap:anywhere;word-break:break-word;}
 #description360{white-space:pre-wrap;}
 .photos360Tree ul{padding-left:32px;list-style-type:disc;}
@@ -48,7 +47,7 @@
     <span id="telechargement"></span>
     <span id="description360"></span>
     <span id="gps"></span>
-    <span id="erreur"></span>
+    <span id="err"></span>
   </div>
 </div>
 <button onclick="openPhotos360Popup()" class="photos">Photos 360°</button>
@@ -91,7 +90,7 @@ ctx.imageSmoothingEnabled = true;
 var statut = document.getElementById("statut");
 var fovAff = document.getElementById("fov");
 var dropPage = document.getElementById("dropPage");
-var erreur = document.getElementById("erreur");
+var err = document.getElementById("err");
 var chkRotation = document.getElementById("chkRotation");
 var btnReset = document.getElementById("btnReset");
 var fileinput = document.getElementById("fileinput");
@@ -1655,14 +1654,14 @@ function resetPhoto360() {
 }
 /* ERREURS */
 function afficherErreur(msg) {
-  erreur.textContent = msg;
-  erreur.style.display = "block";
+  err.textContent = msg;
+  err.style.display = "block";
   if (
-    typeof erreur._timer !== "undefined"
+    typeof err._timer !== "undefined"
   ) {
-    clearTimeout(erreur._timer);
+    clearTimeout(err._timer);
   }
-  erreur._timer =
+  err._timer =
     setTimeout(
       function() {
         masquerErreur();
@@ -1671,7 +1670,7 @@ function afficherErreur(msg) {
     );
 }
 function masquerErreur() {
-  erreur.style.display = "none";
+  err.style.display = "none";
 }
 /* DÉMARRAGE */
 var demo = textureDemonstration();

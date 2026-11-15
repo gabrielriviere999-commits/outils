@@ -7,13 +7,6 @@
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
 <style>
-#progressZone{display:none;margin-top:10px;}
-#progressBar {
-  width:100%;
-  height:20px;
-  background:#f44;
-  border-radius:10px;
-}
 .image-list {
   display:table;
   width:100%;
@@ -36,7 +29,6 @@
 .image-item > .image-info{width:100%;}
 .image-name{font-weight:bold;}
 .image-details{margin-top:5px;}
-.image-error{color:#a00;}
 </style>
 </head>
 <body>
@@ -72,7 +64,7 @@
 </fieldset>
 </div>
 <button class="btn-primary" id="downloadBtn" disabled>Redimensionner et télécharger ZIP</button>
-<div id="progressZone"><div id="progressBar"></div></div>
+<div id="progressZone"><progress id="progressBar" value="0" max="100"></progress></div>
 <div id="status"></div>
 <script src="outils.js"></script>
 <script src="libs/jszip.min.js"></script>
@@ -173,7 +165,7 @@ function renderImages() {
                     '</div>';
         }
         if (item.error) {
-            html += '<div class="image-details image-error">' +
+            html += '<div class="image-details err">' +
                     escapeHTML(item.error) +
                     '</div>';
         }
@@ -451,7 +443,7 @@ function processImages() {
     downloadBtn.disabled = true;
     clearBtn.disabled = true;
     progressZone.style.display = "block";
-    progressBar.style.width = "0%";
+    progressBar.value = 0;
     status.innerHTML = "Préparation des images...";
     var zip = new JSZip();
     var index = 0;
@@ -482,8 +474,7 @@ function processImages() {
                 successCount++;
             }
             index++;
-            progressBar.style.width =
-                Math.round(index / files.length * 70) + "%";
+            progressBar.value = Math.round(index / files.length * 70);
             nextImage();
         });
     }
@@ -498,7 +489,7 @@ function processImages() {
             return;
         }
         status.innerHTML = "Création de l'archive ZIP...";
-        progressBar.style.width = "75%";
+        progressBar.value = 75;
         zip.generateAsync({
             type: "blob",
             compression: "DEFLATE",
@@ -506,14 +497,13 @@ function processImages() {
                 level: 5
             }
         }, function(metadata) {
-            progressBar.style.width =
-                (75 + metadata.percent * 0.25) + "%";
+            progressBar.value = 75 + metadata.percent * 0.25;
         }).then(function(content) {
             downloadBlob(
                 content,
                 getTimestampName("images_redimensionnees", "zip")
             );
-            progressBar.style.width = "100%";
+            progressBar.value = 100;
             status.innerHTML =
                 successCount + " image(s) traitée(s). " +
                 "Archive ZIP prête au téléchargement.";
