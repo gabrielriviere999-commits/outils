@@ -61,7 +61,7 @@ body{margin-top:45px}
     <label><input type="radio" name="brushMode" id="normalMode" checked>Couleur</label>
     <label><input type="radio" name="brushMode" id="eraserCheck">Gomme</label>
     <label><input type="radio" name="brushMode" id="rainbowCheck">Arc-en-ciel</label>
-    <button id="btnPencil" class="active">Crayon</button>
+    <button id="btnPencil" class="active">Tracer</button>
     <button id="btnLine">Ligne</button>
     <button id="btnFill">Remplir</button>
     <hr><button onclick="closePopup()">Fermer</button>
@@ -96,7 +96,7 @@ body{margin-top:45px}
     <label>Zoom modèle 3D : <input type="range" id="modelZoom" min="30" max="300" value="100"></label><br>
     <hr><button onclick="closePopup()">Fermer</button>
   </div>
-  <span id="activeTool">Crayon</span> |
+  <span id="activeTool">Tracer</span> |
   <span id="status">x : -, y : -</span>
 </div>
 <button id="toggleToolbarBtn">▲</button>
@@ -326,7 +326,7 @@ function setTool(t){
   updateToolLabel();
 }
 var toolNames = {
-  pencil: "Pinceau/Crayon",
+  pencil: "Pinceau/Tracer",
   line: "Pinceau/Ligne",
   fill: "Pinceau/Remplir",
   pipette: "Pinceau/Pipette",
