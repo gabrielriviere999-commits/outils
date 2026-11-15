@@ -40,17 +40,9 @@
 <button onclick="openMenuPopup()" class="menu">≡</button>
 <div id="popupMenuContent" style="display:none">
   <b class="titleb">Menu</b><hr class="titlehr">
-  <input type="file" id="fileinput" accept=".obj,.stl,.gltf,.glb,.bin,.png,.jpg,.jpeg,.webp" multiple>
-  <div class="popupgrid">
-    <div style="display:table-row;">
-      <div style="display:table-cell;">
-        <button type="button" id="reset">Recentrer</button>
-      </div>
-      <div style="display:table-cell;">
-        <button type="button" id="auto">Rotation auto</button>
-      </div>
-    </div>
-  </div>
+  <input type="file" id="fileinput" multiple>
+  <button id="reset">Recentrer</button>
+  <label><input type="checkbox" id="auto">Rotation auto</label><br>
   <select id="mode">
     <option value="solid">Solide</option>
     <option value="wire">Filaire</option>
@@ -416,11 +408,12 @@ function loadFromURL(url){
 /* Controles */
 byId("fileinput").onchange=function(){if(this.files&&this.files.length)loadFiles(this.files);};
 byId("reset").onclick=function(){if(root)showModel(root,root.name||"mod&egrave;le");};
-byId("auto").onclick=function(){
- autoRotate=!autoRotate;
- if(autoRotate)this.classList.add("active");
- else this.classList.remove("active");
-};
+function majAutoRotation() {
+  autoRotate=!autoRotate;
+  autoRotate=auto.checked;
+}
+if(auto.checked) { majAutoRotation(); }
+auto.addEventListener("change", majAutoRotation, false);
 mode.onchange=updateDisplayMode;
 modelColor.onchange=applyModelColor;
 bgColor.onchange=applyColors;
