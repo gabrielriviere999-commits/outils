@@ -30,7 +30,7 @@
     <label>Repos : <input type="number" id="renduReposInput" min="100" step="1000" value="700000"></label>
     <button id="btnResetQualite" onclick="resetQualiteRendu()">Valeurs par défaut</button>
   </div>
-  <label><input type="checkbox" id="chkWebGL">Moteur WebGL <span id="noteWebGL" style="display:none">(qualité Canvas 2D inactive)</span></label>
+  <label><input type="checkbox" id="chkWebGL">Moteur WebGL</label>
   <hr>
   <div class="popupgrid">
     <div style="display:table-row;">
@@ -105,7 +105,6 @@ var renduInteractionInput = document.getElementById("renduInteractionInput");
 var renduInertieInput = document.getElementById("renduInertieInput");
 var renduReposInput = document.getElementById("renduReposInput");
 var chkWebGL = document.getElementById("chkWebGL");
-var noteWebGL = document.getElementById("noteWebGL");
 /* CAMÉRA */
 var yaw = 0;
 var pitch = 0;
@@ -636,7 +635,6 @@ function majMoteurWebGL() {
   } finally {
     // Exécuté dans TOUS les cas, même si activerWebGL() a levé une exception.
     canvas2dOptions.style.display = webglActif ? "none" : "block";
-    noteWebGL.style.display = webglActif ? "inline" : "none";
     sauvegarderMoteurWebGL();
   }
 }
