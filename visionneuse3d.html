@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
-<link rel="stylesheet" href="photo360.css">
 <link rel="stylesheet" href="color-palette.css">
 <title>Visionneuse 3D - GLTF, GLB, OBJ, STL</title>
 </head>
@@ -83,6 +82,7 @@
   <span id="fov">50°</span> <input type="range" id="fovSlider" min="10" max="100" step="1" value="50">
 </div>
 <div id="info"></div>
+<div id="depot"><span>Relâchez pour charger la photo 360°</span></div>
 <script src="libs/visionneuse3d/three.min.js"></script>
 <script src="libs/visionneuse3d/OrbitControls.js"></script>
 <script src="libs/visionneuse3d/GLTFLoader.js"></script>
@@ -126,6 +126,7 @@ var info=document.getElementById("info"),mode=document.getElementById("mode");
 var modelColor=document.getElementById("modelColor"),bgColor=document.getElementById("bgColor");
 var gridBox=document.getElementById("grid"),axesBox=document.getElementById("axes");
 var fovSlider=byId("fovSlider"),fovAff=byId("fov");
+var depot = document.getElementById("depot");
 var renderer,scene,camera,controls,grid,axes,root=null,wireOverlay=null,autoRotate=false;
 /* Etat des directions maintenues (fleches clavier + boutons), comme la visionneuse 360 */
 var touches={gauche:false,droite:false,haut:false,bas:false};
@@ -419,6 +420,38 @@ modelColor.onchange=applyModelColor;
 bgColor.onchange=applyColors;
 gridBox.onclick=function(){grid.visible=gridBox.checked;};
 axesBox.onclick=function(){axes.visible=axesBox.checked;};
+/* FICHIER */
+fileinput.addEventListener("change",
+  function() {
+    if (fileinput.files && fileinput.files[0]) {
+      chargerFichier(fileinput.files[0]);
+    }
+    fileinput.value = "";
+  },
+  false
+);
+/* STYLE DRAG & DROP */
+window.addEventListener("dragover",
+  function(e) {
+    e.preventDefault();
+    depot.className = "actif";
+  },
+  false
+);
+window.addEventListener("dragleave",
+  function() {
+    depot.className = "";
+  }, false);
+window.addEventListener("drop",
+  function(e) {
+    e.preventDefault();
+    depot.className = "";
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      chargerFichier(e.dataTransfer.files[0]);
+    }
+  },
+  false
+);
 /* Curseur FOV : ajuste l'angle de vue de la camera */
 fovSlider.addEventListener("input",function(){
   if(!camera)return;

@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="stylesheet" href="outils.css">
-<link rel="stylesheet" href="photo360.css">
 <title>Photo 360°</title>
+<style>
+#erreur{color:#a00}
+.info span{display:block;margin-bottom:10px;word-break:overflow-wrap:anywhere;word-break:break-word;}
+#description360{white-space:pre-wrap;}
+.photos360Tree ul{padding-left:32px;list-style-type:disc;}
+.photo360Toggle{display:inline-block;width:18px;}
+.photo360Fichier{margin:3px 0;}
+</style>
 </head>
 <body>
 <canvas id="scene"></canvas>
@@ -1609,7 +1616,7 @@ fileinput.addEventListener("change",
   },
   false
 );
-/* DRAG & DROP */
+/* STYLE DRAG & DROP */
 window.addEventListener("dragover",
   function(e) {
     e.preventDefault();
