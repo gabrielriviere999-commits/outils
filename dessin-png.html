@@ -136,18 +136,11 @@ body.block-touch{touch-action:none;}
 	<button class="rangebtn" data-action="sizeInputMinus">−</button>
 	<input type="range" id="sizeInput" min="1" max="50" value="3">
 	<button class="rangebtn" data-action="sizeInputPlus">+</button><hr>
-    <div class="popupgrid">
-      <div style="display:table-row;">
-        <div style="display:table-cell;">
-          <button id="btnEraser" data-action="toggleEraser">Gomme</button>
-        </div>
-        <div style="display:table-cell;">
-          <button id="btnRainbow" data-action="toggleRainbow">Arc-en-ciel</button>
-        </div>
-      </div>
-    </div>
+	<label><input type="radio" name="paintMode" id="btnNormalBrush" value="normal" checked onchange="setPaintMode(this.value)">Pinceau</label>
+    <label><input type="radio" name="paintMode" id="btnEraser" value="eraser" onchange="setPaintMode(this.value)">Gomme</label>
+    <label><input type="radio" name="paintMode" id="btnRainbow" value="rainbow" onchange="setPaintMode(this.value)">Arc-en-ciel</label>
     <hr>
-    <button id="btnDotted" data-action="toggleDotted">Pointillés : <span id="dottedGapLabel">2</span></button><br>
+    <label><input type="checkbox" id="btnDotted" onchange="toggleDotted(this.checked)">Pointillés :</label> <span id="dottedGapLabel">2</span><br>
     <button class="rangebtn" data-action="dottedGapInputMinus">−</button>
     <input type="range" id="dottedGapInput" min="1" max="20" value="2">
     <button class="rangebtn" data-action="dottedGapInputPlus">+</button><hr>
@@ -382,38 +375,22 @@ colorInput.onchange = function() {
     updatePickerFromInput(colorInput, colorInput.nextElementSibling);
     applyColor();
 };
-function toggleEraser(){
-    eraserMode = !eraserMode;
-    if(eraserMode){
-        ctx.globalCompositeOperation = "destination-out";
-        btnEraser.className = "active";
-    } else {
-        ctx.globalCompositeOperation = "source-over";
-        btnEraser.className = "";
-    }
-    refreshShapePreview();
-    refreshLoupe();
-}
-function toggleRainbow(){
-    rainbowMode = !rainbowMode;
-    var btn = document.getElementById("btnRainbow");
-    if(rainbowMode){
-        btn.className = "active";
-    } else {
-        btn.className = "";
+function setPaintMode(mode){
+    eraserMode = mode === "eraser";
+    rainbowMode = mode === "rainbow";
+    ctx.globalCompositeOperation = eraserMode ? "destination-out" : "source-over";
+    if(!rainbowMode){
         applyColor();
     }
+    document.getElementById("btnEraser").checked = eraserMode;
+    document.getElementById("btnRainbow").checked = rainbowMode;
+    document.getElementById("btnNormalBrush").checked = mode === "normal";
     refreshShapePreview();
     refreshLoupe();
 }
-function toggleDotted(){
-    dottedMode = !dottedMode;
-    var btn = document.getElementById("btnDotted");
-    if(dottedMode){
-        btn.className = "active";
-    } else {
-        btn.className = "";
-    }
+function toggleDotted(enabled){
+    dottedMode = (typeof enabled === "boolean") ? enabled : !dottedMode;
+    document.getElementById("btnDotted").checked = dottedMode;
     refreshShapePreview();
     refreshLoupe();
 }
