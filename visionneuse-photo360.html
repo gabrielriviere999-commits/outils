@@ -1321,23 +1321,29 @@ window.addEventListener("mousemove",
 );
 window.addEventListener("mouseup", terminer, false);
 /* TACTILE */
-canvas.addEventListener("touchstart",
+window.addEventListener("touchstart",
   function(e) {
     if (e.target !== canvas) return;
-    if (
-      e.touches.length === 1
-    ) {
+    if (e.touches.length === 1) {
       commencer(e.touches[0].clientX, e.touches[0].clientY);
-    } else if (
-      e.touches.length === 2
-    ) {
+    } else if (e.touches.length === 2) {
       pincement = distanceTouches(e.touches);
     }
     e.preventDefault();
   },
-  {
-    passive:false
-  }
+  { passive: false }
+);
+canvas.addEventListener("touchstart",
+  function(e) {
+    if (e.target !== canvas) return;
+    if (e.touches.length === 1) {
+      commencer(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2) {
+      pincement = distanceTouches(e.touches);
+    }
+    e.preventDefault();
+  },
+  { passive: false }
 );
 window.addEventListener("touchmove",
   function(e) {
