@@ -275,40 +275,52 @@ function animate(ts){
   sphTmp.phi=Math.max(0.05,Math.min(Math.PI-0.05,sphTmp.phi));
   camera.position.setFromSpherical(sphTmp).add(controls.target);
  }
- // ZQSD / WASD + ESPACE / SHIFT : DÉPLACEMENT 3D
- IF(CAMERA && CONTROLS) {
-   VAR PX = (DEPLACEMENTS.DROITE ? 1 : 0)
-          - (DEPLACEMENTS.GAUCHE ? 1 : 0);
-   VAR PZ = (DEPLACEMENTS.ARRIERE ? 1 : 0)
-          - (DEPLACEMENTS.AVANT ? 1 : 0);
-   VAR PY = (DEPLACEMENTS.HAUT ? 1 : 0)
-          - (DEPLACEMENTS.BAS ? 1 : 0);
-   IF(PX !== 0 || PY !== 0 || PZ !== 0) {
-     // DROITE / GAUCHE SELON L'ORIENTATION DE LA CAMÉRA
-     PANDROITE.SETFROMMATRIXCOLUMN(CAMERA.MATRIX, 0);
-     PANDROITE.Y = 0;
-     PANDROITE.NORMALIZE();
-     // AVANT / ARRIÈRE SELON L'ORIENTATION DE LA CAMÉRA
-     PANAVANT.SET(0, 0, 1);
-     PANAVANT.APPLYQUATERNION(CAMERA.QUATERNION);
-     PANAVANT.Y = 0;
-     PANAVANT.NORMALIZE();
-     // HAUT / BAS SELON L'AXE VERTICAL DU MONDE
-     PANHAUT.SET(0, 1, 0);
-     // COMBINAISON DES DÉPLACEMENTS
-     PANTMP.SET(0, 0, 0);
-     PANTMP.ADDSCALEDVECTOR(PANDROITE, PX);
-     PANTMP.ADDSCALEDVECTOR(PANAVANT, PZ);
-     PANTMP.ADDSCALEDVECTOR(PANHAUT, PY);
-     // NORMALISATION POUR GARDER LA MÊME VITESSE EN DIAGONALE
-     IF(PANTMP.LENGTHSQ() > 0) {
-       PANTMP.NORMALIZE();
-       PANTMP.MULTIPLYSCALAR(PANVITESSE * DT);
-       CAMERA.POSITION.ADD(PANTMP);
-       CONTROLS.TARGET.ADD(PANTMP);
-     }
-   }
- }
+// ZQSD / WASD + ESPACE / SHIFT : déplacement 3D
+
+if(camera && controls) {
+
+  var px = (deplacements.droite ? 1 : 0)
+         - (deplacements.gauche ? 1 : 0);
+
+  var pz = (deplacements.arriere ? 1 : 0)
+         - (deplacements.avant ? 1 : 0);
+
+  var py = (deplacements.haut ? 1 : 0)
+         - (deplacements.bas ? 1 : 0);
+
+  if(px !== 0 || py !== 0 || pz !== 0) {
+
+    // Droite / gauche selon l'orientation de la caméra
+    panDroite.setFromMatrixColumn(camera.matrix, 0);
+    panDroite.y = 0;
+    panDroite.normalize();
+
+    // Avant / arrière selon l'orientation de la caméra
+    panAvant.set(0, 0, 1);
+    panAvant.applyQuaternion(camera.quaternion);
+    panAvant.y = 0;
+    panAvant.normalize();
+
+    // Haut / bas selon l'axe vertical du monde
+    panHaut.set(0, 1, 0);
+
+    // Combinaison des déplacements
+    panTmp.set(0, 0, 0);
+
+    panTmp.addScaledVector(panDroite, px);
+    panTmp.addScaledVector(panAvant, pz);
+    panTmp.addScaledVector(panHaut, py);
+
+    // Normalisation pour garder la même vitesse en diagonale
+    if(panTmp.lengthSq() > 0) {
+      panTmp.normalize();
+      panTmp.multiplyScalar(panVitesse * dt);
+
+      camera.position.add(panTmp);
+      controls.target.add(panTmp);
+    }
+  }
+}
  controls.autoRotate=autoRotate;
  controls.update();
  renderer.render(scene,camera);
