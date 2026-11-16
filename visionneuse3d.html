@@ -129,6 +129,19 @@ var dropPage = document.getElementById("dropPage");
 var renderer,scene,camera,controls,grid,axes,root=null,wireOverlay=null,autoRotate=false;
 /* Etat des directions maintenues (fleches clavier + boutons), comme la visionneuse 360 */
 var touches={gauche:false,droite:false,haut:false,bas:false};
+var deplacements = {
+  gauche: false,
+  droite: false,
+  avant: false,
+  arriere: false,
+  haut: false,
+  bas: false
+};
+var panVitesse = 2;
+var panTmp = new THREE.Vector3();
+var panDroite = new THREE.Vector3();
+var panAvant = new THREE.Vector3();
+var panHaut = new THREE.Vector3();
 var dernierTemps=0;
 var sphTmp=null,vecTmp=null;
 function byId(i){return document.getElementById(i);}
@@ -261,6 +274,40 @@ function animate(ts){
   sphTmp.makeSafe();             /* evite le blocage au pole */
   sphTmp.phi=Math.max(0.05,Math.min(Math.PI-0.05,sphTmp.phi));
   camera.position.setFromSpherical(sphTmp).add(controls.target);
+ }
+ // ZQSD / WASD + ESPACE / SHIFT : DÉPLACEMENT 3D
+ IF(CAMERA && CONTROLS) {
+   VAR PX = (DEPLACEMENTS.DROITE ? 1 : 0)
+          - (DEPLACEMENTS.GAUCHE ? 1 : 0);
+   VAR PZ = (DEPLACEMENTS.ARRIERE ? 1 : 0)
+          - (DEPLACEMENTS.AVANT ? 1 : 0);
+   VAR PY = (DEPLACEMENTS.HAUT ? 1 : 0)
+          - (DEPLACEMENTS.BAS ? 1 : 0);
+   IF(PX !== 0 || PY !== 0 || PZ !== 0) {
+     // DROITE / GAUCHE SELON L'ORIENTATION DE LA CAMÉRA
+     PANDROITE.SETFROMMATRIXCOLUMN(CAMERA.MATRIX, 0);
+     PANDROITE.Y = 0;
+     PANDROITE.NORMALIZE();
+     // AVANT / ARRIÈRE SELON L'ORIENTATION DE LA CAMÉRA
+     PANAVANT.SET(0, 0, 1);
+     PANAVANT.APPLYQUATERNION(CAMERA.QUATERNION);
+     PANAVANT.Y = 0;
+     PANAVANT.NORMALIZE();
+     // HAUT / BAS SELON L'AXE VERTICAL DU MONDE
+     PANHAUT.SET(0, 1, 0);
+     // COMBINAISON DES DÉPLACEMENTS
+     PANTMP.SET(0, 0, 0);
+     PANTMP.ADDSCALEDVECTOR(PANDROITE, PX);
+     PANTMP.ADDSCALEDVECTOR(PANAVANT, PZ);
+     PANTMP.ADDSCALEDVECTOR(PANHAUT, PY);
+     // NORMALISATION POUR GARDER LA MÊME VITESSE EN DIAGONALE
+     IF(PANTMP.LENGTHSQ() > 0) {
+       PANTMP.NORMALIZE();
+       PANTMP.MULTIPLYSCALAR(PANVITESSE * DT);
+       CAMERA.POSITION.ADD(PANTMP);
+       CONTROLS.TARGET.ADD(PANTMP);
+     }
+   }
  }
  controls.autoRotate=autoRotate;
  controls.update();
@@ -462,46 +509,60 @@ fovSlider.addEventListener("input",function(){
 function menuOuvert() {
   return !!document.querySelector('.popup-overlay');
 }
-window.addEventListener("keydown",function(e){
- if(menuOuvert())return;
- // Ctrl + / Ctrl - : zoom FOV
- if(e.ctrlKey){
-  if(e.key==="+"||e.key==="="){
-   if(camera){
-    camera.fov=Math.max(10,camera.fov-5);
-    camera.updateProjectionMatrix();
-    fovSlider.value=camera.fov;
-    fovAff.textContent=Math.round(camera.fov)+"°";
-   }
-   if(e.preventDefault)e.preventDefault();
-   return;
-  }
-  if(e.key==="-"||e.key==="_"){
-   if(camera){
-    camera.fov=Math.min(100,camera.fov+5);
-    camera.updateProjectionMatrix();
-    fovSlider.value=camera.fov;
-    fovAff.textContent=Math.round(camera.fov)+"°";
-   }
-   if(e.preventDefault)e.preventDefault();
-   return;
-  }
- }
- var k=e.keyCode||e.which;
- if(k===37)touches.gauche=true;
- else if(k===39)touches.droite=true;
- else if(k===38)touches.haut=true;
- else if(k===40)touches.bas=true;
- else return;
- if(e.preventDefault)e.preventDefault(); // evite le defilement de la page
-},false);
-window.addEventListener("keyup",function(e){
- var k=e.keyCode||e.which;
- if(k===37)touches.gauche=false;
- else if(k===39)touches.droite=false;
- else if(k===38)touches.haut=false;
- else if(k===40)touches.bas=false;
-},false);
+
+/* CLAVIER : FLECHES = ROTATION / ZQSD-WASD = PAN */
+
+
+/* CLAVIER : FLECHES = ROTATION / ZQSD-WASD = DEPLACEMENT */
+
+window.addEventListener("keydown", function(e) {
+  if(menuOuvert()) return;
+
+  var k = e.key.toLowerCase();
+
+  // Flèches : rotation
+  if(e.key === "ArrowLeft") touches.gauche = true;
+  else if(e.key === "ArrowRight") touches.droite = true;
+  else if(e.key === "ArrowUp") touches.haut = true;
+  else if(e.key === "ArrowDown") touches.bas = true;
+
+  // Gauche / droite
+  else if(k === "q" || k === "a") deplacements.gauche = true;
+  else if(k === "d") deplacements.droite = true;
+
+  // Avant / arrière
+  else if(k === "z" || k === "w") deplacements.avant = true;
+  else if(k === "s") deplacements.arriere = true;
+
+  // Monter / descendre
+  else if(e.code === "Space") deplacements.haut = true;
+  else if(e.key === "Shift") deplacements.bas = true;
+
+  else return;
+
+  e.preventDefault();
+}, false);
+
+
+window.addEventListener("keyup", function(e) {
+  var k = e.key.toLowerCase();
+
+  if(e.key === "ArrowLeft") touches.gauche = false;
+  else if(e.key === "ArrowRight") touches.droite = false;
+  else if(e.key === "ArrowUp") touches.haut = false;
+  else if(e.key === "ArrowDown") touches.bas = false;
+
+  else if(k === "q" || k === "a") deplacements.gauche = false;
+  else if(k === "d") deplacements.droite = false;
+
+  else if(k === "z" || k === "w") deplacements.avant = false;
+  else if(k === "s") deplacements.arriere = false;
+
+  else if(e.code === "Space") deplacements.haut = false;
+  else if(e.key === "Shift") deplacements.bas = false;
+}, false);
+
+
 /* BOUTONS DIRECTIONNELS */
 function boutonMaintenir(btn, cle) {
   // Chaque bouton garde son propre état "enfoncé" : un mouseup/touchend ailleurs (par exemple en relâchant un AUTRE bouton) ne le relâche pas.
