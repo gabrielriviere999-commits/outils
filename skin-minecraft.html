@@ -1655,6 +1655,18 @@ setInterval(function(){
   if(arrowKeys.ArrowUp){    pitch = Math.min(1.2, pitch + ARROW_STEP); kb = true; }
   if(arrowKeys.ArrowDown){  pitch = Math.max(-0.9, pitch - ARROW_STEP); kb = true; }
   if(kb){ previewDirty = true; }
+  // ZQSD/WASD + Espace/Shift : deplacement continu de la vue, diagonales normalisees
+  var mx = (moveKeys.droite ? 1 : 0) - (moveKeys.gauche ? 1 : 0);
+  var mz = (moveKeys.arriere ? 1 : 0) - (moveKeys.avant ? 1 : 0);
+  var my = (moveKeys.haut ? 1 : 0) - (moveKeys.bas ? 1 : 0);
+  if(mx || mz || my){
+    var norm = Math.sqrt(mx*mx + mz*mz + my*my);
+    var step = MOVE_STEP / norm;
+    // Déplacement horizontal relatif à l'orientation actuelle de la vue
+    panX += (-mx * Math.cos(yaw) + mz * Math.sin(yaw)) * step;
+    panY += (my + mz * Math.cos(yaw) - mx * Math.sin(yaw)) * step;
+    previewDirty = true;
+  }
   if(autoRotate.checked && !rotating && !painting3D){
     yaw += 0.035;
     previewDirty = true;
@@ -1666,24 +1678,50 @@ setInterval(function(){
 }, LEGACY_3DS ? 100 : 30);
 /* Fleches du clavier : rotation continue et combinable (diagonales), uniquement quand le modele a le focus */
 var arrowKeys = {}; // fleches actuellement maintenues
+var moveKeys = { gauche:false, droite:false, avant:false, arriere:false, haut:false, bas:false };
 var ARROW_STEP = 0.06; // vitesse par image (tous les 30 ms)
+var MOVE_STEP = 5; // deplacement de la vue par image
 preview.addEventListener("mousedown", function(){
   preview.focus(); // donne le focus au clic (Safari ne le fait pas seul)
 });
-preview.addEventListener("keydown", function(e){
+function setPreviewKey(e, pressed){
+  var k = (e.key || "").toLowerCase();
+  var handled = true;
+  // Fleches : rotation continue
   if(e.key === "ArrowLeft" || e.key === "ArrowRight" ||
      e.key === "ArrowUp" || e.key === "ArrowDown"){
-    arrowKeys[e.key] = true;
-    e.preventDefault(); /* empeche le scroll de la page */
-  }
-});
-preview.addEventListener("keyup", function(e){
-  delete arrowKeys[e.key];
-});
-/* si le modele perd le focus (clic ailleurs, Tab), on relache tout */
-preview.addEventListener("blur", function(){
+    if(pressed) arrowKeys[e.key] = true;
+    else delete arrowKeys[e.key];
+  // ZQSD (AZERTY) et WASD (QWERTY) : deplacement
+  } else if(k === "q" || k === "a") moveKeys.gauche = pressed;
+  else if(k === "d") moveKeys.droite = pressed;
+  else if(k === "s") moveKeys.avant = pressed;
+  else if(k === "z" || k === "w") moveKeys.arriere = pressed;
+  // Espace : monter ; Shift : descendre
+  else if(e.code === "Space") moveKeys.haut = pressed;
+  else if(e.key === "Shift") moveKeys.bas = pressed;
+  else handled = false;
+  if(handled && pressed) e.preventDefault();
+}
+function isTextEntryTarget(el){
+  if(!el) return false;
+  var tag = (el.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable;
+}
+window.addEventListener("keydown", function(e){
+  if(isTextEntryTarget(e.target)) return;
+  setPreviewKey(e, true);
+}, false);
+window.addEventListener("keyup", function(e){
+  setPreviewKey(e, false);
+}, false);
+/* si le modele perd le focus, on relache toutes les touches maintenues */
+function releasePreviewKeys(){
   arrowKeys = {};
-});
+  moveKeys = { gauche:false, droite:false, avant:false, arriere:false, haut:false, bas:false };
+}
+preview.addEventListener("blur", releasePreviewKeys);
+window.addEventListener("blur", releasePreviewKeys);
 /* Bouton Partager PNG */
 function partagerImage(mime, extension){
     if (!navigator.share) {
