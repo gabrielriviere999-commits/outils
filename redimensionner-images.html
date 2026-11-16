@@ -60,7 +60,11 @@
     <option value="image/jpeg">JPG</option>
     <option value="image/png">PNG</option>
     <option value="image/webp">WebP</option>
-  </select>
+  </select><br>
+  <div id="qualityOptions">
+    <label for="quality">Qualité : <span id="qualityValue">92</span> %</label><br>
+    <input type="range" id="quality" min="10" max="100" value="92" step="1">
+  </div>
 </fieldset>
 </div>
 <button class="btn-primary" id="downloadBtn" disabled>Redimensionner et télécharger ZIP</button>
@@ -80,6 +84,9 @@ var percentageInput = document.getElementById("percentage");
 var widthInput = document.getElementById("width");
 var heightInput = document.getElementById("height");
 var formatInput = document.getElementById("format");
+var qualityInput = document.getElementById("quality");
+var qualityValue = document.getElementById("qualityValue");
+var qualityOptions = document.getElementById("qualityOptions");
 var keepRatioInput = document.getElementById("keepRatio");
 var keepMetadataInput = document.getElementById("keepMetadata");
 var downloadBtn = document.getElementById("downloadBtn");
@@ -104,6 +111,19 @@ resizeMode.onchange = function() {
 downloadBtn.onclick = function() {
     processImages();
 };
+
+formatInput.onchange = function() {
+    updateQualityVisibility();
+};
+
+qualityInput.oninput = function() {
+    qualityValue.textContent = qualityInput.value;
+};
+
+function updateQualityVisibility() {
+    qualityOptions.style.display =
+        formatInput.value == "image/png" ? "none" : "block";
+}
 clearBtn.onclick = function() {
     files = [];
     renderImages();
@@ -256,18 +276,18 @@ function calculateDimensions(originalWidth, originalHeight) {
     return result;
 }
 /* CONVERSION IMAGE VERS BLOB */
-function canvasToBlob(canvas, mimeType, callback) {
+function canvasToBlob(canvas, mimeType, quality, callback) {
     if (canvas.toBlob) {
         canvas.toBlob(function(blob) {
             callback(blob);
-        }, mimeType, 0.92);
+        }, mimeType, quality);
         return;
     }
     /*
        Fallback pour les navigateurs
        ne disposant pas de canvas.toBlob().
     */
-    var dataURL = canvas.toDataURL(mimeType, 0.92);
+    var dataURL = canvas.toDataURL(mimeType, quality);
     var parts = dataURL.split(",");
     var binary = atob(parts[1]);
     var array = new Uint8Array(binary.length);
@@ -399,7 +419,8 @@ function resizeImage(file, callback) {
             canvas.width,
             canvas.height
         );
-        canvasToBlob(canvas, mimeType, function(blob) {
+        var quality = parseInt(qualityInput.value, 10) / 100;
+        canvasToBlob(canvas, mimeType, quality, function(blob) {
             if (!blob) {
                 callback("Erreur lors de la conversion.");
                 return;
@@ -523,10 +544,7 @@ function processImages() {
 /* NOM DU FICHIER DE SORTIE */
 function getOutputName(originalName, extension, index) {
     var name = originalName.replace(/\.[^\.]+$/, "");
-    /*
-       Remplace les caractères spéciaux
-       et évite les noms de fichiers identiques.
-    */
+    // Remplace les caractères spéciaux et évite les noms de fichiers identiques.
     name = name.replace(/[\\\/:*?"<>|]/g, "_");
     return name + "_redimensionne." + extension;
 }
@@ -562,6 +580,7 @@ function escapeHTML(value) {
         .replace(/'/g, "&#039;");
 }
 /* INITIALISATION */
+updateQualityVisibility();
 renderImages();
 </script>
 </body>
