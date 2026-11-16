@@ -1650,8 +1650,8 @@ preview.addEventListener("wheel", function(e){
 setInterval(function(){
   // Rotation clavier : chaque fleche maintenue tourne a sa boucle
   var kb = false;
-  if(arrowKeys.ArrowLeft){  yaw += ARROW_STEP; kb = true; }
-  if(arrowKeys.ArrowRight){ yaw -= ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowLeft){  yaw -= ARROW_STEP; kb = true; }
+  if(arrowKeys.ArrowRight){ yaw += ARROW_STEP; kb = true; }
   if(arrowKeys.ArrowUp){    pitch = Math.min(1.2, pitch + ARROW_STEP); kb = true; }
   if(arrowKeys.ArrowDown){  pitch = Math.max(-0.9, pitch - ARROW_STEP); kb = true; }
   if(kb){ previewDirty = true; }
