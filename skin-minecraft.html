@@ -1709,10 +1709,12 @@ function isTextEntryTarget(el){
   return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable;
 }
 window.addEventListener("keydown", function(e){
-  if(isTextEntryTarget(e.target)) return;
+  // Les touches fonctionnent uniquement si le canvas 3D a le focus
+  if(document.activeElement !== preview) return;
   setPreviewKey(e, true);
 }, false);
 window.addEventListener("keyup", function(e){
+  if(document.activeElement !== preview) return;
   setPreviewKey(e, false);
 }, false);
 /* si le modele perd le focus, on relache toutes les touches maintenues */
