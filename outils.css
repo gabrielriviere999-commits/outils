@@ -69,11 +69,12 @@ button,.a,.a-color {
   font-size:12px;
   cursor:pointer;
   -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
 button:hover,.a:hover{background:rgba(97,97,97,0.7);}
 button:active,.a:active,button.active {
   border-color:rgba(10,10,10,0.7) rgba(180,180,180,0.7) rgba(180,180,180,0.7) rgba(10,10,10,0.7);
-  background:rgba(10,10,10,0.7);
+  background:rgba(10,10,10,0.7)!important;
 }
 button:disabled{opacity:0.5;cursor:not-allowed;}
 .btn-color,.a-color {
