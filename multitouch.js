@@ -8,8 +8,12 @@ function addMultiTouch(selector){
         }
         el.onpointerdown = function(e){
             this._touchTriggered = (e.pointerType === "touch");
+            if(this._touchTriggered){
+                this.classList.add("active");
+            }
         };
         el.onpointerup = function(e){
+            this.classList.remove("active");
             if(this._touchTriggered){
                 var tag = this.tagName.toLowerCase();
                 // Cas spécial : summary → toggle manuel
@@ -36,6 +40,15 @@ function addMultiTouch(selector){
                 if(this._action){
                     this._action();
                 }
+            }
+        };
+        el.onpointercancel = function(){
+            this.classList.remove("active");
+            this._touchTriggered = false;
+        };
+        el.onpointerleave = function(e){
+            if(e.pointerType === "touch"){
+                this.classList.remove("active");
             }
         };
         el.onclick = function(e){
