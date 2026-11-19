@@ -392,11 +392,13 @@ for (var i = 0; i < scrollButtons.length; i++) {
 var toolbar = document.getElementsByClassName('toolbar')[0];
 var toggleBtn = document.getElementById('toggleToolbarBtn');
 var toolbarVisible = true;
-toggleBtn.onclick = function(e) {
-  toolbarVisible = !toolbarVisible;
-  if (toolbarVisible) {
-    toolbar.className = 'toolbar';
-  } else {
-    toolbar.className = 'toolbar hidden';
-  }
-};
+if (toolbar && toggleBtn) {
+  toggleBtn.onclick = function(e) {
+    toolbarVisible = !toolbarVisible;
+    if (toolbarVisible) {
+      toolbar.className = 'toolbar';
+    } else {
+      toolbar.className = 'toolbar hidden';
+    }
+  };
+}
