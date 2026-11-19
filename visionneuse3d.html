@@ -570,10 +570,12 @@ function boutonMaintenir(btn, cle) {
   function activer() {
     enfonce = true;
     touches[cle] = true;
+    btn.classList.add("pressed");
   }
   function relacher() {
     enfonce = false;
     touches[cle] = false;
+    btn.classList.remove("pressed");
   }
   btn.addEventListener("mousedown", activer, false);
   btn.addEventListener("touchstart",

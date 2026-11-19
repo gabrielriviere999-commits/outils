@@ -534,10 +534,12 @@ function bindHoldButton(btn, dx, dy){
     });
     // Tactile
     btn.addEventListener("touchstart", function(e){
+        this.classList.add("pressed");
         e.preventDefault();
         startHold(id, dx, dy);
     });
     btn.addEventListener("touchend", function(){
+        this.classList.remove("pressed");
         stopHold(id);
     });
     // CLAVIER
