@@ -341,12 +341,14 @@ for (var i = 0; i < scrollButtons.length; i++) {
             }
         }
         function startScroll(e) {
+            this.classList.add("pressed");
             if (e && e.preventDefault) {
                 e.preventDefault();
             }
             scrolling = true;
         }
         function stopScroll(e) {
+            this.classList.remove("pressed");
             if (e && e.preventDefault) {
                 e.preventDefault();
             }
@@ -354,8 +356,10 @@ for (var i = 0; i < scrollButtons.length; i++) {
         }
         // SOURIS
         btn.addEventListener("mousedown", startScroll, false);
-        btn.addEventListener("mouseup", stopScroll, false);
-        btn.addEventListener("mouseleave", stopScroll, false);
+        document.addEventListener("mouseup", function () {
+            btn.classList.remove("pressed");
+            scrolling = false;
+        });
         // TACTILE
         btn.addEventListener("touchstart", startScroll, false);
         btn.addEventListener("touchend", stopScroll, false);
