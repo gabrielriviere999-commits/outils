@@ -74,7 +74,7 @@ button,.a,.a-color {
 button:hover,.a:hover{background:rgba(97,97,97,0.7);}
 button:active,.a:active,button.active,button.pressed {
   border-color:rgba(10,10,10,0.7) rgba(180,180,180,0.7) rgba(180,180,180,0.7) rgba(10,10,10,0.7);
-  background:rgba(10,10,10,0.7)!important;
+  background:rgba(10,10,10,0.7);
 }
 button:disabled{opacity:0.5;cursor:not-allowed;}
 .btn-color,.a-color {
