@@ -72,7 +72,7 @@ button,.a,.a-color {
   -webkit-tap-highlight-color:transparent;
 }
 button:hover,.a:hover{background:rgba(97,97,97,0.7);}
-button:active,.a:active,button.active {
+button:active,.a:active,button.active,button.pressed {
   border-color:rgba(10,10,10,0.7) rgba(180,180,180,0.7) rgba(180,180,180,0.7) rgba(10,10,10,0.7);
   background:rgba(10,10,10,0.7)!important;
 }

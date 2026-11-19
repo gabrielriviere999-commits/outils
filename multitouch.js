@@ -9,11 +9,11 @@ function addMultiTouch(selector){
         el.onpointerdown = function(e){
             this._touchTriggered = (e.pointerType === "touch");
             if(this._touchTriggered){
-                this.classList.add("active");
+                this.classList.add("pressed");
             }
         };
         el.onpointerup = function(e){
-            this.classList.remove("active");
+            this.classList.remove("pressed");
             if(this._touchTriggered){
                 var tag = this.tagName.toLowerCase();
                 // Cas spécial : summary → toggle manuel
@@ -43,12 +43,12 @@ function addMultiTouch(selector){
             }
         };
         el.onpointercancel = function(){
-            this.classList.remove("active");
+            this.classList.remove("pressed");
             this._touchTriggered = false;
         };
         el.onpointerleave = function(e){
             if(e.pointerType === "touch"){
-                this.classList.remove("active");
+                this.classList.remove("pressed");
             }
         };
         el.onclick = function(e){
