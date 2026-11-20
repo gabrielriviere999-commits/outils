@@ -269,6 +269,7 @@ function renderPie() {
               " L "+x1+" "+y1+
               " A "+r+" "+r+" 0 "+large+" 1 "+x2+" "+y2+
               " Z";
+      d = d.replace(/-?\d+\.\d+/g, function(match) { return Math.round(parseFloat(match)); }); // Arrondir
       var pct = (s.value / total) * 100;
       pct = Math.round(pct * 10) / 10;
       svg += '<path fill="'+s.color+'" d="'+d+'">' +
