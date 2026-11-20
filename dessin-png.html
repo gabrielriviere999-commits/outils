@@ -369,6 +369,8 @@ function applyColor(){
     var col = colorInput.value;
     ctx.strokeStyle = col;
     ctx.fillStyle = col;
+    refreshShapePreview();
+    refreshLoupe();
 }
 colorInput.oninput = applyColor;
 colorInput.onchange = function() {
