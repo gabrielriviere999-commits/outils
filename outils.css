@@ -273,6 +273,9 @@ select:hover{background:#444;}
   width:36px;
 }
 .photos{left:36px;}
+.photos360Tree ul{padding-left:32px;list-style-type:disc;}
+.photo360Toggle{display:inline-block;width:18px;}
+.photo360Fichier{margin:3px 0;}
 #commandesDirection {
   position:absolute;
   left:0px;
