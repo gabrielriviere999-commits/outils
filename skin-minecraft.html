@@ -1008,8 +1008,26 @@ fileinput.onchange = function(){
 /* LIEN DE TELECHARGEMENT : href mis a jour a chaque rendu (64x64, tres rapide),
    le telechargement est un vrai lien <a download> : clic droit, copier le lien, etc. */
 document.getElementById("btnDownload").onclick = function(){
+  // Aplatir : la 1re couche doit être 100% opaque, l'alpha sert uniquement au "hat"/2e couche (zones 40..72 x 8..16 et secondes couches dessus/dessous).
+  var flat = document.createElement("canvas");
+  flat.width = canvas.width; flat.height = canvas.height;
+  var fc = flat.getContext("2d");
+  fc.drawImage(canvas, 0, 0);
+  var im = fc.getImageData(0, 0, flat.width, flat.height);
+  var data = im.data;
+  function inHat(x, y){
+    // couche hat 64x64 standard : (40,8) a (56,16)
+    return (x >= 32 && x < 64 && y >= 8 && y < 16);
+  }
+  for (var y = 0; y < flat.height; y++){
+    for (var x = 0; x < flat.width; x++){
+      var i = (y * flat.width + x) * 4;
+      if (data[i+3] !== 0 && !inHat(x, y)) data[i+3] = 255; // opaque
+    }
+  }
+  fc.putImageData(im, 0, 0);
   var a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
+  a.href = flat.toDataURL("image/png");
   a.download = getTimestampName("skin-minecraft", "png");
   a.click();
 };
