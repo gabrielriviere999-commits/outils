@@ -158,6 +158,8 @@ function parseHex(str){
 }
 function parseRgb(str){
     str = str.trim();
+    var match = str.match(/^rgba?\((.*)\)$/i);
+    if(match) str = match[1];
     // essayer comme nom CSS
     var hex = cssNameToHex(str);
     if(hex){
@@ -177,6 +179,8 @@ function parseRgb(str){
 }
 function parseHsl(str){
     str = str.trim();
+    var match = str.match(/^hsla?\((.*)\)$/i);
+    if(match) str = match[1];
     // essayer comme nom CSS
     var hex = cssNameToHex(str);
     if(hex){
@@ -197,6 +201,8 @@ function parseHsl(str){
 }
 function parseHsv(str){
     str = str.trim();
+    var match = str.match(/^hsva?\((.*)\)$/i);
+    if(match) str = match[1];
     // essayer comme nom CSS
     var hex = cssNameToHex(str);
     if(hex){
@@ -313,24 +319,24 @@ function updateUI(){
     if(!lockHex){
         hexInput.value = alphaOn ? hex+aHex : hex;
     }
-    if(!lockRgb){
-        if(alphaOn)
-            rgbInput.value = r+","+g+","+b+","+a;
-        else
-            rgbInput.value = r+","+g+","+b;
+        if(!lockRgb){
+      if(alphaOn)
+        rgbInput.value = "rgba("+r+","+g+","+b+","+a+")";
+      else
+        rgbInput.value = "rgb("+r+","+g+","+b+")";
     }
     var hsl=rgbToHsl(r,g,b);
     if(!lockHsl){
-        if(alphaOn)
-            hslInput.value = hsl.h+","+hsl.s+"%,"+hsl.l+"%,"+a;
-        else
-            hslInput.value = hsl.h+","+hsl.s+"%,"+hsl.l+"%";
+      if(alphaOn)
+        hslInput.value = "hsla("+hsl.h+","+hsl.s+"%,"+hsl.l+"%,"+a+")";
+      else
+        hslInput.value = "hsl("+hsl.h+","+hsl.s+"%,"+hsl.l+"%)";
     }
     if(!lockHsv){
-        if(alphaOn)
-            hsvInput.value = hsv.h+","+hsv.s+"%,"+hsv.v+"%,"+a;
-        else
-            hsvInput.value = hsv.h+","+hsv.s+"%,"+hsv.v+"%";
+      if(alphaOn)
+        hsvInput.value = "hsva("+hsv.h+","+hsv.s+"%,"+hsv.v+"%,"+a+")";
+      else
+        hsvInput.value = "hsv("+hsv.h+","+hsv.s+"%,"+hsv.v+"%)";
     }
     saveState();
 }
