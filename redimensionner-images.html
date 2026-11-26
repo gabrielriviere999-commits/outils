@@ -472,7 +472,7 @@ function processImages() {
     var zip = new JSZip();
     var index = 0;
     var successCount = 0;
-    var extension = formatInput.value.split("/")[1];
+    var extension = formatInput.value == "image/jpeg" ? ".jpg" : "." + formatInput.value.split("/")[1];
     // Traitement séquentiel pour éviter de surcharger la mémoire du navigateur.
     function nextImage() {
         if (index >= files.length) {
@@ -549,7 +549,7 @@ function getOutputName(originalName, extension, index) {
     var name = originalName.replace(/\.[^\.]+$/, "");
     // Remplace les caractères spéciaux et évite les noms de fichiers identiques.
     name = name.replace(/[\\\/:*?"<>|]/g, "_");
-    return name + "_redimensionne." + extension;
+    return name + extension;
 }
 /* TELECHARGEMENT DU ZIP */
 function downloadBlob(blob, filename) {
