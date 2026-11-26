@@ -39,7 +39,7 @@
   transform:translate(-50%,-50%);
 }
 .sv-button{width:40px;height:40px;font-size:24px;}
-input[type=text]{width:145px;}
+input[type=text]{width:220px;}
 input[type=range] {
   width:100%;
   margin:4px 0;
@@ -321,22 +321,22 @@ function updateUI(){
     }
         if(!lockRgb){
       if(alphaOn)
-        rgbInput.value = "rgba("+r+","+g+","+b+","+a+")";
+        rgbInput.value = "rgba("+r+", "+g+", "+b+", "+a+")";
       else
-        rgbInput.value = "rgb("+r+","+g+","+b+")";
+        rgbInput.value = "rgb("+r+", "+g+", "+b+")";
     }
     var hsl=rgbToHsl(r,g,b);
     if(!lockHsl){
       if(alphaOn)
-        hslInput.value = "hsla("+hsl.h+","+hsl.s+"%,"+hsl.l+"%,"+a+")";
+        hslInput.value = "hsla("+hsl.h+", "+hsl.s+"%, "+hsl.l+"%, "+a+")";
       else
-        hslInput.value = "hsl("+hsl.h+","+hsl.s+"%,"+hsl.l+"%)";
+        hslInput.value = "hsl("+hsl.h+", "+hsl.s+"%, "+hsl.l+"%)";
     }
     if(!lockHsv){
       if(alphaOn)
-        hsvInput.value = "hsva("+hsv.h+","+hsv.s+"%,"+hsv.v+"%,"+a+")";
+        hsvInput.value = "hsva("+hsv.h+", "+hsv.s+"%, "+hsv.v+"%, "+a+")";
       else
-        hsvInput.value = "hsv("+hsv.h+","+hsv.s+"%,"+hsv.v+"%)";
+        hsvInput.value = "hsv("+hsv.h+", "+hsv.s+"%, "+hsv.v+"%)";
     }
     saveState();
 }
